@@ -1,0 +1,78 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --ktodd-yellow: #FFD700;
+  --ktodd-gold: #D4A017;
+  --ktodd-steel: #4A5568;
+  --ktodd-dark: #1A1A1A;
+  --ktodd-charcoal: #2D2D2D;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: 'Roboto', Arial, sans-serif;
+  background-color: var(--ktodd-dark);
+  color: #ffffff;
+  line-height: 1.6;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Oswald', Impact, sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* Industrial styling */
+.industrial-border {
+  border: 3px solid var(--ktodd-yellow);
+  box-shadow: 0 0 20px rgba(255, 215, 0, 0.3);
+}
+
+.caution-stripe {
+  background: repeating-linear-gradient(
+    45deg,
+    var(--ktodd-yellow),
+    var(--ktodd-yellow) 10px,
+    var(--ktodd-dark) 10px,
+    var(--ktodd-dark) 20px
+  );
+}
+
+.steel-gradient {
+  background: linear-gradient(180deg, #6B7280 0%, #374151 50%, #1F2937 100%);
+}
+
+.glow-yellow {
+  text-shadow: 0 0 10px var(--ktodd-yellow), 0 0 20px var(--ktodd-yellow);
+}
+
+/* Button styles */
+.btn-primary {
+  @apply bg-yellow-500 hover:bg-yellow-400 text-black font-bold py-3 px-8 uppercase tracking-wider transition-all duration-300;
+  font-family: 'Oswald', Impact, sans-serif;
+}
+
+.btn-primary:hover {
+  box-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
+  transform: translateY(-2px);
+}
+
+/* Form styles */
+input, textarea, select {
+  @apply bg-gray-800 border border-gray-600 text-white px-4 py-3 w-full focus:border-yellow-500 focus:outline-none focus:ring-2 focus:ring-yellow-500/50;
+}
+
+input::placeholder, textarea::placeholder {
+  color: #9CA3AF;
+}
