@@ -1,0 +1,46 @@
+{
+  "version": 1,
+  "updated": 1737360330000,
+  "naming": {
+    "exports": {
+      "dominant": "PascalCase",
+      "count": 14,
+      "percentage": 82,
+      "note": "Component names use PascalCase (App, Header, Hero, etc.), utility exports use camelCase (supabase, submitQuoteRequest)"
+    }
+  },
+  "directories": {
+    "components": {
+      "purpose": "UI components",
+      "files": 10
+    },
+    "lib": {
+      "purpose": "Utility functions and service integrations",
+      "files": 1
+    },
+    "src": {
+      "purpose": "Source code root",
+      "files": 12
+    }
+  },
+  "suffixes": {
+    ".jsx": {
+      "purpose": "React components",
+      "count": 12
+    },
+    ".js": {
+      "purpose": "JavaScript modules (config and utilities)",
+      "count": 3
+    },
+    ".config.js": {
+      "purpose": "Configuration files",
+      "count": 3
+    }
+  },
+  "patterns": {
+    "component_structure": "Function components with default exports",
+    "styling": "Tailwind CSS with custom theme extensions",
+    "state_management": "React useState hooks",
+    "backend_integration": "Supabase for database operations"
+  }
+}

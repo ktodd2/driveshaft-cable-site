@@ -1,0 +1,68 @@
+{
+  "version": 1,
+  "updated": 1768942884175,
+  "files": {
+    "/Users/kurtistodd/driveshaft-cable-site/postcss.config.js": {
+      "exports": [
+        "default"
+      ],
+      "imports": [],
+      "indexed": 1737360330000
+    },
+    "/Users/kurtistodd/driveshaft-cable-site/src/App.jsx": {
+      "exports": [
+        "default"
+      ],
+      "imports": [
+        "react",
+        "./components/Header",
+        "./components/Hero",
+        "./components/Problem",
+        "./components/Product",
+        "./components/Specs",
+        "./components/HowItWorks",
+        "./components/Customers",
+        "./components/QuoteForm",
+        "./components/Footer"
+      ],
+      "indexed": 1737360330000
+    },
+    "/Users/kurtistodd/driveshaft-cable-site/src/lib/supabase.js": {
+      "exports": [
+        "supabase",
+        "submitQuoteRequest"
+      ],
+      "imports": [
+        "@supabase/supabase-js"
+      ],
+      "indexed": 1737360330000
+    },
+    "/Users/kurtistodd/driveshaft-cable-site/src/main.jsx": {
+      "exports": [],
+      "imports": [
+        "react",
+        "react-dom/client",
+        "./App.jsx",
+        "./index.css"
+      ],
+      "indexed": 1737360330000
+    },
+    "/Users/kurtistodd/driveshaft-cable-site/tailwind.config.js": {
+      "exports": [
+        "default"
+      ],
+      "imports": [],
+      "indexed": 1737360330000
+    },
+    "/Users/kurtistodd/driveshaft-cable-site/vite.config.js": {
+      "exports": [
+        "default"
+      ],
+      "imports": [
+        "vite",
+        "@vitejs/plugin-react"
+      ],
+      "indexed": 1737360330000
+    }
+  }
+}

@@ -1,4 +1,5 @@
 import React from 'react'
+import { Link } from 'react-router-dom'
 
 function Footer() {
   const currentYear = new Date().getFullYear()
@@ -9,10 +10,10 @@ function Footer() {
       <div className="h-2 caution-stripe"></div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="grid md:grid-cols-3 gap-8">
+        <div className="grid md:grid-cols-4 gap-8">
           {/* Brand */}
           <div>
-            <div className="flex items-center gap-3 mb-4">
+            <Link to="/" className="flex items-center gap-3 mb-4">
               <div className="w-10 h-10 bg-yellow-500 rounded flex items-center justify-center">
                 <span className="text-black font-bold text-lg font-industrial">K</span>
               </div>
@@ -20,27 +21,43 @@ function Footer() {
                 <div className="text-yellow-500 font-industrial text-lg tracking-wider">DRIVESHAFT CABLE</div>
                 <div className="text-gray-400 text-xs tracking-widest">BY K.TODD</div>
               </div>
-            </div>
+            </Link>
             <p className="text-gray-400 text-sm">
               Heavy-duty driveshaft safety cable for professional towing and recovery operations. Designed in Houston, TX.
             </p>
           </div>
 
-          {/* Quick Links */}
+          {/* Shop */}
           <div>
-            <h4 className="text-white font-industrial text-lg mb-4">QUICK LINKS</h4>
+            <h4 className="text-white font-industrial text-lg mb-4">SHOP</h4>
             <ul className="space-y-2">
               <li>
-                <a href="#product" className="text-gray-400 hover:text-yellow-500 transition-colors text-sm">Product</a>
+                <Link to="/products" className="text-gray-400 hover:text-yellow-500 transition-colors text-sm">All Products</Link>
               </li>
               <li>
-                <a href="#specs" className="text-gray-400 hover:text-yellow-500 transition-colors text-sm">Specifications</a>
+                <Link to="/cart" className="text-gray-400 hover:text-yellow-500 transition-colors text-sm">Cart</Link>
               </li>
               <li>
-                <a href="#how-it-works" className="text-gray-400 hover:text-yellow-500 transition-colors text-sm">How It Works</a>
+                <Link to="/quote" className="text-gray-400 hover:text-yellow-500 transition-colors text-sm">Request Quote</Link>
               </li>
               <li>
-                <a href="#quote" className="text-gray-400 hover:text-yellow-500 transition-colors text-sm">Request Quote</a>
+                <Link to="/order-tracking" className="text-gray-400 hover:text-yellow-500 transition-colors text-sm">Track Order</Link>
+              </li>
+            </ul>
+          </div>
+
+          {/* Company */}
+          <div>
+            <h4 className="text-white font-industrial text-lg mb-4">COMPANY</h4>
+            <ul className="space-y-2">
+              <li>
+                <Link to="/about" className="text-gray-400 hover:text-yellow-500 transition-colors text-sm">About Us</Link>
+              </li>
+              <li>
+                <Link to="/contact" className="text-gray-400 hover:text-yellow-500 transition-colors text-sm">Contact</Link>
+              </li>
+              <li>
+                <Link to="/faq" className="text-gray-400 hover:text-yellow-500 transition-colors text-sm">FAQ</Link>
               </li>
             </ul>
           </div>

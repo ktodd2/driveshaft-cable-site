@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { submitQuoteRequest } from '../lib/supabase'
+import { submitQuoteRequest } from '../../lib/supabase'
 
 function QuoteForm() {
   const [formData, setFormData] = useState({
