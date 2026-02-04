@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { loadStripe } from '@stripe/stripe-js'
 import { Elements, PaymentElement, useStripe, useElements } from '@stripe/react-stripe-js'
-import { useCartStore, formatPrice } from '../stores/cartStore'
+import { useCartStore, selectTotalItems, selectSubtotal, formatPrice } from '../stores/cartStore'
 import { supabase } from '../lib/supabase'
 
 // Initialize Stripe
@@ -68,8 +68,8 @@ function PaymentForm({ clientSecret, orderId, totalCents, onSuccess }) {
 function CheckoutPage() {
   const navigate = useNavigate()
   const { items, clearCart } = useCartStore()
-  const totalItems = useCartStore((state) => state.totalItems)
-  const subtotal = useCartStore((state) => state.subtotal)
+  const totalItems = useCartStore(selectTotalItems)
+  const subtotal = useCartStore(selectSubtotal)
 
   const [formData, setFormData] = useState({
     email: '',

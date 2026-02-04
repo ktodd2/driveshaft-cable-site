@@ -1,12 +1,12 @@
 import React from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { useCartStore, formatPrice } from '../stores/cartStore'
+import { useCartStore, selectTotalItems, selectSubtotal, formatPrice } from '../stores/cartStore'
 
 function CartPage() {
   const navigate = useNavigate()
   const { items, updateQuantity, removeItem, clearCart } = useCartStore()
-  const totalItems = useCartStore((state) => state.totalItems)
-  const subtotal = useCartStore((state) => state.subtotal)
+  const totalItems = useCartStore(selectTotalItems)
+  const subtotal = useCartStore(selectSubtotal)
   const isBulkOrder = totalItems >= 10
 
   const handleQuantityChange = (productId, delta) => {
