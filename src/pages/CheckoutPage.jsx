@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { loadStripe } from '@stripe/stripe-js'
 import { Elements, PaymentElement, useStripe, useElements } from '@stripe/react-stripe-js'
-import { useCartStore, selectTotalItems, selectSubtotal, formatPrice } from '../stores/cartStore'
+import { useCartStore, selectTotalItems, selectSubtotal, selectPricePerUnit, formatPrice } from '../stores/cartStore'
 import { supabase } from '../lib/supabase'
 
 // Initialize Stripe
@@ -89,9 +89,10 @@ function CheckoutPage() {
   const [orderError, setOrderError] = useState(null)
   const [step, setStep] = useState(1) // 1 = shipping info, 2 = payment
 
-  // Shipping cost (flat rate for now)
-  const shippingCents = 1499 // $14.99
-  const totalCents = subtotal + shippingCents
+  // Free shipping
+  const shippingCents = 0
+  const totalCents = subtotal
+  const pricePerUnit = useCartStore(selectPricePerUnit)
 
   const handleChange = (e) => {
     const { name, value } = e.target
@@ -469,7 +470,7 @@ function CheckoutPage() {
                   </div>
                   <div className="flex justify-between text-gray-400">
                     <span>Shipping</span>
-                    <span className="text-white">{formatPrice(shippingCents)}</span>
+                    <span className="text-green-400 font-bold">FREE</span>
                   </div>
                   <div className="flex justify-between pt-3 border-t border-gray-700">
                     <span className="text-white font-bold">Total</span>

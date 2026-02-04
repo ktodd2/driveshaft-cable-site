@@ -1,25 +1,40 @@
 import React from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { useCartStore, selectTotalItems, selectSubtotal, formatPrice } from '../stores/cartStore'
+import {
+  useCartStore,
+  selectTotalItems,
+  selectSubtotal,
+  selectPricePerUnit,
+  selectMeetsMinimum,
+  selectHasBulkDiscount,
+  formatPrice,
+  PRICE_PER_UNIT,
+  BULK_PRICE_PER_UNIT,
+  BULK_THRESHOLD,
+  MIN_ORDER_QUANTITY
+} from '../stores/cartStore'
 
 function CartPage() {
   const navigate = useNavigate()
   const { items, updateQuantity, removeItem, clearCart } = useCartStore()
   const totalItems = useCartStore(selectTotalItems)
   const subtotal = useCartStore(selectSubtotal)
-  const isBulkOrder = totalItems >= 10
+  const pricePerUnit = useCartStore(selectPricePerUnit)
+  const meetsMinimum = useCartStore(selectMeetsMinimum)
+  const hasBulkDiscount = useCartStore(selectHasBulkDiscount)
 
   const handleQuantityChange = (productId, delta) => {
     const item = items.find(i => i.productId === productId)
     if (item) {
-      updateQuantity(productId, item.quantity + delta)
+      const newQty = item.quantity + delta
+      if (newQty >= 1) {
+        updateQuantity(productId, newQty)
+      }
     }
   }
 
   const handleCheckout = () => {
-    if (isBulkOrder) {
-      navigate('/quote')
-    } else {
+    if (meetsMinimum) {
       navigate('/checkout')
     }
   }
@@ -51,7 +66,7 @@ function CartPage() {
           <h1 className="text-3xl sm:text-4xl font-industrial text-white">
             YOUR <span className="text-yellow-500">CART</span>
           </h1>
-          <p className="text-gray-400 mt-2">{totalItems} item{totalItems !== 1 ? 's' : ''} in cart</p>
+          <p className="text-gray-400 mt-2">{totalItems} unit{totalItems !== 1 ? 's' : ''} in cart</p>
         </div>
       </section>
 
@@ -61,16 +76,52 @@ function CartPage() {
           <div className="grid lg:grid-cols-3 gap-8">
             {/* Cart Items */}
             <div className="lg:col-span-2">
-              {/* Bulk Order Notice */}
-              {isBulkOrder && (
+              {/* Minimum Order Warning */}
+              {!meetsMinimum && (
+                <div className="bg-red-500/10 border border-red-500 p-4 mb-6">
+                  <div className="flex items-start gap-3">
+                    <svg className="w-5 h-5 text-red-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                    </svg>
+                    <div>
+                      <p className="text-white font-bold">Minimum Order Not Met</p>
+                      <p className="text-gray-300 text-sm">
+                        Add {MIN_ORDER_QUANTITY - totalItems} more unit{MIN_ORDER_QUANTITY - totalItems !== 1 ? 's' : ''} to meet the minimum order of {MIN_ORDER_QUANTITY} units.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Bulk Discount Notice */}
+              {hasBulkDiscount && (
+                <div className="bg-green-500/10 border border-green-500 p-4 mb-6">
+                  <div className="flex items-start gap-3">
+                    <svg className="w-5 h-5 text-green-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                    <div>
+                      <p className="text-white font-bold">Bulk Discount Applied!</p>
+                      <p className="text-gray-300 text-sm">
+                        You're getting {formatPrice(BULK_PRICE_PER_UNIT)}/unit instead of {formatPrice(PRICE_PER_UNIT)}/unit
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Bulk Discount Teaser */}
+              {!hasBulkDiscount && totalItems >= MIN_ORDER_QUANTITY && (
                 <div className="bg-yellow-500/10 border border-yellow-500 p-4 mb-6">
                   <div className="flex items-start gap-3">
-                    <svg className="w-5 h-5 text-yellow-500 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-5 h-5 text-yellow-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                     <div>
-                      <p className="text-white font-bold">Volume Order Detected!</p>
-                      <p className="text-gray-300 text-sm">Your order of {totalItems} units qualifies for volume pricing. Proceed to request a custom quote.</p>
+                      <p className="text-white font-bold">Unlock Bulk Pricing!</p>
+                      <p className="text-gray-300 text-sm">
+                        Add {BULK_THRESHOLD - totalItems} more units to get {formatPrice(BULK_PRICE_PER_UNIT)}/unit instead of {formatPrice(PRICE_PER_UNIT)}/unit
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -96,31 +147,44 @@ function CartPage() {
                         <Link to={`/products/${item.slug}`} className="text-lg font-bold text-white hover:text-yellow-500 transition-colors">
                           {item.name}
                         </Link>
-                        <p className="text-gray-400 text-sm mb-4">SKU: {item.sku}</p>
+                        <p className="text-gray-400 text-sm mb-2">SKU: {item.sku}</p>
+                        <p className="text-yellow-500 text-sm mb-4">{formatPrice(pricePerUnit)}/unit</p>
 
                         <div className="flex flex-wrap items-center gap-4">
                           {/* Quantity */}
                           <div className="flex items-center border border-gray-700">
                             <button
+                              onClick={() => handleQuantityChange(item.productId, -10)}
+                              className="px-2 py-1 text-white hover:bg-gray-700 transition-colors text-sm"
+                            >
+                              -10
+                            </button>
+                            <button
                               onClick={() => handleQuantityChange(item.productId, -1)}
-                              className="px-3 py-1 text-white hover:bg-gray-700 transition-colors"
+                              className="px-2 py-1 text-white hover:bg-gray-700 transition-colors border-l border-gray-700"
                             >
                               -
                             </button>
-                            <span className="px-4 py-1 text-white border-x border-gray-700">
+                            <span className="px-4 py-1 text-white border-x border-gray-700 min-w-[60px] text-center">
                               {item.quantity}
                             </span>
                             <button
                               onClick={() => handleQuantityChange(item.productId, 1)}
-                              className="px-3 py-1 text-white hover:bg-gray-700 transition-colors"
+                              className="px-2 py-1 text-white hover:bg-gray-700 transition-colors border-r border-gray-700"
                             >
                               +
+                            </button>
+                            <button
+                              onClick={() => handleQuantityChange(item.productId, 10)}
+                              className="px-2 py-1 text-white hover:bg-gray-700 transition-colors text-sm"
+                            >
+                              +10
                             </button>
                           </div>
 
                           {/* Price */}
                           <div className="text-yellow-500 font-bold">
-                            {formatPrice(item.price * item.quantity)}
+                            {formatPrice(pricePerUnit * item.quantity)}
                           </div>
 
                           {/* Remove */}
@@ -160,31 +224,47 @@ function CartPage() {
 
                 <div className="space-y-4 mb-6">
                   <div className="flex justify-between text-gray-400">
-                    <span>Subtotal ({totalItems} items)</span>
+                    <span>{totalItems} units × {formatPrice(pricePerUnit)}</span>
                     <span className="text-white">{formatPrice(subtotal)}</span>
                   </div>
                   <div className="flex justify-between text-gray-400">
                     <span>Shipping</span>
-                    <span className="text-white">Calculated at checkout</span>
+                    <span className="text-green-400 font-bold">FREE</span>
                   </div>
+                  {hasBulkDiscount && (
+                    <div className="flex justify-between text-green-400 text-sm">
+                      <span>Bulk discount</span>
+                      <span>-{formatPrice((PRICE_PER_UNIT - BULK_PRICE_PER_UNIT) * totalItems)}</span>
+                    </div>
+                  )}
                   <div className="border-t border-gray-700 pt-4 flex justify-between">
-                    <span className="text-white font-bold">Estimated Total</span>
+                    <span className="text-white font-bold">Total</span>
                     <span className="text-yellow-500 font-bold text-xl">{formatPrice(subtotal)}</span>
                   </div>
                 </div>
 
                 <button
                   onClick={handleCheckout}
-                  className="btn-primary w-full mb-4"
+                  disabled={!meetsMinimum}
+                  className="btn-primary w-full mb-4 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {isBulkOrder ? 'Request Volume Quote' : 'Proceed to Checkout'}
+                  {meetsMinimum ? 'Proceed to Checkout' : `Add ${MIN_ORDER_QUANTITY - totalItems} More Units`}
                 </button>
 
-                {!isBulkOrder && (
-                  <p className="text-gray-400 text-xs text-center">
-                    Ordering 10+ units? <Link to="/quote" className="text-yellow-500 hover:text-yellow-400">Get volume pricing</Link>
-                  </p>
-                )}
+                {/* Pricing tiers */}
+                <div className="mt-6 pt-6 border-t border-gray-700">
+                  <p className="text-gray-400 text-sm mb-3">Volume Pricing:</p>
+                  <div className="space-y-2 text-sm">
+                    <div className={`flex justify-between ${!hasBulkDiscount ? 'text-yellow-500' : 'text-gray-500'}`}>
+                      <span>10-99 units</span>
+                      <span>{formatPrice(PRICE_PER_UNIT)}/ea</span>
+                    </div>
+                    <div className={`flex justify-between ${hasBulkDiscount ? 'text-green-400' : 'text-gray-500'}`}>
+                      <span>100+ units</span>
+                      <span>{formatPrice(BULK_PRICE_PER_UNIT)}/ea</span>
+                    </div>
+                  </div>
+                </div>
 
                 {/* Security badges */}
                 <div className="mt-6 pt-6 border-t border-gray-700">
@@ -196,9 +276,9 @@ function CartPage() {
                   </div>
                   <div className="flex items-center gap-2 text-gray-400 text-sm">
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                     </svg>
-                    All major credit cards accepted
+                    Free shipping on all orders
                   </div>
                 </div>
               </div>
