@@ -170,11 +170,11 @@ function ProductListPage() {
                 <h3 className="text-white font-bold mb-2">Volume Pricing</h3>
                 <div className="flex flex-wrap gap-4 text-sm">
                   <div className="flex items-center gap-2">
-                    <span className="text-gray-400">10-99 units:</span>
+                    <span className="text-gray-400">10-49 units:</span>
                     <span className="text-yellow-500 font-bold">{formatPrice(PRICE_PER_UNIT)}/ea</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="text-gray-400">100+ units:</span>
+                    <span className="text-gray-400">50+ units:</span>
                     <span className="text-green-400 font-bold">{formatPrice(BULK_PRICE_PER_UNIT)}/ea</span>
                   </div>
                 </div>

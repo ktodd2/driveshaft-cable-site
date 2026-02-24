@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updated": 1770243749120,
+  "updated": 1771956648786,
   "files": {
     "/Users/kurtistodd/driveshaft-cable-site/postcss.config.js": {
       "exports": [
@@ -161,12 +161,59 @@
       ],
       "indexed": 1770243396619
     },
-    "/Users/kurtistodd/driveshaft-cable-site-2/supabase/functions/send-order-notification/index.ts": {
-      "exports": [],
-      "imports": [
-        "https://deno.land/std@0.168.0/http/server.ts"
+    "/Users/kurtistodd/driveshaft-cable-site-3/src/stores/cartStore.js": {
+      "exports": [
+        "PRICE_PER_UNIT",
+        "BULK_PRICE_PER_UNIT",
+        "BULK_THRESHOLD",
+        "MIN_ORDER_QUANTITY",
+        "useCartStore",
+        "selectTotalItems",
+        "selectSubtotal",
+        "selectPricePerUnit",
+        "selectMeetsMinimum",
+        "selectHasBulkDiscount",
+        "formatPrice"
       ],
-      "indexed": 1770243441612
+      "imports": [
+        "zustand",
+        "zustand/middleware"
+      ],
+      "indexed": 1771956585742
+    },
+    "/Users/kurtistodd/driveshaft-cable-site-3/src/pages/ProductListPage.jsx": {
+      "exports": [
+        "default",
+        "ProductListPage"
+      ],
+      "imports": [
+        "react-router-dom",
+        "../stores/cartStore"
+      ],
+      "indexed": 1771956608402
+    },
+    "/Users/kurtistodd/driveshaft-cable-site-3/src/pages/CartPage.jsx": {
+      "exports": [
+        "default",
+        "CartPage"
+      ],
+      "imports": [
+        "react",
+        "react-router-dom",
+        "../stores/cartStore"
+      ],
+      "indexed": 1771956629104
+    },
+    "/Users/kurtistodd/driveshaft-cable-site-3/src/pages/ProductDetailPage.jsx": {
+      "exports": [
+        "default",
+        "ProductDetailPage"
+      ],
+      "imports": [
+        "react-router-dom",
+        "../stores/cartStore"
+      ],
+      "indexed": 1771956648786
     }
   }
 }

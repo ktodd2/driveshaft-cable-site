@@ -14,7 +14,7 @@ Built with 5/32" galvanized steel cable and heavy-duty aluminum couplers, it pro
 
 No more makeshift solutions with bungee cords, zip ties, or chains. The K.Todd Driveshaft Cable installs in seconds and keeps that shaft exactly where it needs to be.`,
     short_description: 'Heavy-duty driveshaft safety cable for professional towing and recovery operations.',
-    price_cents: 7999,
+    price_cents: 300,
     bulk_threshold: 10,
     sku: 'KTDC-001',
     specs: {

@@ -1,12 +1,24 @@
-# Codebase Intelligence Summary
+# Codebase Intelligence
 
-Last updated: 2026-02-04T22:22:29.123Z
-Indexed files: 15
+**Indexed entities:** 27
+**Last updated:** 2026-02-24
 
-## Key Directories
+## Dependency Hotspots
 
-- `lib/`: Utility functions (1 files)
-- `pages/`: Page components (4 files)
-- `components/`: UI components (1 files)
+Files with most dependents (change carefully):
+1. `cartstore` (4 dependents)
+1. `cartstore|cartstore` (3 dependents)
+1. `supabase` (2 dependents)
+1. `/Users/kurtistodd/driveshaft-cable-site/src/App.jsx` (1 dependents) [component]
+1. `/Users/kurtistodd/driveshaft-cable-site/src/components/Customers.jsx` (1 dependents) [component]
 
-Total exports: 18
+## Module Types
+
+- **Component**: 18 files
+- **Config**: 3 files
+- **Hook**: 2 files
+- **Api**: 2 files
+- **Service**: 1 files
+- **Module**: 1 files
+
+**Relationships tracked:** 22

@@ -2,9 +2,9 @@ import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 
 // Pricing constants
-export const PRICE_PER_UNIT = 400 // $4.00 in cents
-export const BULK_PRICE_PER_UNIT = 350 // $3.50 in cents for 100+ units
-export const BULK_THRESHOLD = 100 // 100+ units gets bulk pricing
+export const PRICE_PER_UNIT = 300 // $3.00 in cents
+export const BULK_PRICE_PER_UNIT = 250 // $2.50 in cents for 50+ units
+export const BULK_THRESHOLD = 50 // 50+ units gets bulk pricing
 export const MIN_ORDER_QUANTITY = 10 // Minimum order is 10 units
 
 export const useCartStore = create(

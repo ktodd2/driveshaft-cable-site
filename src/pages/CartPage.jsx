@@ -256,11 +256,11 @@ function CartPage() {
                   <p className="text-gray-400 text-sm mb-3">Volume Pricing:</p>
                   <div className="space-y-2 text-sm">
                     <div className={`flex justify-between ${!hasBulkDiscount ? 'text-yellow-500' : 'text-gray-500'}`}>
-                      <span>10-99 units</span>
+                      <span>10-49 units</span>
                       <span>{formatPrice(PRICE_PER_UNIT)}/ea</span>
                     </div>
                     <div className={`flex justify-between ${hasBulkDiscount ? 'text-green-400' : 'text-gray-500'}`}>
-                      <span>100+ units</span>
+                      <span>50+ units</span>
                       <span>{formatPrice(BULK_PRICE_PER_UNIT)}/ea</span>
                     </div>
                   </div>
