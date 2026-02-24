@@ -10,6 +10,7 @@ function AdminOrdersPage() {
   const [selectedOrder, setSelectedOrder] = useState(null)
   const [copiedId, setCopiedId] = useState(null)
   const [statusFilter, setStatusFilter] = useState('all')
+  const [paymentFilter, setPaymentFilter] = useState('all')
 
   useEffect(() => {
     checkAuth()
@@ -87,9 +88,11 @@ ${addr.country}`
     }
   }
 
-  const filteredOrders = statusFilter === 'all'
-    ? orders
-    : orders.filter(o => o.status === statusFilter)
+  const filteredOrders = orders.filter(o => {
+    if (statusFilter !== 'all' && o.status !== statusFilter) return false
+    if (paymentFilter !== 'all' && o.payment_status !== paymentFilter) return false
+    return true
+  })
 
   const formatDate = (dateString) => {
     return new Date(dateString).toLocaleDateString('en-US', {
@@ -170,19 +173,30 @@ ${addr.country}`
               <h1 className="text-3xl font-industrial text-white">ORDERS</h1>
 
               {/* Status Filter */}
-              <div className="flex items-center gap-2">
-                <span className="text-gray-400 text-sm">Filter:</span>
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-gray-400 text-sm">Status:</span>
                 <select
                   value={statusFilter}
                   onChange={(e) => setStatusFilter(e.target.value)}
                   className="bg-gray-800 border border-gray-700 text-white px-3 py-2 text-sm rounded"
                 >
-                  <option value="all">All Orders</option>
+                  <option value="all">All</option>
                   <option value="pending">Pending</option>
                   <option value="confirmed">Confirmed</option>
                   <option value="shipped">Shipped</option>
                   <option value="delivered">Delivered</option>
                   <option value="cancelled">Cancelled</option>
+                </select>
+                <span className="text-gray-400 text-sm">Payment:</span>
+                <select
+                  value={paymentFilter}
+                  onChange={(e) => setPaymentFilter(e.target.value)}
+                  className="bg-gray-800 border border-gray-700 text-white px-3 py-2 text-sm rounded"
+                >
+                  <option value="all">All</option>
+                  <option value="paid">Paid</option>
+                  <option value="pending">Unpaid</option>
+                  <option value="failed">Failed</option>
                 </select>
                 <button
                   onClick={fetchOrders}
@@ -195,6 +209,24 @@ ${addr.country}`
                 </button>
               </div>
             </div>
+
+            {/* Payment Summary */}
+            {orders.length > 0 && (
+              <div className="grid grid-cols-3 gap-4 mb-6">
+                <div className="bg-green-500/10 border border-green-500/30 p-4">
+                  <div className="text-green-400 text-2xl font-industrial">{orders.filter(o => o.payment_status === 'paid').length}</div>
+                  <div className="text-gray-400 text-sm">Paid</div>
+                </div>
+                <div className="bg-yellow-500/10 border border-yellow-500/30 p-4">
+                  <div className="text-yellow-400 text-2xl font-industrial">{orders.filter(o => o.payment_status === 'pending' || !o.payment_status).length}</div>
+                  <div className="text-gray-400 text-sm">Unpaid</div>
+                </div>
+                <div className="bg-red-500/10 border border-red-500/30 p-4">
+                  <div className="text-red-400 text-2xl font-industrial">{orders.filter(o => o.payment_status === 'failed').length}</div>
+                  <div className="text-gray-400 text-sm">Failed</div>
+                </div>
+              </div>
+            )}
 
             {orders.length === 0 ? (
               /* Empty State */
@@ -236,9 +268,14 @@ ${addr.country}`
                         <span className="text-gray-400">{formatDate(order.created_at)}</span>
                         <span className="text-yellow-500 font-bold">{formatPrice(order.total_cents)}</span>
                       </div>
-                      <div className="mt-2 text-sm">
+                      <div className="mt-2 text-sm flex items-center gap-2">
+                        {order.payment_status !== 'paid' && (
+                          <svg className="w-4 h-4 text-red-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                          </svg>
+                        )}
                         <span className={getPaymentStatusColor(order.payment_status)}>
-                          Payment: {order.payment_status}
+                          Payment: {order.payment_status === 'paid' ? 'PAID' : order.payment_status === 'failed' ? 'FAILED' : 'UNPAID'}
                         </span>
                       </div>
                     </div>

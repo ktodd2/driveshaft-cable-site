@@ -12,6 +12,8 @@ const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY)
 function PaymentForm({ clientSecret, orderId, totalCents, onSuccess }) {
   const stripe = useStripe()
   const elements = useElements()
+  const navigate = useNavigate()
+  const { clearCart } = useCartStore()
   const [isProcessing, setIsProcessing] = useState(false)
   const [error, setError] = useState(null)
 
@@ -22,18 +24,35 @@ function PaymentForm({ clientSecret, orderId, totalCents, onSuccess }) {
     setIsProcessing(true)
     setError(null)
 
-    const { error: submitError } = await stripe.confirmPayment({
+    const { error: submitError, paymentIntent } = await stripe.confirmPayment({
       elements,
       confirmParams: {
         return_url: `${window.location.origin}/checkout/success?order=${orderId}`,
       },
+      redirect: 'if_required',
     })
 
     if (submitError) {
       setError(submitError.message)
       setIsProcessing(false)
+      return
     }
-    // If successful, Stripe redirects to return_url
+
+    // Payment succeeded without redirect — update order in Supabase
+    if (paymentIntent && paymentIntent.status === 'succeeded') {
+      await supabase
+        .from('orders')
+        .update({
+          payment_status: 'paid',
+          status: 'confirmed',
+          stripe_payment_intent_id: paymentIntent.id,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', orderId)
+
+      clearCart()
+      navigate(`/checkout/success?order=${orderId}&redirect_status=succeeded`)
+    }
   }
 
   return (
