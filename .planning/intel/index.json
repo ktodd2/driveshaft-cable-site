@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updated": 1771958703897,
+  "updated": 1771961431959,
   "files": {
     "/Users/kurtistodd/driveshaft-cable-site/postcss.config.js": {
       "exports": [
@@ -245,6 +245,20 @@
         "react"
       ],
       "indexed": 1771958698425
+    },
+    "/Users/kurtistodd/driveshaft-cable-site-3/src/pages/CheckoutPage.jsx": {
+      "exports": [
+        "default",
+        "CheckoutPage"
+      ],
+      "imports": [
+        "react-router-dom",
+        "@stripe/stripe-js",
+        "@stripe/react-stripe-js",
+        "../stores/cartStore",
+        "../lib/supabase"
+      ],
+      "indexed": 1771961431959
     }
   }
 }

@@ -258,13 +258,14 @@ function CheckoutPage() {
                           />
                         </div>
                         <div>
-                          <label htmlFor="phone" className="block text-gray-400 text-sm mb-1">Phone</label>
+                          <label htmlFor="phone" className="block text-gray-400 text-sm mb-1">Phone *</label>
                           <input
                             type="tel"
                             id="phone"
                             name="phone"
                             value={formData.phone}
                             onChange={handleChange}
+                            required
                             placeholder="(555) 555-5555"
                             className="w-full bg-gray-800 border border-gray-600 text-white px-4 py-3 focus:border-yellow-500 focus:outline-none"
                           />
