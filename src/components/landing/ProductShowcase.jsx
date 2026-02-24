@@ -15,88 +15,14 @@ function Product() {
         </div>
 
         <div className="grid lg:grid-cols-2 gap-12 items-center">
-          {/* Product image/illustration */}
+          {/* Product image */}
           <div className="relative">
-            <div className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-lg p-8 industrial-border">
-              <svg viewBox="0 0 500 350" className="w-full h-auto">
-                <defs>
-                  <linearGradient id="cableGrad2" x1="0%" y1="0%" x2="100%" y2="0%">
-                    <stop offset="0%" stopColor="#6B7280" />
-                    <stop offset="30%" stopColor="#9CA3AF" />
-                    <stop offset="70%" stopColor="#9CA3AF" />
-                    <stop offset="100%" stopColor="#6B7280" />
-                  </linearGradient>
-                  <linearGradient id="goldGrad2" x1="0%" y1="0%" x2="0%" y2="100%">
-                    <stop offset="0%" stopColor="#FFD700" />
-                    <stop offset="30%" stopColor="#F5C800" />
-                    <stop offset="70%" stopColor="#D4A017" />
-                    <stop offset="100%" stopColor="#B8860B" />
-                  </linearGradient>
-                  <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
-                    <feDropShadow dx="2" dy="4" stdDeviation="3" floodOpacity="0.4"/>
-                  </filter>
-                </defs>
-
-                {/* Background glow */}
-                <ellipse cx="250" cy="175" rx="180" ry="80" fill="rgba(255,215,0,0.05)" />
-
-                {/* Main cable arc */}
-                <path
-                  d="M 70 175 Q 250 80 430 175"
-                  stroke="url(#cableGrad2)"
-                  strokeWidth="12"
-                  fill="none"
-                  strokeLinecap="round"
-                  filter="url(#shadow)"
-                />
-
-                {/* Cable detail/texture */}
-                <path
-                  d="M 70 175 Q 250 80 430 175"
-                  stroke="#374151"
-                  strokeWidth="2"
-                  fill="none"
-                  strokeDasharray="6 12"
-                />
-
-                {/* Highlight */}
-                <path
-                  d="M 85 168 Q 250 78 415 168"
-                  stroke="rgba(255,255,255,0.4)"
-                  strokeWidth="3"
-                  fill="none"
-                />
-
-                {/* Left Aluminum Coupler */}
-                <g filter="url(#shadow)">
-                  <rect x="30" y="145" width="60" height="60" rx="6" fill="url(#goldGrad2)" />
-                  <rect x="38" y="153" width="44" height="44" rx="4" fill="#B8860B" />
-                  <ellipse cx="60" cy="175" rx="14" ry="12" fill="#1A1A1A" />
-                  <ellipse cx="60" cy="175" rx="8" ry="6" fill="#374151" />
-                </g>
-
-                {/* Right Aluminum Coupler */}
-                <g filter="url(#shadow)">
-                  <rect x="410" y="145" width="60" height="60" rx="6" fill="url(#goldGrad2)" />
-                  <rect x="418" y="153" width="44" height="44" rx="4" fill="#B8860B" />
-                  <ellipse cx="440" cy="175" rx="14" ry="12" fill="#1A1A1A" />
-                  <ellipse cx="440" cy="175" rx="8" ry="6" fill="#374151" />
-                </g>
-
-                {/* Dimension line - length */}
-                <line x1="60" y1="260" x2="440" y2="260" stroke="#FFD700" strokeWidth="1" />
-                <line x1="60" y1="250" x2="60" y2="270" stroke="#FFD700" strokeWidth="1" />
-                <line x1="440" y1="250" x2="440" y2="270" stroke="#FFD700" strokeWidth="1" />
-                <text x="250" y="285" textAnchor="middle" fill="#FFD700" fontSize="14" fontFamily="Oswald">1000mm (39")</text>
-
-                {/* Callout - cable */}
-                <line x1="250" y1="120" x2="250" y2="60" stroke="#9CA3AF" strokeWidth="1" strokeDasharray="4 2" />
-                <text x="250" y="50" textAnchor="middle" fill="#9CA3AF" fontSize="12" fontFamily="Oswald">5/32" STEEL CABLE</text>
-
-                {/* Callout - coupler */}
-                <line x1="60" y1="145" x2="60" y2="100" stroke="#FFD700" strokeWidth="1" strokeDasharray="4 2" />
-                <text x="60" y="90" textAnchor="middle" fill="#FFD700" fontSize="12" fontFamily="Oswald">ALUMINUM COUPLER</text>
-              </svg>
+            <div className="rounded-lg overflow-hidden industrial-border">
+              <img
+                src="/inuse.jpeg"
+                alt="K.Todd Driveshaft Cable installed on vehicle"
+                className="w-full h-auto object-cover"
+              />
             </div>
           </div>
 

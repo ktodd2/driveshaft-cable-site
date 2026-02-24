@@ -1,12 +1,12 @@
 # Codebase Intelligence Summary
 
-Last updated: 2026-02-24T18:18:46.393Z
-Indexed files: 18
+Last updated: 2026-02-24T18:45:03.898Z
+Indexed files: 21
 
 ## Key Directories
 
 - `lib/`: Utility functions (1 files)
 - `pages/`: Page components (7 files)
-- `components/`: UI components (1 files)
+- `components/`: UI components (4 files)
 
-Total exports: 32
+Total exports: 35

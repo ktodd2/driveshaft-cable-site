@@ -3,6 +3,7 @@ import { useParams, Link, useNavigate } from 'react-router-dom'
 import { useCartStore, formatPrice } from '../stores/cartStore'
 
 const productImages = [
+  '/inuse.jpeg',
   '/IMG_5491.jpeg',
   '/IMG_5492.jpeg',
   '/IMG_5493.jpeg',
@@ -28,7 +29,7 @@ No more makeshift solutions with bungee cords, zip ties, or chains. The K.Todd D
     specs: {
       'Cable Diameter': '5/32" (4mm)',
       'Total Length': '1000mm (39")',
-      'Working Load Limit': '2400 lb',
+      'Working Load Limit': '3000 lbs',
       'Cable Material': 'Galvanized Steel Wire',
       'Coupler Material': 'Yellow Anodized Aluminum',
       'End Construction': 'Crimped Loops',
@@ -198,37 +199,14 @@ function ProductDetailPage() {
                 </div>
               </div>
 
-              {/* Bulk Order Notice */}
-              {isBulkQuantity && (
-                <div className="bg-yellow-500/10 border border-yellow-500 p-4 mb-6">
-                  <div className="flex items-start gap-3">
-                    <svg className="w-5 h-5 text-yellow-500 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                    <div>
-                      <p className="text-white font-bold">Volume Order Detected</p>
-                      <p className="text-gray-300 text-sm">Orders of 10+ units qualify for volume pricing. Click "Request Quote" to get a custom price.</p>
-                    </div>
-                  </div>
-                </div>
-              )}
-
               {/* Action Buttons */}
               <div className="flex flex-col sm:flex-row gap-4 mb-8">
-                {isBulkQuantity ? (
-                  <Link to="/quote" className="btn-primary text-center flex-1">
-                    Request Quote
-                  </Link>
-                ) : (
-                  <>
-                    <button onClick={handleAddToCart} className="flex-1 border-2 border-yellow-500 text-yellow-500 hover:bg-yellow-500 hover:text-black font-bold py-3 px-8 uppercase tracking-wider transition-all duration-300 font-industrial">
-                      Add to Cart
-                    </button>
-                    <button onClick={handleBuyNow} className="btn-primary flex-1">
-                      Buy Now
-                    </button>
-                  </>
-                )}
+                <button onClick={handleAddToCart} className="flex-1 border-2 border-yellow-500 text-yellow-500 hover:bg-yellow-500 hover:text-black font-bold py-3 px-8 uppercase tracking-wider transition-all duration-300 font-industrial">
+                  Add to Cart
+                </button>
+                <button onClick={handleBuyNow} className="btn-primary flex-1">
+                  Buy Now
+                </button>
               </div>
 
               {/* Quick Specs */}

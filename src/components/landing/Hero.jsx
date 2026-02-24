@@ -1,4 +1,5 @@
 import React from 'react'
+import { Link } from 'react-router-dom'
 
 function Hero() {
   return (
@@ -38,9 +39,9 @@ function Hero() {
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
-              <a href="#quote" className="btn-primary text-lg">
-                Request Quote
-              </a>
+              <Link to="/products" className="btn-primary text-lg">
+                Shop Now
+              </Link>
               <a href="#product" className="border-2 border-yellow-500 text-yellow-500 hover:bg-yellow-500 hover:text-black font-bold py-3 px-8 uppercase tracking-wider transition-all duration-300 font-industrial">
                 Learn More
               </a>
@@ -57,7 +58,7 @@ function Hero() {
                 <div className="text-gray-500 text-sm uppercase tracking-wider">Length</div>
               </div>
               <div>
-                <div className="text-yellow-500 text-2xl sm:text-3xl font-industrial">2400 lb</div>
+                <div className="text-yellow-500 text-2xl sm:text-3xl font-industrial">3000 lbs</div>
                 <div className="text-gray-500 text-sm uppercase tracking-wider">Working Limit</div>
               </div>
             </div>
@@ -65,63 +66,12 @@ function Hero() {
 
           {/* Product Visual */}
           <div className="relative">
-            <div className="relative bg-gradient-to-br from-gray-800 to-gray-900 rounded-lg p-8 industrial-border">
-              {/* Product illustration placeholder */}
-              <svg viewBox="0 0 400 300" className="w-full h-auto">
-                {/* Cable body */}
-                <defs>
-                  <linearGradient id="cableGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                    <stop offset="0%" stopColor="#6B7280" />
-                    <stop offset="50%" stopColor="#9CA3AF" />
-                    <stop offset="100%" stopColor="#6B7280" />
-                  </linearGradient>
-                  <linearGradient id="goldGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-                    <stop offset="0%" stopColor="#FFD700" />
-                    <stop offset="50%" stopColor="#D4A017" />
-                    <stop offset="100%" stopColor="#B8860B" />
-                  </linearGradient>
-                </defs>
-
-                {/* Steel cable */}
-                <path
-                  d="M 80 150 Q 200 100 320 150"
-                  stroke="url(#cableGradient)"
-                  strokeWidth="8"
-                  fill="none"
-                  strokeLinecap="round"
-                />
-
-                {/* Cable texture lines */}
-                <path
-                  d="M 80 150 Q 200 100 320 150"
-                  stroke="#4B5563"
-                  strokeWidth="2"
-                  fill="none"
-                  strokeDasharray="4 8"
-                  strokeLinecap="round"
-                />
-
-                {/* Left coupler */}
-                <rect x="50" y="130" width="45" height="40" rx="4" fill="url(#goldGradient)" />
-                <rect x="55" y="135" width="35" height="30" rx="2" fill="#B8860B" />
-                <ellipse cx="72" cy="150" rx="10" ry="8" fill="#1A1A1A" />
-
-                {/* Right coupler */}
-                <rect x="305" y="130" width="45" height="40" rx="4" fill="url(#goldGradient)" />
-                <rect x="310" y="135" width="35" height="30" rx="2" fill="#B8860B" />
-                <ellipse cx="328" cy="150" rx="10" ry="8" fill="#1A1A1A" />
-
-                {/* Highlight shine */}
-                <path
-                  d="M 90 145 Q 200 95 310 145"
-                  stroke="rgba(255,255,255,0.3)"
-                  strokeWidth="2"
-                  fill="none"
-                  strokeLinecap="round"
-                />
-              </svg>
-
-              {/* Labels */}
+            <div className="relative rounded-lg overflow-hidden industrial-border">
+              <img
+                src="/inuse.jpeg"
+                alt="K.Todd Driveshaft Cable installed on vehicle"
+                className="w-full h-auto object-cover"
+              />
               <div className="absolute top-4 right-4 bg-yellow-500 text-black px-3 py-1 font-industrial text-sm">
                 MADE IN USA
               </div>

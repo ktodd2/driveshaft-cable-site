@@ -4,7 +4,7 @@ function Specs() {
   const specs = [
     { label: 'Cable Diameter', value: '5/32"', detail: 'Steel wire cable' },
     { label: 'Total Length', value: '1000mm', detail: '39 inches' },
-    { label: 'Working Load Limit', value: '2400 lb', detail: 'Heavy-duty rated' },
+    { label: 'Working Load Limit', value: '3000 lbs', detail: 'Heavy-duty rated' },
     { label: 'End Construction', value: 'Crimped Loops', detail: 'Secure attachment' },
     { label: 'Coupler Material', value: 'Aluminum', detail: 'Yellow anodized finish' },
     { label: 'Cable Material', value: 'Steel Wire', detail: 'Galvanized for corrosion resistance' },
