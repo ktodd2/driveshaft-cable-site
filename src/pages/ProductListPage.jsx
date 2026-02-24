@@ -43,28 +43,12 @@ function ProductCard({ product }) {
     <div className="bg-gray-800/50 border border-gray-700 hover:border-yellow-500 transition-all duration-300 group">
       {/* Product Image */}
       <Link to={`/products/${product.slug}`} className="block">
-        <div className="aspect-square bg-gradient-to-br from-gray-800 to-gray-900 p-8 relative overflow-hidden">
-          {/* SVG Illustration */}
-          <svg viewBox="0 0 400 300" className="w-full h-full">
-            <defs>
-              <linearGradient id="cableGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-                <stop offset="0%" stopColor="#6B7280" />
-                <stop offset="50%" stopColor="#9CA3AF" />
-                <stop offset="100%" stopColor="#6B7280" />
-              </linearGradient>
-              <linearGradient id="goldGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-                <stop offset="0%" stopColor="#FFD700" />
-                <stop offset="50%" stopColor="#D4A017" />
-                <stop offset="100%" stopColor="#B8860B" />
-              </linearGradient>
-            </defs>
-            <path d="M 80 150 Q 200 100 320 150" stroke="url(#cableGrad)" strokeWidth="8" fill="none" strokeLinecap="round" />
-            <rect x="50" y="130" width="45" height="40" rx="4" fill="url(#goldGrad)" />
-            <ellipse cx="72" cy="150" rx="10" ry="8" fill="#1A1A1A" />
-            <rect x="305" y="130" width="45" height="40" rx="4" fill="url(#goldGrad)" />
-            <ellipse cx="328" cy="150" rx="10" ry="8" fill="#1A1A1A" />
-          </svg>
-
+        <div className="aspect-square bg-gray-900 relative overflow-hidden">
+          <img
+            src="/IMG_5493.jpeg"
+            alt={product.name}
+            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+          />
           {/* Made in USA badge */}
           <div className="absolute top-4 right-4 bg-yellow-500 text-black px-3 py-1 font-industrial text-xs">
             MADE IN USA

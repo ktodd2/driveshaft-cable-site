@@ -2,6 +2,14 @@ import React, { useState } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
 import { useCartStore, formatPrice } from '../stores/cartStore'
 
+const productImages = [
+  '/IMG_5491.jpeg',
+  '/IMG_5492.jpeg',
+  '/IMG_5493.jpeg',
+  '/IMG_5490.jpeg',
+  '/IMG_5489.jpeg',
+]
+
 // Hardcoded product data - will come from Supabase later
 const products = {
   'driveshaft-cable': {
@@ -51,6 +59,7 @@ function ProductDetailPage() {
   const { slug } = useParams()
   const navigate = useNavigate()
   const [quantity, setQuantity] = useState(1)
+  const [selectedImage, setSelectedImage] = useState(0)
   const addItem = useCartStore((state) => state.addItem)
 
   const product = products[slug]
@@ -108,46 +117,36 @@ function ProductDetailPage() {
       <section className="py-12 bg-ktodd-dark">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid lg:grid-cols-2 gap-12">
-            {/* Product Image */}
-            <div className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-lg p-8 relative">
-              <svg viewBox="0 0 500 350" className="w-full h-auto">
-                <defs>
-                  <linearGradient id="cableGrad2" x1="0%" y1="0%" x2="100%" y2="0%">
-                    <stop offset="0%" stopColor="#6B7280" />
-                    <stop offset="30%" stopColor="#9CA3AF" />
-                    <stop offset="70%" stopColor="#9CA3AF" />
-                    <stop offset="100%" stopColor="#6B7280" />
-                  </linearGradient>
-                  <linearGradient id="goldGrad2" x1="0%" y1="0%" x2="0%" y2="100%">
-                    <stop offset="0%" stopColor="#FFD700" />
-                    <stop offset="30%" stopColor="#F5C800" />
-                    <stop offset="70%" stopColor="#D4A017" />
-                    <stop offset="100%" stopColor="#B8860B" />
-                  </linearGradient>
-                </defs>
-                <ellipse cx="250" cy="175" rx="180" ry="80" fill="rgba(255,215,0,0.05)" />
-                <path d="M 70 175 Q 250 80 430 175" stroke="url(#cableGrad2)" strokeWidth="12" fill="none" strokeLinecap="round" />
-                <path d="M 70 175 Q 250 80 430 175" stroke="#374151" strokeWidth="2" fill="none" strokeDasharray="6 12" />
-                <path d="M 85 168 Q 250 78 415 168" stroke="rgba(255,255,255,0.4)" strokeWidth="3" fill="none" />
-                <g>
-                  <rect x="30" y="145" width="60" height="60" rx="6" fill="url(#goldGrad2)" />
-                  <rect x="38" y="153" width="44" height="44" rx="4" fill="#B8860B" />
-                  <ellipse cx="60" cy="175" rx="14" ry="12" fill="#1A1A1A" />
-                  <ellipse cx="60" cy="175" rx="8" ry="6" fill="#374151" />
-                </g>
-                <g>
-                  <rect x="410" y="145" width="60" height="60" rx="6" fill="url(#goldGrad2)" />
-                  <rect x="418" y="153" width="44" height="44" rx="4" fill="#B8860B" />
-                  <ellipse cx="440" cy="175" rx="14" ry="12" fill="#1A1A1A" />
-                  <ellipse cx="440" cy="175" rx="8" ry="6" fill="#374151" />
-                </g>
-                <line x1="60" y1="260" x2="440" y2="260" stroke="#FFD700" strokeWidth="1" />
-                <line x1="60" y1="250" x2="60" y2="270" stroke="#FFD700" strokeWidth="1" />
-                <line x1="440" y1="250" x2="440" y2="270" stroke="#FFD700" strokeWidth="1" />
-                <text x="250" y="285" textAnchor="middle" fill="#FFD700" fontSize="14" fontFamily="Oswald">1000mm (39")</text>
-              </svg>
-              <div className="absolute top-4 right-4 bg-yellow-500 text-black px-3 py-1 font-industrial text-sm">
-                MADE IN USA
+            {/* Product Image Gallery */}
+            <div className="flex flex-col gap-3">
+              {/* Main Image */}
+              <div className="relative bg-gray-900 rounded-lg overflow-hidden aspect-[4/3]">
+                <img
+                  src={productImages[selectedImage]}
+                  alt={`${product.name} - view ${selectedImage + 1}`}
+                  className="w-full h-full object-cover"
+                />
+                <div className="absolute top-4 right-4 bg-yellow-500 text-black px-3 py-1 font-industrial text-sm">
+                  MADE IN USA
+                </div>
+              </div>
+              {/* Thumbnails */}
+              <div className="flex gap-2">
+                {productImages.map((img, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => setSelectedImage(idx)}
+                    className={`flex-1 aspect-square overflow-hidden rounded border-2 transition-colors ${
+                      selectedImage === idx ? 'border-yellow-500' : 'border-gray-700 hover:border-gray-500'
+                    }`}
+                  >
+                    <img
+                      src={img}
+                      alt={`${product.name} thumbnail ${idx + 1}`}
+                      className="w-full h-full object-cover"
+                    />
+                  </button>
+                ))}
               </div>
             </div>
 

@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updated": 1771956648786,
+  "updated": 1771957126392,
   "files": {
     "/Users/kurtistodd/driveshaft-cable-site/postcss.config.js": {
       "exports": [
@@ -190,7 +190,7 @@
         "react-router-dom",
         "../stores/cartStore"
       ],
-      "indexed": 1771956608402
+      "indexed": 1771957126392
     },
     "/Users/kurtistodd/driveshaft-cable-site-3/src/pages/CartPage.jsx": {
       "exports": [
@@ -213,7 +213,7 @@
         "react-router-dom",
         "../stores/cartStore"
       ],
-      "indexed": 1771956648786
+      "indexed": 1771957112195
     }
   }
 }
