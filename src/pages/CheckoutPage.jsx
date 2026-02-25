@@ -4,7 +4,6 @@ import { loadStripe } from '@stripe/stripe-js'
 import { Elements, PaymentElement, useStripe, useElements } from '@stripe/react-stripe-js'
 import { useCartStore, selectTotalItems, selectSubtotal, selectPricePerUnit, formatPrice } from '../stores/cartStore'
 import { supabase } from '../lib/supabase'
-import { getProductById } from '../lib/inventory'
 
 // Initialize Stripe
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY)
@@ -125,19 +124,6 @@ function CheckoutPage() {
     setOrderError(null)
 
     try {
-      // Validate stock availability for all items
-      for (const item of items) {
-        const product = await getProductById(item.productId)
-        if (!product) {
-          throw new Error(`Product ${item.name} not found`)
-        }
-        if (product.stock_quantity < item.quantity) {
-          throw new Error(
-            `Insufficient stock for ${item.name}. Only ${product.stock_quantity} units available.`
-          )
-        }
-      }
-
       // 1. Create order in Supabase
       const { data: order, error: orderError } = await supabase
         .from('orders')
