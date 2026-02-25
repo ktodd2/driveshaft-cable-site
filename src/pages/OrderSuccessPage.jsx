@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
+import { deductInventory } from '../lib/inventory'
 
 function OrderSuccessPage() {
   const [searchParams] = useSearchParams()
@@ -14,6 +15,25 @@ function OrderSuccessPage() {
 
     const updatePaymentStatus = async () => {
       if (redirectStatus === 'succeeded') {
+        // First, get the order details with items
+        const { data: orderData, error: orderError } = await supabase
+          .from('orders')
+          .select('*, items:order_items(*)')
+          .eq('id', orderId)
+          .single()
+
+        if (orderError) {
+          console.error('Error fetching order:', orderError)
+          setPaymentStatus('error')
+          return
+        }
+
+        // Check if payment already processed (to avoid double-deduction)
+        if (orderData.payment_status === 'paid') {
+          setPaymentStatus('paid')
+          return
+        }
+
         // Update order payment status to paid
         const { error } = await supabase
           .from('orders')
@@ -25,6 +45,19 @@ function OrderSuccessPage() {
           .eq('id', orderId)
 
         if (!error) {
+          // Deduct inventory for each item in the order
+          try {
+            if (orderData.items && orderData.items.length > 0) {
+              for (const item of orderData.items) {
+                await deductInventory(item.product_id, item.quantity, orderId)
+              }
+              console.log('Inventory deducted successfully for order:', orderId)
+            }
+          } catch (inventoryError) {
+            console.error('Error deducting inventory:', inventoryError)
+            // Don't fail the order success page if inventory deduction fails
+            // Admin can manually adjust if needed
+          }
           setPaymentStatus('paid')
         } else {
           console.error('Error updating payment status:', error)

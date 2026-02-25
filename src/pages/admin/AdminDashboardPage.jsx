@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
+import { getAllProductsAdmin, getLowStockProducts } from '../../lib/inventory'
 
 function AdminDashboardPage() {
   const navigate = useNavigate()
@@ -9,7 +10,9 @@ function AdminDashboardPage() {
   const [stats, setStats] = useState({
     pendingQuotes: 0,
     totalOrders: 0,
-    recentOrders: []
+    recentOrders: [],
+    totalStock: 0,
+    lowStockCount: 0
   })
 
   useEffect(() => {
@@ -28,16 +31,29 @@ function AdminDashboardPage() {
   }
 
   const loadStats = async () => {
-    // Load pending quotes count
-    const { count: quotesCount } = await supabase
-      .from('quote_requests')
-      .select('*', { count: 'exact', head: true })
-      .eq('status', 'new')
+    try {
+      // Load pending quotes count
+      const { count: quotesCount } = await supabase
+        .from('quote_requests')
+        .select('*', { count: 'exact', head: true })
+        .eq('status', 'new')
 
-    setStats(prev => ({
-      ...prev,
-      pendingQuotes: quotesCount || 0
-    }))
+      // Load products for stock info
+      const products = await getAllProductsAdmin()
+      const totalStock = products.reduce((sum, p) => sum + (p.stock_quantity || 0), 0)
+
+      // Load low stock products
+      const lowStockProducts = await getLowStockProducts()
+
+      setStats(prev => ({
+        ...prev,
+        pendingQuotes: quotesCount || 0,
+        totalStock,
+        lowStockCount: lowStockProducts.length
+      }))
+    } catch (err) {
+      console.error('Error loading stats:', err)
+    }
   }
 
   const handleSignOut = async () => {
@@ -166,17 +182,19 @@ function AdminDashboardPage() {
 
               <div className="bg-gray-800/50 border border-gray-700 p-6">
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-gray-400 text-sm">Stock Level</span>
+                  <span className="text-gray-400 text-sm">Total Stock</span>
                   <svg className="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
                   </svg>
                 </div>
-                <div className="text-3xl font-industrial text-white">--</div>
-                <span className="text-sm text-gray-400">Coming soon</span>
+                <div className="text-3xl font-industrial text-white">{stats.totalStock}</div>
+                <Link to="/admin/inventory" className="text-sm text-gray-400 hover:text-yellow-500 mt-2 inline-block">
+                  Manage inventory →
+                </Link>
               </div>
             </div>
 
-            {/* Quick Actions */}
+            {/* Quick Actions & Alerts */}
             <div className="grid md:grid-cols-2 gap-6">
               <div className="bg-gray-800/50 border border-gray-700 p-6">
                 <h2 className="text-xl font-industrial text-yellow-500 mb-4">QUICK ACTIONS</h2>
@@ -193,6 +211,12 @@ function AdminDashboardPage() {
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                     </svg>
                   </Link>
+                  <Link to="/admin/inventory" className="flex items-center justify-between p-3 bg-gray-800 hover:bg-gray-700 transition-colors rounded">
+                    <span className="text-white">Manage Inventory</span>
+                    <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    </svg>
+                  </Link>
                   <Link to="/" target="_blank" className="flex items-center justify-between p-3 bg-gray-800 hover:bg-gray-700 transition-colors rounded">
                     <span className="text-white">View Live Website</span>
                     <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -202,29 +226,41 @@ function AdminDashboardPage() {
                 </div>
               </div>
 
+              {/* Stock Alerts */}
               <div className="bg-gray-800/50 border border-gray-700 p-6">
-                <h2 className="text-xl font-industrial text-yellow-500 mb-4">SETUP REQUIRED</h2>
+                <h2 className="text-xl font-industrial text-yellow-500 mb-4">STOCK ALERTS</h2>
                 <div className="space-y-3">
-                  <div className="p-3 bg-yellow-500/10 border border-yellow-500/50 rounded">
-                    <div className="flex items-center gap-2 text-yellow-500 mb-1">
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                      </svg>
-                      <span className="font-bold">Stripe Integration</span>
+                  {stats.lowStockCount > 0 ? (
+                    <div className="p-3 bg-yellow-500/10 border border-yellow-500/50 rounded">
+                      <div className="flex items-center gap-2 text-yellow-500 mb-1">
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                        </svg>
+                        <span className="font-bold">Low Stock Warning</span>
+                      </div>
+                      <p className="text-gray-400 text-sm mb-2">{stats.lowStockCount} product(s) below threshold</p>
+                      <Link to="/admin/inventory" className="text-yellow-500 hover:text-yellow-400 text-sm underline">
+                        View details →
+                      </Link>
                     </div>
-                    <p className="text-gray-400 text-sm">Configure Stripe to enable payment processing.</p>
-                  </div>
-                  <div className="p-3 bg-blue-500/10 border border-blue-500/50 rounded">
-                    <div className="flex items-center gap-2 text-blue-400 mb-1">
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
-                      <span className="font-bold">Database Tables</span>
+                  ) : (
+                    <div className="p-3 bg-green-500/10 border border-green-500/50 rounded">
+                      <div className="flex items-center gap-2 text-green-400 mb-1">
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <span className="font-bold">All Stock Levels Good</span>
+                      </div>
+                      <p className="text-gray-400 text-sm">No low stock alerts at this time.</p>
                     </div>
-                    <p className="text-gray-400 text-sm">Run the SQL schema to create products and orders tables.</p>
+                  )}
+                  <div className="p-3 bg-gray-800 rounded">
+                    <div className="text-gray-300 text-sm mb-1">Total Inventory Value</div>
+                    <div className="text-xl font-industrial text-white">{stats.totalStock} units</div>
                   </div>
                 </div>
               </div>
+
             </div>
           </div>
         </main>
