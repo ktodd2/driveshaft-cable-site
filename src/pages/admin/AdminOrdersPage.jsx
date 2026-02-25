@@ -14,6 +14,7 @@ function AdminOrdersPage() {
   const [trackingNumber, setTrackingNumber] = useState('')
   const [trackingCarrier, setTrackingCarrier] = useState('ups')
   const [savingTracking, setSavingTracking] = useState(false)
+  const [trackingEmailStatus, setTrackingEmailStatus] = useState(null) // 'sent', 'failed', null
 
   useEffect(() => {
     checkAuth()
@@ -69,6 +70,7 @@ function AdminOrdersPage() {
   const saveTracking = async (orderId) => {
     if (!trackingNumber.trim()) return
     setSavingTracking(true)
+    setTrackingEmailStatus(null)
     const { error } = await supabase
       .from('orders')
       .update({
@@ -83,6 +85,23 @@ function AdminOrdersPage() {
       const updated = { ...selectedOrder, tracking_number: trackingNumber.trim(), tracking_carrier: trackingCarrier, status: 'shipped' }
       setSelectedOrder(updated)
       setOrders(orders.map(o => o.id === orderId ? { ...o, tracking_number: trackingNumber.trim(), tracking_carrier: trackingCarrier, status: 'shipped' } : o))
+
+      // Send tracking email to customer
+      try {
+        const { error: emailError } = await supabase.functions.invoke('send-tracking-email', {
+          body: {
+            customerEmail: selectedOrder.email,
+            customerName: selectedOrder.name,
+            trackingNumber: trackingNumber.trim(),
+            trackingCarrier: trackingCarrier,
+            orderId: orderId,
+          }
+        })
+        setTrackingEmailStatus(emailError ? 'failed' : 'sent')
+      } catch {
+        setTrackingEmailStatus('failed')
+      }
+
       setTrackingNumber('')
     }
     setSavingTracking(false)
@@ -458,30 +477,44 @@ ${addr.country}`
                           </div>
                         ) : (
                           <div className="space-y-3">
-                            <div className="flex gap-2">
-                              <select
-                                value={trackingCarrier}
-                                onChange={(e) => setTrackingCarrier(e.target.value)}
-                                className="bg-gray-800 border border-gray-700 text-white px-3 py-2 text-sm rounded"
-                              >
-                                <option value="ups">UPS</option>
-                                <option value="usps">USPS</option>
-                              </select>
-                              <input
-                                type="text"
-                                value={trackingNumber}
-                                onChange={(e) => setTrackingNumber(e.target.value)}
-                                placeholder="Enter tracking number"
-                                className="flex-1 bg-gray-800 border border-gray-700 text-white px-3 py-2 text-sm rounded focus:border-yellow-500 focus:outline-none"
-                              />
-                            </div>
+                            <select
+                              value={trackingCarrier}
+                              onChange={(e) => setTrackingCarrier(e.target.value)}
+                              className="w-full bg-gray-800 border border-gray-700 text-white px-3 py-3 text-sm rounded"
+                            >
+                              <option value="ups">UPS</option>
+                              <option value="usps">USPS</option>
+                            </select>
+                            <input
+                              type="text"
+                              value={trackingNumber}
+                              onChange={(e) => setTrackingNumber(e.target.value)}
+                              placeholder="Enter tracking number"
+                              className="w-full bg-gray-800 border border-gray-700 text-white px-4 py-4 text-base rounded focus:border-yellow-500 focus:outline-none font-mono"
+                            />
                             <button
                               onClick={() => saveTracking(selectedOrder.id)}
                               disabled={!trackingNumber.trim() || savingTracking}
-                              className="w-full bg-yellow-500 hover:bg-yellow-400 text-black px-4 py-2 text-sm font-bold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                              className="w-full bg-yellow-500 hover:bg-yellow-400 text-black px-4 py-3 text-sm font-bold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                             >
-                              {savingTracking ? 'Saving...' : 'Save & Mark Shipped'}
+                              {savingTracking ? 'Saving & Emailing Customer...' : 'Save & Email Customer'}
                             </button>
+                            {trackingEmailStatus === 'sent' && (
+                              <div className="flex items-center gap-2 text-green-400 text-sm">
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                </svg>
+                                Tracking email sent to customer
+                              </div>
+                            )}
+                            {trackingEmailStatus === 'failed' && (
+                              <div className="flex items-center gap-2 text-red-400 text-sm">
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                </svg>
+                                Tracking saved but email failed to send
+                              </div>
+                            )}
                           </div>
                         )}
                       </div>

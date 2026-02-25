@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updated": 1771978232528,
+  "updated": 1771978986017,
   "files": {
     "/Users/kurtistodd/driveshaft-cable-site/postcss.config.js": {
       "exports": [
@@ -281,7 +281,14 @@
         "../../lib/supabase",
         "../../stores/cartStore"
       ],
-      "indexed": 1771978232528
+      "indexed": 1771978952186
+    },
+    "/Users/kurtistodd/driveshaft-cable-site-3/supabase/functions/send-tracking-email/index.ts": {
+      "exports": [],
+      "imports": [
+        "https://deno.land/std@0.168.0/http/server.ts"
+      ],
+      "indexed": 1771978986017
     }
   }
 }
