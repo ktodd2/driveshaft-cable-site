@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updated": 1771978034286,
+  "updated": 1771978232528,
   "files": {
     "/Users/kurtistodd/driveshaft-cable-site/postcss.config.js": {
       "exports": [
@@ -281,7 +281,7 @@
         "../../lib/supabase",
         "../../stores/cartStore"
       ],
-      "indexed": 1771966621929
+      "indexed": 1771978232528
     }
   }
 }

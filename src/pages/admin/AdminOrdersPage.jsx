@@ -11,6 +11,9 @@ function AdminOrdersPage() {
   const [copiedId, setCopiedId] = useState(null)
   const [statusFilter, setStatusFilter] = useState('all')
   const [paymentFilter, setPaymentFilter] = useState('all')
+  const [trackingNumber, setTrackingNumber] = useState('')
+  const [trackingCarrier, setTrackingCarrier] = useState('ups')
+  const [savingTracking, setSavingTracking] = useState(false)
 
   useEffect(() => {
     checkAuth()
@@ -52,6 +55,37 @@ function AdminOrdersPage() {
         setSelectedOrder({ ...selectedOrder, status: newStatus })
       }
     }
+  }
+
+  const getTrackingUrl = (carrier, number) => {
+    if (!number) return null
+    switch (carrier) {
+      case 'ups': return `https://www.ups.com/track?tracknum=${number}`
+      case 'usps': return `https://tools.usps.com/go/TrackConfirmAction?tLabels=${number}`
+      default: return null
+    }
+  }
+
+  const saveTracking = async (orderId) => {
+    if (!trackingNumber.trim()) return
+    setSavingTracking(true)
+    const { error } = await supabase
+      .from('orders')
+      .update({
+        tracking_number: trackingNumber.trim(),
+        tracking_carrier: trackingCarrier,
+        status: 'shipped',
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', orderId)
+
+    if (!error) {
+      const updated = { ...selectedOrder, tracking_number: trackingNumber.trim(), tracking_carrier: trackingCarrier, status: 'shipped' }
+      setSelectedOrder(updated)
+      setOrders(orders.map(o => o.id === orderId ? { ...o, tracking_number: trackingNumber.trim(), tracking_carrier: trackingCarrier, status: 'shipped' } : o))
+      setTrackingNumber('')
+    }
+    setSavingTracking(false)
   }
 
   const copyAddress = (order) => {
@@ -277,6 +311,14 @@ ${addr.country}`
                         <span className={getPaymentStatusColor(order.payment_status)}>
                           Payment: {order.payment_status === 'paid' ? 'PAID' : order.payment_status === 'failed' ? 'FAILED' : 'UNPAID'}
                         </span>
+                        {order.tracking_number && (
+                          <span className="ml-auto text-blue-400 text-xs flex items-center gap-1">
+                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8" />
+                            </svg>
+                            {order.tracking_carrier?.toUpperCase()}
+                          </span>
+                        )}
                       </div>
                     </div>
                   ))}
@@ -379,6 +421,69 @@ ${addr.country}`
                           <span className="text-white">Total</span>
                           <span className="text-yellow-500">{formatPrice(selectedOrder.total_cents)}</span>
                         </div>
+                      </div>
+
+                      {/* Tracking */}
+                      <div className="mb-6 pb-6 border-b border-gray-700">
+                        <h3 className="text-sm font-bold text-gray-400 mb-3">TRACKING</h3>
+                        {selectedOrder.tracking_number ? (
+                          <div className="space-y-3">
+                            <div className="bg-gray-900 p-3 flex items-center justify-between">
+                              <div>
+                                <span className="text-gray-400 text-xs uppercase">{selectedOrder.tracking_carrier?.toUpperCase()}</span>
+                                <p className="text-white font-mono text-sm">{selectedOrder.tracking_number}</p>
+                              </div>
+                              <a
+                                href={getTrackingUrl(selectedOrder.tracking_carrier, selectedOrder.tracking_number)}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="bg-yellow-500 hover:bg-yellow-400 text-black px-4 py-2 text-sm font-bold transition-colors flex items-center gap-2"
+                              >
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                                </svg>
+                                Track
+                              </a>
+                            </div>
+                            <button
+                              onClick={() => {
+                                setTrackingNumber(selectedOrder.tracking_number)
+                                setTrackingCarrier(selectedOrder.tracking_carrier || 'ups')
+                                setSelectedOrder({ ...selectedOrder, tracking_number: null })
+                              }}
+                              className="text-gray-500 hover:text-yellow-500 text-xs transition-colors"
+                            >
+                              Update tracking
+                            </button>
+                          </div>
+                        ) : (
+                          <div className="space-y-3">
+                            <div className="flex gap-2">
+                              <select
+                                value={trackingCarrier}
+                                onChange={(e) => setTrackingCarrier(e.target.value)}
+                                className="bg-gray-800 border border-gray-700 text-white px-3 py-2 text-sm rounded"
+                              >
+                                <option value="ups">UPS</option>
+                                <option value="usps">USPS</option>
+                              </select>
+                              <input
+                                type="text"
+                                value={trackingNumber}
+                                onChange={(e) => setTrackingNumber(e.target.value)}
+                                placeholder="Enter tracking number"
+                                className="flex-1 bg-gray-800 border border-gray-700 text-white px-3 py-2 text-sm rounded focus:border-yellow-500 focus:outline-none"
+                              />
+                            </div>
+                            <button
+                              onClick={() => saveTracking(selectedOrder.id)}
+                              disabled={!trackingNumber.trim() || savingTracking}
+                              className="w-full bg-yellow-500 hover:bg-yellow-400 text-black px-4 py-2 text-sm font-bold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                              {savingTracking ? 'Saving...' : 'Save & Mark Shipped'}
+                            </button>
+                          </div>
+                        )}
                       </div>
 
                       {/* Status Update */}
