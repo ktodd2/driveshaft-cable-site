@@ -1,15 +1,22 @@
 -- ============================================
--- INVENTORY MANAGEMENT SETUP
+-- INVENTORY MANAGEMENT FUNCTIONS
 -- ============================================
--- Run this SQL in your Supabase SQL Editor to set up inventory management
+-- Run this SQL AFTER running the main database setup from SUPABASE_SETUP.md
+-- This adds the inventory management functions and policies
 
 -- ============================================
 -- 1. ADD INVENTORY TRACKING FIELDS (if not exists)
 -- ============================================
 ALTER TABLE products
-ADD COLUMN IF NOT EXISTS stock_quantity INTEGER NOT NULL DEFAULT 0,
 ADD COLUMN IF NOT EXISTS low_stock_threshold INTEGER DEFAULT 100,
 ADD COLUMN IF NOT EXISTS track_inventory BOOLEAN DEFAULT true;
+
+-- Update existing product with inventory settings
+UPDATE products
+SET 
+  low_stock_threshold = 100,
+  track_inventory = true
+WHERE sku = 'KTDC-001' AND low_stock_threshold IS NULL;
 
 -- ============================================
 -- 2. CREATE FUNCTION TO DEDUCT INVENTORY
@@ -214,31 +221,6 @@ CREATE POLICY "Admins can read inventory log" ON inventory_log
   USING (EXISTS (SELECT 1 FROM admin_users WHERE id = auth.uid() AND is_active = true));
 
 -- ============================================
--- 8. SET INITIAL STOCK FOR DRIVESHAFT CABLE
+-- DONE! Your inventory management functions are ready.
 -- ============================================
--- Update the existing product with 500 units
-UPDATE products
-SET 
-  stock_quantity = 500,
-  low_stock_threshold = 100,
-  track_inventory = true
-WHERE sku = 'KTDC-001';
-
--- Log the initial inventory
-INSERT INTO inventory_log (
-  product_id,
-  change_quantity,
-  reason,
-  notes
-)
-SELECT 
-  id,
-  500,
-  'initial_stock',
-  'Initial inventory setup - 500 units'
-FROM products
-WHERE sku = 'KTDC-001';
-
--- ============================================
--- DONE! Your inventory management is ready.
--- ============================================
+-- Note: Initial stock of 500 units was set when you ran the product seed in SUPABASE_SETUP.md

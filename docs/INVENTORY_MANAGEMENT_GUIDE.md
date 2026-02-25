@@ -12,24 +12,34 @@ Your driveshaft cable site now has a complete inventory management system that:
 
 ## Initial Setup
 
-### Step 1: Run Database Setup SQL
+### IMPORTANT: Setup Order
 
+You must complete the database setup in this order:
+
+**Step 1: Main Database Setup (REQUIRED FIRST)**
 1. Open your Supabase project dashboard
 2. Go to **SQL Editor**
-3. Open the file `docs/INVENTORY_SETUP.sql`
-4. Copy and paste the entire SQL script
-5. Click **Run** to execute
+3. Open the file `docs/SUPABASE_SETUP.md`
+4. Copy and run **Section 3: Create Database Tables** SQL
+5. Copy and run **Section 4: Row Level Security** SQL
+6. Copy and run **Section 5: Seed Product Data** SQL (includes 500 units initial stock)
+7. Follow **Section 6** to create your admin user
 
-This will:
-- Add inventory tracking fields to products table
-- Create database functions for inventory management
-- Set up the initial 500 units of stock for your product
-- Create inventory log for audit trail
-- Add low stock view for alerts
+**Step 2: Inventory Functions Setup**
+1. Still in **SQL Editor** in Supabase
+2. Open the file `docs/INVENTORY_SETUP.sql`
+3. Copy and paste the entire SQL script
+4. Click **Run** to execute
 
-### Step 2: Verify Product Setup
+This adds:
+- Inventory tracking fields to products table
+- Database functions for inventory management (deduct, add, set)
+- Low stock view for alerts
+- Inventory log policies
 
-After running the SQL, verify your product has been set up:
+### Step 3: Verify Product Setup
+
+After running both SQL scripts, verify your product:
 
 ```sql
 SELECT name, sku, stock_quantity, low_stock_threshold 
