@@ -3,9 +3,22 @@ import { persist } from 'zustand/middleware'
 
 // Pricing constants
 export const PRICE_PER_UNIT = 300 // $3.00 in cents
-export const BULK_PRICE_PER_UNIT = 250 // $2.50 in cents for 50+ units
-export const BULK_THRESHOLD = 50 // 50+ units gets bulk pricing
 export const MIN_ORDER_QUANTITY = 10 // Minimum order is 10 units
+
+// Volume pricing tiers (must be ordered highest threshold first)
+export const PRICING_TIERS = [
+  { min: 200, price: 250, label: '200+' },
+  { min: 100, price: 275, label: '100-199' },
+  { min: 50, price: 290, label: '50-99' },
+]
+
+// Get price per unit for a given quantity
+export function getPriceForQuantity(qty) {
+  for (const tier of PRICING_TIERS) {
+    if (qty >= tier.min) return tier.price
+  }
+  return PRICE_PER_UNIT
+}
 
 export const useCartStore = create(
   persist(
@@ -78,14 +91,14 @@ export const selectTotalItems = (state) =>
 // Calculate subtotal with volume discount
 export const selectSubtotal = (state) => {
   const totalQty = state.items.reduce((sum, item) => sum + item.quantity, 0)
-  const pricePerUnit = totalQty >= BULK_THRESHOLD ? BULK_PRICE_PER_UNIT : PRICE_PER_UNIT
+  const pricePerUnit = getPriceForQuantity(totalQty)
   return totalQty * pricePerUnit
 }
 
 // Get the current price per unit based on quantity
 export const selectPricePerUnit = (state) => {
   const totalQty = state.items.reduce((sum, item) => sum + item.quantity, 0)
-  return totalQty >= BULK_THRESHOLD ? BULK_PRICE_PER_UNIT : PRICE_PER_UNIT
+  return getPriceForQuantity(totalQty)
 }
 
 // Check if order meets minimum
@@ -97,7 +110,7 @@ export const selectMeetsMinimum = (state) => {
 // Check if getting bulk discount
 export const selectHasBulkDiscount = (state) => {
   const totalQty = state.items.reduce((sum, item) => sum + item.quantity, 0)
-  return totalQty >= BULK_THRESHOLD
+  return totalQty >= PRICING_TIERS[PRICING_TIERS.length - 1].min
 }
 
 // Helper function to format price from cents

@@ -9,8 +9,8 @@ import {
   selectHasBulkDiscount,
   formatPrice,
   PRICE_PER_UNIT,
-  BULK_PRICE_PER_UNIT,
-  BULK_THRESHOLD,
+  PRICING_TIERS,
+  getPriceForQuantity,
   MIN_ORDER_QUANTITY
 } from '../stores/cartStore'
 
@@ -38,6 +38,18 @@ function CartPage() {
       navigate('/checkout')
     }
   }
+
+  // Find the next pricing tier the user can unlock
+  const getNextTier = () => {
+    const sortedTiers = [...PRICING_TIERS].sort((a, b) => a.min - b.min)
+    for (const tier of sortedTiers) {
+      if (totalItems < tier.min) {
+        return { unitsNeeded: tier.min - totalItems, price: tier.price }
+      }
+    }
+    return null
+  }
+  const nextTier = getNextTier()
 
   if (items.length === 0) {
     return (
@@ -93,7 +105,7 @@ function CartPage() {
                 </div>
               )}
 
-              {/* Bulk Discount Notice */}
+              {/* Volume Discount Notice */}
               {hasBulkDiscount && (
                 <div className="bg-green-500/10 border border-green-500 p-4 mb-6">
                   <div className="flex items-start gap-3">
@@ -101,26 +113,26 @@ function CartPage() {
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                     </svg>
                     <div>
-                      <p className="text-white font-bold">Bulk Discount Applied!</p>
+                      <p className="text-white font-bold">Volume Discount Applied!</p>
                       <p className="text-gray-300 text-sm">
-                        You're getting {formatPrice(BULK_PRICE_PER_UNIT)}/unit instead of {formatPrice(PRICE_PER_UNIT)}/unit
+                        You're getting {formatPrice(pricePerUnit)}/unit instead of {formatPrice(PRICE_PER_UNIT)}/unit
                       </p>
                     </div>
                   </div>
                 </div>
               )}
 
-              {/* Bulk Discount Teaser */}
-              {!hasBulkDiscount && totalItems >= MIN_ORDER_QUANTITY && (
+              {/* Next Tier Teaser */}
+              {nextTier && meetsMinimum && (
                 <div className="bg-yellow-500/10 border border-yellow-500 p-4 mb-6">
                   <div className="flex items-start gap-3">
                     <svg className="w-5 h-5 text-yellow-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                     <div>
-                      <p className="text-white font-bold">Unlock Bulk Pricing!</p>
+                      <p className="text-white font-bold">Unlock Better Pricing!</p>
                       <p className="text-gray-300 text-sm">
-                        Add {BULK_THRESHOLD - totalItems} more units to get {formatPrice(BULK_PRICE_PER_UNIT)}/unit instead of {formatPrice(PRICE_PER_UNIT)}/unit
+                        Add {nextTier.unitsNeeded} more unit{nextTier.unitsNeeded !== 1 ? 's' : ''} to get {formatPrice(nextTier.price)}/unit
                       </p>
                     </div>
                   </div>
@@ -233,8 +245,8 @@ function CartPage() {
                   </div>
                   {hasBulkDiscount && (
                     <div className="flex justify-between text-green-400 text-sm">
-                      <span>Bulk discount</span>
-                      <span>-{formatPrice((PRICE_PER_UNIT - BULK_PRICE_PER_UNIT) * totalItems)}</span>
+                      <span>Volume discount</span>
+                      <span>-{formatPrice((PRICE_PER_UNIT - pricePerUnit) * totalItems)}</span>
                     </div>
                   )}
                   <div className="border-t border-gray-700 pt-4 flex justify-between">
@@ -255,14 +267,16 @@ function CartPage() {
                 <div className="mt-6 pt-6 border-t border-gray-700">
                   <p className="text-gray-400 text-sm mb-3">Volume Pricing:</p>
                   <div className="space-y-2 text-sm">
-                    <div className={`flex justify-between ${!hasBulkDiscount ? 'text-yellow-500' : 'text-gray-500'}`}>
+                    <div className={`flex justify-between ${totalItems < 50 && totalItems >= MIN_ORDER_QUANTITY ? 'text-yellow-500' : 'text-gray-500'}`}>
                       <span>10-49 units</span>
                       <span>{formatPrice(PRICE_PER_UNIT)}/ea</span>
                     </div>
-                    <div className={`flex justify-between ${hasBulkDiscount ? 'text-green-400' : 'text-gray-500'}`}>
-                      <span>50+ units</span>
-                      <span>{formatPrice(BULK_PRICE_PER_UNIT)}/ea</span>
-                    </div>
+                    {PRICING_TIERS.slice().reverse().map((tier, i) => (
+                      <div key={i} className={`flex justify-between ${pricePerUnit === tier.price ? 'text-green-400' : 'text-gray-500'}`}>
+                        <span>{tier.label} units</span>
+                        <span>{formatPrice(tier.price)}/ea</span>
+                      </div>
+                    ))}
                   </div>
                 </div>
 

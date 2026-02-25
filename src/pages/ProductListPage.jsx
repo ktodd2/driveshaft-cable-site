@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { useCartStore, formatPrice, PRICE_PER_UNIT, BULK_PRICE_PER_UNIT, BULK_THRESHOLD, MIN_ORDER_QUANTITY } from '../stores/cartStore'
+import { useCartStore, formatPrice, PRICE_PER_UNIT, PRICING_TIERS, getPriceForQuantity, MIN_ORDER_QUANTITY } from '../stores/cartStore'
 
 // For now, hardcoded product data - will come from Supabase later
 const products = [
@@ -9,12 +9,12 @@ const products = [
     name: 'K.Todd Driveshaft Cable',
     slug: 'driveshaft-cable',
     short_description: 'Heavy-duty driveshaft safety cable for professional towing and recovery operations.',
-    price_cents: PRICE_PER_UNIT, // $4.00 per unit
+    price_cents: PRICE_PER_UNIT, // $3.00 per unit
     sku: 'KTDC-001',
     specs: {
       cable_diameter: '5/32"',
       length: '1000mm (39")',
-      working_load: '2400 lb',
+      working_load: '3000 lbs',
       material: 'Galvanized Steel',
       couplers: 'Aluminum'
     },
@@ -36,7 +36,7 @@ function ProductCard({ product }) {
     setQuantity(newQty)
   }
 
-  const currentPrice = quantity >= BULK_THRESHOLD ? BULK_PRICE_PER_UNIT : PRICE_PER_UNIT
+  const currentPrice = getPriceForQuantity(quantity)
   const totalPrice = currentPrice * quantity
 
   return (
@@ -78,8 +78,8 @@ function ProductCard({ product }) {
             <span className="text-yellow-500 text-2xl font-industrial">{formatPrice(currentPrice)}</span>
             <span className="text-gray-400 text-sm">per unit</span>
           </div>
-          {quantity >= BULK_THRESHOLD && (
-            <div className="text-green-400 text-sm mt-1">Bulk discount applied!</div>
+          {currentPrice < PRICE_PER_UNIT && (
+            <div className="text-green-400 text-sm mt-1">Volume discount applied!</div>
           )}
         </div>
 
@@ -157,10 +157,12 @@ function ProductListPage() {
                     <span className="text-gray-400">10-49 units:</span>
                     <span className="text-yellow-500 font-bold">{formatPrice(PRICE_PER_UNIT)}/ea</span>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-gray-400">50+ units:</span>
-                    <span className="text-green-400 font-bold">{formatPrice(BULK_PRICE_PER_UNIT)}/ea</span>
-                  </div>
+                  {PRICING_TIERS.slice().reverse().map((tier, i) => (
+                    <div key={i} className="flex items-center gap-2">
+                      <span className="text-gray-400">{tier.label} units:</span>
+                      <span className="text-green-400 font-bold">{formatPrice(tier.price)}/ea</span>
+                    </div>
+                  ))}
                 </div>
               </div>
               <div className="text-sm text-gray-300">

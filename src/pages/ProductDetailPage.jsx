@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
-import { useCartStore, formatPrice } from '../stores/cartStore'
+import { useCartStore, formatPrice, getPriceForQuantity, PRICE_PER_UNIT, PRICING_TIERS, MIN_ORDER_QUANTITY } from '../stores/cartStore'
 
 const productImages = [
   '/inuse.jpeg',
@@ -90,14 +90,10 @@ function ProductDetailPage() {
 
   const handleBuyNow = () => {
     addItem(product, quantity)
-    if (quantity >= product.bulk_threshold) {
-      navigate('/quote')
-    } else {
-      navigate('/cart')
-    }
+    navigate('/cart')
   }
 
-  const isBulkQuantity = quantity >= product.bulk_threshold
+  const currentPrice = getPriceForQuantity(quantity)
 
   return (
     <div className="pt-20">
@@ -158,13 +154,26 @@ function ProductDetailPage() {
               </div>
               <h1 className="text-3xl sm:text-4xl font-industrial text-white mb-4">{product.name}</h1>
 
-              <div className="flex items-center gap-4 mb-6">
-                <span className="text-yellow-500 text-4xl font-industrial">{formatPrice(product.price_cents)}</span>
+              <div className="flex items-center gap-4 mb-4">
+                <span className="text-yellow-500 text-4xl font-industrial">{formatPrice(currentPrice)}</span>
+                <span className="text-gray-400 text-sm">per unit</span>
                 {product.in_stock ? (
                   <span className="bg-green-500/20 text-green-400 px-3 py-1 text-sm">In Stock</span>
                 ) : (
                   <span className="bg-red-500/20 text-red-400 px-3 py-1 text-sm">Out of Stock</span>
                 )}
+              </div>
+
+              {/* Volume Pricing Tiers */}
+              <div className="flex flex-wrap gap-3 mb-6">
+                <span className={`text-xs px-3 py-1 border ${currentPrice === PRICE_PER_UNIT ? 'border-yellow-500 text-yellow-500' : 'border-gray-700 text-gray-500'}`}>
+                  10-49: {formatPrice(PRICE_PER_UNIT)}/ea
+                </span>
+                {PRICING_TIERS.slice().reverse().map((tier, i) => (
+                  <span key={i} className={`text-xs px-3 py-1 border ${currentPrice === tier.price ? 'border-green-500 text-green-400' : 'border-gray-700 text-gray-500'}`}>
+                    {tier.label}: {formatPrice(tier.price)}/ea
+                  </span>
+                ))}
               </div>
 
               <p className="text-gray-300 mb-8 whitespace-pre-line">{product.description}</p>
@@ -194,7 +203,7 @@ function ProductDetailPage() {
                     </button>
                   </div>
                   <span className="text-gray-400">
-                    Total: <span className="text-yellow-500 font-bold">{formatPrice(product.price_cents * quantity)}</span>
+                    Total: <span className="text-yellow-500 font-bold">{formatPrice(currentPrice * quantity)}</span>
                   </span>
                 </div>
               </div>

@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updated": 1771966621929,
+  "updated": 1771977637300,
   "files": {
     "/Users/kurtistodd/driveshaft-cable-site/postcss.config.js": {
       "exports": [
@@ -164,9 +164,9 @@
     "/Users/kurtistodd/driveshaft-cable-site-3/src/stores/cartStore.js": {
       "exports": [
         "PRICE_PER_UNIT",
-        "BULK_PRICE_PER_UNIT",
-        "BULK_THRESHOLD",
         "MIN_ORDER_QUANTITY",
+        "PRICING_TIERS",
+        "getPriceForQuantity",
         "useCartStore",
         "selectTotalItems",
         "selectSubtotal",
@@ -179,7 +179,7 @@
         "zustand",
         "zustand/middleware"
       ],
-      "indexed": 1771956585742
+      "indexed": 1771977481451
     },
     "/Users/kurtistodd/driveshaft-cable-site-3/src/pages/ProductListPage.jsx": {
       "exports": [
@@ -190,7 +190,7 @@
         "react-router-dom",
         "../stores/cartStore"
       ],
-      "indexed": 1771957126392
+      "indexed": 1771977530821
     },
     "/Users/kurtistodd/driveshaft-cable-site-3/src/pages/CartPage.jsx": {
       "exports": [
@@ -202,7 +202,7 @@
         "react-router-dom",
         "../stores/cartStore"
       ],
-      "indexed": 1771956629104
+      "indexed": 1771977584848
     },
     "/Users/kurtistodd/driveshaft-cable-site-3/src/pages/ProductDetailPage.jsx": {
       "exports": [
@@ -213,7 +213,7 @@
         "react-router-dom",
         "../stores/cartStore"
       ],
-      "indexed": 1771958703897
+      "indexed": 1771977637300
     },
     "/Users/kurtistodd/driveshaft-cable-site-3/src/components/landing/Hero.jsx": {
       "exports": [
