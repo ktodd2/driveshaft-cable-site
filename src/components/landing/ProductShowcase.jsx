@@ -94,7 +94,7 @@ function Product() {
 
             <div className="mt-8 p-4 bg-yellow-500/10 border border-yellow-500">
               <p className="text-yellow-500 font-industrial text-lg">
-                ★ DESIGNED BY PEOPLE WHO ACTUALLY TOW TRUCKS
+                ★ MADE BY A HEAVY DUTY OPERATOR FOR THE HEAVY DUTY OPERATOR
               </p>
             </div>
           </div>

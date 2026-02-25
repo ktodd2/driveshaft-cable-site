@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updated": 1771977637300,
+  "updated": 1771978034286,
   "files": {
     "/Users/kurtistodd/driveshaft-cable-site/postcss.config.js": {
       "exports": [
@@ -190,7 +190,7 @@
         "react-router-dom",
         "../stores/cartStore"
       ],
-      "indexed": 1771977530821
+      "indexed": 1771978005410
     },
     "/Users/kurtistodd/driveshaft-cable-site-3/src/pages/CartPage.jsx": {
       "exports": [
@@ -213,7 +213,7 @@
         "react-router-dom",
         "../stores/cartStore"
       ],
-      "indexed": 1771977637300
+      "indexed": 1771978019662
     },
     "/Users/kurtistodd/driveshaft-cable-site-3/src/components/landing/Hero.jsx": {
       "exports": [
@@ -224,7 +224,7 @@
         "react",
         "react-router-dom"
       ],
-      "indexed": 1771958693505
+      "indexed": 1771978024676
     },
     "/Users/kurtistodd/driveshaft-cable-site-3/src/components/landing/Specs.jsx": {
       "exports": [
@@ -244,7 +244,7 @@
       "imports": [
         "react"
       ],
-      "indexed": 1771958698425
+      "indexed": 1771978034286
     },
     "/Users/kurtistodd/driveshaft-cable-site-3/src/pages/CheckoutPage.jsx": {
       "exports": [

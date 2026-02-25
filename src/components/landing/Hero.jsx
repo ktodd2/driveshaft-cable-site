@@ -72,9 +72,6 @@ function Hero() {
                 alt="K.Todd Driveshaft Cable installed on vehicle"
                 className="w-full h-auto object-cover"
               />
-              <div className="absolute top-4 right-4 bg-yellow-500 text-black px-3 py-1 font-industrial text-sm">
-                MADE IN USA
-              </div>
             </div>
 
             {/* Floating badges */}

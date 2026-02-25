@@ -123,9 +123,6 @@ function ProductDetailPage() {
                   alt={`${product.name} - view ${selectedImage + 1}`}
                   className="w-full h-full object-cover"
                 />
-                <div className="absolute top-4 right-4 bg-yellow-500 text-black px-3 py-1 font-industrial text-sm">
-                  MADE IN USA
-                </div>
               </div>
               {/* Thumbnails */}
               <div className="flex gap-2">

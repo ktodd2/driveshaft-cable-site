@@ -49,10 +49,6 @@ function ProductCard({ product }) {
             alt={product.name}
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
           />
-          {/* Made in USA badge */}
-          <div className="absolute top-4 right-4 bg-yellow-500 text-black px-3 py-1 font-industrial text-xs">
-            MADE IN USA
-          </div>
         </div>
       </Link>
 
