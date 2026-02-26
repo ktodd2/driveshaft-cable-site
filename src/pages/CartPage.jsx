@@ -7,11 +7,15 @@ import {
   selectPricePerUnit,
   selectMeetsMinimum,
   selectHasBulkDiscount,
+  selectShipping,
+  selectOrderTotal,
   formatPrice,
   PRICE_PER_UNIT,
   PRICING_TIERS,
   getPriceForQuantity,
-  MIN_ORDER_QUANTITY
+  MIN_ORDER_QUANTITY,
+  FREE_SHIPPING_THRESHOLD,
+  SHIPPING_FEE
 } from '../stores/cartStore'
 
 function CartPage() {
@@ -22,6 +26,8 @@ function CartPage() {
   const pricePerUnit = useCartStore(selectPricePerUnit)
   const meetsMinimum = useCartStore(selectMeetsMinimum)
   const hasBulkDiscount = useCartStore(selectHasBulkDiscount)
+  const shipping = useCartStore(selectShipping)
+  const orderTotal = useCartStore(selectOrderTotal)
 
   const handleQuantityChange = (productId, delta) => {
     const item = items.find(i => i.productId === productId)
@@ -241,8 +247,16 @@ function CartPage() {
                   </div>
                   <div className="flex justify-between text-gray-400">
                     <span>Shipping</span>
-                    <span className="text-green-400 font-bold">FREE</span>
+                    {shipping === 0
+                      ? <span className="text-green-400 font-bold">FREE</span>
+                      : <span className="text-white">{formatPrice(SHIPPING_FEE)}</span>
+                    }
                   </div>
+                  {shipping > 0 && (
+                    <div className="bg-yellow-500/10 border border-yellow-500/50 px-3 py-2 text-xs text-yellow-400">
+                      Add {formatPrice(FREE_SHIPPING_THRESHOLD - subtotal)} more to get FREE shipping
+                    </div>
+                  )}
                   {hasBulkDiscount && (
                     <div className="flex justify-between text-green-400 text-sm">
                       <span>Volume discount</span>
@@ -251,7 +265,7 @@ function CartPage() {
                   )}
                   <div className="border-t border-gray-700 pt-4 flex justify-between">
                     <span className="text-white font-bold">Total</span>
-                    <span className="text-yellow-500 font-bold text-xl">{formatPrice(subtotal)}</span>
+                    <span className="text-yellow-500 font-bold text-xl">{formatPrice(orderTotal)}</span>
                   </div>
                 </div>
 
@@ -292,7 +306,7 @@ function CartPage() {
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                     </svg>
-                    Free shipping on all orders
+                    Free shipping on orders over $100
                   </div>
                 </div>
               </div>

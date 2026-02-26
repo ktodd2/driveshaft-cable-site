@@ -5,6 +5,10 @@ import { persist } from 'zustand/middleware'
 export const PRICE_PER_UNIT = 300 // $3.00 in cents
 export const MIN_ORDER_QUANTITY = 10 // Minimum order is 10 units
 
+// Shipping constants
+export const SHIPPING_FEE = 1000 // $10.00 in cents
+export const FREE_SHIPPING_THRESHOLD = 10000 // $100.00 in cents - free shipping at or above this
+
 // Volume pricing tiers (must be ordered highest threshold first)
 export const PRICING_TIERS = [
   { min: 200, price: 250, label: '200+' },
@@ -111,6 +115,21 @@ export const selectMeetsMinimum = (state) => {
 export const selectHasBulkDiscount = (state) => {
   const totalQty = state.items.reduce((sum, item) => sum + item.quantity, 0)
   return totalQty >= PRICING_TIERS[PRICING_TIERS.length - 1].min
+}
+
+// Calculate shipping cost based on subtotal
+export const selectShipping = (state) => {
+  const totalQty = state.items.reduce((sum, item) => sum + item.quantity, 0)
+  const subtotal = totalQty * getPriceForQuantity(totalQty)
+  return subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : SHIPPING_FEE
+}
+
+// Calculate order total (subtotal + shipping)
+export const selectOrderTotal = (state) => {
+  const totalQty = state.items.reduce((sum, item) => sum + item.quantity, 0)
+  const subtotal = totalQty * getPriceForQuantity(totalQty)
+  const shipping = subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : SHIPPING_FEE
+  return subtotal + shipping
 }
 
 // Helper function to format price from cents

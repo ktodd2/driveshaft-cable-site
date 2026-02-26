@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updated": 1772124169700,
+  "updated": 1772137543798,
   "files": {
     "/Users/kurtistodd/driveshaft-cable-site/postcss.config.js": {
       "exports": [
@@ -165,6 +165,8 @@
       "exports": [
         "PRICE_PER_UNIT",
         "MIN_ORDER_QUANTITY",
+        "SHIPPING_FEE",
+        "FREE_SHIPPING_THRESHOLD",
         "PRICING_TIERS",
         "getPriceForQuantity",
         "useCartStore",
@@ -173,13 +175,15 @@
         "selectPricePerUnit",
         "selectMeetsMinimum",
         "selectHasBulkDiscount",
+        "selectShipping",
+        "selectOrderTotal",
         "formatPrice"
       ],
       "imports": [
         "zustand",
         "zustand/middleware"
       ],
-      "indexed": 1771977481451
+      "indexed": 1772137415725
     },
     "/Users/kurtistodd/driveshaft-cable-site-3/src/pages/ProductListPage.jsx": {
       "exports": [
@@ -190,7 +194,7 @@
         "react-router-dom",
         "../stores/cartStore"
       ],
-      "indexed": 1771978005410
+      "indexed": 1772137543798
     },
     "/Users/kurtistodd/driveshaft-cable-site-3/src/pages/CartPage.jsx": {
       "exports": [
@@ -202,7 +206,7 @@
         "react-router-dom",
         "../stores/cartStore"
       ],
-      "indexed": 1771977584848
+      "indexed": 1772137504018
     },
     "/Users/kurtistodd/driveshaft-cable-site-3/src/pages/ProductDetailPage.jsx": {
       "exports": [
@@ -258,7 +262,7 @@
         "../stores/cartStore",
         "../lib/supabase"
       ],
-      "indexed": 1771966559978
+      "indexed": 1772137528631
     },
     "/Users/kurtistodd/driveshaft-cable-site-3/src/pages/OrderSuccessPage.jsx": {
       "exports": [
@@ -299,6 +303,19 @@
         "react-router-dom"
       ],
       "indexed": 1772124169700
+    },
+    "/Users/kurtistodd/driveshaft-cable-site-3/src/components/layout/Layout.jsx": {
+      "exports": [
+        "default",
+        "Layout"
+      ],
+      "imports": [
+        "react",
+        "react-router-dom",
+        "./Header",
+        "./Footer"
+      ],
+      "indexed": 1772137450323
     }
   }
 }

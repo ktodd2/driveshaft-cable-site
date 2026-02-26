@@ -1,7 +1,7 @@
 ---
 path: /Users/kurtistodd/driveshaft-cable-site-3/src/stores/cartStore.js
-type: module
-updated: 2026-02-24
+type: store
+updated: 2026-02-26
 status: active
 ---
 
@@ -9,26 +9,30 @@ status: active
 
 ## Purpose
 
-Manages shopping cart state with persistent storage using Zustand. Implements volume-based pricing tiers with automatic discount calculation based on total quantity.
+Zustand store managing shopping cart state with persistence, volume-based pricing tiers, and shipping fee calculations. Handles cart operations (add, update, remove items) and provides selectors for computed values like subtotals and discounts.
 
 ## Exports
 
-- `PRICE_PER_UNIT` - Base price constant (300 cents/$3.00)
-- `MIN_ORDER_QUANTITY` - Minimum order requirement (10 units)
-- `PRICING_TIERS` - Array of volume discount tiers (50+, 100+, 200+ units)
-- `getPriceForQuantity(qty)` - Returns price per unit based on quantity and tier thresholds
-- `useCartStore` - Zustand store hook with actions: addItem, updateQuantity, removeItem, clearCart, clearNotification
-- `selectTotalItems` - Selector for total item count across cart
-- `selectSubtotal` - Selector for cart subtotal with volume pricing applied
+- `PRICE_PER_UNIT` - Base price per unit in cents ($3.00)
+- `MIN_ORDER_QUANTITY` - Minimum order quantity (10 units)
+- `SHIPPING_FEE` - Flat shipping fee in cents ($10.00)
+- `FREE_SHIPPING_THRESHOLD` - Subtotal threshold for free shipping in cents ($100.00)
+- `PRICING_TIERS` - Array of volume discount tiers (200+, 100-199, 50-99)
+- `getPriceForQuantity(qty)` - Returns price per unit based on quantity tier
+- `useCartStore` - Zustand hook for cart state and actions (addItem, updateQuantity, removeItem, clearCart, clearNotification)
+- `selectTotalItems` - Selector for total item count
+- `selectSubtotal` - Selector for subtotal with volume discount applied
 - `selectPricePerUnit` - Selector for current price per unit based on cart quantity
-- `selectMeetsMinimum` - Selector checking if cart meets minimum order quantity
-- `selectHasBulkDiscount` - Selector checking if cart qualifies for volume discount
-- `formatPrice` - Utility for formatting cents to dollar string
+- `selectMeetsMinimum` - Selector checking if minimum order quantity is met
+- `selectHasBulkDiscount` - Selector checking if bulk discount is active
+- `selectShipping` - Selector for shipping fee (0 if above threshold)
+- `selectOrderTotal` - Selector for subtotal plus shipping
+- `formatPrice(cents)` - Utility to format cents as dollar string
 
 ## Dependencies
 
-- zustand
-- zustand/middleware
+- zustand (external)
+- zustand/middleware (external)
 
 ## Used By
 
@@ -36,4 +40,6 @@ TBD
 
 ## Notes
 
-Store is persisted to localStorage under key 'ktodd-cart'. Notification state is excluded from persistence. Pricing tiers must be ordered from highest to lowest threshold for correct calculation.
+- Cart persisted to localStorage under key 'ktodd-cart'
+- Notification state not persisted (auto-clears after 3 seconds)
+- Pricing tiers must be ordered highest threshold first for correct tier matching
