@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updated": 1772138284095,
+  "updated": 1772138712537,
   "files": {
     "/Users/kurtistodd/driveshaft-cable-site/postcss.config.js": {
       "exports": [
@@ -341,9 +341,10 @@
       "imports": [
         "react-router-dom",
         "../../lib/supabase",
+        "../../stores/cartStore",
         "../../hooks/useInventory"
       ],
-      "indexed": 1772138245872
+      "indexed": 1772138712537
     }
   }
 }

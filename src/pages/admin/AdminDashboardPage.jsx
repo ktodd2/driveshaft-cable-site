@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
+import { formatPrice } from '../../stores/cartStore'
 import { useInventory } from '../../hooks/useInventory'
 
 function AdminDashboardPage() {
@@ -10,6 +11,12 @@ function AdminDashboardPage() {
   const [stats, setStats] = useState({
     pendingQuotes: 0,
     totalOrders: 0,
+    paidOrders: 0,
+    revenue30d: 0,
+    revenueAllTime: 0,
+    unitsSold30d: 0,
+    unitsSoldAllTime: 0,
+    avgOrderValue: 0,
     recentOrders: []
   })
 
@@ -37,10 +44,54 @@ function AdminDashboardPage() {
       .select('*', { count: 'exact', head: true })
       .eq('status', 'new')
 
-    setStats(prev => ({
-      ...prev,
-      pendingQuotes: quotesCount || 0
-    }))
+    // Load all orders
+    const { data: orders, error } = await supabase
+      .from('orders')
+      .select('*')
+      .order('created_at', { ascending: false })
+
+    if (error) {
+      console.error('Error loading orders:', error)
+      setStats(prev => ({ ...prev, pendingQuotes: quotesCount || 0 }))
+      return
+    }
+
+    const allOrders = orders || []
+    const paidOrders = allOrders.filter(o => o.payment_status === 'paid')
+
+    // 30-day cutoff
+    const thirtyDaysAgo = new Date()
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
+
+    const paidLast30 = paidOrders.filter(o => new Date(o.created_at) >= thirtyDaysAgo)
+
+    // Revenue calculations
+    const revenueAllTime = paidOrders.reduce((sum, o) => sum + (o.total_cents || 0), 0)
+    const revenue30d = paidLast30.reduce((sum, o) => sum + (o.total_cents || 0), 0)
+
+    // Units sold
+    const countUnits = (orderList) => orderList.reduce((sum, o) => {
+      const items = o.items || []
+      return sum + items.reduce((s, item) => s + (item.quantity || 0), 0)
+    }, 0)
+
+    const unitsSoldAllTime = countUnits(paidOrders)
+    const unitsSold30d = countUnits(paidLast30)
+
+    // Average order value
+    const avgOrderValue = paidOrders.length > 0 ? Math.round(revenueAllTime / paidOrders.length) : 0
+
+    setStats({
+      pendingQuotes: quotesCount || 0,
+      totalOrders: allOrders.length,
+      paidOrders: paidOrders.length,
+      revenue30d,
+      revenueAllTime,
+      unitsSold30d,
+      unitsSoldAllTime,
+      avgOrderValue,
+      recentOrders: allOrders.slice(0, 5)
+    })
   }
 
   const handleSignOut = async () => {
@@ -132,26 +183,14 @@ function AdminDashboardPage() {
             <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
               <div className="bg-gray-800/50 border border-gray-700 p-6">
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-gray-400 text-sm">Pending Quotes</span>
-                  <svg className="w-5 h-5 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
-                  </svg>
-                </div>
-                <div className="text-3xl font-industrial text-yellow-500">{stats.pendingQuotes}</div>
-                <Link to="/admin/quotes" className="text-sm text-gray-400 hover:text-yellow-500 mt-2 inline-block">
-                  View all →
-                </Link>
-              </div>
-
-              <div className="bg-gray-800/50 border border-gray-700 p-6">
-                <div className="flex items-center justify-between mb-2">
                   <span className="text-gray-400 text-sm">Total Orders</span>
                   <svg className="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                   </svg>
                 </div>
                 <div className="text-3xl font-industrial text-white">{stats.totalOrders}</div>
-                <Link to="/admin/orders" className="text-sm text-gray-400 hover:text-yellow-500 mt-2 inline-block">
+                <span className="text-sm text-green-400">{stats.paidOrders} paid</span>
+                <Link to="/admin/orders" className="text-sm text-gray-400 hover:text-yellow-500 mt-1 block">
                   View all →
                 </Link>
               </div>
@@ -163,8 +202,21 @@ function AdminDashboardPage() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                 </div>
-                <div className="text-3xl font-industrial text-white">$0</div>
-                <span className="text-sm text-gray-400">Coming soon</span>
+                <div className="text-3xl font-industrial text-green-400">{formatPrice(stats.revenue30d)}</div>
+                <span className="text-sm text-gray-400">{stats.unitsSold30d} units sold</span>
+              </div>
+
+              <div className="bg-gray-800/50 border border-gray-700 p-6">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-gray-400 text-sm">Pending Quotes</span>
+                  <svg className="w-5 h-5 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+                  </svg>
+                </div>
+                <div className="text-3xl font-industrial text-yellow-500">{stats.pendingQuotes}</div>
+                <Link to="/admin/quotes" className="text-sm text-gray-400 hover:text-yellow-500 mt-2 inline-block">
+                  View all →
+                </Link>
               </div>
 
               <div className="bg-gray-800/50 border border-gray-700 p-6">
@@ -182,6 +234,61 @@ function AdminDashboardPage() {
                 </Link>
               </div>
             </div>
+
+            {/* Revenue Insights */}
+            <div className="bg-gray-800/50 border border-gray-700 p-6 mb-8">
+              <h2 className="text-xl font-industrial text-yellow-500 mb-4">REVENUE INSIGHTS</h2>
+              <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div>
+                  <div className="text-gray-400 text-sm mb-1">All-Time Revenue</div>
+                  <div className="text-2xl font-industrial text-white">{formatPrice(stats.revenueAllTime)}</div>
+                </div>
+                <div>
+                  <div className="text-gray-400 text-sm mb-1">Last 30 Days</div>
+                  <div className="text-2xl font-industrial text-green-400">{formatPrice(stats.revenue30d)}</div>
+                </div>
+                <div>
+                  <div className="text-gray-400 text-sm mb-1">Avg Order Value</div>
+                  <div className="text-2xl font-industrial text-white">{stats.paidOrders > 0 ? formatPrice(stats.avgOrderValue) : '--'}</div>
+                </div>
+                <div>
+                  <div className="text-gray-400 text-sm mb-1">Total Units Sold</div>
+                  <div className="text-2xl font-industrial text-white">{stats.unitsSoldAllTime}</div>
+                </div>
+              </div>
+            </div>
+
+            {/* Recent Orders */}
+            {stats.recentOrders.length > 0 && (
+              <div className="bg-gray-800/50 border border-gray-700 p-6 mb-8">
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-xl font-industrial text-yellow-500">RECENT ORDERS</h2>
+                  <Link to="/admin/orders" className="text-sm text-gray-400 hover:text-yellow-500">View all →</Link>
+                </div>
+                <div className="space-y-3">
+                  {stats.recentOrders.map((order) => (
+                    <div key={order.id} className="flex items-center justify-between p-3 bg-gray-800 rounded">
+                      <div>
+                        <span className="text-white font-bold">{order.name}</span>
+                        <span className="text-gray-400 text-sm ml-3">
+                          {new Date(order.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <span className={`text-xs px-2 py-1 rounded ${
+                          order.payment_status === 'paid' ? 'bg-green-500/20 text-green-400' :
+                          order.payment_status === 'failed' ? 'bg-red-500/20 text-red-400' :
+                          'bg-yellow-500/20 text-yellow-400'
+                        }`}>
+                          {order.payment_status === 'paid' ? 'PAID' : order.payment_status === 'failed' ? 'FAILED' : 'UNPAID'}
+                        </span>
+                        <span className="text-yellow-500 font-bold">{formatPrice(order.total_cents)}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {/* Quick Actions */}
             <div className="grid md:grid-cols-2 gap-6">
