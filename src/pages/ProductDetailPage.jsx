@@ -19,7 +19,7 @@ const products = {
     slug: 'driveshaft-cable',
     description: `The K.Todd Driveshaft Cable is a purpose-built safety device designed to securely suspend disconnected driveshafts during towing and recovery operations.
 
-Built with 5/32" galvanized steel cable and heavy-duty aluminum couplers, it provides a professional, reusable solution for keeping drivelines safely secured during transport.
+Built with 5/32" galvanized steel cable and heavy-duty aluminum couplers, it provides a professional, single-use solution for keeping drivelines safely secured during transport. The cable is cut off after the job — no reuse, no guessing if it's still safe.
 
 No more makeshift solutions with bungee cords, zip ties, or chains. The K.Todd Driveshaft Cable installs in seconds and keeps that shaft exactly where it needs to be.`,
     short_description: 'Heavy-duty driveshaft safety cable for professional towing and recovery operations.',

@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updated": 1771980615232,
+  "updated": 1772124169700,
   "files": {
     "/Users/kurtistodd/driveshaft-cable-site/postcss.config.js": {
       "exports": [
@@ -213,7 +213,7 @@
         "react-router-dom",
         "../stores/cartStore"
       ],
-      "indexed": 1771978019662
+      "indexed": 1772124163531
     },
     "/Users/kurtistodd/driveshaft-cable-site-3/src/components/landing/Hero.jsx": {
       "exports": [
@@ -289,6 +289,16 @@
         "https://deno.land/std@0.168.0/http/server.ts"
       ],
       "indexed": 1771980615232
+    },
+    "/Users/kurtistodd/driveshaft-cable-site-3/src/pages/FAQPage.jsx": {
+      "exports": [
+        "default",
+        "FAQPage"
+      ],
+      "imports": [
+        "react-router-dom"
+      ],
+      "indexed": 1772124169700
     }
   }
 }

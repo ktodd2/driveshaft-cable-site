@@ -19,7 +19,7 @@ const faqs = [
       },
       {
         question: 'Is it reusable?',
-        answer: 'Yes, the K.Todd Driveshaft Cable is designed for repeated use. Simply inspect the cable and couplers before each use for any signs of wear or damage. With proper care, it will serve you reliably job after job.'
+        answer: 'No. The K.Todd Driveshaft Cable is a single-use product — it is cut off after the job is done. This is by design. There is no guessing whether the cable is still safe to use. One job, one cable.'
       }
     ]
   },
