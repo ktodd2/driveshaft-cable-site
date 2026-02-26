@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
 import { formatPrice } from '../../stores/cartStore'
+import { useInventory, updateStock } from '../../hooks/useInventory'
 
 function AdminOrdersPage() {
   const navigate = useNavigate()
@@ -15,6 +16,36 @@ function AdminOrdersPage() {
   const [trackingCarrier, setTrackingCarrier] = useState('ups')
   const [savingTracking, setSavingTracking] = useState(false)
   const [trackingEmailStatus, setTrackingEmailStatus] = useState(null) // 'sent', 'failed', null
+
+  // Inventory state
+  const { stock, loading: stockLoading, refetch: refetchStock } = useInventory('1')
+  const [stockInput, setStockInput] = useState('')
+  const [savingStock, setSavingStock] = useState(false)
+  const [stockSaved, setStockSaved] = useState(false)
+
+  useEffect(() => {
+    if (stock !== null && stockInput === '') setStockInput(String(stock))
+  }, [stock])
+
+  const handleStockSave = async () => {
+    const qty = parseInt(stockInput)
+    if (isNaN(qty) || qty < 0) return
+    setSavingStock(true)
+    setStockSaved(false)
+    const { error } = await updateStock('1', qty)
+    if (!error) {
+      setStockSaved(true)
+      refetchStock()
+      setTimeout(() => setStockSaved(false), 2000)
+    }
+    setSavingStock(false)
+  }
+
+  const adjustStock = (delta) => {
+    const current = parseInt(stockInput) || 0
+    const newVal = Math.max(0, current + delta)
+    setStockInput(String(newVal))
+  }
 
   useEffect(() => {
     checkAuth()
@@ -260,6 +291,56 @@ ${addr.country}`
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                   </svg>
                 </button>
+              </div>
+            </div>
+
+            {/* Inventory Management */}
+            <div className="bg-gray-800/50 border border-gray-700 p-6 mb-8">
+              <h2 className="text-xl font-industrial text-yellow-500 mb-4">INVENTORY</h2>
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6">
+                {/* Current Stock Display */}
+                <div className="text-center">
+                  <div className="text-gray-400 text-sm mb-1">Current Stock</div>
+                  <div className={`text-5xl font-industrial ${
+                    stockLoading ? 'text-gray-500' : stock === 0 ? 'text-red-400' : stock <= 20 ? 'text-yellow-400' : 'text-green-400'
+                  }`}>
+                    {stockLoading ? '...' : stock ?? '--'}
+                  </div>
+                </div>
+
+                {/* Stock Controls */}
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 mb-3">
+                    <button onClick={() => adjustStock(-10)} className="px-3 py-2 bg-red-500/20 text-red-400 border border-red-500/50 hover:bg-red-500/30 text-sm font-bold transition-colors">-10</button>
+                    <button onClick={() => adjustStock(-1)} className="px-3 py-2 bg-red-500/20 text-red-400 border border-red-500/50 hover:bg-red-500/30 text-sm font-bold transition-colors">-1</button>
+                    <input
+                      type="number"
+                      value={stockInput}
+                      onChange={(e) => setStockInput(e.target.value)}
+                      min="0"
+                      className="w-24 text-center bg-gray-800 border border-gray-600 text-white px-3 py-2 text-lg font-mono focus:border-yellow-500 focus:outline-none"
+                    />
+                    <button onClick={() => adjustStock(1)} className="px-3 py-2 bg-green-500/20 text-green-400 border border-green-500/50 hover:bg-green-500/30 text-sm font-bold transition-colors">+1</button>
+                    <button onClick={() => adjustStock(10)} className="px-3 py-2 bg-green-500/20 text-green-400 border border-green-500/50 hover:bg-green-500/30 text-sm font-bold transition-colors">+10</button>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <button
+                      onClick={handleStockSave}
+                      disabled={savingStock || stockInput === String(stock)}
+                      className="bg-yellow-500 hover:bg-yellow-400 text-black px-6 py-2 text-sm font-bold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {savingStock ? 'Saving...' : 'Save Stock'}
+                    </button>
+                    {stockSaved && (
+                      <span className="text-green-400 text-sm flex items-center gap-1">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        </svg>
+                        Saved!
+                      </span>
+                    )}
+                  </div>
+                </div>
               </div>
             </div>
 

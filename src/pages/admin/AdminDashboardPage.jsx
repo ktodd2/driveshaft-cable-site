@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
+import { useInventory } from '../../hooks/useInventory'
 
 function AdminDashboardPage() {
   const navigate = useNavigate()
@@ -11,6 +12,8 @@ function AdminDashboardPage() {
     totalOrders: 0,
     recentOrders: []
   })
+
+  const { stock, loading: stockLoading } = useInventory('1')
 
   useEffect(() => {
     checkAuth()
@@ -171,8 +174,12 @@ function AdminDashboardPage() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
                   </svg>
                 </div>
-                <div className="text-3xl font-industrial text-white">--</div>
-                <span className="text-sm text-gray-400">Coming soon</span>
+                <div className={`text-3xl font-industrial ${
+                  stockLoading ? 'text-gray-500' : stock === 0 ? 'text-red-400' : stock <= 20 ? 'text-yellow-400' : 'text-white'
+                }`}>{stockLoading ? '...' : stock ?? '--'}</div>
+                <Link to="/admin/orders" className="text-sm text-gray-400 hover:text-yellow-500 mt-2 inline-block">
+                  Manage →
+                </Link>
               </div>
             </div>
 

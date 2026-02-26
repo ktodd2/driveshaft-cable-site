@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useCartStore, formatPrice, PRICE_PER_UNIT, PRICING_TIERS, getPriceForQuantity, MIN_ORDER_QUANTITY } from '../stores/cartStore'
+import { useInventory } from '../hooks/useInventory'
 
 // For now, hardcoded product data - will come from Supabase later
 const products = [
@@ -26,6 +27,8 @@ const products = [
 function ProductCard({ product }) {
   const addItem = useCartStore((state) => state.addItem)
   const [quantity, setQuantity] = useState(MIN_ORDER_QUANTITY)
+  const { stock, loading: stockLoading } = useInventory(product.id)
+  const outOfStock = !stockLoading && stock === 0
 
   const handleAddToCart = () => {
     addItem(product, quantity)
@@ -49,6 +52,14 @@ function ProductCard({ product }) {
             alt={product.name}
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
           />
+          {/* Stock Badge */}
+          {!stockLoading && stock !== null && (
+            <div className={`absolute top-3 right-3 px-3 py-1 text-xs font-bold ${
+              stock === 0 ? 'bg-red-500 text-white' : stock <= 20 ? 'bg-yellow-500 text-black' : 'bg-green-500 text-white'
+            }`}>
+              {stock === 0 ? 'OUT OF STOCK' : `${stock} in stock`}
+            </div>
+          )}
         </div>
       </Link>
 
@@ -113,9 +124,14 @@ function ProductCard({ product }) {
         {/* Add to Cart */}
         <button
           onClick={handleAddToCart}
-          className="w-full bg-yellow-500 hover:bg-yellow-400 text-black font-bold py-3 px-4 uppercase text-sm tracking-wider transition-colors"
+          disabled={outOfStock}
+          className={`w-full font-bold py-3 px-4 uppercase text-sm tracking-wider transition-colors ${
+            outOfStock
+              ? 'bg-gray-600 text-gray-400 cursor-not-allowed'
+              : 'bg-yellow-500 hover:bg-yellow-400 text-black'
+          }`}
         >
-          Add {quantity} to Cart
+          {outOfStock ? 'Out of Stock' : `Add ${quantity} to Cart`}
         </button>
       </div>
     </div>

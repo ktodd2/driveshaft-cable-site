@@ -1,7 +1,7 @@
 ---
 path: /Users/kurtistodd/driveshaft-cable-site-3/src/pages/ProductListPage.jsx
 type: component
-updated: 2026-02-24
+updated: 2026-02-26
 status: active
 ---
 
@@ -9,17 +9,17 @@ status: active
 
 ## Purpose
 
-Displays the main product listing page for driveshaft cables with product cards, pricing information, quantity selection, and add-to-cart functionality. Currently uses hardcoded product data with a placeholder for future Supabase integration.
+Displays a catalog of driveshaft cable products with quantity-based pricing tiers and add-to-cart functionality. Renders product cards with specs, volume discount information, and inventory-aware purchase controls.
 
 ## Exports
 
-- `ProductListPage` (default): Main page component that renders the product grid
-- `ProductCard`: Individual product card component with image, specs, pricing calculator, and cart controls
+- `ProductListPage` (default): Main page component rendering the product catalog with pricing tiers and product cards
 
 ## Dependencies
 
-- react-router-dom (Link)
-- [[cartstore|cartStore]]: useCartStore hook, formatPrice, pricing constants (PRICE_PER_UNIT, BULK_PRICE_PER_UNIT, BULK_THRESHOLD, MIN_ORDER_QUANTITY)
+- `react-router-dom`: Link component for navigation to product detail pages
+- [[users-kurtistodd-driveshaft-cable-site-3-src-stores-cartstore]]: useCartStore, formatPrice, PRICE_PER_UNIT, PRICING_TIERS, getPriceForQuantity, MIN_ORDER_QUANTITY
+- [[users-kurtistodd-driveshaft-cable-site-3-src-hooks-useinventory]]: useInventory hook for stock availability
 
 ## Used By
 
@@ -27,4 +27,7 @@ TBD
 
 ## Notes
 
-Product data is currently hardcoded in the `products` array. Dynamic pricing based on quantity (bulk discounts at BULK_THRESHOLD). Uses SVG illustration for product visualization. Industrial design theme with yellow accent colors.
+- Contains hardcoded product data with TODO comment indicating future Supabase integration
+- ProductCard is an internal component handling quantity selection and cart operations
+- Implements tiered pricing display showing volume discounts
+- Uses MIN_ORDER_QUANTITY as the baseline for quantity controls

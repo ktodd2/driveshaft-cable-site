@@ -1,7 +1,7 @@
 ---
 path: /Users/kurtistodd/driveshaft-cable-site-3/src/pages/admin/AdminOrdersPage.jsx
 type: component
-updated: 2026-02-24
+updated: 2026-02-26
 status: active
 ---
 
@@ -9,19 +9,19 @@ status: active
 
 ## Purpose
 
-Admin dashboard page for viewing and managing customer orders. Provides authentication-protected interface for viewing order details, updating order status, filtering by status/payment, and accessing customer shipping information.
+Admin dashboard page for viewing and managing customer orders. Provides order listing with status/payment filtering, order detail modal, status updates, tracking number management with email notifications, and order statistics.
 
 ## Exports
 
-- `default` (AdminOrdersPage): Main admin orders management component with order list, detail view, status updates, and filtering capabilities
-- `AdminOrdersPage`: Named export of the same component
+- `AdminOrdersPage` (default) - Main admin orders management component with authentication check
 
 ## Dependencies
 
-- react-router-dom (useNavigate, Link)
-- [[supabase]]: Database client for fetching orders and authentication
-- [[cartStore]]: formatPrice utility function
-- react (useState, useEffect)
+- [[users-kurtistodd-driveshaft-cable-site-3-src-lib-supabase]] - Database client for orders CRUD
+- [[users-kurtistodd-driveshaft-cable-site-3-src-stores-cartstore]] - `formatPrice` utility for currency display
+- [[users-kurtistodd-driveshaft-cable-site-3-src-hooks-useinventory]] - `useInventory`, `updateStock` for inventory management
+- react-router-dom - Navigation and Link component
+- react - useState, useEffect hooks
 
 ## Used By
 
@@ -29,7 +29,8 @@ TBD
 
 ## Notes
 
-- Requires authentication via Supabase session, redirects to /admin/login if not authenticated
-- Supports filtering orders by status (pending/confirmed/shipped/delivered/cancelled) and payment status
-- Includes clipboard functionality for copying shipping addresses
-- Updates order status with optimistic UI updates
+- Requires authenticated admin session; redirects to `/admin/login` if not authenticated
+- Supports UPS and USPS tracking URL generation
+- Sends tracking notification emails when tracking info is saved
+- Status options: pending, processing, shipped, delivered, cancelled
+- Payment filter options: all, paid, unpaid

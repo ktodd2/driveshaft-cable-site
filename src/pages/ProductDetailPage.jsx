@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
 import { useCartStore, formatPrice, getPriceForQuantity, PRICE_PER_UNIT, PRICING_TIERS, MIN_ORDER_QUANTITY } from '../stores/cartStore'
+import { useInventory } from '../hooks/useInventory'
 
 const productImages = [
   '/inuse.jpeg',
@@ -64,6 +65,7 @@ function ProductDetailPage() {
   const addItem = useCartStore((state) => state.addItem)
 
   const product = products[slug]
+  const { stock, loading: stockLoading } = useInventory(product?.id)
 
   if (!product) {
     return (
@@ -154,10 +156,16 @@ function ProductDetailPage() {
               <div className="flex items-center gap-4 mb-4">
                 <span className="text-yellow-500 text-4xl font-industrial">{formatPrice(currentPrice)}</span>
                 <span className="text-gray-400 text-sm">per unit</span>
-                {product.in_stock ? (
-                  <span className="bg-green-500/20 text-green-400 px-3 py-1 text-sm">In Stock</span>
-                ) : (
+                {stockLoading ? (
+                  <span className="bg-gray-500/20 text-gray-400 px-3 py-1 text-sm">Checking stock...</span>
+                ) : stock === null ? (
+                  <span className="bg-gray-500/20 text-gray-400 px-3 py-1 text-sm">Stock unavailable</span>
+                ) : stock === 0 ? (
                   <span className="bg-red-500/20 text-red-400 px-3 py-1 text-sm">Out of Stock</span>
+                ) : stock <= 20 ? (
+                  <span className="bg-yellow-500/20 text-yellow-400 px-3 py-1 text-sm">{stock} units left</span>
+                ) : (
+                  <span className="bg-green-500/20 text-green-400 px-3 py-1 text-sm">{stock} units in stock</span>
                 )}
               </div>
 
@@ -207,12 +215,20 @@ function ProductDetailPage() {
 
               {/* Action Buttons */}
               <div className="flex flex-col sm:flex-row gap-4 mb-8">
-                <button onClick={handleAddToCart} className="flex-1 border-2 border-yellow-500 text-yellow-500 hover:bg-yellow-500 hover:text-black font-bold py-3 px-8 uppercase tracking-wider transition-all duration-300 font-industrial">
-                  Add to Cart
-                </button>
-                <button onClick={handleBuyNow} className="btn-primary flex-1">
-                  Buy Now
-                </button>
+                {stock === 0 ? (
+                  <div className="flex-1 text-center border-2 border-gray-600 text-gray-500 font-bold py-3 px-8 uppercase tracking-wider font-industrial cursor-not-allowed">
+                    Out of Stock
+                  </div>
+                ) : (
+                  <>
+                    <button onClick={handleAddToCart} className="flex-1 border-2 border-yellow-500 text-yellow-500 hover:bg-yellow-500 hover:text-black font-bold py-3 px-8 uppercase tracking-wider transition-all duration-300 font-industrial">
+                      Add to Cart
+                    </button>
+                    <button onClick={handleBuyNow} className="btn-primary flex-1">
+                      Buy Now
+                    </button>
+                  </>
+                )}
               </div>
 
               {/* Quick Specs */}

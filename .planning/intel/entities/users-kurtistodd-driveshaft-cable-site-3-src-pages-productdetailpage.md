@@ -1,7 +1,7 @@
 ---
 path: /Users/kurtistodd/driveshaft-cable-site-3/src/pages/ProductDetailPage.jsx
 type: component
-updated: 2026-02-24
+updated: 2026-02-26
 status: active
 ---
 
@@ -9,21 +9,18 @@ status: active
 
 ## Purpose
 
-Displays detailed product information for individual products, including specifications, features, applications, pricing, and quantity selector with add-to-cart functionality. Currently uses hardcoded product data with plans to migrate to Supabase.
+Product detail page component that displays full product information including images, specifications, pricing tiers, and add-to-cart functionality. Handles quantity selection with tiered pricing and integrates with cart and inventory systems.
 
 ## Exports
 
-- `ProductDetailPage` (default): Main product detail page component that renders product info, specs, features, and cart controls
-- `ProductDetailPage` (named): Same component exported as named export
+- **default** - ProductDetailPage component (also named export)
+- **ProductDetailPage** - React component for rendering product details with image gallery, specs, bulk pricing, and cart integration
 
 ## Dependencies
 
-**External:**
-- react
 - react-router-dom (useParams, Link, useNavigate)
-
-**Internal:**
-- [[cartstore|cartStore]] (useCartStore, formatPrice)
+- [[cartStore]] (useCartStore, formatPrice, getPriceForQuantity, PRICE_PER_UNIT, PRICING_TIERS, MIN_ORDER_QUANTITY)
+- [[useInventory]] (useInventory hook for stock management)
 
 ## Used By
 
@@ -31,8 +28,7 @@ TBD
 
 ## Notes
 
-- Product data is hardcoded in the file (products object) - TODO: migrate to Supabase
-- Implements bulk pricing display when quantity >= bulk_threshold
-- Shows notification popup after adding items to cart
-- Handles 404 state for invalid product slugs
-- Product images stored in /product-photos/ directory
+- Contains hardcoded product data with TODO comment indicating future Supabase integration
+- Implements tiered bulk pricing display using PRICING_TIERS from cartStore
+- Product images array references local image assets in public directory
+- Single product currently defined: 'driveshaft-cable' with detailed specs and features
