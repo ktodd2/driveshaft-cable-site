@@ -1,19 +1,19 @@
 {
   "version": 1,
-  "updated": 1772138885065,
+  "updated": 1772139162781,
   "naming": {},
   "directories": {
     "lib": {
       "purpose": "Utility functions",
-      "files": 1
+      "files": 2
     },
     "pages": {
       "purpose": "Page components",
-      "files": 12
+      "files": 13
     },
     "components": {
       "purpose": "UI components",
-      "files": 6
+      "files": 7
     },
     "hooks": {
       "purpose": "React/custom hooks",

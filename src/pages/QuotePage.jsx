@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useCartStore } from '../stores/cartStore'
-import { supabase } from '../lib/supabase'
+import { supabase, sendQuoteNotification } from '../lib/supabase'
 
 function QuotePage() {
   const { items, totalItems, clearCart } = useCartStore()
@@ -42,6 +42,16 @@ function QuotePage() {
         }])
 
       if (error) throw error
+
+      // Send email notification (don't block on failure)
+      sendQuoteNotification({
+        name: formData.name,
+        company: formData.company,
+        email: formData.email,
+        phone: formData.phone,
+        quantity: formData.quantity ? parseInt(formData.quantity) : null,
+        message: formData.message,
+      })
 
       setStatus('success')
       clearCart()

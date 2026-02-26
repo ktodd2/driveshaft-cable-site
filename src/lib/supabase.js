@@ -32,6 +32,27 @@ export async function submitQuoteRequest(formData) {
   return data
 }
 
+// Send quote notification email via Edge Function
+export async function sendQuoteNotification(formData) {
+  try {
+    const { data, error } = await supabase.functions.invoke('send-quote-notification', {
+      body: {
+        name: formData.name,
+        company: formData.company,
+        email: formData.email,
+        phone: formData.phone,
+        quantity: formData.quantity,
+        message: formData.message,
+      },
+    })
+    if (error) console.error('Quote notification email error:', error)
+    return { data, error }
+  } catch (err) {
+    console.error('Quote notification email error:', err)
+    return { error: err }
+  }
+}
+
 /*
 -- SUPABASE TABLE SETUP --
 Run this SQL in your Supabase SQL Editor to create the quote_requests table:

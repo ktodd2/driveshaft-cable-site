@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updated": 1772138885065,
+  "updated": 1772139162781,
   "files": {
     "/Users/kurtistodd/driveshaft-cable-site/postcss.config.js": {
       "exports": [
@@ -355,6 +355,46 @@
         "react"
       ],
       "indexed": 1772138885065
+    },
+    "/Users/kurtistodd/driveshaft-cable-site-3/supabase/functions/send-quote-notification/index.ts": {
+      "exports": [],
+      "imports": [
+        "https://deno.land/std@0.168.0/http/server.ts"
+      ],
+      "indexed": 1772139095782
+    },
+    "/Users/kurtistodd/driveshaft-cable-site-3/src/lib/supabase.js": {
+      "exports": [
+        "supabase",
+        "submitQuoteRequest",
+        "sendQuoteNotification"
+      ],
+      "imports": [
+        "@supabase/supabase-js"
+      ],
+      "indexed": 1772139108668
+    },
+    "/Users/kurtistodd/driveshaft-cable-site-3/src/components/landing/QuoteForm.jsx": {
+      "exports": [
+        "default",
+        "QuoteForm"
+      ],
+      "imports": [
+        "../../lib/supabase"
+      ],
+      "indexed": 1772139137404
+    },
+    "/Users/kurtistodd/driveshaft-cable-site-3/src/pages/QuotePage.jsx": {
+      "exports": [
+        "default",
+        "QuotePage"
+      ],
+      "imports": [
+        "react-router-dom",
+        "../stores/cartStore",
+        "../lib/supabase"
+      ],
+      "indexed": 1772139162781
     }
   }
 }

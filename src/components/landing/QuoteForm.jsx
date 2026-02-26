@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { submitQuoteRequest } from '../../lib/supabase'
+import { submitQuoteRequest, sendQuoteNotification } from '../../lib/supabase'
 
 function QuoteForm() {
   const [formData, setFormData] = useState({
@@ -27,10 +27,13 @@ function QuoteForm() {
     setErrorMessage('')
 
     try {
-      await submitQuoteRequest({
+      const submissionData = {
         ...formData,
         quantity: formData.quantity ? parseInt(formData.quantity) : null
-      })
+      }
+      await submitQuoteRequest(submissionData)
+      // Send email notification (don't block on failure)
+      sendQuoteNotification(submissionData)
       setStatus('success')
       setFormData({
         name: '',
