@@ -86,18 +86,6 @@ function Customers() {
           ))}
         </div>
 
-        {/* Trust indicators */}
-        <div className="mt-16 pt-12 border-t border-gray-700">
-          <div className="text-center mb-8">
-            <p className="text-gray-400 uppercase tracking-widest text-sm">Trusted By Professionals</p>
-          </div>
-          <div className="flex flex-wrap justify-center items-center gap-8 md:gap-16 opacity-60">
-            <div className="text-gray-400 font-industrial text-lg">HOUSTON TOWING</div>
-            <div className="text-gray-400 font-industrial text-lg">GULF COAST RECOVERY</div>
-            <div className="text-gray-400 font-industrial text-lg">TEXAS HEAVY HAUL</div>
-            <div className="text-gray-400 font-industrial text-lg">LONE STAR WRECKER</div>
-          </div>
-        </div>
       </div>
     </section>
   )

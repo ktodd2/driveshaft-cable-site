@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updated": 1772138712537,
+  "updated": 1772138885065,
   "files": {
     "/Users/kurtistodd/driveshaft-cable-site/postcss.config.js": {
       "exports": [
@@ -345,6 +345,16 @@
         "../../hooks/useInventory"
       ],
       "indexed": 1772138712537
+    },
+    "/Users/kurtistodd/driveshaft-cable-site-3/src/components/landing/Customers.jsx": {
+      "exports": [
+        "default",
+        "Customers"
+      ],
+      "imports": [
+        "react"
+      ],
+      "indexed": 1772138885065
     }
   }
 }
