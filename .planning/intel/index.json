@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updated": 1772172318892,
+  "updated": 1772173685700,
   "files": {
     "/Users/kurtistodd/driveshaft-cable-site/postcss.config.js": {
       "exports": [
@@ -290,7 +290,7 @@
         "../../stores/cartStore",
         "../../hooks/useInventory"
       ],
-      "indexed": 1772172318892
+      "indexed": 1772173671745
     },
     "/Users/kurtistodd/driveshaft-cable-site-3/supabase/functions/send-tracking-email/index.ts": {
       "exports": [],
@@ -345,7 +345,7 @@
         "../../stores/cartStore",
         "../../hooks/useInventory"
       ],
-      "indexed": 1772138712537
+      "indexed": 1772173653571
     },
     "/Users/kurtistodd/driveshaft-cable-site-3/src/components/landing/Customers.jsx": {
       "exports": [
@@ -396,6 +396,66 @@
         "../lib/supabase"
       ],
       "indexed": 1772139162781
+    },
+    "/Users/kurtistodd/driveshaft-cable-site-3/supabase/functions/send-marketing-email/index.ts": {
+      "exports": [],
+      "imports": [
+        "https://deno.land/std@0.168.0/http/server.ts",
+        "https://esm.sh/@supabase/supabase-js@2"
+      ],
+      "indexed": 1772173223381
+    },
+    "/Users/kurtistodd/driveshaft-cable-site-3/src/pages/admin/AdminEmailPage.jsx": {
+      "exports": [
+        "default",
+        "AdminEmailPage"
+      ],
+      "imports": [
+        "react-router-dom",
+        "../../lib/supabase"
+      ],
+      "indexed": 1772173528027
+    },
+    "/Users/kurtistodd/driveshaft-cable-site-3/src/App.jsx": {
+      "exports": [
+        "default",
+        "App"
+      ],
+      "imports": [
+        "react",
+        "react-router-dom",
+        "./components/layout/Layout",
+        "./pages/HomePage",
+        "./pages/AboutPage",
+        "./pages/ContactPage",
+        "./pages/FAQPage",
+        "./pages/NotFoundPage",
+        "./pages/ProductListPage",
+        "./pages/ProductDetailPage",
+        "./pages/CartPage",
+        "./pages/CheckoutPage",
+        "./pages/OrderSuccessPage",
+        "./pages/QuotePage",
+        "./pages/OrderTrackingPage",
+        "./pages/admin/AdminLoginPage",
+        "./pages/admin/AdminDashboardPage",
+        "./pages/admin/AdminOrdersPage",
+        "./pages/admin/AdminQuotesPage",
+        "./pages/admin/AdminEmailPage"
+      ],
+      "indexed": 1772173635020
+    },
+    "/Users/kurtistodd/driveshaft-cable-site-3/src/pages/admin/AdminQuotesPage.jsx": {
+      "exports": [
+        "default",
+        "AdminQuotesPage"
+      ],
+      "imports": [
+        "react-router-dom",
+        "../../lib/supabase",
+        "date-fns"
+      ],
+      "indexed": 1772173685700
     }
   }
 }
