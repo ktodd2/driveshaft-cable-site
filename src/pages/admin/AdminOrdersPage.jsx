@@ -513,6 +513,12 @@ ${addr.country}`
                             <span className="text-white">{formatPrice(item.price * item.quantity)}</span>
                           </div>
                         ))}
+                        {selectedOrder.discount_cents > 0 && (
+                          <div className="flex justify-between text-sm pt-2 border-t border-gray-700 mt-2">
+                            <span className="text-green-400">Loyalty Discount (10%)</span>
+                            <span className="text-green-400 font-bold">-{formatPrice(selectedOrder.discount_cents)}</span>
+                          </div>
+                        )}
                         <div className="flex justify-between text-sm pt-2 border-t border-gray-700 mt-2">
                           <span className="text-gray-400">Shipping</span>
                           <span className="text-green-400">FREE</span>

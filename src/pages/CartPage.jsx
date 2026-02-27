@@ -294,6 +294,13 @@ function CartPage() {
                   </div>
                 </div>
 
+                {/* Loyalty Discount Note */}
+                <div className="mt-6 pt-6 border-t border-gray-700">
+                  <div className="bg-green-500/10 border border-green-500/30 px-3 py-2 text-xs text-green-400">
+                    Returning customer? Get an extra <span className="font-bold">10% off</span> at checkout — automatically applied!
+                  </div>
+                </div>
+
                 {/* Security badges */}
                 <div className="mt-6 pt-6 border-t border-gray-700">
                   <div className="flex items-center gap-2 text-gray-400 text-sm mb-2">

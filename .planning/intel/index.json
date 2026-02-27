@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updated": 1772139162781,
+  "updated": 1772172318892,
   "files": {
     "/Users/kurtistodd/driveshaft-cable-site/postcss.config.js": {
       "exports": [
@@ -167,6 +167,7 @@
         "MIN_ORDER_QUANTITY",
         "SHIPPING_FEE",
         "FREE_SHIPPING_THRESHOLD",
+        "REPEAT_CUSTOMER_DISCOUNT",
         "PRICING_TIERS",
         "getPriceForQuantity",
         "useCartStore",
@@ -183,7 +184,7 @@
         "zustand",
         "zustand/middleware"
       ],
-      "indexed": 1772137415725
+      "indexed": 1772172182008
     },
     "/Users/kurtistodd/driveshaft-cable-site-3/src/pages/ProductListPage.jsx": {
       "exports": [
@@ -195,7 +196,7 @@
         "../stores/cartStore",
         "../hooks/useInventory"
       ],
-      "indexed": 1772138168480
+      "indexed": 1772172292418
     },
     "/Users/kurtistodd/driveshaft-cable-site-3/src/pages/CartPage.jsx": {
       "exports": [
@@ -207,7 +208,7 @@
         "react-router-dom",
         "../stores/cartStore"
       ],
-      "indexed": 1772137504018
+      "indexed": 1772172268543
     },
     "/Users/kurtistodd/driveshaft-cable-site-3/src/pages/ProductDetailPage.jsx": {
       "exports": [
@@ -219,7 +220,7 @@
         "../stores/cartStore",
         "../hooks/useInventory"
       ],
-      "indexed": 1772138121824
+      "indexed": 1772172278190
     },
     "/Users/kurtistodd/driveshaft-cable-site-3/src/components/landing/Hero.jsx": {
       "exports": [
@@ -265,7 +266,7 @@
         "../lib/supabase",
         "../hooks/useInventory"
       ],
-      "indexed": 1772138284095
+      "indexed": 1772172246747
     },
     "/Users/kurtistodd/driveshaft-cable-site-3/src/pages/OrderSuccessPage.jsx": {
       "exports": [
@@ -289,7 +290,7 @@
         "../../stores/cartStore",
         "../../hooks/useInventory"
       ],
-      "indexed": 1772138215484
+      "indexed": 1772172318892
     },
     "/Users/kurtistodd/driveshaft-cable-site-3/supabase/functions/send-tracking-email/index.ts": {
       "exports": [],
@@ -382,7 +383,7 @@
       "imports": [
         "../../lib/supabase"
       ],
-      "indexed": 1772139137404
+      "indexed": 1772172301124
     },
     "/Users/kurtistodd/driveshaft-cable-site-3/src/pages/QuotePage.jsx": {
       "exports": [

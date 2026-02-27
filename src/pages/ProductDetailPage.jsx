@@ -181,6 +181,11 @@ function ProductDetailPage() {
                 ))}
               </div>
 
+              {/* Loyalty Discount Note */}
+              <div className="bg-green-500/10 border border-green-500/30 px-4 py-2 mb-6 text-sm text-green-400">
+                Returning customers save an extra <span className="font-bold">10%</span> — applied automatically at checkout!
+              </div>
+
               <p className="text-gray-300 mb-8 whitespace-pre-line">{product.description}</p>
 
               {/* Quantity Selector */}

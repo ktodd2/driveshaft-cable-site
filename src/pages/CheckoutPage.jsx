@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { loadStripe } from '@stripe/stripe-js'
 import { Elements, PaymentElement, useStripe, useElements } from '@stripe/react-stripe-js'
-import { useCartStore, selectTotalItems, selectSubtotal, selectPricePerUnit, selectShipping, selectOrderTotal, formatPrice, SHIPPING_FEE, FREE_SHIPPING_THRESHOLD } from '../stores/cartStore'
+import { useCartStore, selectTotalItems, selectSubtotal, selectPricePerUnit, selectShipping, selectOrderTotal, formatPrice, SHIPPING_FEE, FREE_SHIPPING_THRESHOLD, REPEAT_CUSTOMER_DISCOUNT } from '../stores/cartStore'
 import { supabase } from '../lib/supabase'
 import { decrementStock } from '../hooks/useInventory'
 
@@ -112,10 +112,37 @@ function CheckoutPage() {
   const [isCreatingOrder, setIsCreatingOrder] = useState(false)
   const [orderError, setOrderError] = useState(null)
   const [step, setStep] = useState(1) // 1 = shipping info, 2 = payment
+  const [isRepeatCustomer, setIsRepeatCustomer] = useState(false)
+  const [checkingEmail, setCheckingEmail] = useState(false)
 
   const shippingCents = useCartStore(selectShipping)
-  const totalCents = useCartStore(selectOrderTotal)
+  const baseTotal = useCartStore(selectOrderTotal)
   const pricePerUnit = useCartStore(selectPricePerUnit)
+
+  // Calculate loyalty discount
+  const discountCents = isRepeatCustomer ? Math.round(subtotal * REPEAT_CUSTOMER_DISCOUNT) : 0
+  const totalCents = baseTotal - discountCents
+
+  // Check if email belongs to a returning customer
+  const checkRepeatCustomer = async (email) => {
+    if (!email || !email.includes('@')) return
+    setCheckingEmail(true)
+    try {
+      const { count, error } = await supabase
+        .from('orders')
+        .select('*', { count: 'exact', head: true })
+        .eq('email', email.toLowerCase().trim())
+        .eq('payment_status', 'paid')
+      if (!error && count > 0) {
+        setIsRepeatCustomer(true)
+      } else {
+        setIsRepeatCustomer(false)
+      }
+    } catch {
+      setIsRepeatCustomer(false)
+    }
+    setCheckingEmail(false)
+  }
 
   const handleChange = (e) => {
     const { name, value } = e.target
@@ -151,6 +178,8 @@ function CheckoutPage() {
             price: item.price
           })),
           subtotal_cents: subtotal,
+          discount_cents: discountCents,
+          discount_reason: isRepeatCustomer ? 'Returning customer 10% loyalty discount' : null,
           shipping_cents: shippingCents,
           total_cents: totalCents,
           status: 'pending',
@@ -261,11 +290,26 @@ function CheckoutPage() {
                           name="email"
                           value={formData.email}
                           onChange={handleChange}
+                          onBlur={(e) => checkRepeatCustomer(e.target.value)}
                           required
                           placeholder="your@email.com"
                           className="w-full bg-gray-800 border border-gray-600 text-white px-4 py-3 focus:border-yellow-500 focus:outline-none"
                         />
+                        {checkingEmail && (
+                          <p className="text-gray-500 text-xs mt-1">Checking for loyalty discount...</p>
+                        )}
                       </div>
+                      {isRepeatCustomer && (
+                        <div className="bg-green-500/10 border border-green-500 p-4 flex items-center gap-3">
+                          <svg className="w-6 h-6 text-green-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                          <div>
+                            <p className="text-green-400 font-bold text-sm">Welcome back! Returning Customer: 10% Off!</p>
+                            <p className="text-green-400/70 text-xs">Your loyalty discount of {formatPrice(discountCents)} will be applied automatically.</p>
+                          </div>
+                        </div>
+                      )}
                       <div className="grid sm:grid-cols-2 gap-4">
                         <div>
                           <label htmlFor="name" className="block text-gray-400 text-sm mb-1">Full Name *</label>
@@ -493,6 +537,12 @@ function CheckoutPage() {
                     <span>Subtotal</span>
                     <span className="text-white">{formatPrice(subtotal)}</span>
                   </div>
+                  {discountCents > 0 && (
+                    <div className="flex justify-between text-green-400">
+                      <span>Loyalty Discount (10%)</span>
+                      <span className="font-bold">-{formatPrice(discountCents)}</span>
+                    </div>
+                  )}
                   <div className="flex justify-between text-gray-400">
                     <span>Shipping</span>
                     {shippingCents === 0

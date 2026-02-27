@@ -177,8 +177,9 @@ function ProductListPage() {
                   ))}
                 </div>
               </div>
-              <div className="text-sm text-gray-300">
-                <span className="text-yellow-500">FREE SHIPPING</span> on orders over $100 · $10 flat rate under $100
+              <div className="text-sm text-gray-300 space-y-1">
+                <div><span className="text-yellow-500">FREE SHIPPING</span> on orders over $100 · $10 flat rate under $100</div>
+                <div><span className="text-green-400">LOYALTY DISCOUNT</span> — returning customers get an extra 10% off!</div>
               </div>
             </div>
           </div>

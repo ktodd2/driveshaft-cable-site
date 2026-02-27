@@ -9,6 +9,9 @@ export const MIN_ORDER_QUANTITY = 10 // Minimum order is 10 units
 export const SHIPPING_FEE = 1000 // $10.00 in cents
 export const FREE_SHIPPING_THRESHOLD = 10000 // $100.00 in cents - free shipping at or above this
 
+// Loyalty discount for repeat customers (stacks with volume pricing)
+export const REPEAT_CUSTOMER_DISCOUNT = 0.10 // 10% off subtotal
+
 // Volume pricing tiers (must be ordered highest threshold first)
 export const PRICING_TIERS = [
   { min: 200, price: 250, label: '200+' },

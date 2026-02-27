@@ -85,8 +85,8 @@ function QuoteForm() {
                   </svg>
                 </div>
                 <div>
-                  <div className="text-white font-bold">Volume Pricing</div>
-                  <div className="text-gray-400 text-sm">Discounts for orders of 10+ units</div>
+                  <div className="text-white font-bold">Volume Pricing + Loyalty Discount</div>
+                  <div className="text-gray-400 text-sm">Bulk discounts + extra 10% off for returning customers</div>
                 </div>
               </div>
 
