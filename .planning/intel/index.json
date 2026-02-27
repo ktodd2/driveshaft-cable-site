@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updated": 1772173685700,
+  "updated": 1772174830817,
   "files": {
     "/Users/kurtistodd/driveshaft-cable-site/postcss.config.js": {
       "exports": [
@@ -403,7 +403,7 @@
         "https://deno.land/std@0.168.0/http/server.ts",
         "https://esm.sh/@supabase/supabase-js@2"
       ],
-      "indexed": 1772173223381
+      "indexed": 1772174830817
     },
     "/Users/kurtistodd/driveshaft-cable-site-3/src/pages/admin/AdminEmailPage.jsx": {
       "exports": [

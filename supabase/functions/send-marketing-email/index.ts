@@ -98,8 +98,8 @@ serve(async (req) => {
         failedCount++
         console.error(`Error sending to ${to}:`, err)
       }
-      // Throttle: 100ms between sends
-      await new Promise(r => setTimeout(r, 100))
+      // Throttle: 1 second between sends to stay under Resend rate limit (2/sec)
+      await new Promise(r => setTimeout(r, 1000))
     }
 
     if (campaignId) {
