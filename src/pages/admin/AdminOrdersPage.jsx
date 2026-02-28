@@ -3,7 +3,6 @@ import { Link, useNavigate } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
 import { formatPrice } from '../../stores/cartStore'
 import { useInventory, updateStock } from '../../hooks/useInventory'
-import { parsePirateShipCSV } from '../../lib/csvParser'
 
 function AdminOrdersPage() {
   const navigate = useNavigate()
@@ -28,15 +27,6 @@ function AdminOrdersPage() {
   const [shippingCostInput, setShippingCostInput] = useState('')
   const [savingShippingCost, setSavingShippingCost] = useState(false)
   const [shippingCostSaved, setShippingCostSaved] = useState(false)
-
-  // CSV bulk import state
-  const [showCsvUpload, setShowCsvUpload] = useState(false)
-  const [csvFile, setCsvFile] = useState(null)
-  const [csvResults, setCsvResults] = useState(null)
-  const [csvParsing, setCsvParsing] = useState(false)
-  const [csvApplying, setCsvApplying] = useState(false)
-  const [csvApplyResults, setCsvApplyResults] = useState(null)
-  const [csvCheckedRows, setCsvCheckedRows] = useState(new Set())
 
   useEffect(() => {
     if (stock !== null && stockInput === '') setStockInput(String(stock))
@@ -93,53 +83,6 @@ function AdminOrdersPage() {
       setTimeout(() => setShippingCostSaved(false), 2000)
     }
     setSavingShippingCost(false)
-  }
-
-  const handleCsvParse = async () => {
-    if (!csvFile) return
-    setCsvParsing(true)
-    setCsvResults(null)
-    setCsvApplyResults(null)
-    try {
-      const results = await parsePirateShipCSV(csvFile, orders)
-      setCsvResults(results)
-      setCsvCheckedRows(new Set(results.matched.map(m => m.orderId)))
-    } catch (err) {
-      console.error('CSV parse error:', err)
-      setCsvResults({ matched: [], unmatched: [], errors: [String(err)] })
-      setCsvCheckedRows(new Set())
-    }
-    setCsvParsing(false)
-  }
-
-  const handleCsvApply = async () => {
-    if (!csvResults) return
-    setCsvApplying(true)
-    setCsvApplyResults(null)
-    const toApply = csvResults.matched.filter(m => csvCheckedRows.has(m.orderId))
-    let updated = 0
-    let failed = 0
-    for (const item of toApply) {
-      const updatePayload = {
-        actual_shipping_cost_cents: item.shippingCostCents,
-        updated_at: new Date().toISOString()
-      }
-      if (item.trackingNumber) {
-        updatePayload.tracking_number = item.trackingNumber
-      }
-      const { error } = await supabase
-        .from('orders')
-        .update(updatePayload)
-        .eq('id', item.orderId)
-      if (error) {
-        failed++
-      } else {
-        updated++
-      }
-    }
-    setCsvApplyResults({ updated, failed })
-    setCsvApplying(false)
-    fetchOrders()
   }
 
   useEffect(() => {
@@ -449,152 +392,6 @@ ${addr.country}`
                   </div>
                 </div>
               </div>
-            </div>
-
-            {/* Bulk Shipping Import */}
-            <div className="bg-gray-800/50 border border-gray-700 mb-8">
-              <button
-                onClick={() => setShowCsvUpload(v => !v)}
-                className="w-full flex items-center justify-between p-6 text-left"
-              >
-                <h2 className="text-xl font-industrial text-yellow-500">BULK SHIPPING IMPORT</h2>
-                <span className="text-gray-400 text-sm">{showCsvUpload ? 'Hide' : 'Show'}</span>
-              </button>
-
-              {showCsvUpload && (
-                <div className="px-6 pb-6 border-t border-gray-700">
-                  <p className="text-gray-400 text-sm mt-4 mb-4">
-                    Upload a Pirate Ship CSV to batch-import shipping costs and tracking numbers.
-                  </p>
-
-                  {/* File input + Parse button */}
-                  <div className="flex items-center gap-3 mb-4">
-                    <input
-                      type="file"
-                      accept=".csv"
-                      onChange={(e) => {
-                        setCsvFile(e.target.files?.[0] || null)
-                        setCsvResults(null)
-                        setCsvApplyResults(null)
-                      }}
-                      className="flex-1 text-sm text-gray-400 file:mr-3 file:py-2 file:px-4 file:border-0 file:bg-gray-700 file:text-gray-300 file:text-sm file:cursor-pointer hover:file:bg-gray-600"
-                    />
-                    <button
-                      onClick={handleCsvParse}
-                      disabled={!csvFile || csvParsing}
-                      className="bg-yellow-500 hover:bg-yellow-400 text-black px-4 py-2 text-sm font-bold transition-colors disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
-                    >
-                      {csvParsing ? 'Parsing...' : 'Parse & Preview'}
-                    </button>
-                  </div>
-
-                  {/* Parse errors */}
-                  {csvResults?.errors?.length > 0 && (
-                    <div className="bg-red-500/10 border border-red-500/30 p-3 mb-4">
-                      <p className="text-red-400 text-sm font-bold mb-1">Errors:</p>
-                      {csvResults.errors.map((e, i) => (
-                        <p key={i} className="text-red-300 text-sm">{e}</p>
-                      ))}
-                    </div>
-                  )}
-
-                  {/* Preview table */}
-                  {csvResults && csvResults.matched.length > 0 && (
-                    <div className="mb-4">
-                      <div className="flex items-center justify-between mb-2">
-                        <p className="text-gray-300 text-sm font-bold">
-                          Matched: {csvResults.matched.length} &nbsp;&bull;&nbsp; Unmatched: {csvResults.unmatched.length}
-                        </p>
-                        <div className="flex items-center gap-3 text-sm">
-                          <button
-                            onClick={() => setCsvCheckedRows(new Set(csvResults.matched.map(m => m.orderId)))}
-                            className="text-yellow-500 hover:text-yellow-400 transition-colors"
-                          >
-                            All
-                          </button>
-                          <button
-                            onClick={() => setCsvCheckedRows(new Set())}
-                            className="text-gray-400 hover:text-gray-300 transition-colors"
-                          >
-                            None
-                          </button>
-                        </div>
-                      </div>
-
-                      <div className="overflow-x-auto">
-                        <table className="w-full text-sm">
-                          <thead>
-                            <tr className="text-left text-gray-500 border-b border-gray-700">
-                              <th className="pb-2 pr-3 w-8"></th>
-                              <th className="pb-2 pr-3">Order</th>
-                              <th className="pb-2 pr-3">Email</th>
-                              <th className="pb-2 pr-3">Tracking</th>
-                              <th className="pb-2 pr-3">Ship Cost</th>
-                              <th className="pb-2">Match</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {csvResults.matched.map((item) => (
-                              <tr key={item.orderId} className="border-b border-gray-800">
-                                <td className="py-2 pr-3">
-                                  <input
-                                    type="checkbox"
-                                    checked={csvCheckedRows.has(item.orderId)}
-                                    onChange={(e) => {
-                                      setCsvCheckedRows(prev => {
-                                        const next = new Set(prev)
-                                        if (e.target.checked) next.add(item.orderId)
-                                        else next.delete(item.orderId)
-                                        return next
-                                      })
-                                    }}
-                                    className="accent-yellow-500"
-                                  />
-                                </td>
-                                <td className="py-2 pr-3 text-white">{item.orderName}</td>
-                                <td className="py-2 pr-3 text-gray-400 truncate max-w-[140px]">{item.orderEmail}</td>
-                                <td className="py-2 pr-3 text-gray-300 font-mono text-xs">{item.trackingNumber || '—'}</td>
-                                <td className="py-2 pr-3 text-green-400">{formatPrice(item.shippingCostCents)}</td>
-                                <td className="py-2 text-gray-500 text-xs">{item.matchMethod}</td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                      </div>
-
-                      {csvResults.unmatched.length > 0 && (
-                        <p className="text-yellow-500 text-xs mt-2">
-                          {csvResults.unmatched.length} row{csvResults.unmatched.length !== 1 ? 's' : ''} could not be matched to an order.
-                        </p>
-                      )}
-
-                      <button
-                        onClick={handleCsvApply}
-                        disabled={csvApplying || csvCheckedRows.size === 0}
-                        className="mt-4 bg-yellow-500 hover:bg-yellow-400 text-black px-6 py-2 text-sm font-bold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                      >
-                        {csvApplying ? 'Applying...' : `Apply Selected (${csvCheckedRows.size})`}
-                      </button>
-                    </div>
-                  )}
-
-                  {csvResults && csvResults.matched.length === 0 && !csvResults.errors?.length && (
-                    <p className="text-gray-500 text-sm">No orders matched from this CSV.</p>
-                  )}
-
-                  {/* Apply results */}
-                  {csvApplyResults && (
-                    <div className="bg-gray-900 border border-gray-700 p-3 mt-2">
-                      <p className="text-green-400 text-sm font-bold">
-                        {csvApplyResults.updated} updated
-                        {csvApplyResults.failed > 0 && (
-                          <span className="text-red-400 ml-2">&bull; {csvApplyResults.failed} failed</span>
-                        )}
-                      </p>
-                    </div>
-                  )}
-                </div>
-              )}
             </div>
 
             {/* Payment Summary */}
