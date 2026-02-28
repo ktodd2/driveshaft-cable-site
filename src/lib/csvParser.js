@@ -44,7 +44,119 @@ async function parseXlsx(file, orders) {
   return matchRows(data, orders)
 }
 
+/**
+ * Detect if data is a Pirate Ship transaction ledger (has Type + Description columns)
+ * vs a generic shipment export (has Name/Tracking/Cost columns).
+ */
+function isPirateShipTransactionFormat(data) {
+  if (!data || data.length === 0) return false
+  const firstRow = data[0]
+  return ('Type' in firstRow) && ('Description' in firstRow)
+}
+
+/**
+ * Extract customer name from Pirate Ship Description field.
+ * Format: "CustomerName: 1 Label Batch" or "CustomerName: N Label Batch"
+ * Edge case: "Prompt Towing Attn: Mike: 1 Label Batch" — strip only the last ": N Label Batch"
+ */
+function extractNameFromDescription(description) {
+  const desc = String(description || '').trim()
+  // Strip the trailing ": N Label Batch" suffix
+  const match = desc.match(/^(.+?):\s*\d+\s*Label\s*Batch\s*$/i)
+  if (match) return match[1].trim()
+  // Fallback: take everything before the first colon
+  const colonIdx = desc.indexOf(':')
+  if (colonIdx > 0) return desc.substring(0, colonIdx).trim()
+  return desc
+}
+
 function matchRows(data, orders) {
+  // Route to the correct parser based on detected format
+  if (isPirateShipTransactionFormat(data)) {
+    return matchPirateShipTransactions(data, orders)
+  }
+  return matchGenericRows(data, orders)
+}
+
+/**
+ * Match Pirate Ship transaction ledger rows to orders.
+ * Only processes "Label" type rows. Extracts name from Description, cost from Total.
+ */
+function matchPirateShipTransactions(data, orders) {
+  const matched = []
+  const unmatched = []
+  const errors = []
+
+  // Build name lookup: order.name.toLowerCase() → order
+  const orderByName = new Map()
+  orders.forEach(order => {
+    const name = (order.name || '').trim().toLowerCase()
+    if (name && !orderByName.has(name)) {
+      orderByName.set(name, order)
+    }
+  })
+
+  const matchedOrderIds = new Set()
+  let skippedNonLabel = 0
+
+  data.forEach((row, index) => {
+    try {
+      const rowType = String(row['Type'] || '').trim()
+
+      // Only process Label rows (skip Payment, Refund, etc.)
+      if (rowType !== 'Label') {
+        skippedNonLabel++
+        return
+      }
+
+      // Extract customer name from Description
+      const description = String(row['Description'] || '')
+      const csvName = extractNameFromDescription(description)
+      if (!csvName) {
+        unmatched.push({ row: index + 2, data: row, reason: 'Could not extract name from description' })
+        return
+      }
+
+      // Get shipping cost from Total (negative for labels, take absolute value)
+      const totalRaw = row['Total']
+      const costFloat = parseFloat(String(totalRaw).replace(/[$,]/g, ''))
+      if (isNaN(costFloat)) {
+        errors.push({ row: index + 2, error: `Invalid cost value: ${totalRaw}` })
+        return
+      }
+      const shippingCostCents = Math.round(Math.abs(costFloat) * 100)
+
+      // Match by name
+      const nameLower = csvName.toLowerCase()
+      if (orderByName.has(nameLower)) {
+        const order = orderByName.get(nameLower)
+        if (!matchedOrderIds.has(order.id)) {
+          matchedOrderIds.add(order.id)
+          matched.push({
+            orderId: order.id,
+            orderName: order.name,
+            orderEmail: order.email,
+            shippingCostCents,
+            trackingNumber: null,
+            matchMethod: 'name'
+          })
+          return
+        }
+      }
+
+      unmatched.push({ row: index + 2, data: row, reason: `No order found for "${csvName}"` })
+    } catch (err) {
+      errors.push({ row: index + 2, error: err.message })
+    }
+  })
+
+  return { matched, unmatched, errors, skippedNonLabel }
+}
+
+/**
+ * Match generic CSV/XLSX rows (columns like Name, Tracking Number, Cost, etc.)
+ */
+function matchGenericRows(data, orders) {
   const matched = []
   const unmatched = []
   const errors = []
@@ -66,7 +178,7 @@ function matchRows(data, orders) {
 
   data.forEach((row, index) => {
     try {
-      // Detect shipping cost column (Pirate Ship uses various names)
+      // Detect shipping cost column
       const costRaw = row['Total'] || row['Cost'] || row['Postage'] || row['Ship Cost'] || row['Amount'] || row['Label Cost'] || row['Shipping Cost']
       if (!costRaw && costRaw !== 0) {
         unmatched.push({ row: index + 2, data: row, reason: 'No cost column found' })
@@ -79,7 +191,7 @@ function matchRows(data, orders) {
         errors.push({ row: index + 2, error: `Invalid cost value: ${costRaw}` })
         return
       }
-      const shippingCostCents = Math.round(costFloat * 100)
+      const shippingCostCents = Math.round(Math.abs(costFloat) * 100)
 
       // Get tracking number
       const csvTracking = String(row['Tracking Number'] || row['Tracking'] || row['Tracking #'] || '').trim().toUpperCase()
