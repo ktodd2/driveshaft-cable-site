@@ -3,6 +3,8 @@ import { Link, useNavigate } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
 import { formatPrice } from '../../stores/cartStore'
 import { useInventory } from '../../hooks/useInventory'
+import { useProductShipments } from '../../hooks/useProductShipments'
+import { calcProfitStats } from '../../lib/costCalculations'
 
 function AdminDashboardPage() {
   const navigate = useNavigate()
@@ -18,10 +20,22 @@ function AdminDashboardPage() {
     unitsSoldAllTime: 0,
     avgOrderValue: 0,
     recentOrders: [],
-    paidOrdersList: []
+    paidOrdersList: [],
+    paidLast30: []
   })
-  const [costPerUnit, setCostPerUnit] = useState(() => parseInt(localStorage.getItem('ktodd-admin-cost-per-unit') || '0'))
-  const [shippingCost, setShippingCost] = useState(() => parseInt(localStorage.getItem('ktodd-admin-shipping-cost') || '0'))
+
+  // Product shipments (variable cost)
+  const { shipments, loading: shipmentsLoading, avgCostPerUnit, addShipment, deleteShipment } = useProductShipments()
+  const [newShipmentQty, setNewShipmentQty] = useState('')
+  const [newShipmentCost, setNewShipmentCost] = useState('')
+  const [newShipmentSupplier, setNewShipmentSupplier] = useState('')
+  const [savingShipment, setSavingShipment] = useState(false)
+  const [deletingId, setDeletingId] = useState(null)
+
+  // Fallback shipping cost for orders without actual_shipping_cost_cents
+  const [fallbackShipping, setFallbackShipping] = useState(
+    () => parseInt(localStorage.getItem('ktodd-admin-shipping-fallback') || '0')
+  )
 
   const { stock, loading: stockLoading } = useInventory('1')
 
@@ -41,13 +55,11 @@ function AdminDashboardPage() {
   }
 
   const loadStats = async () => {
-    // Load pending quotes count
     const { count: quotesCount } = await supabase
       .from('quote_requests')
       .select('*', { count: 'exact', head: true })
       .eq('status', 'new')
 
-    // Load all orders
     const { data: orders, error } = await supabase
       .from('orders')
       .select('*')
@@ -62,17 +74,13 @@ function AdminDashboardPage() {
     const allOrders = orders || []
     const paidOrders = allOrders.filter(o => o.payment_status === 'paid')
 
-    // 30-day cutoff
     const thirtyDaysAgo = new Date()
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
-
     const paidLast30 = paidOrders.filter(o => new Date(o.created_at) >= thirtyDaysAgo)
 
-    // Revenue calculations
     const revenueAllTime = paidOrders.reduce((sum, o) => sum + (o.total_cents || 0), 0)
     const revenue30d = paidLast30.reduce((sum, o) => sum + (o.total_cents || 0), 0)
 
-    // Units sold
     const countUnits = (orderList) => orderList.reduce((sum, o) => {
       const items = o.items || []
       return sum + items.reduce((s, item) => s + (item.quantity || 0), 0)
@@ -80,8 +88,6 @@ function AdminDashboardPage() {
 
     const unitsSoldAllTime = countUnits(paidOrders)
     const unitsSold30d = countUnits(paidLast30)
-
-    // Average order value
     const avgOrderValue = paidOrders.length > 0 ? Math.round(revenueAllTime / paidOrders.length) : 0
 
     setStats({
@@ -99,36 +105,32 @@ function AdminDashboardPage() {
     })
   }
 
-  const handleCostPerUnitChange = (val) => {
+  const handleFallbackShippingChange = (val) => {
     const n = parseInt(val) || 0
-    setCostPerUnit(n)
-    localStorage.setItem('ktodd-admin-cost-per-unit', String(n))
+    setFallbackShipping(n)
+    localStorage.setItem('ktodd-admin-shipping-fallback', String(n))
   }
 
-  const handleShippingCostChange = (val) => {
-    const n = parseInt(val) || 0
-    setShippingCost(n)
-    localStorage.setItem('ktodd-admin-shipping-cost', String(n))
-  }
-
-  const calcProfitStats = (ordersList) => {
-    let totalRevenue = 0
-    let totalProductCost = 0
-    let totalShippingCost = 0
-    let totalStripeFees = 0
-
-    ordersList.forEach(order => {
-      const units = (order.items || []).reduce((s, i) => s + (i.quantity || 0), 0)
-      totalRevenue += order.total_cents
-      totalProductCost += units * costPerUnit
-      totalShippingCost += shippingCost
-      totalStripeFees += Math.round(order.total_cents * 0.029) + 30
+  const handleAddShipment = async () => {
+    const qty = parseInt(newShipmentQty)
+    const costDollars = parseFloat(newShipmentCost)
+    if (!qty || qty <= 0 || isNaN(costDollars) || costDollars <= 0) return
+    setSavingShipment(true)
+    await addShipment({
+      quantity: qty,
+      totalCostCents: Math.round(costDollars * 100),
+      supplierName: newShipmentSupplier.trim() || null
     })
+    setNewShipmentQty('')
+    setNewShipmentCost('')
+    setNewShipmentSupplier('')
+    setSavingShipment(false)
+  }
 
-    const netProfit = totalRevenue - totalProductCost - totalShippingCost - totalStripeFees
-    const margin = totalRevenue > 0 ? (netProfit / totalRevenue) * 100 : 0
-
-    return { totalRevenue, totalProductCost, totalShippingCost, totalStripeFees, netProfit, margin }
+  const handleDeleteShipment = async (id) => {
+    setDeletingId(id)
+    await deleteShipment(id)
+    setDeletingId(null)
   }
 
   const handleSignOut = async () => {
@@ -143,6 +145,10 @@ function AdminDashboardPage() {
       </div>
     )
   }
+
+  // Count orders with/without actual shipping cost
+  const ordersWithShipping = (stats.paidOrdersList || []).filter(o => o.actual_shipping_cost_cents != null).length
+  const ordersTotal = (stats.paidOrdersList || []).length
 
   return (
     <div className="min-h-screen bg-ktodd-dark">
@@ -307,48 +313,154 @@ function AdminDashboardPage() {
               </div>
             </div>
 
-            {/* Business Costs */}
+            {/* Product Shipments */}
             <div className="bg-gray-800/50 border border-gray-700 p-6 mb-8">
-              <h2 className="text-xl font-industrial text-yellow-500 mb-4">BUSINESS COSTS</h2>
-              <div className="flex flex-wrap gap-6 items-end">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-xl font-industrial text-yellow-500">PRODUCT SHIPMENTS</h2>
+                <div className="text-right">
+                  <div className="text-gray-400 text-xs">Weighted Avg Cost/Unit</div>
+                  <div className={`text-2xl font-industrial ${avgCostPerUnit > 0 ? 'text-white' : 'text-gray-500'}`}>
+                    {avgCostPerUnit > 0 ? formatPrice(avgCostPerUnit) : '--'}
+                  </div>
+                </div>
+              </div>
+
+              {shipments.length === 0 && !shipmentsLoading && (
+                <div className="p-4 bg-yellow-500/10 border border-yellow-500/50 rounded mb-4">
+                  <p className="text-yellow-500 text-sm">No product shipments logged yet. Add your first bulk purchase below to track product costs.</p>
+                </div>
+              )}
+
+              {/* Shipments Table */}
+              {shipments.length > 0 && (
+                <div className="overflow-x-auto mb-4">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="text-gray-400 text-xs uppercase border-b border-gray-700">
+                        <th className="text-left py-2 pr-4">Date</th>
+                        <th className="text-right py-2 px-4">Qty</th>
+                        <th className="text-right py-2 px-4">Total Cost</th>
+                        <th className="text-right py-2 px-4">Cost/Unit</th>
+                        <th className="text-left py-2 px-4">Supplier</th>
+                        <th className="text-right py-2 pl-4"></th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {shipments.map(s => (
+                        <tr key={s.id} className="border-b border-gray-700/50">
+                          <td className="py-2 pr-4 text-gray-300">
+                            {new Date(s.received_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                          </td>
+                          <td className="py-2 px-4 text-right text-white font-bold">{s.quantity}</td>
+                          <td className="py-2 px-4 text-right text-white">{formatPrice(s.total_cost_cents)}</td>
+                          <td className="py-2 px-4 text-right text-gray-300">{formatPrice(Math.round(s.total_cost_cents / s.quantity))}</td>
+                          <td className="py-2 px-4 text-gray-400">{s.supplier_name || '-'}</td>
+                          <td className="py-2 pl-4 text-right">
+                            <button
+                              onClick={() => handleDeleteShipment(s.id)}
+                              disabled={deletingId === s.id}
+                              className="text-gray-500 hover:text-red-400 transition-colors text-xs disabled:opacity-50"
+                            >
+                              {deletingId === s.id ? '...' : 'Delete'}
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+
+              {/* Add Shipment Form */}
+              <div className="flex flex-wrap items-end gap-3 pt-2 border-t border-gray-700">
                 <div>
-                  <label className="text-gray-400 text-sm block mb-1">Cost Per Unit (cents)</label>
+                  <label className="text-gray-400 text-xs block mb-1">Quantity</label>
                   <input
                     type="number"
-                    value={costPerUnit}
-                    onChange={e => handleCostPerUnitChange(e.target.value)}
-                    className="bg-gray-900 border border-gray-700 text-white px-3 py-2 text-sm rounded w-40 focus:border-yellow-500 focus:outline-none"
-                    placeholder="e.g. 150"
+                    value={newShipmentQty}
+                    onChange={e => setNewShipmentQty(e.target.value)}
+                    className="bg-gray-900 border border-gray-700 text-white px-3 py-2 text-sm rounded w-24 focus:border-yellow-500 focus:outline-none"
+                    placeholder="100"
+                    min="1"
                   />
-                  <span className="text-gray-500 text-xs ml-2">{formatPrice(costPerUnit)} each</span>
                 </div>
                 <div>
-                  <label className="text-gray-400 text-sm block mb-1">Shipping Cost Per Order (cents)</label>
+                  <label className="text-gray-400 text-xs block mb-1">Total Cost ($)</label>
                   <input
                     type="number"
-                    value={shippingCost}
-                    onChange={e => handleShippingCostChange(e.target.value)}
+                    step="0.01"
+                    value={newShipmentCost}
+                    onChange={e => setNewShipmentCost(e.target.value)}
+                    className="bg-gray-900 border border-gray-700 text-white px-3 py-2 text-sm rounded w-32 focus:border-yellow-500 focus:outline-none"
+                    placeholder="150.00"
+                    min="0.01"
+                  />
+                </div>
+                <div>
+                  <label className="text-gray-400 text-xs block mb-1">Supplier (optional)</label>
+                  <input
+                    type="text"
+                    value={newShipmentSupplier}
+                    onChange={e => setNewShipmentSupplier(e.target.value)}
+                    className="bg-gray-900 border border-gray-700 text-white px-3 py-2 text-sm rounded w-40 focus:border-yellow-500 focus:outline-none"
+                    placeholder="Supplier name"
+                  />
+                </div>
+                <button
+                  onClick={handleAddShipment}
+                  disabled={savingShipment || !newShipmentQty || !newShipmentCost}
+                  className="bg-yellow-500 hover:bg-yellow-400 text-black px-4 py-2 text-sm font-bold transition-colors disabled:opacity-50 disabled:cursor-not-allowed rounded"
+                >
+                  {savingShipment ? 'Adding...' : 'Add Shipment'}
+                </button>
+              </div>
+            </div>
+
+            {/* Shipping Cost Settings */}
+            <div className="bg-gray-800/50 border border-gray-700 p-6 mb-8">
+              <h2 className="text-xl font-industrial text-yellow-500 mb-4">SHIPPING COSTS</h2>
+              <div className="flex flex-wrap gap-6 items-end">
+                <div>
+                  <label className="text-gray-400 text-sm block mb-1">Fallback Shipping Cost (cents)</label>
+                  <input
+                    type="number"
+                    value={fallbackShipping}
+                    onChange={e => handleFallbackShippingChange(e.target.value)}
                     className="bg-gray-900 border border-gray-700 text-white px-3 py-2 text-sm rounded w-40 focus:border-yellow-500 focus:outline-none"
                     placeholder="e.g. 800"
                   />
-                  <span className="text-gray-500 text-xs ml-2">{formatPrice(shippingCost)} per order</span>
+                  <span className="text-gray-500 text-xs ml-2">{formatPrice(fallbackShipping)} per order</span>
                 </div>
-                <div className="text-gray-500 text-xs">
-                  Stripe fees (2.9% + $0.30) are calculated automatically
+                <div className="text-gray-400 text-sm">
+                  <span className="text-white font-bold">{ordersWithShipping}</span> of <span className="text-white font-bold">{ordersTotal}</span> paid orders have actual shipping costs.
+                  {ordersTotal - ordersWithShipping > 0 && (
+                    <span className="text-yellow-500 ml-1">Fallback used for {ordersTotal - ordersWithShipping}.</span>
+                  )}
                 </div>
               </div>
+              <p className="text-gray-500 text-xs mt-3">Enter actual shipping costs per order on the Orders page, or upload a Pirate Ship CSV to import in bulk. Stripe fees (2.9% + $0.30) are calculated automatically.</p>
             </div>
 
             {/* Profit Insights */}
             {stats.paidOrdersList && stats.paidOrdersList.length > 0 && (() => {
-              const allTime = calcProfitStats(stats.paidOrdersList)
-              const last30 = calcProfitStats(stats.paidLast30 || [])
+              const allTime = calcProfitStats(stats.paidOrdersList, avgCostPerUnit, fallbackShipping)
+              const last30 = calcProfitStats(stats.paidLast30 || [], avgCostPerUnit, fallbackShipping)
               return (
                 <div className="bg-gray-800/50 border border-gray-700 p-6 mb-8">
                   <div className="flex items-center justify-between mb-4">
                     <h2 className="text-xl font-industrial text-yellow-500">PROFIT INSIGHTS</h2>
                     <Link to="/admin/analytics" className="text-sm text-gray-400 hover:text-yellow-500">Full analytics →</Link>
                   </div>
+                  {allTime.ordersWithoutShipping > 0 && (
+                    <div className="p-3 bg-yellow-500/10 border border-yellow-500/50 rounded mb-4">
+                      <p className="text-yellow-500 text-sm">{allTime.ordersWithoutShipping} orders missing actual shipping cost — using {formatPrice(fallbackShipping)} fallback.</p>
+                    </div>
+                  )}
+                  {avgCostPerUnit === 0 && (
+                    <div className="p-3 bg-yellow-500/10 border border-yellow-500/50 rounded mb-4">
+                      <p className="text-yellow-500 text-sm">No product shipments logged — product cost is showing as $0. Add shipments above for accurate profit.</p>
+                    </div>
+                  )}
                   <div className="grid lg:grid-cols-2 gap-6">
                     {/* All Time */}
                     <div>
@@ -359,7 +471,7 @@ function AdminDashboardPage() {
                           <span className="text-white font-bold">{formatPrice(allTime.totalRevenue)}</span>
                         </div>
                         <div className="flex justify-between">
-                          <span className="text-gray-400 text-sm">Product Cost</span>
+                          <span className="text-gray-400 text-sm">Product Cost ({formatPrice(avgCostPerUnit)}/unit)</span>
                           <span className="text-red-400">-{formatPrice(allTime.totalProductCost)}</span>
                         </div>
                         <div className="flex justify-between">

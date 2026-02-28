@@ -2,6 +2,8 @@ import React, { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
 import { formatPrice } from '../../stores/cartStore'
+import { useProductShipments } from '../../hooks/useProductShipments'
+import { calcOrderProfit as calcOrderProfitShared } from '../../lib/costCalculations'
 import {
   LineChart, Line, BarChart, Bar, PieChart, Pie, Cell,
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip,
@@ -55,8 +57,10 @@ function AdminAnalyticsPage() {
   const [dateRange, setDateRange] = useState('30d')
   const [customStart, setCustomStart] = useState('')
   const [customEnd, setCustomEnd] = useState('')
-  const [costPerUnit, setCostPerUnit] = useState(() => parseInt(localStorage.getItem('ktodd-admin-cost-per-unit') || '0'))
-  const [shippingCost, setShippingCost] = useState(() => parseInt(localStorage.getItem('ktodd-admin-shipping-cost') || '0'))
+  const { shipments, avgCostPerUnit, loading: shipmentsLoading } = useProductShipments()
+  const [fallbackShipping, setFallbackShipping] = useState(
+    () => parseInt(localStorage.getItem('ktodd-admin-shipping-fallback') || '0')
+  )
 
   useEffect(() => {
     checkAuth()
@@ -87,16 +91,10 @@ function AdminAnalyticsPage() {
     navigate('/admin/login')
   }
 
-  const handleCostPerUnitChange = (val) => {
+  const handleFallbackShippingChange = (val) => {
     const n = parseInt(val) || 0
-    setCostPerUnit(n)
-    localStorage.setItem('ktodd-admin-cost-per-unit', String(n))
-  }
-
-  const handleShippingCostChange = (val) => {
-    const n = parseInt(val) || 0
-    setShippingCost(n)
-    localStorage.setItem('ktodd-admin-shipping-cost', String(n))
+    setFallbackShipping(n)
+    localStorage.setItem('ktodd-admin-shipping-fallback', String(n))
   }
 
   const getFilteredOrders = () => {
@@ -114,12 +112,7 @@ function AdminAnalyticsPage() {
   }
 
   const calcOrderProfit = (order) => {
-    const units = (order.items || []).reduce((s, i) => s + (i.quantity || 0), 0)
-    const productCost = units * costPerUnit
-    const shipCost = shippingCost
-    const stripeFee = Math.round(order.total_cents * 0.029) + 30
-    const profit = order.total_cents - productCost - shipCost - stripeFee
-    return { units, productCost, shipCost, stripeFee, profit }
+    return calcOrderProfitShared(order, avgCostPerUnit, fallbackShipping)
   }
 
   const getPeriodKey = (date) => {
@@ -172,9 +165,9 @@ function AdminAnalyticsPage() {
     let totalProfit = 0
 
     filtered.forEach(order => {
-      const { productCost, shipCost, stripeFee, profit } = calcOrderProfit(order)
+      const { productCost, shippingCost, stripeFee, profit } = calcOrderProfit(order)
       totalProductCost += productCost
-      totalShipping += shipCost
+      totalShipping += shippingCost
       totalStripe += stripeFee
       totalProfit += profit
     })
@@ -322,26 +315,24 @@ function AdminAnalyticsPage() {
               <h2 className="text-xl font-industrial text-yellow-500 mb-4">COST SETTINGS</h2>
               <div className="flex flex-wrap gap-6">
                 <div>
-                  <label className="text-gray-400 text-sm block mb-1">Cost Per Unit (cents)</label>
-                  <input
-                    type="number"
-                    value={costPerUnit}
-                    onChange={e => handleCostPerUnitChange(e.target.value)}
-                    className="bg-gray-900 border border-gray-700 text-white px-3 py-2 text-sm rounded w-40"
-                    placeholder="e.g. 150"
-                  />
-                  <span className="text-gray-500 text-xs ml-2">{formatPrice(costPerUnit)} each</span>
+                  <label className="text-gray-400 text-sm block mb-1">Weighted Avg Cost / Unit</label>
+                  <div className="text-white text-lg font-bold">
+                    {shipmentsLoading ? '...' : formatPrice(avgCostPerUnit)}
+                  </div>
+                  <Link to="/admin" className="text-yellow-500 text-xs hover:underline">
+                    Manage shipments on Dashboard →
+                  </Link>
                 </div>
                 <div>
-                  <label className="text-gray-400 text-sm block mb-1">Shipping Cost Per Order (cents)</label>
+                  <label className="text-gray-400 text-sm block mb-1">Fallback Shipping Per Order (cents)</label>
                   <input
                     type="number"
-                    value={shippingCost}
-                    onChange={e => handleShippingCostChange(e.target.value)}
+                    value={fallbackShipping}
+                    onChange={e => handleFallbackShippingChange(e.target.value)}
                     className="bg-gray-900 border border-gray-700 text-white px-3 py-2 text-sm rounded w-40"
                     placeholder="e.g. 800"
                   />
-                  <span className="text-gray-500 text-xs ml-2">{formatPrice(shippingCost)} per order</span>
+                  <span className="text-gray-500 text-xs ml-2">{formatPrice(fallbackShipping)} per order</span>
                 </div>
               </div>
             </div>
