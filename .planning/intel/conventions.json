@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updated": 1772174830818,
+  "updated": 1772247992295,
   "naming": {},
   "directories": {
     "lib": {
@@ -9,7 +9,7 @@
     },
     "pages": {
       "purpose": "Page components",
-      "files": 15
+      "files": 16
     },
     "components": {
       "purpose": "UI components",

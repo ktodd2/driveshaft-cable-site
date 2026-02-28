@@ -17,8 +17,11 @@ function AdminDashboardPage() {
     unitsSold30d: 0,
     unitsSoldAllTime: 0,
     avgOrderValue: 0,
-    recentOrders: []
+    recentOrders: [],
+    paidOrdersList: []
   })
+  const [costPerUnit, setCostPerUnit] = useState(() => parseInt(localStorage.getItem('ktodd-admin-cost-per-unit') || '0'))
+  const [shippingCost, setShippingCost] = useState(() => parseInt(localStorage.getItem('ktodd-admin-shipping-cost') || '0'))
 
   const { stock, loading: stockLoading } = useInventory('1')
 
@@ -90,8 +93,42 @@ function AdminDashboardPage() {
       unitsSold30d,
       unitsSoldAllTime,
       avgOrderValue,
-      recentOrders: allOrders.slice(0, 5)
+      recentOrders: allOrders.slice(0, 5),
+      paidOrdersList: paidOrders,
+      paidLast30
     })
+  }
+
+  const handleCostPerUnitChange = (val) => {
+    const n = parseInt(val) || 0
+    setCostPerUnit(n)
+    localStorage.setItem('ktodd-admin-cost-per-unit', String(n))
+  }
+
+  const handleShippingCostChange = (val) => {
+    const n = parseInt(val) || 0
+    setShippingCost(n)
+    localStorage.setItem('ktodd-admin-shipping-cost', String(n))
+  }
+
+  const calcProfitStats = (ordersList) => {
+    let totalRevenue = 0
+    let totalProductCost = 0
+    let totalShippingCost = 0
+    let totalStripeFees = 0
+
+    ordersList.forEach(order => {
+      const units = (order.items || []).reduce((s, i) => s + (i.quantity || 0), 0)
+      totalRevenue += order.total_cents
+      totalProductCost += units * costPerUnit
+      totalShippingCost += shippingCost
+      totalStripeFees += Math.round(order.total_cents * 0.029) + 30
+    })
+
+    const netProfit = totalRevenue - totalProductCost - totalShippingCost - totalStripeFees
+    const margin = totalRevenue > 0 ? (netProfit / totalRevenue) * 100 : 0
+
+    return { totalRevenue, totalProductCost, totalShippingCost, totalStripeFees, netProfit, margin }
   }
 
   const handleSignOut = async () => {
@@ -167,6 +204,12 @@ function AdminDashboardPage() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
               </svg>
               Email Blast
+            </Link>
+            <Link to="/admin/analytics" className="flex items-center gap-3 px-4 py-3 text-gray-400 hover:text-white hover:bg-gray-800 rounded transition-colors">
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+              </svg>
+              Analytics
             </Link>
             <div className="border-t border-gray-800 my-4"></div>
             <Link to="/" className="flex items-center gap-3 px-4 py-3 text-gray-400 hover:text-white hover:bg-gray-800 rounded transition-colors">
@@ -264,6 +307,122 @@ function AdminDashboardPage() {
               </div>
             </div>
 
+            {/* Business Costs */}
+            <div className="bg-gray-800/50 border border-gray-700 p-6 mb-8">
+              <h2 className="text-xl font-industrial text-yellow-500 mb-4">BUSINESS COSTS</h2>
+              <div className="flex flex-wrap gap-6 items-end">
+                <div>
+                  <label className="text-gray-400 text-sm block mb-1">Cost Per Unit (cents)</label>
+                  <input
+                    type="number"
+                    value={costPerUnit}
+                    onChange={e => handleCostPerUnitChange(e.target.value)}
+                    className="bg-gray-900 border border-gray-700 text-white px-3 py-2 text-sm rounded w-40 focus:border-yellow-500 focus:outline-none"
+                    placeholder="e.g. 150"
+                  />
+                  <span className="text-gray-500 text-xs ml-2">{formatPrice(costPerUnit)} each</span>
+                </div>
+                <div>
+                  <label className="text-gray-400 text-sm block mb-1">Shipping Cost Per Order (cents)</label>
+                  <input
+                    type="number"
+                    value={shippingCost}
+                    onChange={e => handleShippingCostChange(e.target.value)}
+                    className="bg-gray-900 border border-gray-700 text-white px-3 py-2 text-sm rounded w-40 focus:border-yellow-500 focus:outline-none"
+                    placeholder="e.g. 800"
+                  />
+                  <span className="text-gray-500 text-xs ml-2">{formatPrice(shippingCost)} per order</span>
+                </div>
+                <div className="text-gray-500 text-xs">
+                  Stripe fees (2.9% + $0.30) are calculated automatically
+                </div>
+              </div>
+            </div>
+
+            {/* Profit Insights */}
+            {stats.paidOrdersList && stats.paidOrdersList.length > 0 && (() => {
+              const allTime = calcProfitStats(stats.paidOrdersList)
+              const last30 = calcProfitStats(stats.paidLast30 || [])
+              return (
+                <div className="bg-gray-800/50 border border-gray-700 p-6 mb-8">
+                  <div className="flex items-center justify-between mb-4">
+                    <h2 className="text-xl font-industrial text-yellow-500">PROFIT INSIGHTS</h2>
+                    <Link to="/admin/analytics" className="text-sm text-gray-400 hover:text-yellow-500">Full analytics →</Link>
+                  </div>
+                  <div className="grid lg:grid-cols-2 gap-6">
+                    {/* All Time */}
+                    <div>
+                      <h3 className="text-sm font-bold text-gray-400 mb-3">ALL TIME</h3>
+                      <div className="space-y-2">
+                        <div className="flex justify-between">
+                          <span className="text-gray-400 text-sm">Gross Revenue</span>
+                          <span className="text-white font-bold">{formatPrice(allTime.totalRevenue)}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-gray-400 text-sm">Product Cost</span>
+                          <span className="text-red-400">-{formatPrice(allTime.totalProductCost)}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-gray-400 text-sm">Shipping Cost</span>
+                          <span className="text-red-400">-{formatPrice(allTime.totalShippingCost)}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-gray-400 text-sm">Stripe Fees</span>
+                          <span className="text-red-400">-{formatPrice(allTime.totalStripeFees)}</span>
+                        </div>
+                        <div className="flex justify-between pt-2 border-t border-gray-700">
+                          <span className="text-white font-bold">Net Profit</span>
+                          <span className={`font-bold ${allTime.netProfit >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                            {formatPrice(allTime.netProfit)}
+                          </span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-gray-400 text-sm">Margin</span>
+                          <span className={`font-bold ${allTime.margin >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                            {allTime.margin.toFixed(1)}%
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                    {/* Last 30 Days */}
+                    <div>
+                      <h3 className="text-sm font-bold text-gray-400 mb-3">LAST 30 DAYS</h3>
+                      <div className="space-y-2">
+                        <div className="flex justify-between">
+                          <span className="text-gray-400 text-sm">Gross Revenue</span>
+                          <span className="text-white font-bold">{formatPrice(last30.totalRevenue)}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-gray-400 text-sm">Product Cost</span>
+                          <span className="text-red-400">-{formatPrice(last30.totalProductCost)}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-gray-400 text-sm">Shipping Cost</span>
+                          <span className="text-red-400">-{formatPrice(last30.totalShippingCost)}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-gray-400 text-sm">Stripe Fees</span>
+                          <span className="text-red-400">-{formatPrice(last30.totalStripeFees)}</span>
+                        </div>
+                        <div className="flex justify-between pt-2 border-t border-gray-700">
+                          <span className="text-white font-bold">Net Profit</span>
+                          <span className={`font-bold ${last30.netProfit >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                            {formatPrice(last30.netProfit)}
+                          </span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-gray-400 text-sm">Margin</span>
+                          <span className={`font-bold ${last30.margin >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                            {last30.margin.toFixed(1)}%
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )
+            })()}
+
             {/* Recent Orders */}
             {stats.recentOrders.length > 0 && (
               <div className="bg-gray-800/50 border border-gray-700 p-6 mb-8">
@@ -315,6 +474,12 @@ function AdminDashboardPage() {
                   </Link>
                   <Link to="/admin/email" className="flex items-center justify-between p-3 bg-gray-800 hover:bg-gray-700 transition-colors rounded">
                     <span className="text-white">Send Email Blast</span>
+                    <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    </svg>
+                  </Link>
+                  <Link to="/admin/analytics" className="flex items-center justify-between p-3 bg-gray-800 hover:bg-gray-700 transition-colors rounded">
+                    <span className="text-white">View Analytics</span>
                     <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                     </svg>

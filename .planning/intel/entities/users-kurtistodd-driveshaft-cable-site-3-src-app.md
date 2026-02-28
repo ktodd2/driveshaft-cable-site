@@ -1,7 +1,7 @@
 ---
 path: /Users/kurtistodd/driveshaft-cable-site-3/src/App.jsx
 type: component
-updated: 2026-02-27
+updated: 2026-02-28
 status: active
 ---
 
@@ -9,34 +9,38 @@ status: active
 
 ## Purpose
 
-Root application component that configures client-side routing for the entire application. Defines the route structure for both public-facing pages and admin dashboard pages using React Router.
+Root application component that configures React Router and defines all application routes. Serves as the entry point for the SPA, organizing routes into public (wrapped in Layout) and admin sections.
 
 ## Exports
 
-- **App** (default): Main application component with BrowserRouter and route configuration
+- **App** (default): Main application component containing BrowserRouter and route definitions
 
 ## Dependencies
 
-- react (external)
-- react-router-dom (external)
-- [[components-layout-layout]]: Shared layout wrapper for public routes
-- [[pages-homepage]]: Landing page
-- [[pages-aboutpage]]: About page
-- [[pages-contactpage]]: Contact form page
-- [[pages-faqpage]]: FAQ page
-- [[pages-notfoundpage]]: 404 fallback page
-- [[pages-productlistpage]]: Product catalog listing
-- [[pages-productdetailpage]]: Individual product view
-- [[pages-cartpage]]: Shopping cart
-- [[pages-checkoutpage]]: Checkout flow
-- [[pages-ordersuccesspage]]: Order confirmation
-- [[pages-quotepage]]: Quote request form
-- [[pages-ordertrackingpage]]: Order status tracking
-- [[pages-admin-adminloginpage]]: Admin authentication
-- [[pages-admin-admindashboardpage]]: Admin dashboard
-- [[pages-admin-adminorderspage]]: Order management
-- [[pages-admin-adminquotespage]]: Quote management
-- [[pages-admin-adminemailpage]]: Email marketing (imported but not routed)
+### External
+- react
+- react-router-dom (BrowserRouter, Routes, Route)
+
+### Internal
+- [[layout]] - Layout wrapper for public routes
+- [[homepage]] - Landing page
+- [[aboutpage]] - About page
+- [[contactpage]] - Contact page
+- [[faqpage]] - FAQ page
+- [[notfoundpage]] - 404 fallback
+- [[productlistpage]] - Product catalog
+- [[productdetailpage]] - Individual product view
+- [[cartpage]] - Shopping cart
+- [[checkoutpage]] - Checkout flow
+- [[ordersuccesspage]] - Order confirmation
+- [[quotepage]] - Quote request form
+- [[ordertrackingpage]] - Order status tracking
+- [[adminloginpage]] - Admin authentication
+- [[admindashboardpage]] - Admin home
+- [[adminorderspage]] - Order management
+- [[adminquotespage]] - Quote management
+- [[adminemailpage]] - Email campaigns
+- [[adminanalyticspage]] - Analytics dashboard (imported but not routed)
 
 ## Used By
 
@@ -44,6 +48,7 @@ TBD
 
 ## Notes
 
-- AdminEmailPage is imported but not included in the route configuration - appears to be a missing route
-- Comment mentions "lazy loaded" for admin pages but they use standard imports, not React.lazy()
-- Public routes are nested under Layout component; admin routes are standalone
+- AdminAnalyticsPage is imported but not included in routes - appears to be incomplete integration
+- Admin pages comment mentions "lazy loaded" but uses regular imports
+- Public routes use nested routing with Layout; admin routes are standalone
+- Product detail uses dynamic `:slug` parameter
