@@ -28,6 +28,9 @@ function AdminOrdersPage() {
   const [savingShippingCost, setSavingShippingCost] = useState(false)
   const [shippingCostSaved, setShippingCostSaved] = useState(false)
 
+  // Delete order state
+  const [confirmDelete, setConfirmDelete] = useState(null)
+
   useEffect(() => {
     if (stock !== null && stockInput === '') setStockInput(String(stock))
   }, [stock])
@@ -40,6 +43,7 @@ function AdminOrdersPage() {
         setShippingCostInput('')
       }
       setShippingCostSaved(false)
+      setConfirmDelete(null)
     }
   }, [selectedOrder?.id])
 
@@ -124,6 +128,19 @@ function AdminOrdersPage() {
       if (selectedOrder?.id === orderId) {
         setSelectedOrder({ ...selectedOrder, status: newStatus })
       }
+    }
+  }
+
+  const deleteOrder = async (orderId) => {
+    const { error } = await supabase
+      .from('orders')
+      .delete()
+      .eq('id', orderId)
+
+    if (!error) {
+      setOrders(orders.filter(o => o.id !== orderId))
+      setSelectedOrder(null)
+      setConfirmDelete(null)
     }
   }
 
@@ -714,6 +731,41 @@ ${addr.country}`
                             </button>
                           ))}
                         </div>
+                      </div>
+
+                      {/* Delete Order */}
+                      <div className="border-t border-gray-700 pt-4 mt-4">
+                        {confirmDelete === selectedOrder.id ? (
+                          <div>
+                            <p className="text-red-400 text-sm mb-3">
+                              Delete order from <span className="font-bold">{selectedOrder.name}</span>? This cannot be undone.
+                            </p>
+                            <div className="flex gap-2">
+                              <button
+                                onClick={() => deleteOrder(selectedOrder.id)}
+                                className="flex-1 bg-red-600 hover:bg-red-500 text-white px-3 py-2 text-sm font-bold rounded transition-colors"
+                              >
+                                Yes, Delete
+                              </button>
+                              <button
+                                onClick={() => setConfirmDelete(null)}
+                                className="flex-1 bg-gray-700 hover:bg-gray-600 text-gray-300 px-3 py-2 text-sm font-bold rounded transition-colors"
+                              >
+                                Cancel
+                              </button>
+                            </div>
+                          </div>
+                        ) : (
+                          <button
+                            onClick={() => setConfirmDelete(selectedOrder.id)}
+                            className="w-full flex items-center justify-center gap-2 bg-gray-800 hover:bg-red-900/50 text-gray-500 hover:text-red-400 px-3 py-2 text-sm border border-gray-700 hover:border-red-800 rounded transition-colors"
+                          >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                            </svg>
+                            Delete Order
+                          </button>
+                        )}
                       </div>
                     </div>
                   ) : (
