@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updated": 1772247992295,
+  "updated": 1772256236572,
   "files": {
     "/Users/kurtistodd/driveshaft-cable-site/postcss.config.js": {
       "exports": [
@@ -290,7 +290,7 @@
         "../../stores/cartStore",
         "../../hooks/useInventory"
       ],
-      "indexed": 1772247976880
+      "indexed": 1772252524403
     },
     "/Users/kurtistodd/driveshaft-cable-site-3/supabase/functions/send-tracking-email/index.ts": {
       "exports": [],
@@ -343,9 +343,12 @@
         "react-router-dom",
         "../../lib/supabase",
         "../../stores/cartStore",
-        "../../hooks/useInventory"
+        "../../hooks/useInventory",
+        "../../hooks/useProductShipments",
+        "../../lib/costCalculations",
+        "../../lib/csvParser"
       ],
-      "indexed": 1772247969522
+      "indexed": 1772255536680
     },
     "/Users/kurtistodd/driveshaft-cable-site-3/src/components/landing/Customers.jsx": {
       "exports": [
@@ -467,9 +470,43 @@
         "react-router-dom",
         "../../lib/supabase",
         "../../stores/cartStore",
+        "../../hooks/useProductShipments",
+        "../../lib/costCalculations",
+        "papaparse",
         "recharts"
       ],
-      "indexed": 1772247703726
+      "indexed": 1772256236572
+    },
+    "/Users/kurtistodd/driveshaft-cable-site-3/src/lib/costCalculations.js": {
+      "exports": [
+        "calcWeightedAvgCost",
+        "calcOrderProfit",
+        "calcProfitStats"
+      ],
+      "imports": [],
+      "indexed": 1772250178887
+    },
+    "/Users/kurtistodd/driveshaft-cable-site-3/src/lib/csvParser.js": {
+      "exports": [
+        "parsePirateShipFile",
+        "parsePirateShipCSV"
+      ],
+      "imports": [
+        "papaparse",
+        "read-excel-file/browser"
+      ],
+      "indexed": 1772254745339
+    },
+    "/Users/kurtistodd/driveshaft-cable-site-3/src/hooks/useProductShipments.js": {
+      "exports": [
+        "useProductShipments"
+      ],
+      "imports": [
+        "react",
+        "../lib/supabase",
+        "../lib/costCalculations"
+      ],
+      "indexed": 1772255526218
     }
   }
 }

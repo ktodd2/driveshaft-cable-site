@@ -9,18 +9,21 @@ status: active
 
 ## Purpose
 
-Admin dashboard page for visualizing sales analytics with interactive charts showing revenue, profit margins, order counts, and cost breakdowns over configurable date ranges.
+Admin dashboard page for viewing financial analytics and order metrics. Displays revenue, profit, shipping costs, and Stripe fees through interactive charts with configurable date ranges.
 
 ## Exports
 
-- `AdminAnalyticsPage` (default) - Main analytics dashboard component with auth protection, date range filtering, and multiple chart visualizations (line, bar, pie, area charts)
+- `AdminAnalyticsPage` (default): Main analytics dashboard component with charts for revenue trends, profit margins, and cost breakdowns
 
 ## Dependencies
 
-- [[supabase]] - Authentication and order data fetching
-- [[cartStore]] - `formatPrice` utility for currency formatting
-- react-router-dom - Navigation and routing (`Link`, `useNavigate`)
-- recharts - Chart components (LineChart, BarChart, PieChart, AreaChart, etc.)
+- [[users-kurtistodd-driveshaft-cable-site-3-src-lib-supabase]]: Database client for auth and order queries
+- [[users-kurtistodd-driveshaft-cable-site-3-src-stores-cartstore]]: `formatPrice` utility for currency display
+- [[users-kurtistodd-driveshaft-cable-site-3-src-hooks-useproductshipments]]: Hook for shipment data and average cost per unit
+- [[users-kurtistodd-driveshaft-cable-site-3-src-lib-costcalculations]]: `calcOrderProfit` for profit calculations
+- react-router-dom: Navigation and routing
+- papaparse: CSV parsing for data import
+- recharts: Chart components (LineChart, BarChart, PieChart, AreaChart)
 
 ## Used By
 
@@ -28,8 +31,8 @@ TBD
 
 ## Notes
 
-- Requires admin authentication; redirects to `/admin/login` if not authenticated
-- Cost per unit and shipping cost values persist to localStorage with `ktodd-admin-` prefix
-- Only displays orders with `payment_status: 'paid'`
-- Custom tooltip components (`CustomTooltip`, `CountTooltip`) for chart hover states
-- Color palette defined in `COLORS` constant for consistent chart theming
+- Uses localStorage for persisting fallback shipping cost setting (`ktodd-admin-shipping-fallback`)
+- Requires authentication; redirects to `/admin/login` if no session
+- Fetches only paid orders for analytics
+- Custom tooltip components for currency and count display formatting
+- Color palette defined in COLORS constant for consistent chart styling

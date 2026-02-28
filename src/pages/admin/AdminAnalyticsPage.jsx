@@ -1,9 +1,10 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useRef } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
 import { formatPrice } from '../../stores/cartStore'
 import { useProductShipments } from '../../hooks/useProductShipments'
 import { calcOrderProfit as calcOrderProfitShared } from '../../lib/costCalculations'
+import Papa from 'papaparse'
 import {
   LineChart, Line, BarChart, Bar, PieChart, Pie, Cell,
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip,
@@ -61,6 +62,8 @@ function AdminAnalyticsPage() {
   const [fallbackShipping, setFallbackShipping] = useState(
     () => parseInt(localStorage.getItem('ktodd-admin-shipping-fallback') || '0')
   )
+  const [exporting, setExporting] = useState(false)
+  const reportRef = useRef(null)
 
   useEffect(() => {
     checkAuth()
@@ -219,6 +222,157 @@ function AdminAnalyticsPage() {
     return { totalRevenue, totalProfit, margin, orders: filtered.length, totalUnits, avgOrder }
   }
 
+  const getDateRangeLabel = () => {
+    if (dateRange === 'custom') return `${customStart} to ${customEnd}`
+    if (dateRange === '7d') return 'Last 7 Days'
+    if (dateRange === '30d') return 'Last 30 Days'
+    if (dateRange === '90d') return 'Last 90 Days'
+    if (dateRange === 'year') return 'Last Year'
+    return 'All Time'
+  }
+
+  const triggerDownload = (content, filename, mimeType) => {
+    const blob = new Blob([content], { type: mimeType })
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = filename
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    URL.revokeObjectURL(url)
+  }
+
+  const handleExportCSV = () => {
+    const summary = getSummaryStats()
+    const chartD = buildChartData()
+    const marginD = buildMarginData()
+    const pieD = buildPieData()
+    const topCust = buildTopCustomers()
+    const totalPieVal = pieD.reduce((s, d) => s + d.value, 0)
+
+    const rows = []
+
+    rows.push(['Analytics Report — ' + getDateRangeLabel()])
+    rows.push([])
+
+    rows.push(['Summary Statistics'])
+    rows.push(['Metric', 'Value'])
+    rows.push(['Revenue', formatPrice(summary.totalRevenue)])
+    rows.push(['Net Profit', formatPrice(summary.totalProfit)])
+    rows.push(['Margin %', `${summary.margin.toFixed(1)}%`])
+    rows.push(['Orders', summary.orders])
+    rows.push(['Units Sold', summary.totalUnits])
+    rows.push(['Avg Order Value', formatPrice(summary.avgOrder)])
+    rows.push([])
+
+    rows.push(['Revenue & Profit by Period'])
+    rows.push(['Date', 'Revenue', 'Profit', 'Orders', 'Units'])
+    chartD.forEach(d => {
+      rows.push([d.date, formatPrice(d.revenue), formatPrice(d.profit), d.orders, d.units])
+    })
+    rows.push([])
+
+    rows.push(['Profit Margin by Period'])
+    rows.push(['Date', 'Margin %'])
+    marginD.forEach(d => {
+      rows.push([d.date, `${d.margin.toFixed(1)}%`])
+    })
+    rows.push([])
+
+    rows.push(['Cost Breakdown'])
+    rows.push(['Category', 'Amount', 'Percentage'])
+    pieD.forEach(d => {
+      const pct = totalPieVal > 0 ? ((d.value / totalPieVal) * 100).toFixed(1) : '0.0'
+      rows.push([d.name, formatPrice(d.value), `${pct}%`])
+    })
+    rows.push([])
+
+    rows.push(['Top Customers by Spend'])
+    rows.push(['Name', 'Email', 'Total Spend', 'Orders'])
+    topCust.forEach(c => {
+      rows.push([c.name, c.email, formatPrice(c.total), c.orders])
+    })
+
+    const csvString = Papa.unparse(rows)
+    const dateStr = new Date().toISOString().split('T')[0]
+    triggerDownload(csvString, `analytics-data-${dateRange}-${dateStr}.csv`, 'text/csv;charset=utf-8;')
+  }
+
+  const handleExportPDF = async () => {
+    if (!reportRef.current) return
+    setExporting(true)
+
+    try {
+      const html2canvas = (await import('html2canvas')).default
+      const { jsPDF } = await import('jspdf')
+
+      const canvas = await html2canvas(reportRef.current, {
+        scale: 2,
+        useCORS: true,
+        backgroundColor: '#1A1A1A',
+        logging: false,
+        windowWidth: reportRef.current.scrollWidth,
+      })
+
+      const imgData = canvas.toDataURL('image/png')
+      const imgWidth = canvas.width
+      const imgHeight = canvas.height
+
+      const pdf = new jsPDF({
+        orientation: imgWidth > imgHeight ? 'landscape' : 'portrait',
+        unit: 'mm',
+        format: 'letter',
+      })
+
+      const pdfWidth = pdf.internal.pageSize.getWidth()
+      const pdfHeight = pdf.internal.pageSize.getHeight()
+
+      pdf.setFontSize(10)
+      pdf.setTextColor(150, 150, 150)
+      pdf.text(`Analytics Report — ${getDateRangeLabel()} — Generated ${new Date().toLocaleDateString()}`, 10, 8)
+
+      const margin = 10
+      const availableWidth = pdfWidth - margin * 2
+      const scaledHeight = (imgHeight * availableWidth) / imgWidth
+      const headerOffset = 12
+
+      if (scaledHeight + headerOffset <= pdfHeight - margin) {
+        pdf.addImage(imgData, 'PNG', margin, headerOffset, availableWidth, scaledHeight)
+      } else {
+        const pageContentHeight = pdfHeight - headerOffset - margin
+        const sliceHeightInPx = (pageContentHeight / availableWidth) * imgWidth
+        let yOffset = 0
+        let page = 0
+
+        while (yOffset < imgHeight) {
+          if (page > 0) pdf.addPage()
+
+          const sliceCanvas = document.createElement('canvas')
+          sliceCanvas.width = imgWidth
+          sliceCanvas.height = Math.min(sliceHeightInPx, imgHeight - yOffset)
+          const ctx = sliceCanvas.getContext('2d')
+          ctx.drawImage(canvas, 0, yOffset, imgWidth, sliceCanvas.height, 0, 0, imgWidth, sliceCanvas.height)
+
+          const sliceData = sliceCanvas.toDataURL('image/png')
+          const sliceScaledHeight = (sliceCanvas.height * availableWidth) / imgWidth
+          pdf.addImage(sliceData, 'PNG', margin, page === 0 ? headerOffset : margin, availableWidth, sliceScaledHeight)
+
+          yOffset += sliceHeightInPx
+          page++
+        }
+      }
+
+      const dateStr = new Date().toISOString().split('T')[0]
+      pdf.save(`analytics-report-${dateRange}-${dateStr}.pdf`)
+    } catch (err) {
+      console.error('PDF export failed:', err)
+      alert('PDF export failed. Please try again.')
+    } finally {
+      setExporting(false)
+    }
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen bg-ktodd-dark flex items-center justify-center">
@@ -308,7 +462,31 @@ function AdminAnalyticsPage() {
         {/* Main Content */}
         <main className="flex-1 p-6 lg:p-8">
           <div className="max-w-6xl mx-auto">
-            <h1 className="text-3xl font-industrial text-white mb-8">ANALYTICS</h1>
+            <div className="flex items-center justify-between mb-8">
+              <h1 className="text-3xl font-industrial text-white">ANALYTICS</h1>
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={handleExportCSV}
+                  disabled={exporting}
+                  className="flex items-center gap-2 bg-gray-800 hover:bg-gray-700 text-gray-300 hover:text-white px-4 py-2 text-sm font-bold rounded border border-gray-700 transition-colors disabled:opacity-50"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                  Export CSV
+                </button>
+                <button
+                  onClick={handleExportPDF}
+                  disabled={exporting}
+                  className="flex items-center gap-2 bg-yellow-500 hover:bg-yellow-400 text-black px-4 py-2 text-sm font-bold rounded transition-colors disabled:opacity-50"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                  </svg>
+                  {exporting ? 'Generating...' : 'Export PDF'}
+                </button>
+              </div>
+            </div>
 
             {/* Cost Settings */}
             <div className="bg-gray-800/50 border border-gray-700 p-6 mb-6">
@@ -353,6 +531,9 @@ function AdminAnalyticsPage() {
                   className="bg-gray-800 border border-gray-700 text-white px-3 py-2 text-sm rounded" />
               </div>
             </div>
+
+            {/* Exportable Report Content */}
+            <div ref={reportRef} style={{ backgroundColor: '#1A1A1A' }}>
 
             {/* Summary Cards */}
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
@@ -536,6 +717,8 @@ function AdminAnalyticsPage() {
                 </ResponsiveContainer>
               )}
             </div>
+
+            </div>{/* End exportable report content */}
 
           </div>
         </main>

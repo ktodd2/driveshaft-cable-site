@@ -1,11 +1,11 @@
 {
   "version": 1,
-  "updated": 1772247992295,
+  "updated": 1772256236573,
   "naming": {},
   "directories": {
     "lib": {
       "purpose": "Utility functions",
-      "files": 2
+      "files": 4
     },
     "pages": {
       "purpose": "Page components",
@@ -17,7 +17,7 @@
     },
     "hooks": {
       "purpose": "React/custom hooks",
-      "files": 1
+      "files": 2
     }
   },
   "suffixes": {}
