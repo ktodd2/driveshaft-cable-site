@@ -137,7 +137,10 @@ function AdminOrdersPage() {
       .delete()
       .eq('id', orderId)
 
-    if (!error) {
+    if (error) {
+      console.error('Delete failed:', error)
+      alert(`Failed to delete order: ${error.message}`)
+    } else {
       setOrders(orders.filter(o => o.id !== orderId))
       setSelectedOrder(null)
       setConfirmDelete(null)
