@@ -47,7 +47,7 @@ function AdminDashboardPage() {
   const [csvApplyResults, setCsvApplyResults] = useState(null)
   const [csvCheckedRows, setCsvCheckedRows] = useState(new Set())
 
-  const { stock, loading: stockLoading } = useInventory('1')
+  const { stock, loading: stockLoading, refetch: refetchStock } = useInventory('1')
 
   useEffect(() => {
     checkAuth()
@@ -136,6 +136,7 @@ function AdminDashboardPage() {
     setNewShipmentCost('')
     setNewShipmentSupplier('')
     setSavingShipment(false)
+    refetchStock()
   }
 
   const handleDeleteShipment = async (id) => {
