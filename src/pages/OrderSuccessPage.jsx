@@ -28,17 +28,19 @@ function OrderSuccessPage() {
         if (!error) {
           setPaymentStatus('paid')
 
-          // Fetch order to get quantity and decrement inventory
+          // Fetch order to get items and decrement inventory
           const { data: orderData } = await supabase
             .from('orders')
-            .select('email, name, quantity')
+            .select('email, name, items')
             .eq('id', orderId)
             .single()
 
           if (orderData) {
             setOrder(orderData)
-            if (orderData.quantity) {
-              await decrementStock('1', orderData.quantity)
+            // items is a JSON array like [{productId, name, quantity, price}]
+            const totalQty = (orderData.items || []).reduce((sum, item) => sum + (item.quantity || 0), 0)
+            if (totalQty > 0) {
+              await decrementStock('1', totalQty)
             }
           }
         } else {

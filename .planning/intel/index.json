@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updated": 1772394628420,
+  "updated": 1772396311702,
   "files": {
     "/Users/kurtistodd/driveshaft-cable-site/postcss.config.js": {
       "exports": [
@@ -277,7 +277,7 @@
         "../lib/supabase",
         "../hooks/useInventory"
       ],
-      "indexed": 1772393603758
+      "indexed": 1772396311702
     },
     "/Users/kurtistodd/driveshaft-cable-site-3/src/pages/admin/AdminOrdersPage.jsx": {
       "exports": [
