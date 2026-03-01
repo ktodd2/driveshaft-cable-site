@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
+import { decrementStock } from '../hooks/useInventory'
 
 function OrderSuccessPage() {
   const [searchParams] = useSearchParams()
@@ -12,7 +13,7 @@ function OrderSuccessPage() {
   useEffect(() => {
     if (!orderId) return
 
-    const updatePaymentStatus = async () => {
+    const handleOrderSuccess = async () => {
       if (redirectStatus === 'succeeded') {
         // Update order payment status to paid
         const { error } = await supabase
@@ -26,6 +27,20 @@ function OrderSuccessPage() {
 
         if (!error) {
           setPaymentStatus('paid')
+
+          // Fetch order to get quantity and decrement inventory
+          const { data: orderData } = await supabase
+            .from('orders')
+            .select('email, name, quantity')
+            .eq('id', orderId)
+            .single()
+
+          if (orderData) {
+            setOrder(orderData)
+            if (orderData.quantity) {
+              await decrementStock('1', orderData.quantity)
+            }
+          }
         } else {
           console.error('Error updating payment status:', error)
           setPaymentStatus('error')
@@ -39,23 +54,20 @@ function OrderSuccessPage() {
           })
           .eq('id', orderId)
         setPaymentStatus('failed')
+
+        // Still fetch order for display
+        const { data: orderData } = await supabase
+          .from('orders')
+          .select('email, name')
+          .eq('id', orderId)
+          .single()
+        if (orderData) setOrder(orderData)
       } else {
-        // processing or requires_action
         setPaymentStatus('pending')
       }
     }
 
-    const fetchOrder = async () => {
-      const { data } = await supabase
-        .from('orders')
-        .select('email, name')
-        .eq('id', orderId)
-        .single()
-      if (data) setOrder(data)
-    }
-
-    updatePaymentStatus()
-    fetchOrder()
+    handleOrderSuccess()
   }, [orderId, redirectStatus])
 
   const email = order?.email || 'your email'

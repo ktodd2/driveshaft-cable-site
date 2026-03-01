@@ -4,7 +4,6 @@ import { loadStripe } from '@stripe/stripe-js'
 import { Elements, PaymentElement, useStripe, useElements } from '@stripe/react-stripe-js'
 import { useCartStore, selectTotalItems, selectSubtotal, selectPricePerUnit, selectShipping, selectOrderTotal, formatPrice, SHIPPING_FEE, FREE_SHIPPING_THRESHOLD, REPEAT_CUSTOMER_DISCOUNT } from '../stores/cartStore'
 import { supabase } from '../lib/supabase'
-import { decrementStock } from '../hooks/useInventory'
 
 // Initialize Stripe
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY)
@@ -50,10 +49,6 @@ function PaymentForm({ clientSecret, orderId, totalCents, onSuccess, items }) {
           updated_at: new Date().toISOString()
         })
         .eq('id', orderId)
-
-      // Decrement stock for each item
-      const totalQty = items.reduce((sum, item) => sum + item.quantity, 0)
-      await decrementStock('1', totalQty)
 
       clearCart()
       navigate(`/checkout/success?order=${orderId}&redirect_status=succeeded`)

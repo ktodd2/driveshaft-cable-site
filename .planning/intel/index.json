@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updated": 1772256958137,
+  "updated": 1772393632355,
   "files": {
     "/Users/kurtistodd/driveshaft-cable-site/postcss.config.js": {
       "exports": [
@@ -263,10 +263,9 @@
         "@stripe/stripe-js",
         "@stripe/react-stripe-js",
         "../stores/cartStore",
-        "../lib/supabase",
-        "../hooks/useInventory"
+        "../lib/supabase"
       ],
-      "indexed": 1772172246747
+      "indexed": 1772393632355
     },
     "/Users/kurtistodd/driveshaft-cable-site-3/src/pages/OrderSuccessPage.jsx": {
       "exports": [
@@ -275,9 +274,10 @@
       ],
       "imports": [
         "react-router-dom",
-        "../lib/supabase"
+        "../lib/supabase",
+        "../hooks/useInventory"
       ],
-      "indexed": 1771966518616
+      "indexed": 1772393603758
     },
     "/Users/kurtistodd/driveshaft-cable-site-3/src/pages/admin/AdminOrdersPage.jsx": {
       "exports": [
