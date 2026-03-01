@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updated": 1772393632355,
+  "updated": 1772394628420,
   "files": {
     "/Users/kurtistodd/driveshaft-cable-site/postcss.config.js": {
       "exports": [
@@ -290,7 +290,7 @@
         "../../stores/cartStore",
         "../../hooks/useInventory"
       ],
-      "indexed": 1772256958137
+      "indexed": 1772394628420
     },
     "/Users/kurtistodd/driveshaft-cable-site-3/supabase/functions/send-tracking-email/index.ts": {
       "exports": [],

@@ -591,7 +591,9 @@ ${addr.country}`
                         )}
                         <div className="flex justify-between text-sm pt-2 border-t border-gray-700 mt-2">
                           <span className="text-gray-400">Shipping</span>
-                          <span className="text-green-400">FREE</span>
+                          <span className={selectedOrder.shipping_cents > 0 ? 'text-white' : 'text-green-400'}>
+                            {selectedOrder.shipping_cents > 0 ? formatPrice(selectedOrder.shipping_cents) : 'FREE'}
+                          </span>
                         </div>
                         <div className="flex justify-between font-bold pt-2">
                           <span className="text-white">Total</span>
