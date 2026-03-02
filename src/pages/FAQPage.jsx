@@ -255,7 +255,7 @@ function FAQPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-industrial text-white mb-4">
-              FREQUENTLY ASKED <span className="text-yellow-500">QUESTIONS</span>
+              DRIVESHAFT CABLE <span className="text-yellow-500">FAQ</span>
             </h1>
             <div className="w-24 h-1 bg-yellow-500 mx-auto mb-6"></div>
             <p className="text-xl text-gray-400 max-w-2xl mx-auto">
@@ -290,9 +290,14 @@ function FAQPage() {
           <p className="text-gray-400 mb-8">
             Can't find the answer you're looking for? We're here to help.
           </p>
-          <Link to="/contact" className="btn-primary">
-            Contact Us
-          </Link>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Link to="/products/driveshaft-cable" className="btn-primary">
+              Shop Driveshaft Cable
+            </Link>
+            <Link to="/contact" className="border border-gray-600 text-white px-8 py-3 font-industrial hover:bg-gray-800 transition-colors">
+              Contact Us
+            </Link>
+          </div>
         </div>
       </section>
     </div>

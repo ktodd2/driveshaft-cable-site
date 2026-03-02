@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { Suspense } from 'react'
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { HelmetProvider } from 'react-helmet-async'
 import Layout from './components/layout/Layout'
@@ -15,14 +15,14 @@ import OrderSuccessPage from './pages/OrderSuccessPage'
 import QuotePage from './pages/QuotePage'
 import OrderTrackingPage from './pages/OrderTrackingPage'
 
-// Admin pages (lazy loaded)
-import AdminLoginPage from './pages/admin/AdminLoginPage'
-import AdminDashboardPage from './pages/admin/AdminDashboardPage'
-import AdminOrdersPage from './pages/admin/AdminOrdersPage'
-import AdminQuotesPage from './pages/admin/AdminQuotesPage'
-import AdminEmailPage from './pages/admin/AdminEmailPage'
-import AdminAnalyticsPage from './pages/admin/AdminAnalyticsPage'
-import AdminNewsletterPage from './pages/admin/AdminNewsletterPage'
+// Admin pages (lazy loaded — excluded from public bundle)
+const AdminLoginPage = React.lazy(() => import('./pages/admin/AdminLoginPage'))
+const AdminDashboardPage = React.lazy(() => import('./pages/admin/AdminDashboardPage'))
+const AdminOrdersPage = React.lazy(() => import('./pages/admin/AdminOrdersPage'))
+const AdminQuotesPage = React.lazy(() => import('./pages/admin/AdminQuotesPage'))
+const AdminEmailPage = React.lazy(() => import('./pages/admin/AdminEmailPage'))
+const AdminAnalyticsPage = React.lazy(() => import('./pages/admin/AdminAnalyticsPage'))
+const AdminNewsletterPage = React.lazy(() => import('./pages/admin/AdminNewsletterPage'))
 
 function App() {
   return (
@@ -45,14 +45,14 @@ function App() {
           <Route path="*" element={<NotFoundPage />} />
         </Route>
 
-        {/* Admin routes */}
-        <Route path="/admin/login" element={<AdminLoginPage />} />
-        <Route path="/admin" element={<AdminDashboardPage />} />
-        <Route path="/admin/orders" element={<AdminOrdersPage />} />
-        <Route path="/admin/quotes" element={<AdminQuotesPage />} />
-        <Route path="/admin/email" element={<AdminEmailPage />} />
-        <Route path="/admin/analytics" element={<AdminAnalyticsPage />} />
-        <Route path="/admin/newsletter" element={<AdminNewsletterPage />} />
+        {/* Admin routes (lazy loaded) */}
+        <Route path="/admin/login" element={<Suspense fallback={<div />}><AdminLoginPage /></Suspense>} />
+        <Route path="/admin" element={<Suspense fallback={<div />}><AdminDashboardPage /></Suspense>} />
+        <Route path="/admin/orders" element={<Suspense fallback={<div />}><AdminOrdersPage /></Suspense>} />
+        <Route path="/admin/quotes" element={<Suspense fallback={<div />}><AdminQuotesPage /></Suspense>} />
+        <Route path="/admin/email" element={<Suspense fallback={<div />}><AdminEmailPage /></Suspense>} />
+        <Route path="/admin/analytics" element={<Suspense fallback={<div />}><AdminAnalyticsPage /></Suspense>} />
+        <Route path="/admin/newsletter" element={<Suspense fallback={<div />}><AdminNewsletterPage /></Suspense>} />
       </Routes>
     </BrowserRouter>
     </HelmetProvider>

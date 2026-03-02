@@ -52,6 +52,7 @@ function ProductCard({ product }) {
             src="/IMG_5493.jpeg"
             alt={product.name}
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+            loading="lazy"
           />
           {/* Stock Badge */}
           {!stockLoading && stock !== null && (

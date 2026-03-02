@@ -22,6 +22,7 @@ function Product() {
                 src="/inuse.jpeg"
                 alt="K.Todd Driveshaft Cable installed on vehicle"
                 className="w-full h-auto object-cover"
+                loading="lazy"
               />
             </div>
           </div>
