@@ -14,7 +14,7 @@ const homeStructuredData = [
     '@context': 'https://schema.org',
     '@type': 'Organization',
     name: 'K.Todd LLC',
-    url: 'https://k-todd.com',
+    url: 'https://driveshaftcable.com',
     description: 'K.Todd LLC manufactures heavy-duty driveshaft safety cables (driveshaftcable) for professional towing and recovery operations. Made by a heavy duty operator for the heavy duty operator.',
     contactPoint: {
       '@type': 'ContactPoint',
@@ -26,7 +26,7 @@ const homeStructuredData = [
     '@context': 'https://schema.org',
     '@type': 'WebSite',
     name: 'K.Todd Driveshaft Cable',
-    url: 'https://k-todd.com',
+    url: 'https://driveshaftcable.com',
     description: 'Heavy-duty driveshaft cable for towing and recovery operations',
     publisher: {
       '@type': 'Organization',

@@ -154,7 +154,7 @@ function ProductListPage() {
           itemListElement: [{
             '@type': 'ListItem',
             position: 1,
-            url: 'https://k-todd.com/products/driveshaft-cable',
+            url: 'https://driveshaftcable.com/products/driveshaft-cable',
             name: 'K.Todd Driveshaft Cable'
           }]
         }}

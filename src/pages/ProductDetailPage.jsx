@@ -17,10 +17,10 @@ const productStructuredData = [
     sku: 'KTDC-001',
     mpn: 'KTDC-001',
     image: [
-      'https://k-todd.com/IMG_5489.jpeg',
-      'https://k-todd.com/inuse.jpeg',
-      'https://k-todd.com/IMG_5491.jpeg',
-      'https://k-todd.com/IMG_5492.jpeg'
+      'https://driveshaftcable.com/IMG_5489.jpeg',
+      'https://driveshaftcable.com/inuse.jpeg',
+      'https://driveshaftcable.com/IMG_5491.jpeg',
+      'https://driveshaftcable.com/IMG_5492.jpeg'
     ],
     material: 'Galvanized Steel Wire with Aluminum Couplers',
     weight: {
@@ -35,16 +35,16 @@ const productStructuredData = [
       priceCurrency: 'USD',
       offerCount: '4',
       availability: 'https://schema.org/InStock',
-      url: 'https://k-todd.com/products/driveshaft-cable'
+      url: 'https://driveshaftcable.com/products/driveshaft-cable'
     }
   },
   {
     '@context': 'https://schema.org',
     '@type': 'BreadcrumbList',
     itemListElement: [
-      { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://k-todd.com/' },
-      { '@type': 'ListItem', position: 2, name: 'Products', item: 'https://k-todd.com/products' },
-      { '@type': 'ListItem', position: 3, name: 'Driveshaft Cable', item: 'https://k-todd.com/products/driveshaft-cable' }
+      { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://driveshaftcable.com/' },
+      { '@type': 'ListItem', position: 2, name: 'Products', item: 'https://driveshaftcable.com/products' },
+      { '@type': 'ListItem', position: 3, name: 'Driveshaft Cable', item: 'https://driveshaftcable.com/products/driveshaft-cable' }
     ]
   }
 ]

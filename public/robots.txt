@@ -4,4 +4,4 @@ Disallow: /admin/
 Disallow: /checkout/
 Disallow: /cart
 
-Sitemap: https://k-todd.com/sitemap.xml
+Sitemap: https://driveshaftcable.com/sitemap.xml

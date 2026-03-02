@@ -35,7 +35,7 @@ const TEMPLATES = {
               <table width="100%" cellpadding="0" cellspacing="0">
                 <tr>
                   <td align="center" style="padding-top:16px;">
-                    <a href="https://k-todd.com/products" target="_blank" style="display:inline-block;background-color:#eab308;color:#000;font-size:16px;font-weight:bold;text-decoration:none;padding:16px 48px;letter-spacing:1px;">
+                    <a href="https://driveshaftcable.com/products" target="_blank" style="display:inline-block;background-color:#eab308;color:#000;font-size:16px;font-weight:bold;text-decoration:none;padding:16px 48px;letter-spacing:1px;">
                       SHOP NOW
                     </a>
                   </td>
@@ -84,7 +84,7 @@ const TEMPLATES = {
               <table width="100%" cellpadding="0" cellspacing="0">
                 <tr>
                   <td align="center" style="padding-top:16px;">
-                    <a href="https://k-todd.com/products" target="_blank" style="display:inline-block;background-color:#eab308;color:#000;font-size:16px;font-weight:bold;text-decoration:none;padding:16px 48px;letter-spacing:1px;">
+                    <a href="https://driveshaftcable.com/products" target="_blank" style="display:inline-block;background-color:#eab308;color:#000;font-size:16px;font-weight:bold;text-decoration:none;padding:16px 48px;letter-spacing:1px;">
                       ORDER NOW
                     </a>
                   </td>
@@ -155,7 +155,7 @@ const TEMPLATES = {
               <table width="100%" cellpadding="0" cellspacing="0">
                 <tr>
                   <td align="center" style="padding-top:16px;">
-                    <a href="https://k-todd.com/products" target="_blank" style="display:inline-block;background-color:#eab308;color:#000;font-size:16px;font-weight:bold;text-decoration:none;padding:16px 48px;letter-spacing:1px;">
+                    <a href="https://driveshaftcable.com/products" target="_blank" style="display:inline-block;background-color:#eab308;color:#000;font-size:16px;font-weight:bold;text-decoration:none;padding:16px 48px;letter-spacing:1px;">
                       VIEW PRICING
                     </a>
                   </td>
@@ -204,7 +204,7 @@ const TEMPLATES = {
               <table width="100%" cellpadding="0" cellspacing="0">
                 <tr>
                   <td align="center" style="padding-top:16px;">
-                    <a href="https://k-todd.com/products" target="_blank" style="display:inline-block;background-color:#eab308;color:#000;font-size:16px;font-weight:bold;text-decoration:none;padding:16px 48px;letter-spacing:1px;">
+                    <a href="https://driveshaftcable.com/products" target="_blank" style="display:inline-block;background-color:#eab308;color:#000;font-size:16px;font-weight:bold;text-decoration:none;padding:16px 48px;letter-spacing:1px;">
                       REORDER NOW
                     </a>
                   </td>
@@ -253,7 +253,7 @@ const TEMPLATES = {
               <table width="100%" cellpadding="0" cellspacing="0">
                 <tr>
                   <td align="center" style="padding-top:16px;">
-                    <a href="https://k-todd.com/products" target="_blank" style="display:inline-block;background-color:#eab308;color:#000;font-size:16px;font-weight:bold;text-decoration:none;padding:16px 48px;letter-spacing:1px;">
+                    <a href="https://driveshaftcable.com/products" target="_blank" style="display:inline-block;background-color:#eab308;color:#000;font-size:16px;font-weight:bold;text-decoration:none;padding:16px 48px;letter-spacing:1px;">
                       SHOP THE SALE
                     </a>
                   </td>
@@ -302,7 +302,7 @@ const TEMPLATES = {
               <table width="100%" cellpadding="0" cellspacing="0">
                 <tr>
                   <td align="center" style="padding-top:16px;">
-                    <a href="https://k-todd.com/products" target="_blank" style="display:inline-block;background-color:#eab308;color:#000;font-size:16px;font-weight:bold;text-decoration:none;padding:16px 48px;letter-spacing:1px;">
+                    <a href="https://driveshaftcable.com/products" target="_blank" style="display:inline-block;background-color:#eab308;color:#000;font-size:16px;font-weight:bold;text-decoration:none;padding:16px 48px;letter-spacing:1px;">
                       LEARN MORE
                     </a>
                   </td>
@@ -351,7 +351,7 @@ const TEMPLATES = {
               <table width="100%" cellpadding="0" cellspacing="0">
                 <tr>
                   <td align="center" style="padding-top:16px;">
-                    <a href="https://k-todd.com/products" target="_blank" style="display:inline-block;background-color:#eab308;color:#000;font-size:16px;font-weight:bold;text-decoration:none;padding:16px 48px;letter-spacing:1px;">
+                    <a href="https://driveshaftcable.com/products" target="_blank" style="display:inline-block;background-color:#eab308;color:#000;font-size:16px;font-weight:bold;text-decoration:none;padding:16px 48px;letter-spacing:1px;">
                       ORDER AT CURRENT PRICES
                     </a>
                   </td>
@@ -441,7 +441,7 @@ const TEMPLATES = {
               <table width="100%" cellpadding="0" cellspacing="0">
                 <tr>
                   <td align="center" style="padding-top:16px;">
-                    <a href="https://k-todd.com/quote" target="_blank" style="display:inline-block;background-color:#eab308;color:#000;font-size:16px;font-weight:bold;text-decoration:none;padding:16px 48px;letter-spacing:1px;">
+                    <a href="https://driveshaftcable.com/quote" target="_blank" style="display:inline-block;background-color:#eab308;color:#000;font-size:16px;font-weight:bold;text-decoration:none;padding:16px 48px;letter-spacing:1px;">
                       GET A QUOTE
                     </a>
                   </td>
@@ -490,7 +490,7 @@ const TEMPLATES = {
               <table width="100%" cellpadding="0" cellspacing="0">
                 <tr>
                   <td align="center" style="padding-top:16px;">
-                    <a href="https://k-todd.com/products" target="_blank" style="display:inline-block;background-color:#eab308;color:#000;font-size:16px;font-weight:bold;text-decoration:none;padding:16px 48px;letter-spacing:1px;">
+                    <a href="https://driveshaftcable.com/products" target="_blank" style="display:inline-block;background-color:#eab308;color:#000;font-size:16px;font-weight:bold;text-decoration:none;padding:16px 48px;letter-spacing:1px;">
                       SHOP NOW
                     </a>
                   </td>
@@ -579,7 +579,7 @@ const TEMPLATES = {
               <table width="100%" cellpadding="0" cellspacing="0">
                 <tr>
                   <td align="center" style="padding-top:16px;">
-                    <a href="https://k-todd.com/quote" target="_blank" style="display:inline-block;background-color:#eab308;color:#000;font-size:16px;font-weight:bold;text-decoration:none;padding:16px 48px;letter-spacing:1px;">
+                    <a href="https://driveshaftcable.com/quote" target="_blank" style="display:inline-block;background-color:#eab308;color:#000;font-size:16px;font-weight:bold;text-decoration:none;padding:16px 48px;letter-spacing:1px;">
                       REQUEST A QUOTE
                     </a>
                   </td>

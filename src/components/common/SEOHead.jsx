@@ -1,7 +1,7 @@
 import { Helmet } from 'react-helmet-async'
 
 const SITE_NAME = 'K.Todd Driveshaft Cable'
-const SITE_URL = 'https://k-todd.com'
+const SITE_URL = 'https://driveshaftcable.com'
 const DEFAULT_DESCRIPTION = 'Heavy-duty driveshaft safety cables for towing. 3000lb WLL, galvanized steel, aluminum couplers. Made by a heavy duty operator for the heavy duty operator.'
 const DEFAULT_IMAGE = `${SITE_URL}/IMG_5489.jpeg`
 
