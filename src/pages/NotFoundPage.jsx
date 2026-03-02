@@ -1,9 +1,11 @@
 import React from 'react'
 import { Link } from 'react-router-dom'
+import SEOHead from '../components/common/SEOHead'
 
 function NotFoundPage() {
   return (
     <div className="pt-20 min-h-screen flex items-center justify-center bg-ktodd-dark">
+      <SEOHead title="Page Not Found" noindex />
       <div className="max-w-xl mx-auto px-4 text-center">
         <div className="text-yellow-500 font-industrial text-9xl mb-4">404</div>
         <h1 className="text-3xl sm:text-4xl font-industrial text-white mb-4">

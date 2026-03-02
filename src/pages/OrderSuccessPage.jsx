@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { decrementStock } from '../hooks/useInventory'
+import SEOHead from '../components/common/SEOHead'
 
 function OrderSuccessPage() {
   const [searchParams] = useSearchParams()
@@ -106,6 +107,7 @@ function OrderSuccessPage() {
 
   return (
     <div className="pt-20 min-h-screen bg-ktodd-dark">
+      <SEOHead title="Order Confirmed" noindex />
       <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
         {/* Success Icon */}
         <div className="text-center mb-8">

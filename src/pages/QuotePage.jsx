@@ -74,8 +74,9 @@ function QuotePage() {
   return (
     <div className="pt-20">
       <SEOHead
-        title="Request a Quote — Custom Orders & Wholesale"
-        description="Request a custom quote for K.Todd driveshaft cables. Wholesale pricing available for fleet and bulk orders."
+        title="Request a Driveshaft Cable Quote — Wholesale & Bulk"
+        description="Request a custom quote for K.Todd driveshaft cables (driveshaftcable). Wholesale pricing available for fleet and bulk orders."
+        keywords="driveshaft cable quote, bulk driveshaftcable, wholesale driveshaft cable pricing"
         canonical="/quote"
       />
       {/* Hero Section */}

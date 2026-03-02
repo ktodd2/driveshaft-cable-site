@@ -117,6 +117,14 @@ const faqStructuredData = {
         '@type': 'Answer',
         text: 'Email us at houstontruckwreck@gmail.com. We typically respond within 24 hours during business days.'
       }
+    },
+    {
+      '@type': 'Question',
+      name: 'What is a driveshaftcable?',
+      acceptedAnswer: {
+        '@type': 'Answer',
+        text: 'A driveshaftcable (also written as driveshaft cable) is a safety cable used to secure a disconnected driveshaft during towing operations. The K.Todd Driveshaft Cable is a purpose-built driveshaftcable featuring 5/32" galvanized steel wire and aluminum couplers with a 3000lb working load limit.'
+      }
     }
   ]
 }
@@ -140,6 +148,10 @@ const faqs = [
       {
         question: 'Is it reusable?',
         answer: 'No. The K.Todd Driveshaft Cable is a single-use product — it is cut off after the job is done. This is by design. There is no guessing whether the cable is still safe to use. One job, one cable.'
+      },
+      {
+        question: 'What is a driveshaftcable?',
+        answer: 'A driveshaftcable (also written as driveshaft cable) is a safety cable used to secure a disconnected driveshaft during towing operations. The K.Todd Driveshaft Cable is a purpose-built driveshaftcable featuring 5/32" galvanized steel wire and aluminum couplers with a 3000lb working load limit.'
       }
     ]
   },
@@ -232,8 +244,9 @@ function FAQPage() {
   return (
     <div className="pt-20">
       <SEOHead
-        title="FAQ — Driveshaft Cable Questions Answered"
-        description="Frequently asked questions about K.Todd driveshaft safety cables. Learn about WLL ratings, installation, pricing, and shipping."
+        title="Driveshaft Cable FAQ — Questions Answered"
+        description="Frequently asked questions about K.Todd driveshaft safety cables (driveshaftcable). Learn about WLL ratings, installation, pricing, and shipping."
+        keywords="driveshaft cable FAQ, driveshaftcable questions, towing cable specifications"
         canonical="/faq"
         structuredData={faqStructuredData}
       />

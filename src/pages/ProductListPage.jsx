@@ -144,16 +144,27 @@ function ProductListPage() {
     <div className="pt-20">
       <SEOHead
         title="Shop Driveshaft Safety Cables"
-        description="Browse K.Todd heavy-duty driveshaft cables. Volume pricing from $2.50/unit. Free shipping on orders over $100."
-        keywords="buy driveshaft cable, driveshaft cable price, bulk driveshaft cable, towing safety cable"
+        description="Browse K.Todd heavy-duty driveshaft cables (driveshaftcable). Volume pricing from $2.50/unit. Free shipping on orders over $100."
+        keywords="buy driveshaft cable, driveshaftcable, driveshaft cable price, bulk driveshaft cable, towing safety cable"
         canonical="/products"
+        structuredData={{
+          '@context': 'https://schema.org',
+          '@type': 'ItemList',
+          name: 'K.Todd Driveshaft Cables',
+          itemListElement: [{
+            '@type': 'ListItem',
+            position: 1,
+            url: 'https://k-todd.com/products/driveshaft-cable',
+            name: 'K.Todd Driveshaft Cable'
+          }]
+        }}
       />
       {/* Hero Section */}
       <section className="py-16 bg-gradient-to-b from-ktodd-dark to-ktodd-charcoal">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center">
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-industrial text-white mb-4">
-              SHOP <span className="text-yellow-500">PRODUCTS</span>
+              SHOP <span className="text-yellow-500">DRIVESHAFT CABLES</span>
             </h1>
             <div className="w-24 h-1 bg-yellow-500 mx-auto mb-6"></div>
             <p className="text-xl text-gray-400 max-w-2xl mx-auto">

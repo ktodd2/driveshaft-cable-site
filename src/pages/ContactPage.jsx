@@ -44,8 +44,9 @@ function ContactPage() {
   return (
     <div className="pt-20">
       <SEOHead
-        title="Contact K.Todd — Get in Touch"
-        description="Contact K.Todd LLC for driveshaft cable inquiries, wholesale pricing, or support. Based in Houston, TX."
+        title="Contact K.Todd — Driveshaft Cable Inquiries"
+        description="Contact K.Todd LLC for driveshaft cable (driveshaftcable) inquiries, wholesale pricing, or support. Based in Houston, TX."
+        keywords="contact driveshaft cable, driveshaftcable supplier, buy driveshaft cable Houston"
         canonical="/contact"
       />
       {/* Hero Section */}

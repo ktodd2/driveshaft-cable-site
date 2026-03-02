@@ -39,11 +39,17 @@ function SEOHead({
       <meta name="twitter:description" content={description} />
       <meta name="twitter:image" content={ogImage} />
 
-      {/* Structured Data */}
+      {/* Structured Data — supports single object or array of objects */}
       {structuredData && (
-        <script type="application/ld+json">
-          {JSON.stringify(structuredData)}
-        </script>
+        Array.isArray(structuredData)
+          ? structuredData.map((data, i) => (
+              <script key={i} type="application/ld+json">
+                {JSON.stringify(data)}
+              </script>
+            ))
+          : <script type="application/ld+json">
+              {JSON.stringify(structuredData)}
+            </script>
       )}
     </Helmet>
   )

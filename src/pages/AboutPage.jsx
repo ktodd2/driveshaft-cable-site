@@ -6,8 +6,9 @@ function AboutPage() {
   return (
     <div className="pt-20">
       <SEOHead
-        title="About K.Todd — Made by a Heavy Duty Operator"
-        description="K.Todd LLC manufactures heavy-duty driveshaft safety cables in Houston, TX. Made by a heavy duty operator for the heavy duty operator."
+        title="About K.Todd — Driveshaft Cable Manufacturer in Houston, TX"
+        description="K.Todd LLC manufactures heavy-duty driveshaft safety cables (driveshaftcable) in Houston, TX. Made by a heavy duty operator for the heavy duty operator."
+        keywords="driveshaft cable manufacturer, driveshaftcable, K.Todd LLC, Houston towing cable"
         canonical="/about"
       />
       {/* Hero Section */}

@@ -4,25 +4,50 @@ import { useCartStore, formatPrice, getPriceForQuantity, PRICE_PER_UNIT, PRICING
 import { useInventory } from '../hooks/useInventory'
 import SEOHead from '../components/common/SEOHead'
 
-const productStructuredData = {
-  '@context': 'https://schema.org',
-  '@type': 'Product',
-  name: 'K.Todd Driveshaft Cable',
-  description: 'K.Todd Driveshaft Safety Cable. 3000lb working load limit, 5/32" galvanized steel, 39" length, aluminum couplers. Purpose-built for heavy-duty towing and recovery operations.',
-  brand: {
-    '@type': 'Brand',
-    name: 'K.Todd'
+const productStructuredData = [
+  {
+    '@context': 'https://schema.org',
+    '@type': 'Product',
+    name: 'K.Todd Driveshaft Cable',
+    description: 'K.Todd Driveshaft Safety Cable (driveshaftcable). 3000lb working load limit, 5/32" galvanized steel, 39" length, aluminum couplers. Purpose-built for heavy-duty towing and recovery operations.',
+    brand: {
+      '@type': 'Brand',
+      name: 'K.Todd'
+    },
+    sku: 'KTDC-001',
+    mpn: 'KTDC-001',
+    image: [
+      'https://k-todd.com/IMG_5489.jpeg',
+      'https://k-todd.com/inuse.jpeg',
+      'https://k-todd.com/IMG_5491.jpeg',
+      'https://k-todd.com/IMG_5492.jpeg'
+    ],
+    material: 'Galvanized Steel Wire with Aluminum Couplers',
+    weight: {
+      '@type': 'QuantitativeValue',
+      value: '1.2',
+      unitCode: 'LBR'
+    },
+    offers: {
+      '@type': 'AggregateOffer',
+      lowPrice: '2.50',
+      highPrice: '3.00',
+      priceCurrency: 'USD',
+      offerCount: '4',
+      availability: 'https://schema.org/InStock',
+      url: 'https://k-todd.com/products/driveshaft-cable'
+    }
   },
-  sku: 'KTDC-001',
-  image: 'https://k-todd.com/IMG_5489.jpeg',
-  offers: {
-    '@type': 'Offer',
-    price: '3.00',
-    priceCurrency: 'USD',
-    availability: 'https://schema.org/InStock',
-    url: 'https://k-todd.com/products/driveshaft-cable'
+  {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://k-todd.com/' },
+      { '@type': 'ListItem', position: 2, name: 'Products', item: 'https://k-todd.com/products' },
+      { '@type': 'ListItem', position: 3, name: 'Driveshaft Cable', item: 'https://k-todd.com/products/driveshaft-cable' }
+    ]
   }
-}
+]
 
 const productImages = [
   '/inuse.jpeg',
@@ -123,7 +148,7 @@ function ProductDetailPage() {
       <SEOHead
         title="K.Todd Driveshaft Cable — 3000lb WLL"
         description='K.Todd Driveshaft Safety Cable. 3000lb working load limit, 5/32" galvanized steel, 39" length, aluminum couplers. Starting at $3.00/unit with volume discounts.'
-        keywords="K.Todd driveshaft cable, 3000lb WLL cable, towing safety cable, driveshaft guard"
+        keywords="K.Todd driveshaft cable, driveshaftcable, 3000lb WLL cable, towing safety cable, driveshaft guard"
         canonical="/products/driveshaft-cable"
         structuredData={productStructuredData}
       />
