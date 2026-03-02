@@ -97,7 +97,7 @@ No more makeshift solutions with bungee cords, zip ties, or chains. The K.Todd D
       { title: 'Protects Drivetrain Components', description: 'Eliminates seal damage and secondary transmission failures.' },
       { title: 'Faster Than Makeshift Solutions', description: 'No more chains, bungees, or zip ties. Install in seconds.' },
       { title: 'Compact & Field-Ready', description: 'Fits in glove box or tool tray. Always ready when you need it.' },
-      { title: 'Reusable & Weather-Resistant', description: 'Built to last job after job in any conditions.' }
+      { title: 'Single-Use by Design', description: 'Cut off after each job — no reuse, no guessing if it\'s still safe.' }
     ],
     in_stock: true
   }
@@ -240,7 +240,18 @@ function ProductDetailPage() {
                 Returning customers save an extra <span className="font-bold">10%</span> — applied automatically at checkout!
               </div>
 
-              <p className="text-gray-300 mb-8 whitespace-pre-line">{product.description}</p>
+              <p className="text-gray-300 mb-6 whitespace-pre-line">{product.description}</p>
+
+              {/* Single-Use Notice */}
+              <div className="bg-yellow-500/10 border border-yellow-500/40 px-4 py-3 mb-8 flex items-start gap-3">
+                <svg className="w-5 h-5 text-yellow-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <div>
+                  <span className="text-yellow-500 font-bold text-sm uppercase tracking-wider">Single-Use Product</span>
+                  <p className="text-gray-300 text-sm mt-1">This cable is designed to be cut off after each job. One cable per use — no reuse, no risk.</p>
+                </div>
+              </div>
 
               {/* Quantity Selector */}
               <div className="mb-6">

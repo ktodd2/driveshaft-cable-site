@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updated": 1772476092544,
+  "updated": 1772492215071,
   "files": {
     "/Users/kurtistodd/driveshaft-cable-site/postcss.config.js": {
       "exports": [
@@ -223,7 +223,7 @@
         "../hooks/useInventory",
         "../components/common/SEOHead"
       ],
-      "indexed": 1772476090457
+      "indexed": 1772492215071
     },
     "/Users/kurtistodd/driveshaft-cable-site-3/src/components/landing/Hero.jsx": {
       "exports": [
