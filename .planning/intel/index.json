@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updated": 1772492215071,
+  "updated": 1772494285292,
   "files": {
     "/Users/kurtistodd/driveshaft-cable-site/postcss.config.js": {
       "exports": [
@@ -414,7 +414,7 @@
         "https://deno.land/std@0.168.0/http/server.ts",
         "https://esm.sh/@supabase/supabase-js@2"
       ],
-      "indexed": 1772174830817
+      "indexed": 1772494259241
     },
     "/Users/kurtistodd/driveshaft-cable-site-3/src/pages/admin/AdminEmailPage.jsx": {
       "exports": [
@@ -425,7 +425,7 @@
         "react-router-dom",
         "../../lib/supabase"
       ],
-      "indexed": 1772476092544
+      "indexed": 1772494285292
     },
     "/Users/kurtistodd/driveshaft-cable-site-3/src/App.jsx": {
       "exports": [

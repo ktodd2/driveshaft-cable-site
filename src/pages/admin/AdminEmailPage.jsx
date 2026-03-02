@@ -744,11 +744,12 @@ function AdminEmailPage() {
 
   const checkRecipientCount = async () => {
     setCheckingCount(true)
-    const [{ count: orderCount }, { count: quoteCount }] = await Promise.all([
+    const [{ count: orderCount }, { count: quoteCount }, { count: subscriberCount }] = await Promise.all([
       supabase.from('orders').select('email', { count: 'exact', head: true }).eq('payment_status', 'paid'),
       supabase.from('quote_requests').select('email', { count: 'exact', head: true }),
+      supabase.from('newsletter_subscribers').select('email', { count: 'exact', head: true }).eq('status', 'active'),
     ])
-    setRecipientCount((orderCount || 0) + (quoteCount || 0))
+    setRecipientCount((orderCount || 0) + (quoteCount || 0) + (subscriberCount || 0))
     setCheckingCount(false)
   }
 
@@ -1041,7 +1042,7 @@ function AdminEmailPage() {
             <div className="bg-gray-800/50 border border-gray-700 px-6 py-4 mb-6 flex flex-col sm:flex-row sm:items-center gap-3">
               <div className="flex-1">
                 <span className="text-gray-400 text-sm">
-                  Recipients: all paid orders + quote requests (deduplicated)
+                  Recipients: paid orders + quote requests + newsletter subscribers (deduplicated)
                 </span>
                 {recipientCount !== null && (
                   <span className="ml-3 text-yellow-500 font-bold text-sm">

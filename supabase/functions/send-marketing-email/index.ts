@@ -58,15 +58,17 @@ serve(async (req) => {
       )
     }
 
-    // Collect unique customer emails
-    const [{ data: orders }, { data: quotes }] = await Promise.all([
+    // Collect unique emails from orders, quotes, and newsletter subscribers
+    const [{ data: orders }, { data: quotes }, { data: subscribers }] = await Promise.all([
       adminClient.from('orders').select('email').eq('payment_status', 'paid'),
       adminClient.from('quote_requests').select('email'),
+      adminClient.from('newsletter_subscribers').select('email').eq('status', 'active'),
     ])
 
     const allEmails = new Set<string>()
     ;(orders ?? []).forEach((r: any) => r.email && allEmails.add(r.email.toLowerCase().trim()))
     ;(quotes ?? []).forEach((r: any) => r.email && allEmails.add(r.email.toLowerCase().trim()))
+    ;(subscribers ?? []).forEach((r: any) => r.email && allEmails.add(r.email.toLowerCase().trim()))
 
     const recipients = Array.from(allEmails)
 
