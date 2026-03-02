@@ -1,5 +1,6 @@
 import React from 'react'
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import { HelmetProvider } from 'react-helmet-async'
 import Layout from './components/layout/Layout'
 import HomePage from './pages/HomePage'
 import AboutPage from './pages/AboutPage'
@@ -24,6 +25,7 @@ import AdminAnalyticsPage from './pages/admin/AdminAnalyticsPage'
 
 function App() {
   return (
+    <HelmetProvider>
     <BrowserRouter>
       <Routes>
         {/* Public routes */}
@@ -51,6 +53,7 @@ function App() {
         <Route path="/admin/analytics" element={<AdminAnalyticsPage />} />
       </Routes>
     </BrowserRouter>
+    </HelmetProvider>
   )
 }
 

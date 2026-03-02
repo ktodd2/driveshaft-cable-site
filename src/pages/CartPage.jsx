@@ -17,6 +17,7 @@ import {
   FREE_SHIPPING_THRESHOLD,
   SHIPPING_FEE
 } from '../stores/cartStore'
+import SEOHead from '../components/common/SEOHead'
 
 function CartPage() {
   const navigate = useNavigate()
@@ -78,6 +79,11 @@ function CartPage() {
 
   return (
     <div className="pt-20">
+      <SEOHead
+        title="Your Cart"
+        noindex={true}
+        canonical="/cart"
+      />
       {/* Header */}
       <section className="py-12 bg-gradient-to-b from-ktodd-dark to-ktodd-charcoal">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

@@ -1,7 +1,7 @@
 ---
 path: /Users/kurtistodd/driveshaft-cable-site-3/src/pages/FAQPage.jsx
 type: component
-updated: 2026-02-26
+updated: 2026-03-02
 status: active
 ---
 
@@ -9,16 +9,17 @@ status: active
 
 ## Purpose
 
-Displays a categorized FAQ (Frequently Asked Questions) page for the K.Todd Driveshaft Cable product. Provides expandable accordion-style answers organized by Product, Usage, and Ordering categories.
+Renders the FAQ page with an accordion-style interface for frequently asked questions about the K.Todd Driveshaft Cable product. Includes SEO-optimized structured data (JSON-LD FAQPage schema) for rich search results.
 
 ## Exports
 
-- `FAQPage` (default) - React component rendering the FAQ page with collapsible question/answer sections
+- `FAQPage` (default): React component that displays expandable FAQ sections with product information, specifications, installation instructions, and ordering details.
 
 ## Dependencies
 
-- `react` - useState hook for managing expanded FAQ state
-- `react-router-dom` - Link component for navigation to contact and quote pages
+- `react` (external): useState hook for accordion state management
+- `react-router-dom` (external): Link component for internal navigation
+- [[users-kurtistodd-driveshaft-cable-site-3-src-components-common-seohead]]: SEOHead component for meta tags and structured data injection
 
 ## Used By
 
@@ -26,6 +27,7 @@ TBD
 
 ## Notes
 
-- Uses local `faqs` array with categorized questions/answers (not fetched from API)
-- Accordion pattern with single expanded item at a time (clicking new item closes previous)
-- Links to `/contact` and `/request-quote` pages within answer content
+- Uses JSON-LD structured data (`FAQPage` schema) for SEO, injected via SEOHead component
+- Accordion state managed locally with useState (single open section at a time)
+- FAQ content covers: product description, vehicle compatibility, specifications, single-use design, installation, tow setup compatibility, sizing, bulk orders, warranty, and purchasing
+- Responsive design with mobile-friendly tap targets for accordion headers

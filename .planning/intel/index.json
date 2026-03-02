@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updated": 1772396311702,
+  "updated": 1772419062352,
   "files": {
     "/Users/kurtistodd/driveshaft-cable-site/postcss.config.js": {
       "exports": [
@@ -194,9 +194,10 @@
       "imports": [
         "react-router-dom",
         "../stores/cartStore",
-        "../hooks/useInventory"
+        "../hooks/useInventory",
+        "../components/common/SEOHead"
       ],
-      "indexed": 1772172292418
+      "indexed": 1772418866757
     },
     "/Users/kurtistodd/driveshaft-cable-site-3/src/pages/CartPage.jsx": {
       "exports": [
@@ -206,9 +207,10 @@
       "imports": [
         "react",
         "react-router-dom",
-        "../stores/cartStore"
+        "../stores/cartStore",
+        "../components/common/SEOHead"
       ],
-      "indexed": 1772172268543
+      "indexed": 1772419046374
     },
     "/Users/kurtistodd/driveshaft-cable-site-3/src/pages/ProductDetailPage.jsx": {
       "exports": [
@@ -218,9 +220,10 @@
       "imports": [
         "react-router-dom",
         "../stores/cartStore",
-        "../hooks/useInventory"
+        "../hooks/useInventory",
+        "../components/common/SEOHead"
       ],
-      "indexed": 1772172278190
+      "indexed": 1772418896414
     },
     "/Users/kurtistodd/driveshaft-cable-site-3/src/components/landing/Hero.jsx": {
       "exports": [
@@ -263,9 +266,10 @@
         "@stripe/stripe-js",
         "@stripe/react-stripe-js",
         "../stores/cartStore",
-        "../lib/supabase"
+        "../lib/supabase",
+        "../components/common/SEOHead"
       ],
-      "indexed": 1772393632355
+      "indexed": 1772419062352
     },
     "/Users/kurtistodd/driveshaft-cable-site-3/src/pages/OrderSuccessPage.jsx": {
       "exports": [
@@ -305,9 +309,10 @@
         "FAQPage"
       ],
       "imports": [
-        "react-router-dom"
+        "react-router-dom",
+        "../components/common/SEOHead"
       ],
-      "indexed": 1772124169700
+      "indexed": 1772418964282
     },
     "/Users/kurtistodd/driveshaft-cable-site-3/src/components/layout/Layout.jsx": {
       "exports": [
@@ -396,9 +401,10 @@
       "imports": [
         "react-router-dom",
         "../stores/cartStore",
-        "../lib/supabase"
+        "../lib/supabase",
+        "../components/common/SEOHead"
       ],
-      "indexed": 1772139162781
+      "indexed": 1772419015349
     },
     "/Users/kurtistodd/driveshaft-cable-site-3/supabase/functions/send-marketing-email/index.ts": {
       "exports": [],
@@ -427,6 +433,7 @@
       "imports": [
         "react",
         "react-router-dom",
+        "react-helmet-async",
         "./components/layout/Layout",
         "./pages/HomePage",
         "./pages/AboutPage",
@@ -447,7 +454,7 @@
         "./pages/admin/AdminEmailPage",
         "./pages/admin/AdminAnalyticsPage"
       ],
-      "indexed": 1772247735331
+      "indexed": 1772418731956
     },
     "/Users/kurtistodd/driveshaft-cable-site-3/src/pages/admin/AdminQuotesPage.jsx": {
       "exports": [
@@ -507,6 +514,57 @@
         "../lib/costCalculations"
       ],
       "indexed": 1772255526218
+    },
+    "/Users/kurtistodd/driveshaft-cable-site-3/src/components/common/SEOHead.jsx": {
+      "exports": [
+        "default",
+        "SEOHead"
+      ],
+      "imports": [
+        "react-helmet-async"
+      ],
+      "indexed": 1772418756309
+    },
+    "/Users/kurtistodd/driveshaft-cable-site-3/src/pages/HomePage.jsx": {
+      "exports": [
+        "default",
+        "HomePage"
+      ],
+      "imports": [
+        "react",
+        "../components/landing/Hero",
+        "../components/landing/Problem",
+        "../components/landing/ProductShowcase",
+        "../components/landing/Specs",
+        "../components/landing/HowItWorks",
+        "../components/landing/Customers",
+        "../components/landing/QuoteForm",
+        "../components/common/SEOHead"
+      ],
+      "indexed": 1772418827656
+    },
+    "/Users/kurtistodd/driveshaft-cable-site-3/src/pages/AboutPage.jsx": {
+      "exports": [
+        "default",
+        "AboutPage"
+      ],
+      "imports": [
+        "react",
+        "react-router-dom",
+        "../components/common/SEOHead"
+      ],
+      "indexed": 1772418907053
+    },
+    "/Users/kurtistodd/driveshaft-cable-site-3/src/pages/ContactPage.jsx": {
+      "exports": [
+        "default",
+        "ContactPage"
+      ],
+      "imports": [
+        "../lib/supabase",
+        "../components/common/SEOHead"
+      ],
+      "indexed": 1772418989970
     }
   }
 }

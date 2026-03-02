@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import { supabase } from '../lib/supabase'
+import SEOHead from '../components/common/SEOHead'
 
 function ContactPage() {
   const [formData, setFormData] = useState({
@@ -42,6 +43,11 @@ function ContactPage() {
 
   return (
     <div className="pt-20">
+      <SEOHead
+        title="Contact K.Todd — Get in Touch"
+        description="Contact K.Todd LLC for driveshaft cable inquiries, wholesale pricing, or support. Based in Houston, TX."
+        canonical="/contact"
+      />
       {/* Hero Section */}
       <section className="py-20 bg-gradient-to-b from-ktodd-dark to-ktodd-charcoal">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

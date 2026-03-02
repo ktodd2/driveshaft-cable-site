@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useCartStore, formatPrice, PRICE_PER_UNIT, PRICING_TIERS, getPriceForQuantity, MIN_ORDER_QUANTITY } from '../stores/cartStore'
 import { useInventory } from '../hooks/useInventory'
+import SEOHead from '../components/common/SEOHead'
 
 // For now, hardcoded product data - will come from Supabase later
 const products = [
@@ -141,6 +142,12 @@ function ProductCard({ product }) {
 function ProductListPage() {
   return (
     <div className="pt-20">
+      <SEOHead
+        title="Shop Driveshaft Safety Cables"
+        description="Browse K.Todd heavy-duty driveshaft cables. Volume pricing from $2.50/unit. Free shipping on orders over $100."
+        keywords="buy driveshaft cable, driveshaft cable price, bulk driveshaft cable, towing safety cable"
+        canonical="/products"
+      />
       {/* Hero Section */}
       <section className="py-16 bg-gradient-to-b from-ktodd-dark to-ktodd-charcoal">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

@@ -1,9 +1,15 @@
 import React from 'react'
 import { Link } from 'react-router-dom'
+import SEOHead from '../components/common/SEOHead'
 
 function AboutPage() {
   return (
     <div className="pt-20">
+      <SEOHead
+        title="About K.Todd — Made by a Heavy Duty Operator"
+        description="K.Todd LLC manufactures heavy-duty driveshaft safety cables in Houston, TX. Made by a heavy duty operator for the heavy duty operator."
+        canonical="/about"
+      />
       {/* Hero Section */}
       <section className="py-20 bg-gradient-to-b from-ktodd-dark to-ktodd-charcoal">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

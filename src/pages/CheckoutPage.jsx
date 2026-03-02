@@ -4,6 +4,7 @@ import { loadStripe } from '@stripe/stripe-js'
 import { Elements, PaymentElement, useStripe, useElements } from '@stripe/react-stripe-js'
 import { useCartStore, selectTotalItems, selectSubtotal, selectPricePerUnit, selectShipping, selectOrderTotal, formatPrice, SHIPPING_FEE, FREE_SHIPPING_THRESHOLD, REPEAT_CUSTOMER_DISCOUNT } from '../stores/cartStore'
 import { supabase } from '../lib/supabase'
+import SEOHead from '../components/common/SEOHead'
 
 // Initialize Stripe
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY)
@@ -234,6 +235,11 @@ function CheckoutPage() {
 
   return (
     <div className="pt-20">
+      <SEOHead
+        title="Checkout"
+        noindex={true}
+        canonical="/checkout"
+      />
       {/* Header */}
       <section className="py-8 bg-ktodd-dark border-b border-gray-800">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
