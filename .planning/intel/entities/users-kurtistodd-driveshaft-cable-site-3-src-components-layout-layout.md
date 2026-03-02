@@ -1,7 +1,7 @@
 ---
 path: /Users/kurtistodd/driveshaft-cable-site-3/src/components/layout/Layout.jsx
 type: component
-updated: 2026-02-26
+updated: 2026-03-02
 status: active
 ---
 
@@ -9,18 +9,19 @@ status: active
 
 ## Purpose
 
-Root layout component that wraps all pages with consistent structure including announcement bar, header, main content area, and footer. Provides the visual shell and navigation context for the entire application.
+Root layout wrapper component that provides consistent page structure including announcement bar, header, main content area, and footer. Wraps all routed pages via React Router's Outlet and includes the newsletter modal overlay.
 
 ## Exports
 
-- `Layout` (default): Main layout wrapper component using React Router's Outlet for nested route rendering
+- **Layout** (default): Main layout component that renders the full page shell with dark background, announcement bar, header, footer, and newsletter modal
 
 ## Dependencies
 
-- react (external)
-- react-router-dom (external)
-- [[header]] - Site header/navigation component
-- [[footer]] - Site footer component
+- react
+- react-router-dom (Outlet)
+- [[users-kurtistodd-driveshaft-cable-site-3-src-components-layout-header]]
+- [[users-kurtistodd-driveshaft-cable-site-3-src-components-layout-footer]]
+- [[users-kurtistodd-driveshaft-cable-site-3-src-components-newsletter-newslettermodal]]
 
 ## Used By
 
@@ -28,6 +29,6 @@ TBD
 
 ## Notes
 
-- Contains promotional announcement bar with shipping thresholds ($100 free shipping, $10 flat rate under $100)
-- Uses Tailwind CSS with custom `bg-ktodd-dark` color class
-- Flexbox layout ensures footer stays at bottom via `min-h-screen` and `flex-grow` on main
+- Announcement bar displays shipping promotions (free over $100, $10 flat rate under)
+- Uses flexbox column layout with `min-h-screen` to ensure footer stays at bottom
+- NewsletterModal renders at layout level so it's available on all pages

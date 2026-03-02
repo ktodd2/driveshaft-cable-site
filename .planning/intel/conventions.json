@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updated": 1772419062352,
+  "updated": 1772419712541,
   "naming": {},
   "directories": {
     "lib": {
@@ -9,11 +9,11 @@
     },
     "pages": {
       "purpose": "Page components",
-      "files": 19
+      "files": 20
     },
     "components": {
       "purpose": "UI components",
-      "files": 8
+      "files": 12
     },
     "hooks": {
       "purpose": "React/custom hooks",

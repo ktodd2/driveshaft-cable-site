@@ -9,15 +9,15 @@ status: active
 
 ## Purpose
 
-Main landing page component that assembles all marketing sections for the driveshaft cable e-commerce site. Combines SEO metadata with structured data for organization schema and renders the complete sales funnel from hero through quote form.
+Main landing page component that assembles all marketing sections for the driveshaft cable e-commerce site. Configures SEO metadata and structured data for organization schema to improve search visibility.
 
 ## Exports
 
-- `HomePage` (default) - Landing page component rendering all marketing sections with SEO head
+- `HomePage` (default): Landing page component rendering hero, problem statement, product showcase, specs, how-it-works, customer testimonials, and quote form sections
 
 ## Dependencies
 
-- react (external)
+- react
 - [[users-kurtistodd-driveshaft-cable-site-3-src-components-landing-hero]]
 - [[users-kurtistodd-driveshaft-cable-site-3-src-components-landing-problem]]
 - [[users-kurtistodd-driveshaft-cable-site-3-src-components-landing-productshowcase]]
@@ -25,6 +25,7 @@ Main landing page component that assembles all marketing sections for the drives
 - [[users-kurtistodd-driveshaft-cable-site-3-src-components-landing-howitworks]]
 - [[users-kurtistodd-driveshaft-cable-site-3-src-components-landing-customers]]
 - [[users-kurtistodd-driveshaft-cable-site-3-src-components-landing-quoteform]]
+- [[users-kurtistodd-driveshaft-cable-site-3-src-components-newsletter-newsletterinline]]
 - [[users-kurtistodd-driveshaft-cable-site-3-src-components-common-seohead]]
 
 ## Used By
@@ -33,6 +34,6 @@ TBD
 
 ## Notes
 
-- Contains inline `homeStructuredData` object for JSON-LD Organization schema markup
-- Section order follows a marketing funnel: Hero → Problem → Product → Specs → How It Works → Social Proof → CTA
-- Uses fragment wrapper (`<>`) to avoid extra DOM nodes
+- `NewsletterInline` component is imported but not rendered in the current JSX — likely intended for future integration or was removed from the page layout
+- Uses JSON-LD structured data for Organization schema to enhance SEO
+- Contact email in structured data: houstontruckwreck@gmail.com

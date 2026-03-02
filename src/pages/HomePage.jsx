@@ -6,6 +6,7 @@ import Specs from '../components/landing/Specs'
 import HowItWorks from '../components/landing/HowItWorks'
 import Customers from '../components/landing/Customers'
 import QuoteForm from '../components/landing/QuoteForm'
+import NewsletterInline from '../components/newsletter/NewsletterInline'
 import SEOHead from '../components/common/SEOHead'
 
 const homeStructuredData = {
@@ -37,6 +38,7 @@ function HomePage() {
       <Specs />
       <HowItWorks />
       <Customers />
+      <NewsletterInline source="homepage" />
       <QuoteForm />
     </>
   )

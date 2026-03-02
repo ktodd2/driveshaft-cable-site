@@ -22,6 +22,7 @@ import AdminOrdersPage from './pages/admin/AdminOrdersPage'
 import AdminQuotesPage from './pages/admin/AdminQuotesPage'
 import AdminEmailPage from './pages/admin/AdminEmailPage'
 import AdminAnalyticsPage from './pages/admin/AdminAnalyticsPage'
+import AdminNewsletterPage from './pages/admin/AdminNewsletterPage'
 
 function App() {
   return (
@@ -51,6 +52,7 @@ function App() {
         <Route path="/admin/quotes" element={<AdminQuotesPage />} />
         <Route path="/admin/email" element={<AdminEmailPage />} />
         <Route path="/admin/analytics" element={<AdminAnalyticsPage />} />
+        <Route path="/admin/newsletter" element={<AdminNewsletterPage />} />
       </Routes>
     </BrowserRouter>
     </HelmetProvider>

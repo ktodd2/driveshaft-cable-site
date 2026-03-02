@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updated": 1772419062352,
+  "updated": 1772419712540,
   "files": {
     "/Users/kurtistodd/driveshaft-cable-site/postcss.config.js": {
       "exports": [
@@ -294,7 +294,7 @@
         "../../stores/cartStore",
         "../../hooks/useInventory"
       ],
-      "indexed": 1772394628420
+      "indexed": 1772419684915
     },
     "/Users/kurtistodd/driveshaft-cable-site-3/supabase/functions/send-tracking-email/index.ts": {
       "exports": [],
@@ -323,9 +323,10 @@
         "react",
         "react-router-dom",
         "./Header",
-        "./Footer"
+        "./Footer",
+        "../newsletter/NewsletterModal"
       ],
-      "indexed": 1772137450323
+      "indexed": 1772419505436
     },
     "/Users/kurtistodd/driveshaft-cable-site-3/src/hooks/useInventory.js": {
       "exports": [
@@ -353,7 +354,7 @@
         "../../lib/costCalculations",
         "../../lib/csvParser"
       ],
-      "indexed": 1772255536680
+      "indexed": 1772419712540
     },
     "/Users/kurtistodd/driveshaft-cable-site-3/src/components/landing/Customers.jsx": {
       "exports": [
@@ -423,7 +424,7 @@
         "react-router-dom",
         "../../lib/supabase"
       ],
-      "indexed": 1772247992295
+      "indexed": 1772419682854
     },
     "/Users/kurtistodd/driveshaft-cable-site-3/src/App.jsx": {
       "exports": [
@@ -452,9 +453,10 @@
         "./pages/admin/AdminOrdersPage",
         "./pages/admin/AdminQuotesPage",
         "./pages/admin/AdminEmailPage",
-        "./pages/admin/AdminAnalyticsPage"
+        "./pages/admin/AdminAnalyticsPage",
+        "./pages/admin/AdminNewsletterPage"
       ],
-      "indexed": 1772418731956
+      "indexed": 1772419636020
     },
     "/Users/kurtistodd/driveshaft-cable-site-3/src/pages/admin/AdminQuotesPage.jsx": {
       "exports": [
@@ -466,7 +468,7 @@
         "../../lib/supabase",
         "date-fns"
       ],
-      "indexed": 1772247984285
+      "indexed": 1772419685952
     },
     "/Users/kurtistodd/driveshaft-cable-site-3/src/pages/admin/AdminAnalyticsPage.jsx": {
       "exports": [
@@ -482,7 +484,7 @@
         "papaparse",
         "recharts"
       ],
-      "indexed": 1772256236572
+      "indexed": 1772419683893
     },
     "/Users/kurtistodd/driveshaft-cable-site-3/src/lib/costCalculations.js": {
       "exports": [
@@ -539,9 +541,10 @@
         "../components/landing/HowItWorks",
         "../components/landing/Customers",
         "../components/landing/QuoteForm",
+        "../components/newsletter/NewsletterInline",
         "../components/common/SEOHead"
       ],
-      "indexed": 1772418827656
+      "indexed": 1772419424548
     },
     "/Users/kurtistodd/driveshaft-cable-site-3/src/pages/AboutPage.jsx": {
       "exports": [
@@ -565,6 +568,62 @@
         "../components/common/SEOHead"
       ],
       "indexed": 1772418989970
+    },
+    "/Users/kurtistodd/driveshaft-cable-site-3/src/components/newsletter/NewsletterForm.jsx": {
+      "exports": [
+        "default",
+        "NewsletterForm"
+      ],
+      "imports": [
+        "../../lib/supabase"
+      ],
+      "indexed": 1772419362849
+    },
+    "/Users/kurtistodd/driveshaft-cable-site-3/src/components/newsletter/NewsletterInline.jsx": {
+      "exports": [
+        "default",
+        "NewsletterInline"
+      ],
+      "imports": [
+        "react",
+        "./NewsletterForm"
+      ],
+      "indexed": 1772419392495
+    },
+    "/Users/kurtistodd/driveshaft-cable-site-3/src/components/layout/Footer.jsx": {
+      "exports": [
+        "default",
+        "Footer"
+      ],
+      "imports": [
+        "react",
+        "react-router-dom",
+        "../newsletter/NewsletterForm"
+      ],
+      "indexed": 1772419458196
+    },
+    "/Users/kurtistodd/driveshaft-cable-site-3/src/components/newsletter/NewsletterModal.jsx": {
+      "exports": [
+        "default",
+        "NewsletterModal"
+      ],
+      "imports": [
+        "./NewsletterForm"
+      ],
+      "indexed": 1772419481319
+    },
+    "/Users/kurtistodd/driveshaft-cable-site-3/src/pages/admin/AdminNewsletterPage.jsx": {
+      "exports": [
+        "default",
+        "AdminNewsletterPage"
+      ],
+      "imports": [
+        "react-router-dom",
+        "../../lib/supabase",
+        "date-fns",
+        "papaparse"
+      ],
+      "indexed": 1772419596609
     }
   }
 }

@@ -1,5 +1,6 @@
 import React from 'react'
 import { Link } from 'react-router-dom'
+import NewsletterForm from '../newsletter/NewsletterForm'
 
 function Footer() {
   const currentYear = new Date().getFullYear()
@@ -80,6 +81,15 @@ function Footer() {
                 Houston, Texas, USA
               </div>
             </div>
+          </div>
+        </div>
+
+        {/* Newsletter */}
+        <div className="mt-8 pt-8 border-t border-gray-800">
+          <div className="max-w-md">
+            <h4 className="text-white font-industrial text-lg mb-2">NEWSLETTER</h4>
+            <p className="text-gray-400 text-sm mb-3">Deals, updates & towing tips. No spam.</p>
+            <NewsletterForm source="footer" compact />
           </div>
         </div>
 

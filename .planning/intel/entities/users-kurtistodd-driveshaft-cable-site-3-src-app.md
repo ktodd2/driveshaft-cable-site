@@ -9,36 +9,37 @@ status: active
 
 ## Purpose
 
-Root application component that defines the routing structure for the entire e-commerce site. It configures both public customer-facing routes (wrapped in a shared Layout) and admin dashboard routes.
+Root application component that defines the routing structure for the entire e-commerce site. Configures React Router with public customer-facing routes wrapped in a shared Layout component, and separate admin routes for the dashboard.
 
 ## Exports
 
-- **App** (default): Main application component containing BrowserRouter and all route definitions
+- **App** (default): Main application component containing BrowserRouter, HelmetProvider, and all route definitions
 
 ## Dependencies
 
 - react
 - react-router-dom (BrowserRouter, Routes, Route)
-- react-helmet-async (HelmetProvider - imported but unused)
-- [[Layout]]: Shared layout wrapper for public routes
-- [[HomePage]]: Landing page
-- [[AboutPage]]: About page
-- [[ContactPage]]: Contact page
-- [[FAQPage]]: FAQ page
-- [[NotFoundPage]]: 404 fallback
-- [[ProductListPage]]: Product catalog
-- [[ProductDetailPage]]: Individual product view (dynamic :slug)
-- [[CartPage]]: Shopping cart
-- [[CheckoutPage]]: Checkout flow
-- [[OrderSuccessPage]]: Post-purchase confirmation
-- [[QuotePage]]: Quote request form
-- [[OrderTrackingPage]]: Order status tracking
-- [[AdminLoginPage]]: Admin authentication
-- [[AdminDashboardPage]]: Admin home
-- [[AdminOrdersPage]]: Order management
-- [[AdminQuotesPage]]: Quote management
-- [[AdminEmailPage]]: Email administration
-- [[AdminAnalyticsPage]]: Analytics dashboard
+- react-helmet-async (HelmetProvider)
+- [[layout]] - Shared layout wrapper for public routes
+- [[homepage]] - Landing page
+- [[aboutpage]] - Company information
+- [[contactpage]] - Contact form
+- [[faqpage]] - Frequently asked questions
+- [[notfoundpage]] - 404 error page
+- [[productlistpage]] - Product catalog
+- [[productdetailpage]] - Individual product view
+- [[cartpage]] - Shopping cart
+- [[checkoutpage]] - Payment flow
+- [[ordersuccesspage]] - Order confirmation
+- [[quotepage]] - Quote request form
+- [[ordertrackingpage]] - Order status lookup
+- [[adminloginpage]] - Admin authentication
+- [[admindashboardpage]] - Admin home
+- [[adminorderspage]] - Order management
+- [[adminquotespage]] - Quote management
+- [[adminemailpage]] - Email management
+- [[adminanalyticspage]] - Analytics dashboard
+- [[adminnewsletterpage]] - Newsletter management
 
 ## Used By
 
@@ -46,7 +47,7 @@ TBD
 
 ## Notes
 
-- Comment mentions "lazy loaded" for admin pages but they're actually imported statically
-- HelmetProvider is imported but not used in the JSX tree
-- Admin routes are outside the Layout wrapper, meaning they don't share the public site's header/footer
-- Public routes use nested routing with Layout as parent; admin routes are flat
+- Public routes use nested routing under Layout for consistent header/footer
+- Admin routes are defined outside the Layout wrapper (separate admin UI)
+- Comment mentions "lazy loaded" for admin pages but imports are synchronous—potential optimization opportunity
+- AdminNewsletterPage is imported but not included in the Routes (missing route definition)
