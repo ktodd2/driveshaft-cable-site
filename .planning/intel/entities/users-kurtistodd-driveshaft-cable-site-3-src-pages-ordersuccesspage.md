@@ -1,7 +1,7 @@
 ---
 path: /Users/kurtistodd/driveshaft-cable-site-3/src/pages/OrderSuccessPage.jsx
 type: component
-updated: 2026-03-01
+updated: 2026-03-02
 status: active
 ---
 
@@ -9,17 +9,19 @@ status: active
 
 ## Purpose
 
-Handles the post-payment redirect from Stripe, displaying order confirmation status to customers. Updates order payment status in the database based on the Stripe redirect result and shows appropriate success/failure UI.
+Displays post-payment confirmation page that handles Stripe redirect results, updates order status in Supabase, decrements inventory stock, and shows appropriate success/failure UI to the customer.
 
 ## Exports
 
-- `OrderSuccessPage` (default) - React component that processes payment redirects and displays order confirmation
+- `OrderSuccessPage` (default) - React component that renders order confirmation with payment status handling
 
 ## Dependencies
 
-- react-router-dom (external) - `Link`, `useSearchParams` for routing and URL parameter handling
-- [[supabase]] - Database client for updating and fetching order data
-- [[useInventory]] - `decrementStock` function (imported but usage truncated in visible code)
+- [[supabase]] - Database client for order status updates
+- [[useInventory]] - `decrementStock` function for inventory management
+- [[SEOHead]] - Meta tags component for page SEO
+- react-router-dom - URL params and navigation (Link, useSearchParams)
+- react - Core React hooks (useEffect, useState)
 
 ## Used By
 
@@ -27,7 +29,8 @@ TBD
 
 ## Notes
 
-- Reads `order` and `redirect_status` query parameters from Stripe payment redirect
-- Handles three payment states: succeeded, failed, and pending/processing
-- Updates order status to 'confirmed' and payment_status to 'paid' on success
-- The `decrementStock` import suggests inventory reduction happens here after successful payment
+- Reads `order` and `redirect_status` from URL search params (Stripe redirect)
+- Automatically updates order to 'paid'/'confirmed' or 'failed' based on Stripe redirect status
+- Decrements inventory by summing quantities from order items JSON array
+- Hardcoded product ID '1' in decrementStock call - assumes single product catalog
+- Shows different UI states: success (green checkmark), failed (red X with retry option), pending (loading)
