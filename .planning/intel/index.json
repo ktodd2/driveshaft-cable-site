@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updated": 1772419712540,
+  "updated": 1772420291178,
   "files": {
     "/Users/kurtistodd/driveshaft-cable-site/postcss.config.js": {
       "exports": [
@@ -424,7 +424,7 @@
         "react-router-dom",
         "../../lib/supabase"
       ],
-      "indexed": 1772419682854
+      "indexed": 1772420291178
     },
     "/Users/kurtistodd/driveshaft-cable-site-3/src/App.jsx": {
       "exports": [

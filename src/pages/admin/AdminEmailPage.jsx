@@ -549,6 +549,57 @@ const TEMPLATES = {
 </body>
 </html>`,
   },
+
+  outOfStock: {
+    label: 'Out of Stock Notice',
+    description: 'Temporarily sold out, restocking soon',
+    subject: 'Temporarily out of stock — new inventory arriving soon | K.Todd',
+    html: `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body style="margin:0;padding:0;background-color:#111111;font-family:Arial,Helvetica,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#111111;padding:40px 20px;">
+    <tr>
+      <td align="center">
+        <table width="600" cellpadding="0" cellspacing="0" style="background-color:#1a1a1a;border:1px solid #333;">
+          <tr>
+            <td style="background-color:#eab308;padding:24px;text-align:center;">
+              <h1 style="margin:0;color:#000;font-size:24px;font-weight:bold;letter-spacing:2px;">TEMPORARILY OUT OF STOCK</h1>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:32px;">
+              <p style="color:#d1d5db;font-size:16px;margin:0 0 16px;">We wanted to give you a heads up — K.Todd Driveshaft Cables are currently sold out due to high demand.</p>
+              <p style="color:#d1d5db;font-size:16px;margin:0 0 16px;">The good news: <strong style="color:#eab308;">new inventory is on the way and expected within the next 20 days.</strong> We're working to get restocked as fast as possible so you're never without the parts you need.</p>
+              <p style="color:#d1d5db;font-size:16px;margin:0 0 16px;">If you'd like to get ahead of the rush, you can request a quote now to lock in your order. We'll have it ready to ship the moment inventory arrives.</p>
+              <p style="color:#d1d5db;font-size:16px;margin:0 0 24px;">We appreciate your patience and your business. As always, returning customers receive a 10% loyalty discount — applied automatically at checkout.</p>
+              <table width="100%" cellpadding="0" cellspacing="0">
+                <tr>
+                  <td align="center" style="padding-top:16px;">
+                    <a href="https://k-todd.com/quote" target="_blank" style="display:inline-block;background-color:#eab308;color:#000;font-size:16px;font-weight:bold;text-decoration:none;padding:16px 48px;letter-spacing:1px;">
+                      REQUEST A QUOTE
+                    </a>
+                  </td>
+                </tr>
+              </table>
+              <p style="color:#6b7280;font-size:13px;margin:24px 0 0;text-align:center;">We'll notify you as soon as we're restocked and ready to ship.</p>
+            </td>
+          </tr>
+          <tr>
+            <td style="background-color:#111;padding:20px;text-align:center;border-top:1px solid #333;">
+              <p style="color:#6b7280;font-size:12px;margin:0;">K.Todd Driveshaft Cable | orders@k-todd.com</p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`,
+  },
 }
 
 // ---------------------------------------------------------------------------
