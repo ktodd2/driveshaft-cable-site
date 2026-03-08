@@ -87,8 +87,8 @@ function Product() {
                   </svg>
                 </div>
                 <div>
-                  <h4 className="text-lg font-bold text-white">Reusable & Weather-Resistant</h4>
-                  <p className="text-gray-400">Built to last job after job in any conditions.</p>
+                  <h4 className="text-lg font-bold text-white">Single-Use by Design</h4>
+                  <p className="text-gray-400">Cut off after each job — one cable per use, no risk.</p>
                 </div>
               </div>
             </div>
