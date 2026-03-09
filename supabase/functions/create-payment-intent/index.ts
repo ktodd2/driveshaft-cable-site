@@ -1,5 +1,6 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import Stripe from 'https://esm.sh/stripe@13.10.0?target=deno'
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY') as string, {
   apiVersion: '2023-10-16',
@@ -17,13 +18,46 @@ serve(async (req) => {
   }
 
   try {
-    const { amount, orderId, customerEmail } = await req.json()
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!
+    const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+    const adminClient = createClient(supabaseUrl, serviceRoleKey)
+
+    const { amount, orderId, customerEmail, items } = await req.json()
+
+    // Validate stock for each item before creating payment
+    if (items && items.length > 0) {
+      for (const item of items) {
+        const { data: inventory, error: invError } = await adminClient
+          .from('product_inventory')
+          .select('stock_quantity')
+          .eq('product_id', item.productId)
+          .single()
+
+        if (invError || !inventory) {
+          return new Response(
+            JSON.stringify({ error: `Product not found: ${item.productId}` }),
+            { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+          )
+        }
+
+        if (inventory.stock_quantity < item.quantity) {
+          return new Response(
+            JSON.stringify({
+              error: `Insufficient stock. Only ${inventory.stock_quantity} units available.`,
+              availableStock: inventory.stock_quantity
+            }),
+            { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+          )
+        }
+      }
+    }
 
     const paymentIntent = await stripe.paymentIntents.create({
       amount: amount, // Amount in cents
       currency: 'usd',
       metadata: {
         order_id: orderId,
+        items: items ? JSON.stringify(items) : '[]',
       },
       receipt_email: customerEmail,
     })

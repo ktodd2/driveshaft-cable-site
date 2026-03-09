@@ -1,7 +1,7 @@
 # Codebase Intelligence Summary
 
-Last updated: 2026-03-08T01:19:22.834Z
-Indexed files: 54
+Last updated: 2026-03-09T21:58:33.832Z
+Indexed files: 56
 
 ## Key Directories
 
@@ -10,4 +10,4 @@ Indexed files: 54
 - `components/`: UI components (12 files)
 - `hooks/`: React/custom hooks (2 files)
 
-Total exports: 76
+Total exports: 75

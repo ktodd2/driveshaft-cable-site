@@ -1,7 +1,7 @@
 ---
 path: /Users/kurtistodd/driveshaft-cable-site-3/src/pages/OrderSuccessPage.jsx
 type: component
-updated: 2026-03-02
+updated: 2026-03-09
 status: active
 ---
 
@@ -9,19 +9,18 @@ status: active
 
 ## Purpose
 
-Displays post-payment confirmation page that handles Stripe redirect results, updates order status in Supabase, decrements inventory stock, and shows appropriate success/failure UI to the customer.
+Handles the post-payment redirect from Stripe, displaying order confirmation or failure status to customers. Updates order payment status in the database, decrements inventory on successful payments, and shows appropriate success/failure UI with order details and next steps.
 
 ## Exports
 
-- `OrderSuccessPage` (default) - React component that renders order confirmation with payment status handling
+- `OrderSuccessPage` (default): React component that processes Stripe redirect parameters, updates order status, manages inventory, and renders confirmation/failure pages
 
 ## Dependencies
 
-- [[supabase]] - Database client for order status updates
-- [[useInventory]] - `decrementStock` function for inventory management
-- [[SEOHead]] - Meta tags component for page SEO
-- react-router-dom - URL params and navigation (Link, useSearchParams)
-- react - Core React hooks (useEffect, useState)
+- [[supabase]]: Database client for updating orders and fetching order details
+- [[seohead]]: SEO metadata component for page head
+- react-router-dom: URL search params and navigation links
+- react: Component state and effects
 
 ## Used By
 
@@ -29,8 +28,8 @@ TBD
 
 ## Notes
 
-- Reads `order` and `redirect_status` from URL search params (Stripe redirect)
-- Automatically updates order to 'paid'/'confirmed' or 'failed' based on Stripe redirect status
-- Decrements inventory by summing quantities from order items JSON array
-- Hardcoded product ID '1' in decrementStock call - assumes single product catalog
-- Shows different UI states: success (green checkmark), failed (red X with retry option), pending (loading)
+- Reads `order` and `redirect_status` from URL query parameters (Stripe redirect)
+- Calls `decrementStock` function to reduce inventory on successful payment
+- Uses hardcoded product ID '1' when decrementing stock (assumes single-product store)
+- Displays different UI states: success (green checkmark), failed (red X with retry), pending
+- Shows order confirmation number and sends confirmation email notification in success state

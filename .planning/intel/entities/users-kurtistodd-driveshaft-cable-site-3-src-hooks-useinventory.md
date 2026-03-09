@@ -1,7 +1,7 @@
 ---
 path: /Users/kurtistodd/driveshaft-cable-site-3/src/hooks/useInventory.js
 type: hook
-updated: 2026-02-26
+updated: 2026-03-09
 status: active
 ---
 
@@ -9,18 +9,17 @@ status: active
 
 ## Purpose
 
-Custom React hook and utility functions for managing product inventory state via Supabase. Provides real-time stock fetching, manual stock updates, and atomic decrement operations for the product_inventory table.
+Custom React hook for fetching and managing product inventory from Supabase. Provides real-time stock quantity tracking and manual stock updates for the e-commerce product catalog.
 
 ## Exports
 
 - `useInventory(productId)` - React hook that returns `{ stock, loading, refetch }` for a given product ID (defaults to '1')
-- `updateStock(productId, newQuantity)` - Async function to set a product's stock to a specific quantity
-- `decrementStock(productId, quantity)` - Async function to reduce stock by a given amount (floors at 0)
+- `updateStock(productId, newQuantity)` - Async function to update stock quantity in the database, returns `{ error }`
 
 ## Dependencies
 
-- react (useState, useEffect)
-- [[supabase]] - Supabase client for database operations
+- `react` (useState, useEffect)
+- [[users-kurtistodd-driveshaft-cable-site-3-src-lib-supabase]] - Supabase client instance
 
 ## Used By
 
@@ -28,6 +27,6 @@ TBD
 
 ## Notes
 
-- `decrementStock` uses a fetch-then-update pattern rather than a true atomic decrement RPC, which could cause race conditions under concurrent updates
-- Stock quantity is floored at 0 to prevent negative inventory
-- Updates include `updated_at` timestamp for tracking changes
+- Default productId of '1' suggests single-product store design; may need refactoring for multi-product inventory
+- No real-time subscription—uses manual `refetch` for updates; consider Supabase realtime for live inventory sync
+- `updateStock` sets `updated_at` timestamp on each update for audit tracking

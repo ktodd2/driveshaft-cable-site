@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updated": 1772932762832,
+  "updated": 1773093513830,
   "files": {
     "/Users/kurtistodd/driveshaft-cable-site/postcss.config.js": {
       "exports": [
@@ -223,7 +223,7 @@
         "../hooks/useInventory",
         "../components/common/SEOHead"
       ],
-      "indexed": 1772492215071
+      "indexed": 1773093463562
     },
     "/Users/kurtistodd/driveshaft-cable-site-3/src/components/landing/Hero.jsx": {
       "exports": [
@@ -269,7 +269,7 @@
         "../lib/supabase",
         "../components/common/SEOHead"
       ],
-      "indexed": 1772419062352
+      "indexed": 1773093370790
     },
     "/Users/kurtistodd/driveshaft-cable-site-3/src/pages/OrderSuccessPage.jsx": {
       "exports": [
@@ -279,10 +279,9 @@
       "imports": [
         "react-router-dom",
         "../lib/supabase",
-        "../hooks/useInventory",
         "../components/common/SEOHead"
       ],
-      "indexed": 1772474737374
+      "indexed": 1773093424363
     },
     "/Users/kurtistodd/driveshaft-cable-site-3/src/pages/admin/AdminOrdersPage.jsx": {
       "exports": [
@@ -332,14 +331,13 @@
     "/Users/kurtistodd/driveshaft-cable-site-3/src/hooks/useInventory.js": {
       "exports": [
         "useInventory",
-        "updateStock",
-        "decrementStock"
+        "updateStock"
       ],
       "imports": [
         "react",
         "../lib/supabase"
       ],
-      "indexed": 1772138070565
+      "indexed": 1773093483078
     },
     "/Users/kurtistodd/driveshaft-cable-site-3/src/pages/admin/AdminDashboardPage.jsx": {
       "exports": [
@@ -516,7 +514,7 @@
         "../lib/supabase",
         "../lib/costCalculations"
       ],
-      "indexed": 1772255526218
+      "indexed": 1773093513830
     },
     "/Users/kurtistodd/driveshaft-cable-site-3/src/components/common/SEOHead.jsx": {
       "exports": [
@@ -658,6 +656,24 @@
         "../components/common/SEOHead"
       ],
       "indexed": 1772474745493
+    },
+    "/Users/kurtistodd/driveshaft-cable-site-3/supabase/functions/create-payment-intent/index.ts": {
+      "exports": [],
+      "imports": [
+        "https://deno.land/std@0.168.0/http/server.ts",
+        "https://esm.sh/stripe@13.10.0?target=deno",
+        "https://esm.sh/@supabase/supabase-js@2"
+      ],
+      "indexed": 1773093305424
+    },
+    "/Users/kurtistodd/driveshaft-cable-site-3/supabase/functions/stripe-webhook/index.ts": {
+      "exports": [],
+      "imports": [
+        "https://deno.land/std@0.168.0/http/server.ts",
+        "https://esm.sh/stripe@13.10.0?target=deno",
+        "https://esm.sh/@supabase/supabase-js@2"
+      ],
+      "indexed": 1773093343113
     }
   }
 }

@@ -200,7 +200,11 @@ function CheckoutPage() {
           body: JSON.stringify({
             amount: totalCents,
             orderId: order.id,
-            customerEmail: formData.email
+            customerEmail: formData.email,
+            items: items.map(item => ({
+              productId: item.productId,
+              quantity: item.quantity
+            }))
           })
         }
       )

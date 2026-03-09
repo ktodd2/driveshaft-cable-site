@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
-import { decrementStock } from '../hooks/useInventory'
 import SEOHead from '../components/common/SEOHead'
 
 function OrderSuccessPage() {
@@ -29,20 +28,15 @@ function OrderSuccessPage() {
         if (!error) {
           setPaymentStatus('paid')
 
-          // Fetch order to get items and decrement inventory
+          // Fetch order for display (stock is decremented server-side via webhook)
           const { data: orderData } = await supabase
             .from('orders')
-            .select('email, name, items')
+            .select('email, name')
             .eq('id', orderId)
             .single()
 
           if (orderData) {
             setOrder(orderData)
-            // items is a JSON array like [{productId, name, quantity, price}]
-            const totalQty = (orderData.items || []).reduce((sum, item) => sum + (item.quantity || 0), 0)
-            if (totalQty > 0) {
-              await decrementStock('1', totalQty)
-            }
           }
         } else {
           console.error('Error updating payment status:', error)

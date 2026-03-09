@@ -127,7 +127,8 @@ function ProductDetailPage() {
   }
 
   const handleQuantityChange = (delta) => {
-    const newQty = Math.max(1, quantity + delta)
+    const max = stock ?? Infinity
+    const newQty = Math.min(max, Math.max(1, quantity + delta))
     setQuantity(newQty)
   }
 
@@ -267,7 +268,12 @@ function ProductDetailPage() {
                     <input
                       type="number"
                       value={quantity}
-                      onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value) || 1))}
+                      min={1}
+                      max={stock ?? undefined}
+                      onChange={(e) => {
+                        const max = stock ?? Infinity
+                        setQuantity(Math.min(max, Math.max(1, parseInt(e.target.value) || 1)))
+                      }}
                       className="w-16 text-center bg-transparent text-white border-x border-gray-700 py-2"
                     />
                     <button
@@ -281,6 +287,9 @@ function ProductDetailPage() {
                     Total: <span className="text-yellow-500 font-bold">{formatPrice(currentPrice * quantity)}</span>
                   </span>
                 </div>
+                {stock !== null && quantity >= stock && stock > 0 && (
+                  <p className="text-yellow-500 text-sm mt-2">Maximum available: {stock} units</p>
+                )}
               </div>
 
               {/* Action Buttons */}
