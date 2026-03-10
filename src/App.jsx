@@ -14,6 +14,8 @@ import CheckoutPage from './pages/CheckoutPage'
 import OrderSuccessPage from './pages/OrderSuccessPage'
 import QuotePage from './pages/QuotePage'
 import OrderTrackingPage from './pages/OrderTrackingPage'
+import BlogListPage from './pages/BlogListPage'
+import BlogPostPage from './pages/BlogPostPage'
 
 // Admin pages (lazy loaded — excluded from public bundle)
 const AdminLoginPage = React.lazy(() => import('./pages/admin/AdminLoginPage'))
@@ -23,6 +25,7 @@ const AdminQuotesPage = React.lazy(() => import('./pages/admin/AdminQuotesPage')
 const AdminEmailPage = React.lazy(() => import('./pages/admin/AdminEmailPage'))
 const AdminAnalyticsPage = React.lazy(() => import('./pages/admin/AdminAnalyticsPage'))
 const AdminNewsletterPage = React.lazy(() => import('./pages/admin/AdminNewsletterPage'))
+const AdminBlogPage = React.lazy(() => import('./pages/admin/AdminBlogPage'))
 
 function App() {
   return (
@@ -42,6 +45,8 @@ function App() {
           <Route path="checkout/success" element={<OrderSuccessPage />} />
           <Route path="quote" element={<QuotePage />} />
           <Route path="order-tracking" element={<OrderTrackingPage />} />
+          <Route path="blog" element={<BlogListPage />} />
+          <Route path="blog/:slug" element={<BlogPostPage />} />
           <Route path="*" element={<NotFoundPage />} />
         </Route>
 
@@ -53,6 +58,7 @@ function App() {
         <Route path="/admin/email" element={<Suspense fallback={<div />}><AdminEmailPage /></Suspense>} />
         <Route path="/admin/analytics" element={<Suspense fallback={<div />}><AdminAnalyticsPage /></Suspense>} />
         <Route path="/admin/newsletter" element={<Suspense fallback={<div />}><AdminNewsletterPage /></Suspense>} />
+        <Route path="/admin/blog" element={<Suspense fallback={<div />}><AdminBlogPage /></Suspense>} />
       </Routes>
     </BrowserRouter>
     </HelmetProvider>

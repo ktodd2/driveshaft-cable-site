@@ -97,6 +97,7 @@ function Header() {
               )}
               <NavLink to="/about">About</NavLink>
               <NavLink to="/faq">FAQ</NavLink>
+              <NavLink to="/blog">Blog</NavLink>
 
               {/* Cart Icon */}
               <Link to="/cart" className="relative text-gray-300 hover:text-yellow-500 transition-colors p-2">
@@ -154,6 +155,7 @@ function Header() {
                 )}
                 <NavLink to="/about">About</NavLink>
                 <NavLink to="/faq">FAQ</NavLink>
+                <NavLink to="/blog">Blog</NavLink>
                 <NavLink to="/contact">Contact</NavLink>
                 <Link to="/quote" className="btn-primary text-center" onClick={() => setIsMenuOpen(false)}>Get Quote</Link>
               </nav>

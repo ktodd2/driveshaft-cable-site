@@ -60,6 +60,9 @@ function Footer() {
               <li>
                 <Link to="/faq" className="text-gray-400 hover:text-yellow-500 transition-colors text-sm">FAQ</Link>
               </li>
+              <li>
+                <Link to="/blog" className="text-gray-400 hover:text-yellow-500 transition-colors text-sm">Blog</Link>
+              </li>
             </ul>
           </div>
 
