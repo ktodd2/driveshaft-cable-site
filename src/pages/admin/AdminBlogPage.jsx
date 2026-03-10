@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
 
-const TOTAL_TOPIC_SEEDS = 50
+const TOTAL_TOPIC_SEEDS = 100
 
 function AdminBlogPage() {
   const navigate = useNavigate()
