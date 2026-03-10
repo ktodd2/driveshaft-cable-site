@@ -21,7 +21,7 @@ function AdSlot({ slot, format = 'auto', responsive = true, className = '' }) {
         className="adsbygoogle"
         ref={adRef}
         style={{ display: 'block' }}
-        data-ad-client="ca-pub-XXXXXXXXXXXXXXXX"
+        data-ad-client="ca-pub-3653983384826324"
         data-ad-slot={slot}
         data-ad-format={format}
         data-full-width-responsive={responsive ? 'true' : 'false'}
