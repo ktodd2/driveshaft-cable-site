@@ -126,6 +126,7 @@ function BlogPostPage() {
         description={post.meta_description || post.excerpt}
         keywords={post.tags ? post.tags.join(', ') : 'heavy duty towing, towing tips'}
         canonical={`/blog/${post.slug}`}
+        ogImage="https://driveshaftcable.com/og-blog.jpg"
         structuredData={structuredData}
       />
 

@@ -295,6 +295,7 @@ Respond with valid JSON only, in this exact format:
             body: JSON.stringify({
               message: fbMessage,
               link: postUrl,
+              picture: 'https://driveshaftcable.com/og-blog.jpg',
               access_token: fbToken,
             }),
           }

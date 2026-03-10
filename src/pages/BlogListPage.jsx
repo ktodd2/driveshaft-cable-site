@@ -94,6 +94,7 @@ function BlogListPage() {
         description="Expert tips, industry news, and safety guides for heavy duty towing and recovery professionals. Stay informed with K.Todd."
         keywords="heavy duty towing blog, tow truck tips, towing safety, recovery techniques, driveshaft cable, towing industry news"
         canonical="/blog"
+        ogImage="https://driveshaftcable.com/og-blog.jpg"
         structuredData={structuredData}
       />
 
