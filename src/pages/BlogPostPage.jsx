@@ -1,8 +1,10 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useMemo } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import ReactMarkdown from 'react-markdown'
 import { supabase } from '../lib/supabase'
 import SEOHead from '../components/common/SEOHead'
+import AdSlot from '../components/ads/AdSlot'
+import InlineNewsletterCTA from '../components/newsletter/InlineNewsletterCTA'
 
 function BlogPostPage() {
   const { slug } = useParams()
@@ -106,6 +108,17 @@ function BlogPostPage() {
     },
   }
 
+  // Split content at ~40% for mid-article newsletter CTA
+  const [contentBefore, contentAfter] = useMemo(() => {
+    if (!post?.content) return ['', '']
+    const paragraphs = post.content.split('\n\n')
+    const splitAt = Math.max(2, Math.floor(paragraphs.length * 0.4))
+    return [
+      paragraphs.slice(0, splitAt).join('\n\n'),
+      paragraphs.slice(splitAt).join('\n\n'),
+    ]
+  }, [post?.content])
+
   return (
     <div className="pt-20">
       <SEOHead
@@ -155,7 +168,22 @@ function BlogPostPage() {
             prose-strong:text-white
             prose-a:text-yellow-500 prose-a:no-underline hover:prose-a:text-yellow-400
           ">
-            <ReactMarkdown>{post.content}</ReactMarkdown>
+            <ReactMarkdown>{contentBefore}</ReactMarkdown>
+          </article>
+
+          {/* Mid-article newsletter CTA */}
+          <InlineNewsletterCTA />
+
+          <article className="prose prose-invert prose-yellow max-w-none
+            prose-headings:font-industrial prose-headings:text-white
+            prose-h2:text-2xl prose-h2:mt-10 prose-h2:mb-4 prose-h2:text-yellow-500
+            prose-h3:text-xl prose-h3:mt-8 prose-h3:mb-3
+            prose-p:text-gray-300 prose-p:leading-relaxed prose-p:mb-4
+            prose-li:text-gray-300
+            prose-strong:text-white
+            prose-a:text-yellow-500 prose-a:no-underline hover:prose-a:text-yellow-400
+          ">
+            <ReactMarkdown>{contentAfter}</ReactMarkdown>
           </article>
 
           {/* Tags */}
@@ -170,8 +198,18 @@ function BlogPostPage() {
               </div>
             </div>
           )}
+
+          {/* Ad slot — after article content */}
+          <AdSlot slot="AFTER_CONTENT_SLOT" format="horizontal" className="mt-8" />
         </div>
       </section>
+
+      {/* Ad slot — between content and related posts */}
+      <div className="bg-ktodd-dark py-6">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+          <AdSlot slot="MID_PAGE_SLOT" format="auto" />
+        </div>
+      </div>
 
       {/* Related Posts */}
       {relatedPosts.length > 0 && (

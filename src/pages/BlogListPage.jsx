@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import SEOHead from '../components/common/SEOHead'
+import AdSlot from '../components/ads/AdSlot'
 
 const CATEGORIES = [
   { value: 'all', label: 'All' },
@@ -143,14 +144,14 @@ function BlogListPage() {
             </div>
           ) : (
             <>
+              {/* First 6 posts */}
               <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {posts.slice(0, POSTS_PER_PAGE).map((post) => (
+                {posts.slice(0, Math.min(6, POSTS_PER_PAGE)).map((post) => (
                   <Link
                     key={post.id}
                     to={`/blog/${post.slug}`}
                     className="group bg-gray-800/50 border border-gray-700 hover:border-yellow-500/50 transition-all duration-300"
                   >
-                    {/* Category & Date Header */}
                     <div className="p-6">
                       <div className="flex items-center justify-between mb-4">
                         <span className={`text-xs font-bold uppercase tracking-wider px-2 py-1 border ${categoryColor(post.category)}`}>
@@ -181,6 +182,52 @@ function BlogListPage() {
                   </Link>
                 ))}
               </div>
+
+              {/* Ad slot between card rows */}
+              {posts.length > 6 && (
+                <AdSlot slot="BLOG_LIST_SLOT" format="horizontal" className="my-6" />
+              )}
+
+              {/* Remaining posts */}
+              {posts.length > 6 && (
+                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {posts.slice(6, POSTS_PER_PAGE).map((post) => (
+                    <Link
+                      key={post.id}
+                      to={`/blog/${post.slug}`}
+                      className="group bg-gray-800/50 border border-gray-700 hover:border-yellow-500/50 transition-all duration-300"
+                    >
+                      <div className="p-6">
+                        <div className="flex items-center justify-between mb-4">
+                          <span className={`text-xs font-bold uppercase tracking-wider px-2 py-1 border ${categoryColor(post.category)}`}>
+                            {post.category.replace('-', ' ')}
+                          </span>
+                          <span className="text-gray-500 text-xs">
+                            {post.reading_time_minutes} min read
+                          </span>
+                        </div>
+
+                        <h2 className="text-lg font-bold text-white group-hover:text-yellow-500 transition-colors mb-3 line-clamp-2">
+                          {post.title}
+                        </h2>
+
+                        <p className="text-gray-400 text-sm mb-4 line-clamp-3">
+                          {post.excerpt}
+                        </p>
+
+                        <div className="flex items-center justify-between">
+                          <span className="text-gray-500 text-xs">
+                            {formatDate(post.published_at)}
+                          </span>
+                          <span className="text-yellow-500 text-sm font-bold uppercase tracking-wider group-hover:translate-x-1 transition-transform">
+                            Read More →
+                          </span>
+                        </div>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              )}
 
               {/* Pagination */}
               <div className="flex justify-center gap-4 mt-12">
