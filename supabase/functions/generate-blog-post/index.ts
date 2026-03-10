@@ -281,15 +281,14 @@ Respond with valid JSON only, in this exact format:
 
     // Auto-post to Facebook (best-effort, don't block on failure)
     try {
-      const fbPageId = Deno.env.get('FACEBOOK_PAGE_ID')
       const fbToken = Deno.env.get('FACEBOOK_PAGE_ACCESS_TOKEN')
 
-      if (fbPageId && fbToken) {
+      if (fbToken) {
         const postUrl = `https://driveshaftcable.com/blog/${slug}`
         const fbMessage = `New on the blog: ${parsed.title}\n\n${parsed.excerpt}\n\nRead more:`
 
         const fbResponse = await fetch(
-          `https://graph.facebook.com/v19.0/${fbPageId}/feed`,
+          `https://graph.facebook.com/v25.0/me/feed`,
           {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
