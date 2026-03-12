@@ -35,6 +35,7 @@ DECLARE
 BEGIN
   UPDATE product_inventory
   SET stock_quantity = stock_quantity + p_quantity,
+      total_quantity = COALESCE(total_quantity, 0) + p_quantity,
       updated_at = NOW()
   WHERE product_id = p_product_id
   RETURNING stock_quantity INTO new_stock;
