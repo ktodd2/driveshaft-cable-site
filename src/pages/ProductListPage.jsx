@@ -36,8 +36,10 @@ function ProductCard({ product }) {
     addItem(product, quantity)
   }
 
+  const maxQty = stock !== null && stock > 0 ? stock : Infinity
+
   const handleQuantityChange = (delta) => {
-    const newQty = Math.max(MIN_ORDER_QUANTITY, quantity + delta)
+    const newQty = Math.min(Math.max(MIN_ORDER_QUANTITY, quantity + delta), maxQty)
     setQuantity(newQty)
   }
 
@@ -110,7 +112,7 @@ function ProductCard({ product }) {
               <input
                 type="number"
                 value={quantity}
-                onChange={(e) => setQuantity(Math.max(MIN_ORDER_QUANTITY, parseInt(e.target.value) || MIN_ORDER_QUANTITY))}
+                onChange={(e) => setQuantity(Math.min(Math.max(MIN_ORDER_QUANTITY, parseInt(e.target.value) || MIN_ORDER_QUANTITY), maxQty))}
                 className="w-16 text-center bg-transparent text-white border-x border-gray-700 py-2 text-sm"
                 min={MIN_ORDER_QUANTITY}
               />
@@ -127,12 +129,17 @@ function ProductCard({ product }) {
           </div>
         </div>
 
+        {/* Stock limit warning */}
+        {!outOfStock && stock !== null && quantity >= stock && (
+          <p className="text-yellow-500 text-xs mb-2">Max available: {stock} units</p>
+        )}
+
         {/* Add to Cart */}
         <button
           onClick={handleAddToCart}
-          disabled={outOfStock}
+          disabled={outOfStock || (!stockLoading && stock !== null && quantity > stock)}
           className={`w-full font-bold py-3 px-4 uppercase text-sm tracking-wider transition-colors ${
-            outOfStock
+            outOfStock || (!stockLoading && stock !== null && quantity > stock)
               ? 'bg-gray-600 text-gray-400 cursor-not-allowed'
               : 'bg-yellow-500 hover:bg-yellow-400 text-black'
           }`}
