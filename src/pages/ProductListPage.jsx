@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { useCartStore, formatPrice, PRICE_PER_UNIT, PRICING_TIERS, getPriceForQuantity, MIN_ORDER_QUANTITY } from '../stores/cartStore'
 import { useInventory } from '../hooks/useInventory'
@@ -32,14 +32,20 @@ function ProductCard({ product }) {
   const { stock, totalStock, loading: stockLoading } = useInventory(product.id)
   const outOfStock = !stockLoading && stock === 0
 
-  const handleAddToCart = () => {
-    addItem(product, quantity)
-  }
-
+  const isLowStock = !stockLoading && stock !== null && stock > 0 && stock < MIN_ORDER_QUANTITY
+  const effectiveMin = isLowStock ? stock : MIN_ORDER_QUANTITY
   const maxQty = stock !== null && stock > 0 ? stock : Infinity
 
+  useEffect(() => {
+    if (isLowStock) setQuantity(stock)
+  }, [stock, stockLoading])
+
+  const handleAddToCart = () => {
+    addItem(product, quantity, isLowStock ? { reducedMinimum: true } : {})
+  }
+
   const handleQuantityChange = (delta) => {
-    const newQty = Math.min(Math.max(MIN_ORDER_QUANTITY, quantity + delta), maxQty)
+    const newQty = Math.min(Math.max(effectiveMin, quantity + delta), maxQty)
     setQuantity(newQty)
   }
 
@@ -100,7 +106,7 @@ function ProductCard({ product }) {
 
         {/* Quantity Selector */}
         <div className="mb-4 mt-4">
-          <label className="block text-gray-400 text-xs mb-2">Quantity (min. {MIN_ORDER_QUANTITY})</label>
+          <label className="block text-gray-400 text-xs mb-2">Quantity (min. {effectiveMin})</label>
           <div className="flex items-center gap-3">
             <div className="flex items-center border border-gray-700">
               <button
@@ -112,7 +118,7 @@ function ProductCard({ product }) {
               <input
                 type="number"
                 value={quantity}
-                onChange={(e) => setQuantity(Math.min(Math.max(MIN_ORDER_QUANTITY, parseInt(e.target.value) || MIN_ORDER_QUANTITY), maxQty))}
+                onChange={(e) => setQuantity(Math.min(Math.max(effectiveMin, parseInt(e.target.value) || effectiveMin), maxQty))}
                 className="w-16 text-center bg-transparent text-white border-x border-gray-700 py-2 text-sm"
                 min={MIN_ORDER_QUANTITY}
               />
@@ -129,8 +135,11 @@ function ProductCard({ product }) {
           </div>
         </div>
 
-        {/* Stock limit warning */}
-        {!outOfStock && stock !== null && quantity >= stock && (
+        {/* Stock warnings */}
+        {isLowStock && (
+          <p className="text-yellow-500 text-xs mb-2">Only {stock} available — min order reduced from {MIN_ORDER_QUANTITY}</p>
+        )}
+        {!isLowStock && !outOfStock && stock !== null && quantity >= stock && (
           <p className="text-yellow-500 text-xs mb-2">Max available: {stock} units</p>
         )}
 
