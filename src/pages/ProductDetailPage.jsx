@@ -1,7 +1,8 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
 import { useCartStore, formatPrice, getPriceForQuantity, PRICE_PER_UNIT, PRICING_TIERS, MIN_ORDER_QUANTITY } from '../stores/cartStore'
 import { useInventory } from '../hooks/useInventory'
+import InventoryProgressBar from '../components/common/InventoryProgressBar'
 import SEOHead from '../components/common/SEOHead'
 
 const productStructuredData = [
@@ -106,12 +107,20 @@ No more makeshift solutions with bungee cords, zip ties, or chains. The K.Todd D
 function ProductDetailPage() {
   const { slug } = useParams()
   const navigate = useNavigate()
-  const [quantity, setQuantity] = useState(1)
+  const [quantity, setQuantity] = useState(MIN_ORDER_QUANTITY)
   const [selectedImage, setSelectedImage] = useState(0)
   const addItem = useCartStore((state) => state.addItem)
 
   const product = products[slug]
-  const { stock, loading: stockLoading } = useInventory(product?.id)
+  const { stock, totalStock, loading: stockLoading } = useInventory(product?.id)
+
+  const isLowStock = !stockLoading && stock !== null && stock > 0 && stock < MIN_ORDER_QUANTITY
+  const effectiveMin = isLowStock ? stock : MIN_ORDER_QUANTITY
+  const maxQty = stock !== null && stock > 0 ? stock : Infinity
+
+  useEffect(() => {
+    if (isLowStock) setQuantity(stock)
+  }, [stock, stockLoading])
 
   if (!product) {
     return (
@@ -127,18 +136,16 @@ function ProductDetailPage() {
   }
 
   const handleQuantityChange = (delta) => {
-    const max = stock ?? Infinity
-    const newQty = Math.min(max, Math.max(1, quantity + delta))
+    const newQty = Math.min(Math.max(effectiveMin, quantity + delta), maxQty)
     setQuantity(newQty)
   }
 
   const handleAddToCart = () => {
-    addItem(product, quantity)
-    // Could show a toast notification here
+    addItem(product, quantity, isLowStock ? { reducedMinimum: true } : {})
   }
 
   const handleBuyNow = () => {
-    addItem(product, quantity)
+    addItem(product, quantity, isLowStock ? { reducedMinimum: true } : {})
     navigate('/cart')
   }
 
@@ -224,8 +231,11 @@ function ProductDetailPage() {
                 )}
               </div>
 
+              {/* Inventory Progress Bar */}
+              <InventoryProgressBar stock={stock} totalStock={totalStock} loading={stockLoading} />
+
               {/* Volume Pricing Tiers */}
-              <div className="flex flex-wrap gap-3 mb-6">
+              <div className="flex flex-wrap gap-3 mb-6 mt-6">
                 <span className={`text-xs px-3 py-1 border ${currentPrice === PRICE_PER_UNIT ? 'border-yellow-500 text-yellow-500' : 'border-gray-700 text-gray-500'}`}>
                   10-49: {formatPrice(PRICE_PER_UNIT)}/ea
                 </span>
@@ -256,7 +266,7 @@ function ProductDetailPage() {
 
               {/* Quantity Selector */}
               <div className="mb-6">
-                <label className="block text-gray-400 text-sm mb-2">Quantity</label>
+                <label className="block text-gray-400 text-sm mb-2">Quantity (min. {effectiveMin})</label>
                 <div className="flex items-center gap-4">
                   <div className="flex items-center border border-gray-700">
                     <button
@@ -268,11 +278,10 @@ function ProductDetailPage() {
                     <input
                       type="number"
                       value={quantity}
-                      min={1}
+                      min={effectiveMin}
                       max={stock ?? undefined}
                       onChange={(e) => {
-                        const max = stock ?? Infinity
-                        setQuantity(Math.min(max, Math.max(1, parseInt(e.target.value) || 1)))
+                        setQuantity(Math.min(maxQty, Math.max(effectiveMin, parseInt(e.target.value) || effectiveMin)))
                       }}
                       className="w-16 text-center bg-transparent text-white border-x border-gray-700 py-2"
                     />
@@ -287,7 +296,10 @@ function ProductDetailPage() {
                     Total: <span className="text-yellow-500 font-bold">{formatPrice(currentPrice * quantity)}</span>
                   </span>
                 </div>
-                {stock !== null && quantity >= stock && stock > 0 && (
+                {isLowStock && (
+                  <p className="text-yellow-500 text-sm mt-2">Only {stock} available — min order reduced from {MIN_ORDER_QUANTITY}</p>
+                )}
+                {!isLowStock && stock !== null && quantity >= stock && stock > 0 && (
                   <p className="text-yellow-500 text-sm mt-2">Maximum available: {stock} units</p>
                 )}
               </div>

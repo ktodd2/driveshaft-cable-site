@@ -1,7 +1,8 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { useCartStore, formatPrice, PRICE_PER_UNIT, PRICING_TIERS, getPriceForQuantity, MIN_ORDER_QUANTITY } from '../stores/cartStore'
 import { useInventory } from '../hooks/useInventory'
+import InventoryProgressBar from '../components/common/InventoryProgressBar'
 import SEOHead from '../components/common/SEOHead'
 
 // For now, hardcoded product data - will come from Supabase later
@@ -28,15 +29,23 @@ const products = [
 function ProductCard({ product }) {
   const addItem = useCartStore((state) => state.addItem)
   const [quantity, setQuantity] = useState(MIN_ORDER_QUANTITY)
-  const { stock, loading: stockLoading } = useInventory(product.id)
+  const { stock, totalStock, loading: stockLoading } = useInventory(product.id)
   const outOfStock = !stockLoading && stock === 0
 
+  const isLowStock = !stockLoading && stock !== null && stock > 0 && stock < MIN_ORDER_QUANTITY
+  const effectiveMin = isLowStock ? stock : MIN_ORDER_QUANTITY
+  const maxQty = stock !== null && stock > 0 ? stock : Infinity
+
+  useEffect(() => {
+    if (isLowStock) setQuantity(stock)
+  }, [stock, stockLoading])
+
   const handleAddToCart = () => {
-    addItem(product, quantity)
+    addItem(product, quantity, isLowStock ? { reducedMinimum: true } : {})
   }
 
   const handleQuantityChange = (delta) => {
-    const newQty = Math.max(MIN_ORDER_QUANTITY, quantity + delta)
+    const newQty = Math.min(Math.max(effectiveMin, quantity + delta), maxQty)
     setQuantity(newQty)
   }
 
@@ -92,9 +101,12 @@ function ProductCard({ product }) {
           )}
         </div>
 
+        {/* Inventory Progress Bar */}
+        <InventoryProgressBar stock={stock} totalStock={totalStock} loading={stockLoading} />
+
         {/* Quantity Selector */}
-        <div className="mb-4">
-          <label className="block text-gray-400 text-xs mb-2">Quantity (min. {MIN_ORDER_QUANTITY})</label>
+        <div className="mb-4 mt-4">
+          <label className="block text-gray-400 text-xs mb-2">Quantity (min. {effectiveMin})</label>
           <div className="flex items-center gap-3">
             <div className="flex items-center border border-gray-700">
               <button
@@ -106,7 +118,7 @@ function ProductCard({ product }) {
               <input
                 type="number"
                 value={quantity}
-                onChange={(e) => setQuantity(Math.max(MIN_ORDER_QUANTITY, parseInt(e.target.value) || MIN_ORDER_QUANTITY))}
+                onChange={(e) => setQuantity(Math.min(Math.max(effectiveMin, parseInt(e.target.value) || effectiveMin), maxQty))}
                 className="w-16 text-center bg-transparent text-white border-x border-gray-700 py-2 text-sm"
                 min={MIN_ORDER_QUANTITY}
               />
@@ -123,12 +135,20 @@ function ProductCard({ product }) {
           </div>
         </div>
 
+        {/* Stock warnings */}
+        {isLowStock && (
+          <p className="text-yellow-500 text-xs mb-2">Only {stock} available — min order reduced from {MIN_ORDER_QUANTITY}</p>
+        )}
+        {!isLowStock && !outOfStock && stock !== null && quantity >= stock && (
+          <p className="text-yellow-500 text-xs mb-2">Max available: {stock} units</p>
+        )}
+
         {/* Add to Cart */}
         <button
           onClick={handleAddToCart}
-          disabled={outOfStock}
+          disabled={outOfStock || (!stockLoading && stock !== null && quantity > stock)}
           className={`w-full font-bold py-3 px-4 uppercase text-sm tracking-wider transition-colors ${
-            outOfStock
+            outOfStock || (!stockLoading && stock !== null && quantity > stock)
               ? 'bg-gray-600 text-gray-400 cursor-not-allowed'
               : 'bg-yellow-500 hover:bg-yellow-400 text-black'
           }`}

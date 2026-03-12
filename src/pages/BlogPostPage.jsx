@@ -44,6 +44,17 @@ function BlogPostPage() {
     window.scrollTo(0, 0)
   }, [slug])
 
+  // Split content at ~40% for mid-article newsletter CTA
+  const [contentBefore, contentAfter] = useMemo(() => {
+    if (!post?.content) return ['', '']
+    const paragraphs = post.content.split('\n\n')
+    const splitAt = Math.max(2, Math.floor(paragraphs.length * 0.4))
+    return [
+      paragraphs.slice(0, splitAt).join('\n\n'),
+      paragraphs.slice(splitAt).join('\n\n'),
+    ]
+  }, [post?.content])
+
   const formatDate = (dateStr) => {
     return new Date(dateStr).toLocaleDateString('en-US', {
       year: 'numeric',
@@ -107,17 +118,6 @@ function BlogPostPage() {
       '@id': `https://driveshaftcable.com/blog/${post.slug}`,
     },
   }
-
-  // Split content at ~40% for mid-article newsletter CTA
-  const [contentBefore, contentAfter] = useMemo(() => {
-    if (!post?.content) return ['', '']
-    const paragraphs = post.content.split('\n\n')
-    const splitAt = Math.max(2, Math.floor(paragraphs.length * 0.4))
-    return [
-      paragraphs.slice(0, splitAt).join('\n\n'),
-      paragraphs.slice(splitAt).join('\n\n'),
-    ]
-  }, [post?.content])
 
   return (
     <div className="pt-20">

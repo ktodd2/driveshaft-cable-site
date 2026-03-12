@@ -33,13 +33,14 @@ export const useCartStore = create(
       items: [],
       notification: null,
 
-      addItem: (product, quantity = 1) => {
+      addItem: (product, quantity = 1, options = {}) => {
         const items = get().items
         const existingIndex = items.findIndex(item => item.productId === product.id)
 
         if (existingIndex >= 0) {
           const newItems = [...items]
           newItems[existingIndex].quantity += quantity
+          if (options.reducedMinimum) newItems[existingIndex].reducedMinimum = true
           set({ items: newItems })
         } else {
           set({
@@ -50,7 +51,8 @@ export const useCartStore = create(
               price: product.price_cents,
               sku: product.sku,
               image: product.images?.[0] || null,
-              quantity
+              quantity,
+              ...(options.reducedMinimum && { reducedMinimum: true })
             }]
           })
         }
@@ -108,10 +110,11 @@ export const selectPricePerUnit = (state) => {
   return getPriceForQuantity(totalQty)
 }
 
-// Check if order meets minimum
+// Check if order meets minimum (reduced-minimum items bypass the threshold)
 export const selectMeetsMinimum = (state) => {
   const totalQty = state.items.reduce((sum, item) => sum + item.quantity, 0)
-  return totalQty >= MIN_ORDER_QUANTITY
+  const hasReducedMinimum = state.items.some(item => item.reducedMinimum)
+  return totalQty >= MIN_ORDER_QUANTITY || hasReducedMinimum
 }
 
 // Check if getting bulk discount
