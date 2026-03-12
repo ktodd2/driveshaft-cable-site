@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
 import { useCartStore, formatPrice, getPriceForQuantity, PRICE_PER_UNIT, PRICING_TIERS, MIN_ORDER_QUANTITY } from '../stores/cartStore'
 import { useInventory } from '../hooks/useInventory'
+import InventoryProgressBar from '../components/common/InventoryProgressBar'
 import SEOHead from '../components/common/SEOHead'
 
 const productStructuredData = [
@@ -111,7 +112,7 @@ function ProductDetailPage() {
   const addItem = useCartStore((state) => state.addItem)
 
   const product = products[slug]
-  const { stock, loading: stockLoading } = useInventory(product?.id)
+  const { stock, totalStock, loading: stockLoading } = useInventory(product?.id)
 
   if (!product) {
     return (
@@ -224,8 +225,11 @@ function ProductDetailPage() {
                 )}
               </div>
 
+              {/* Inventory Progress Bar */}
+              <InventoryProgressBar stock={stock} totalStock={totalStock} loading={stockLoading} />
+
               {/* Volume Pricing Tiers */}
-              <div className="flex flex-wrap gap-3 mb-6">
+              <div className="flex flex-wrap gap-3 mb-6 mt-6">
                 <span className={`text-xs px-3 py-1 border ${currentPrice === PRICE_PER_UNIT ? 'border-yellow-500 text-yellow-500' : 'border-gray-700 text-gray-500'}`}>
                   10-49: {formatPrice(PRICE_PER_UNIT)}/ea
                 </span>

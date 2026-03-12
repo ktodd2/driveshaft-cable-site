@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useCartStore, formatPrice, PRICE_PER_UNIT, PRICING_TIERS, getPriceForQuantity, MIN_ORDER_QUANTITY } from '../stores/cartStore'
 import { useInventory } from '../hooks/useInventory'
+import InventoryProgressBar from '../components/common/InventoryProgressBar'
 import SEOHead from '../components/common/SEOHead'
 
 // For now, hardcoded product data - will come from Supabase later
@@ -28,7 +29,7 @@ const products = [
 function ProductCard({ product }) {
   const addItem = useCartStore((state) => state.addItem)
   const [quantity, setQuantity] = useState(MIN_ORDER_QUANTITY)
-  const { stock, loading: stockLoading } = useInventory(product.id)
+  const { stock, totalStock, loading: stockLoading } = useInventory(product.id)
   const outOfStock = !stockLoading && stock === 0
 
   const handleAddToCart = () => {
@@ -92,8 +93,11 @@ function ProductCard({ product }) {
           )}
         </div>
 
+        {/* Inventory Progress Bar */}
+        <InventoryProgressBar stock={stock} totalStock={totalStock} loading={stockLoading} />
+
         {/* Quantity Selector */}
-        <div className="mb-4">
+        <div className="mb-4 mt-4">
           <label className="block text-gray-400 text-xs mb-2">Quantity (min. {MIN_ORDER_QUANTITY})</label>
           <div className="flex items-center gap-3">
             <div className="flex items-center border border-gray-700">
