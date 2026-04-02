@@ -34,35 +34,37 @@ serve(async (req) => {
       const paymentIntent = event.data.object as Stripe.PaymentIntent
       const orderId = paymentIntent.metadata.order_id
 
-      // Idempotency: check if order is already paid (Stripe may deliver webhooks twice)
+      // Fetch current order state for idempotency checks
       const { data: existingOrder } = await supabase
         .from('orders')
-        .select('payment_status')
+        .select('payment_status, stock_decremented')
         .eq('id', orderId)
         .single()
 
-      if (existingOrder?.payment_status === 'paid') {
-        console.log(`Order ${orderId} already processed, skipping`)
-        break
+      // Update payment status if not already paid
+      // (client-side code may have set this before the webhook fires)
+      if (existingOrder?.payment_status !== 'paid') {
+        const { error: updateError } = await supabase
+          .from('orders')
+          .update({
+            payment_status: 'paid',
+            status: 'confirmed',
+            stripe_payment_intent_id: paymentIntent.id,
+            updated_at: new Date().toISOString(),
+          })
+          .eq('id', orderId)
+
+        if (updateError) {
+          console.error('Error updating order:', updateError)
+        } else {
+          console.log(`Order ${orderId} payment status set to paid`)
+        }
+      } else {
+        console.log(`Order ${orderId} already marked paid, skipping status update`)
       }
 
-      // Update order status
-      const { error: updateError } = await supabase
-        .from('orders')
-        .update({
-          payment_status: 'paid',
-          status: 'confirmed',
-          stripe_payment_intent_id: paymentIntent.id,
-          updated_at: new Date().toISOString(),
-        })
-        .eq('id', orderId)
-
-      if (updateError) {
-        console.error('Error updating order:', updateError)
-      } else {
-        console.log(`Order ${orderId} payment succeeded`)
-
-        // Decrement stock atomically for each item
+      // Decrement stock if not already done (separate from payment idempotency)
+      if (!existingOrder?.stock_decremented) {
         const itemsJson = paymentIntent.metadata.items
         if (itemsJson) {
           try {
@@ -78,11 +80,22 @@ serve(async (req) => {
                 console.log(`Decremented ${item.quantity} units for product ${item.productId}`)
               }
             }
+
+            // Mark stock as decremented so duplicate webhooks don't double-decrement
+            await supabase
+              .from('orders')
+              .update({ stock_decremented: true, updated_at: new Date().toISOString() })
+              .eq('id', orderId)
+
+            console.log(`Order ${orderId} stock decremented successfully`)
           } catch (parseErr) {
             console.error('Failed to parse items metadata:', parseErr)
           }
         }
+      } else {
+        console.log(`Order ${orderId} stock already decremented, skipping`)
       }
+
       break
     }
 
