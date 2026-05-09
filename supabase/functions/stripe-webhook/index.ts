@@ -34,15 +34,16 @@ serve(async (req) => {
       const paymentIntent = event.data.object as Stripe.PaymentIntent
       const orderId = paymentIntent.metadata.order_id
 
-      // Fetch current order state for idempotency checks
+      // Stock decrement is handled by the orders_decrement_stock_trigger
+      // database trigger (orders_decrement_stock_trigger.sql), which fires on
+      // any UPDATE that flips payment_status to 'paid'. This webhook only
+      // needs to ensure that flip happens; the trigger does the rest.
       const { data: existingOrder } = await supabase
         .from('orders')
-        .select('payment_status, stock_decremented')
+        .select('payment_status')
         .eq('id', orderId)
         .single()
 
-      // Update payment status if not already paid
-      // (client-side code may have set this before the webhook fires)
       if (existingOrder?.payment_status !== 'paid') {
         const { error: updateError } = await supabase
           .from('orders')
@@ -57,43 +58,10 @@ serve(async (req) => {
         if (updateError) {
           console.error('Error updating order:', updateError)
         } else {
-          console.log(`Order ${orderId} payment status set to paid`)
+          console.log(`Order ${orderId} payment status set to paid (trigger will decrement stock)`)
         }
       } else {
-        console.log(`Order ${orderId} already marked paid, skipping status update`)
-      }
-
-      // Decrement stock if not already done (separate from payment idempotency)
-      if (!existingOrder?.stock_decremented) {
-        const itemsJson = paymentIntent.metadata.items
-        if (itemsJson) {
-          try {
-            const items = JSON.parse(itemsJson)
-            for (const item of items) {
-              const { error: stockError } = await supabase.rpc('decrement_stock', {
-                p_product_id: item.productId,
-                p_quantity: item.quantity,
-              })
-              if (stockError) {
-                console.error(`Stock decrement failed for product ${item.productId}:`, stockError.message)
-              } else {
-                console.log(`Decremented ${item.quantity} units for product ${item.productId}`)
-              }
-            }
-
-            // Mark stock as decremented so duplicate webhooks don't double-decrement
-            await supabase
-              .from('orders')
-              .update({ stock_decremented: true, updated_at: new Date().toISOString() })
-              .eq('id', orderId)
-
-            console.log(`Order ${orderId} stock decremented successfully`)
-          } catch (parseErr) {
-            console.error('Failed to parse items metadata:', parseErr)
-          }
-        }
-      } else {
-        console.log(`Order ${orderId} stock already decremented, skipping`)
+        console.log(`Order ${orderId} already marked paid, skipping`)
       }
 
       break

@@ -28,7 +28,7 @@ function OrderSuccessPage() {
         if (!error) {
           setPaymentStatus('paid')
 
-          // Fetch order for display (stock is decremented server-side via webhook)
+          // Fetch order for display (stock is decremented by the orders_decrement_stock_trigger DB trigger)
           const { data: orderData } = await supabase
             .from('orders')
             .select('email, name')
