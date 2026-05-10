@@ -188,13 +188,18 @@ function AdminAnalyticsPage() {
     const customerMap = {}
 
     filtered.forEach(order => {
-      const email = order.email || 'Unknown'
-      const name = order.name || email
-      if (!customerMap[email]) {
-        customerMap[email] = { email, name, total: 0, orders: 0 }
+      // Group by email when present (online orders), otherwise by normalized
+      // name (manual in-person sales without an email), so multiple cash sales
+      // to "John Smith" stack into one row instead of all hitting "Unknown".
+      const normalizedEmail = (order.email || '').trim().toLowerCase()
+      const normalizedName = (order.name || '').trim().toLowerCase()
+      const key = normalizedEmail || normalizedName || 'unknown'
+      const displayName = order.name || order.email || 'Unknown'
+      if (!customerMap[key]) {
+        customerMap[key] = { email: order.email || '', name: displayName, total: 0, orders: 0 }
       }
-      customerMap[email].total += order.total_cents
-      customerMap[email].orders += 1
+      customerMap[key].total += order.total_cents
+      customerMap[key].orders += 1
     })
 
     return Object.values(customerMap)

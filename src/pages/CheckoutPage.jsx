@@ -179,7 +179,8 @@ function CheckoutPage() {
           shipping_cents: shippingCents,
           total_cents: totalCents,
           status: 'pending',
-          payment_status: 'pending'
+          payment_status: 'pending',
+          payment_method: 'stripe'
         }])
         .select()
         .single()

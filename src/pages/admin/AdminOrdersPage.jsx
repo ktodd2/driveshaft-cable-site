@@ -1,8 +1,30 @@
 import React, { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
-import { formatPrice } from '../../stores/cartStore'
+import { formatPrice, getPriceForQuantity, MIN_ORDER_QUANTITY } from '../../stores/cartStore'
 import { useInventory, updateStock } from '../../hooks/useInventory'
+
+function getEmptyManualForm() {
+  // datetime-local needs YYYY-MM-DDTHH:MM in local time, not ISO/UTC.
+  const now = new Date()
+  const pad = (n) => String(n).padStart(2, '0')
+  const localNow = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}T${pad(now.getHours())}:${pad(now.getMinutes())}`
+  return {
+    name: '',
+    email: '',
+    phone: '',
+    saleDate: localNow,
+    quantity: '',
+    unitPriceCents: '',
+    unitPriceManuallyEdited: false,
+    discountCents: '',
+    discountReason: '',
+    shippingCents: '',
+    paymentMethod: 'cash',
+    hasShipping: false,
+    address1: '', address2: '', city: '', state: '', zip: '', country: 'US',
+  }
+}
 
 function AdminOrdersPage() {
   const navigate = useNavigate()
@@ -30,6 +52,12 @@ function AdminOrdersPage() {
 
   // Delete order state
   const [confirmDelete, setConfirmDelete] = useState(null)
+
+  // Manual order entry state
+  const [showManualModal, setShowManualModal] = useState(false)
+  const [savingManual, setSavingManual] = useState(false)
+  const [manualError, setManualError] = useState(null)
+  const [manualForm, setManualForm] = useState(getEmptyManualForm())
 
   useEffect(() => {
     if (stock !== null && stockInput === '') setStockInput(String(stock))
@@ -65,6 +93,94 @@ function AdminOrdersPage() {
     const current = parseInt(stockInput) || 0
     const newVal = Math.max(0, current + delta)
     setStockInput(String(newVal))
+  }
+
+  // Auto-fill the unit-price field with the volume-pricing tier whenever
+  // quantity changes, unless the admin has manually overridden it.
+  const onManualQuantityChange = (val) => {
+    const qty = parseInt(val) || 0
+    const next = { ...manualForm, quantity: val }
+    if (!manualForm.unitPriceManuallyEdited && qty > 0) {
+      next.unitPriceCents = String(getPriceForQuantity(qty))
+    }
+    setManualForm(next)
+  }
+
+  const onManualUnitPriceChange = (val) => {
+    setManualForm({ ...manualForm, unitPriceCents: val, unitPriceManuallyEdited: true })
+  }
+
+  const submitManualOrder = async (e) => {
+    e.preventDefault()
+    setManualError(null)
+
+    const qty = parseInt(manualForm.quantity)
+    const unitPrice = parseInt(manualForm.unitPriceCents)
+    if (!manualForm.name.trim()) return setManualError('Customer name is required.')
+    if (isNaN(qty) || qty < MIN_ORDER_QUANTITY) return setManualError(`Quantity must be at least ${MIN_ORDER_QUANTITY}.`)
+    if (isNaN(unitPrice) || unitPrice <= 0) return setManualError('Unit price must be greater than 0.')
+
+    const discountCents = parseInt(manualForm.discountCents) || 0
+    const shippingCents = parseInt(manualForm.shippingCents) || 0
+    const subtotalCents = qty * unitPrice
+    const totalCents = subtotalCents - discountCents + shippingCents
+    if (totalCents < 0) return setManualError('Discount cannot exceed subtotal + shipping.')
+
+    const saleDateIso = new Date(manualForm.saleDate).toISOString()
+    const items = [{ productId: '1', name: 'K.Todd Driveshaft Cable', quantity: qty, price: unitPrice }]
+    const shippingAddress = manualForm.hasShipping
+      ? {
+          address1: manualForm.address1, address2: manualForm.address2,
+          city: manualForm.city, state: manualForm.state, zip: manualForm.zip, country: manualForm.country,
+        }
+      : null
+
+    setSavingManual(true)
+
+    // Two-step: insert as pending, then flip to paid so the
+    // orders_decrement_stock_trigger fires and decrements inventory.
+    const { data: inserted, error: insertError } = await supabase
+      .from('orders')
+      .insert([{
+        name: manualForm.name.trim(),
+        email: manualForm.email.trim() || null,
+        phone: manualForm.phone.trim() || null,
+        shipping_address: shippingAddress,
+        items,
+        subtotal_cents: subtotalCents,
+        discount_cents: discountCents || null,
+        discount_reason: manualForm.discountReason.trim() || null,
+        shipping_cents: shippingCents,
+        total_cents: totalCents,
+        status: 'confirmed',
+        payment_status: 'pending',
+        payment_method: manualForm.paymentMethod,
+        created_at: saleDateIso,
+        updated_at: saleDateIso,
+      }])
+      .select()
+      .single()
+
+    if (insertError) {
+      setSavingManual(false)
+      return setManualError(`Failed to create order: ${insertError.message}`)
+    }
+
+    const { error: updateError } = await supabase
+      .from('orders')
+      .update({ payment_status: 'paid' })
+      .eq('id', inserted.id)
+
+    setSavingManual(false)
+
+    if (updateError) {
+      return setManualError(`Order created but payment flip failed: ${updateError.message}. Stock not decremented.`)
+    }
+
+    setShowManualModal(false)
+    setManualForm(getEmptyManualForm())
+    fetchOrders()
+    refetchStock()
   }
 
   const handleShippingCostSave = async () => {
@@ -336,7 +452,18 @@ ${addr.country}`
         <main className="flex-1 p-6 lg:p-8">
           <div className="max-w-6xl mx-auto">
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
-              <h1 className="text-3xl font-industrial text-white">ORDERS</h1>
+              <div className="flex items-center gap-4">
+                <h1 className="text-3xl font-industrial text-white">ORDERS</h1>
+                <button
+                  onClick={() => { setManualForm(getEmptyManualForm()); setManualError(null); setShowManualModal(true) }}
+                  className="bg-yellow-500 hover:bg-yellow-400 text-black px-4 py-2 text-sm font-bold transition-colors flex items-center gap-2"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M12 4v16m8-8H4" />
+                  </svg>
+                  ADD MANUAL ORDER
+                </button>
+              </div>
 
               {/* Status Filter */}
               <div className="flex items-center gap-2 flex-wrap">
@@ -476,9 +603,16 @@ ${addr.country}`
                           <p className="text-white font-bold">{order.name}</p>
                           <p className="text-gray-400 text-sm">{order.email}</p>
                         </div>
-                        <span className={`px-2 py-1 text-xs border rounded ${getStatusColor(order.status)}`}>
-                          {order.status?.toUpperCase()}
-                        </span>
+                        <div className="flex items-center gap-1.5">
+                          {order.payment_method && order.payment_method !== 'stripe' && (
+                            <span className="px-2 py-1 text-xs border rounded bg-emerald-500/20 text-emerald-400 border-emerald-500/50">
+                              {order.payment_method.toUpperCase()}
+                            </span>
+                          )}
+                          <span className={`px-2 py-1 text-xs border rounded ${getStatusColor(order.status)}`}>
+                            {order.status?.toUpperCase()}
+                          </span>
+                        </div>
                       </div>
                       <div className="flex items-center justify-between text-sm">
                         <span className="text-gray-400">{formatDate(order.created_at)}</span>
@@ -800,6 +934,244 @@ ${addr.country}`
           </div>
         </main>
       </div>
+
+      {showManualModal && (
+        <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4 overflow-y-auto">
+          <form
+            onSubmit={submitManualOrder}
+            className="bg-ktodd-dark border border-yellow-500 max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+          >
+            <div className="flex items-center justify-between border-b border-gray-800 px-6 py-4 sticky top-0 bg-ktodd-dark">
+              <h2 className="text-xl font-industrial text-yellow-500">ADD MANUAL ORDER</h2>
+              <button
+                type="button"
+                onClick={() => setShowManualModal(false)}
+                className="text-gray-400 hover:text-white"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            <div className="p-6 space-y-4">
+              <div>
+                <label className="block text-gray-400 text-sm mb-1">Customer name *</label>
+                <input
+                  type="text"
+                  value={manualForm.name}
+                  onChange={(e) => setManualForm({ ...manualForm, name: e.target.value })}
+                  required
+                  placeholder="Walk-in customer"
+                  className="w-full bg-gray-800 border border-gray-600 text-white px-3 py-2 focus:border-yellow-500 focus:outline-none"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-gray-400 text-sm mb-1">Email (optional)</label>
+                  <input
+                    type="email"
+                    value={manualForm.email}
+                    onChange={(e) => setManualForm({ ...manualForm, email: e.target.value })}
+                    className="w-full bg-gray-800 border border-gray-600 text-white px-3 py-2 focus:border-yellow-500 focus:outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-gray-400 text-sm mb-1">Phone (optional)</label>
+                  <input
+                    type="tel"
+                    value={manualForm.phone}
+                    onChange={(e) => setManualForm({ ...manualForm, phone: e.target.value })}
+                    className="w-full bg-gray-800 border border-gray-600 text-white px-3 py-2 focus:border-yellow-500 focus:outline-none"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-gray-400 text-sm mb-1">Sale date *</label>
+                  <input
+                    type="datetime-local"
+                    value={manualForm.saleDate}
+                    onChange={(e) => setManualForm({ ...manualForm, saleDate: e.target.value })}
+                    required
+                    className="w-full bg-gray-800 border border-gray-600 text-white px-3 py-2 focus:border-yellow-500 focus:outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-gray-400 text-sm mb-1">Payment method *</label>
+                  <select
+                    value={manualForm.paymentMethod}
+                    onChange={(e) => setManualForm({ ...manualForm, paymentMethod: e.target.value })}
+                    className="w-full bg-gray-800 border border-gray-600 text-white px-3 py-2 focus:border-yellow-500 focus:outline-none"
+                  >
+                    <option value="cash">Cash</option>
+                    <option value="zelle">Zelle</option>
+                    <option value="cashapp">CashApp</option>
+                    <option value="stripe">Stripe link (incurs 2.9% + $0.30 fee)</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-gray-400 text-sm mb-1">Quantity *</label>
+                  <input
+                    type="number"
+                    min={MIN_ORDER_QUANTITY}
+                    value={manualForm.quantity}
+                    onChange={(e) => onManualQuantityChange(e.target.value)}
+                    required
+                    placeholder={`min ${MIN_ORDER_QUANTITY}`}
+                    className="w-full bg-gray-800 border border-gray-600 text-white px-3 py-2 focus:border-yellow-500 focus:outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-gray-400 text-sm mb-1">
+                    Unit price (cents) *{' '}
+                    <span className="text-gray-500 text-xs">
+                      ({manualForm.unitPriceCents ? formatPrice(parseInt(manualForm.unitPriceCents) || 0) : '—'} each)
+                    </span>
+                  </label>
+                  <input
+                    type="number"
+                    min="1"
+                    value={manualForm.unitPriceCents}
+                    onChange={(e) => onManualUnitPriceChange(e.target.value)}
+                    required
+                    placeholder="auto-fills from volume tier"
+                    className="w-full bg-gray-800 border border-gray-600 text-white px-3 py-2 focus:border-yellow-500 focus:outline-none"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-gray-400 text-sm mb-1">Discount (cents, optional)</label>
+                  <input
+                    type="number"
+                    min="0"
+                    value={manualForm.discountCents}
+                    onChange={(e) => setManualForm({ ...manualForm, discountCents: e.target.value })}
+                    className="w-full bg-gray-800 border border-gray-600 text-white px-3 py-2 focus:border-yellow-500 focus:outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-gray-400 text-sm mb-1">Discount reason (optional)</label>
+                  <input
+                    type="text"
+                    value={manualForm.discountReason}
+                    onChange={(e) => setManualForm({ ...manualForm, discountReason: e.target.value })}
+                    placeholder="e.g. negotiated"
+                    className="w-full bg-gray-800 border border-gray-600 text-white px-3 py-2 focus:border-yellow-500 focus:outline-none"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-gray-400 text-sm mb-1">Shipping (cents, default 0)</label>
+                <input
+                  type="number"
+                  min="0"
+                  value={manualForm.shippingCents}
+                  onChange={(e) => setManualForm({ ...manualForm, shippingCents: e.target.value })}
+                  placeholder="0 for in-person handoff"
+                  className="w-full bg-gray-800 border border-gray-600 text-white px-3 py-2 focus:border-yellow-500 focus:outline-none"
+                />
+              </div>
+
+              <label className="flex items-center gap-2 text-gray-300 text-sm cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={manualForm.hasShipping}
+                  onChange={(e) => setManualForm({ ...manualForm, hasShipping: e.target.checked })}
+                  className="w-4 h-4 accent-yellow-500"
+                />
+                Add shipping address (for orders that will be shipped)
+              </label>
+
+              {manualForm.hasShipping && (
+                <div className="space-y-2 pl-6 border-l-2 border-gray-700">
+                  <input
+                    type="text" value={manualForm.address1}
+                    onChange={(e) => setManualForm({ ...manualForm, address1: e.target.value })}
+                    placeholder="Address line 1"
+                    className="w-full bg-gray-800 border border-gray-600 text-white px-3 py-2 focus:border-yellow-500 focus:outline-none"
+                  />
+                  <input
+                    type="text" value={manualForm.address2}
+                    onChange={(e) => setManualForm({ ...manualForm, address2: e.target.value })}
+                    placeholder="Address line 2"
+                    className="w-full bg-gray-800 border border-gray-600 text-white px-3 py-2 focus:border-yellow-500 focus:outline-none"
+                  />
+                  <div className="grid grid-cols-3 gap-2">
+                    <input
+                      type="text" value={manualForm.city}
+                      onChange={(e) => setManualForm({ ...manualForm, city: e.target.value })}
+                      placeholder="City"
+                      className="bg-gray-800 border border-gray-600 text-white px-3 py-2 focus:border-yellow-500 focus:outline-none"
+                    />
+                    <input
+                      type="text" value={manualForm.state}
+                      onChange={(e) => setManualForm({ ...manualForm, state: e.target.value })}
+                      placeholder="State"
+                      className="bg-gray-800 border border-gray-600 text-white px-3 py-2 focus:border-yellow-500 focus:outline-none"
+                    />
+                    <input
+                      type="text" value={manualForm.zip}
+                      onChange={(e) => setManualForm({ ...manualForm, zip: e.target.value })}
+                      placeholder="ZIP"
+                      className="bg-gray-800 border border-gray-600 text-white px-3 py-2 focus:border-yellow-500 focus:outline-none"
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* Live preview */}
+              {(() => {
+                const qty = parseInt(manualForm.quantity) || 0
+                const unitPrice = parseInt(manualForm.unitPriceCents) || 0
+                const subtotal = qty * unitPrice
+                const discount = parseInt(manualForm.discountCents) || 0
+                const ship = parseInt(manualForm.shippingCents) || 0
+                const total = subtotal - discount + ship
+                return (
+                  <div className="bg-gray-800/50 border border-gray-700 p-3 text-sm space-y-1">
+                    <div className="flex justify-between text-gray-400"><span>Subtotal ({qty} × {formatPrice(unitPrice)})</span><span className="text-white">{formatPrice(subtotal)}</span></div>
+                    {discount > 0 && <div className="flex justify-between text-green-400"><span>Discount</span><span>-{formatPrice(discount)}</span></div>}
+                    <div className="flex justify-between text-gray-400"><span>Shipping</span><span className="text-white">{formatPrice(ship)}</span></div>
+                    <div className="flex justify-between border-t border-gray-700 pt-1 mt-1"><span className="text-white font-bold">Total</span><span className="text-yellow-500 font-bold">{formatPrice(total)}</span></div>
+                  </div>
+                )
+              })()}
+
+              {manualError && (
+                <div className="bg-red-500/20 border border-red-500 text-red-400 p-3 text-sm">
+                  {manualError}
+                </div>
+              )}
+            </div>
+
+            <div className="flex items-center justify-end gap-3 border-t border-gray-800 px-6 py-4 sticky bottom-0 bg-ktodd-dark">
+              <button
+                type="button"
+                onClick={() => setShowManualModal(false)}
+                className="px-4 py-2 text-gray-400 hover:text-white"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={savingManual}
+                className="bg-yellow-500 hover:bg-yellow-400 text-black px-6 py-2 font-bold disabled:opacity-50"
+              >
+                {savingManual ? 'Saving…' : 'Create Order'}
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
     </div>
   )
 }

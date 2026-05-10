@@ -25,7 +25,11 @@ export function calcOrderProfit(order, avgCostPerUnit, fallbackShippingCents = 0
   const productCost = units * avgCostPerUnit
   const shippingKnown = order.actual_shipping_cost_cents != null
   const shippingCost = shippingKnown ? order.actual_shipping_cost_cents : fallbackShippingCents
-  const stripeFee = Math.round(order.total_cents * 0.029) + 30
+  // Cash, Zelle, and CashApp incur no processing fee. Null is treated as
+  // 'stripe' so legacy rows from before the payment_method column existed
+  // continue to amortize fees the way they always did.
+  const incursStripeFee = order.payment_method == null || order.payment_method === 'stripe'
+  const stripeFee = incursStripeFee ? Math.round(order.total_cents * 0.029) + 30 : 0
   const profit = order.total_cents - productCost - shippingCost - stripeFee
   return { units, productCost, shippingCost, stripeFee, profit, shippingKnown }
 }
