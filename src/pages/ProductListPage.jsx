@@ -165,7 +165,7 @@ function ProductListPage() {
     <div className="pt-20">
       <SEOHead
         title="Shop Driveshaft Safety Cables"
-        description="Browse K.Todd heavy-duty driveshaft cables (driveshaftcable). Volume pricing from $2.50/unit. Free shipping on orders over $100."
+        description="Browse K.Todd heavy-duty driveshaft cables (driveshaftcable). Volume pricing from $2.50/unit. Free shipping on orders over $400."
         keywords="buy driveshaft cable, driveshaftcable, driveshaft cable price, bulk driveshaft cable, towing safety cable"
         canonical="/products"
         structuredData={{
@@ -217,7 +217,7 @@ function ProductListPage() {
                 </div>
               </div>
               <div className="text-sm text-gray-300 space-y-1">
-                <div><span className="text-yellow-500">FREE SHIPPING</span> on orders over $100 · $10 flat rate under $100</div>
+                <div><span className="text-yellow-500">FREE SHIPPING</span> on orders over $400 · $15 flat rate under $400</div>
                 <div><span className="text-green-400">LOYALTY DISCOUNT</span> — returning customers get an extra 10% off!</div>
               </div>
             </div>

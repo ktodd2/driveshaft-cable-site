@@ -6,8 +6,8 @@ export const PRICE_PER_UNIT = 300 // $3.00 in cents
 export const MIN_ORDER_QUANTITY = 10 // Minimum order is 10 units
 
 // Shipping constants
-export const SHIPPING_FEE = 1000 // $10.00 in cents
-export const FREE_SHIPPING_THRESHOLD = 10000 // $100.00 in cents - free shipping at or above this
+export const SHIPPING_FEE = 1500 // $15.00 in cents
+export const FREE_SHIPPING_THRESHOLD = 40000 // $400.00 in cents - free shipping at or above this
 
 // Loyalty discount for repeat customers (stacks with volume pricing)
 export const REPEAT_CUSTOMER_DISCOUNT = 0.10 // 10% off subtotal
