@@ -40,7 +40,7 @@ function HomePage() {
     <>
       <SEOHead
         title="Heavy-Duty Driveshaft Safety Cable for Towing"
-        description="K.Todd Driveshaft Cable — 3000lb WLL galvanized steel safety cable for heavy-duty towing. Made by a heavy duty operator for the heavy duty operator. Starting at $3.00/unit."
+        description="K.Todd Driveshaft Cable — 3000lb WLL galvanized steel safety cable for heavy-duty towing. Made by a heavy duty operator for the heavy duty operator. Starting at $3.45/unit."
         keywords="driveshaft cable, driveshaftcable, driveshaft safety cable, towing safety cable, heavy duty towing cable, driveshaft guard cable"
         canonical="/"
         structuredData={homeStructuredData}

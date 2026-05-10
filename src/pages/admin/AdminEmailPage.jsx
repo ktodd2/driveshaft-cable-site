@@ -135,19 +135,19 @@ const TEMPLATES = {
                 </tr>
                 <tr style="background-color:#222;">
                   <td style="color:#d1d5db;font-size:14px;padding:10px 12px;">10 – 49 units</td>
-                  <td style="color:#ffffff;font-size:14px;font-weight:bold;padding:10px 12px;">$3.00 / ea</td>
+                  <td style="color:#ffffff;font-size:14px;font-weight:bold;padding:10px 12px;">$3.45 / ea</td>
                 </tr>
                 <tr style="background-color:#1a1a1a;">
                   <td style="color:#d1d5db;font-size:14px;padding:10px 12px;">50 – 99 units</td>
-                  <td style="color:#ffffff;font-size:14px;font-weight:bold;padding:10px 12px;">$2.90 / ea</td>
+                  <td style="color:#ffffff;font-size:14px;font-weight:bold;padding:10px 12px;">$3.35 / ea</td>
                 </tr>
                 <tr style="background-color:#222;">
                   <td style="color:#d1d5db;font-size:14px;padding:10px 12px;">100 – 199 units</td>
-                  <td style="color:#ffffff;font-size:14px;font-weight:bold;padding:10px 12px;">$2.75 / ea</td>
+                  <td style="color:#ffffff;font-size:14px;font-weight:bold;padding:10px 12px;">$3.15 / ea</td>
                 </tr>
                 <tr style="background-color:#1a1a1a;">
                   <td style="color:#d1d5db;font-size:14px;padding:10px 12px;">200+ units</td>
-                  <td style="color:#eab308;font-size:14px;font-weight:bold;padding:10px 12px;">$2.50 / ea</td>
+                  <td style="color:#eab308;font-size:14px;font-weight:bold;padding:10px 12px;">$2.90 / ea</td>
                 </tr>
               </table>
               <p style="color:#d1d5db;font-size:15px;margin:0 0 8px;">Every order ships free — no minimums on shipping.</p>
@@ -437,7 +437,7 @@ const TEMPLATES = {
             <td style="padding:32px;">
               <p style="color:#d1d5db;font-size:16px;margin:0 0 16px;">K.Todd Driveshaft Cables are engineered for heavy-duty use and trusted by fleet operators across the country.</p>
               <p style="color:#d1d5db;font-size:16px;margin:0 0 16px;">When you're managing a fleet, you can't afford downtime from inferior parts. Every K.Todd cable is built to spec and ships fast — so your vehicles stay on the road and your operation stays on schedule.</p>
-              <p style="color:#d1d5db;font-size:16px;margin:0 0 24px;">With volume pricing starting at just $2.50/unit, free shipping on orders over $400, and a 10% loyalty discount for returning customers — we're built to keep your fleet moving.</p>
+              <p style="color:#d1d5db;font-size:16px;margin:0 0 24px;">With volume pricing starting at just $2.90/unit, free shipping on orders over $400, and a 10% loyalty discount for returning customers — we're built to keep your fleet moving.</p>
               <table width="100%" cellpadding="0" cellspacing="0">
                 <tr>
                   <td align="center" style="padding-top:16px;">
@@ -485,7 +485,7 @@ const TEMPLATES = {
           <tr>
             <td style="padding:32px;">
               <p style="color:#d1d5db;font-size:16px;margin:0 0 16px;">Hit $400 in your cart and shipping is on us — no codes, no fine print. Under $400 ships flat $15 anywhere in the U.S.</p>
-              <p style="color:#d1d5db;font-size:16px;margin:0 0 16px;">With volume pricing starting at $2.50/unit, the threshold is easier to hit than you'd think — and the bigger your order, the bigger the per-unit savings.</p>
+              <p style="color:#d1d5db;font-size:16px;margin:0 0 16px;">With volume pricing starting at $2.90/unit, the threshold is easier to hit than you'd think — and the bigger your order, the bigger the per-unit savings.</p>
               <p style="color:#d1d5db;font-size:16px;margin:0 0 24px;">Combined with our 10% loyalty discount for returning customers, there's never been a better time to stock up. Savings stack — and so do the units.</p>
               <table width="100%" cellpadding="0" cellspacing="0">
                 <tr>

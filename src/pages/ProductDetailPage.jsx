@@ -155,7 +155,7 @@ function ProductDetailPage() {
     <div className="pt-20">
       <SEOHead
         title="K.Todd Driveshaft Cable — 3000lb WLL"
-        description='K.Todd Driveshaft Safety Cable. 3000lb working load limit, 5/32" galvanized steel, 39" length, aluminum couplers. Starting at $3.00/unit with volume discounts.'
+        description='K.Todd Driveshaft Safety Cable. 3000lb working load limit, 5/32" galvanized steel, 39" length, aluminum couplers. Starting at $3.45/unit with volume discounts.'
         keywords="K.Todd driveshaft cable, driveshaftcable, 3000lb WLL cable, towing safety cable, driveshaft guard"
         canonical="/products/driveshaft-cable"
         structuredData={productStructuredData}

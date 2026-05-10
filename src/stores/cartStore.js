@@ -2,7 +2,7 @@ import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 
 // Pricing constants
-export const PRICE_PER_UNIT = 300 // $3.00 in cents
+export const PRICE_PER_UNIT = 345 // $3.45 in cents
 export const MIN_ORDER_QUANTITY = 10 // Minimum order is 10 units
 
 // Shipping constants
@@ -14,9 +14,9 @@ export const REPEAT_CUSTOMER_DISCOUNT = 0.10 // 10% off subtotal
 
 // Volume pricing tiers (must be ordered highest threshold first)
 export const PRICING_TIERS = [
-  { min: 200, price: 250, label: '200+' },
-  { min: 100, price: 275, label: '100-199' },
-  { min: 50, price: 290, label: '50-99' },
+  { min: 200, price: 290, label: '200+' },
+  { min: 100, price: 315, label: '100-199' },
+  { min: 50, price: 335, label: '50-99' },
 ]
 
 // Get price per unit for a given quantity
