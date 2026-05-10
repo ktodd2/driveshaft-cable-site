@@ -150,7 +150,7 @@ const TEMPLATES = {
                   <td style="color:#eab308;font-size:14px;font-weight:bold;padding:10px 12px;">$2.90 / ea</td>
                 </tr>
               </table>
-              <p style="color:#d1d5db;font-size:15px;margin:0 0 8px;">Every order ships free — no minimums on shipping.</p>
+              <p style="color:#d1d5db;font-size:15px;margin:0 0 8px;">Free shipping on orders over $400 — $15 flat rate under that.</p>
               <p style="color:#d1d5db;font-size:15px;margin:0 0 24px;">Returning customers receive an additional 10% loyalty discount that stacks on top of volume pricing automatically.</p>
               <table width="100%" cellpadding="0" cellspacing="0">
                 <tr>
