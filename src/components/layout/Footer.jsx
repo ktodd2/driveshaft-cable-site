@@ -102,8 +102,6 @@ function Footer() {
             © {currentYear} K.Todd. All rights reserved.
           </p>
           <div className="flex items-center gap-6 text-gray-500 text-sm">
-            <span>MADE IN USA</span>
-            <span>•</span>
             <span>HOUSTON, TX</span>
           </div>
         </div>
