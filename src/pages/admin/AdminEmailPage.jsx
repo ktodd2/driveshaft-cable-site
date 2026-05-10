@@ -437,7 +437,7 @@ const TEMPLATES = {
             <td style="padding:32px;">
               <p style="color:#d1d5db;font-size:16px;margin:0 0 16px;">K.Todd Driveshaft Cables are engineered for heavy-duty use and trusted by fleet operators across the country.</p>
               <p style="color:#d1d5db;font-size:16px;margin:0 0 16px;">When you're managing a fleet, you can't afford downtime from inferior parts. Every K.Todd cable is built to spec and ships fast — so your vehicles stay on the road and your operation stays on schedule.</p>
-              <p style="color:#d1d5db;font-size:16px;margin:0 0 24px;">With volume pricing starting at just $2.50/unit, free shipping on every order, and a 10% loyalty discount for returning customers — we're built to keep your fleet moving.</p>
+              <p style="color:#d1d5db;font-size:16px;margin:0 0 24px;">With volume pricing starting at just $2.50/unit, free shipping on orders over $400, and a 10% loyalty discount for returning customers — we're built to keep your fleet moving.</p>
               <table width="100%" cellpadding="0" cellspacing="0">
                 <tr>
                   <td align="center" style="padding-top:16px;">
@@ -464,8 +464,8 @@ const TEMPLATES = {
 
   freeShipping: {
     label: 'Free Shipping',
-    description: 'Highlight free shipping on every order',
-    subject: 'Free shipping on every order — K.Todd Driveshaft Cable',
+    description: 'Highlight free shipping on orders over $400',
+    subject: 'Free shipping on orders over $400 — K.Todd Driveshaft Cable',
     html: `<!DOCTYPE html>
 <html>
 <head>
@@ -479,14 +479,14 @@ const TEMPLATES = {
         <table width="600" cellpadding="0" cellspacing="0" style="background-color:#1a1a1a;border:1px solid #333;">
           <tr>
             <td style="background-color:#eab308;padding:24px;text-align:center;">
-              <h1 style="margin:0;color:#000;font-size:24px;font-weight:bold;letter-spacing:2px;">FREE SHIPPING ON EVERY ORDER</h1>
+              <h1 style="margin:0;color:#000;font-size:24px;font-weight:bold;letter-spacing:2px;">FREE SHIPPING ON ORDERS OVER $400</h1>
             </td>
           </tr>
           <tr>
             <td style="padding:32px;">
-              <p style="color:#d1d5db;font-size:16px;margin:0 0 16px;">Every K.Todd order ships free — no minimum required, no fine print.</p>
-              <p style="color:#d1d5db;font-size:16px;margin:0 0 16px;">Whether you're ordering 10 units or 200, shipping is on us. That's the K.Todd standard, and it never changes.</p>
-              <p style="color:#d1d5db;font-size:16px;margin:0 0 24px;">Combined with our volume pricing and 10% loyalty discount for returning customers, there's never been a better time to stock up. Savings stack — and so do the units.</p>
+              <p style="color:#d1d5db;font-size:16px;margin:0 0 16px;">Hit $400 in your cart and shipping is on us — no codes, no fine print. Under $400 ships flat $15 anywhere in the U.S.</p>
+              <p style="color:#d1d5db;font-size:16px;margin:0 0 16px;">With volume pricing starting at $2.50/unit, the threshold is easier to hit than you'd think — and the bigger your order, the bigger the per-unit savings.</p>
+              <p style="color:#d1d5db;font-size:16px;margin:0 0 24px;">Combined with our 10% loyalty discount for returning customers, there's never been a better time to stock up. Savings stack — and so do the units.</p>
               <table width="100%" cellpadding="0" cellspacing="0">
                 <tr>
                   <td align="center" style="padding-top:16px;">
