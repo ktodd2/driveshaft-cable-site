@@ -3,14 +3,15 @@ import { Link, useNavigate } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
 import { format } from 'date-fns'
 
-function AdminQuotesPage() {
+function AdminSuggestionsPage() {
   const navigate = useNavigate()
   const [loading, setLoading] = useState(true)
-  const [quotes, setQuotes] = useState([])
+  const [suggestions, setSuggestions] = useState([])
+  const [confirmDelete, setConfirmDelete] = useState(null)
 
   useEffect(() => {
     checkAuth()
-    loadQuotes()
+    loadSuggestions()
   }, [])
 
   const checkAuth = async () => {
@@ -22,25 +23,37 @@ function AdminQuotesPage() {
     setLoading(false)
   }
 
-  const loadQuotes = async () => {
+  const loadSuggestions = async () => {
     const { data, error } = await supabase
-      .from('quote_requests')
+      .from('suggestions')
       .select('*')
       .order('created_at', { ascending: false })
 
     if (!error && data) {
-      setQuotes(data)
+      setSuggestions(data)
     }
   }
 
   const handleStatusChange = async (id, newStatus) => {
     const { error } = await supabase
-      .from('quote_requests')
+      .from('suggestions')
       .update({ status: newStatus })
       .eq('id', id)
 
     if (!error) {
-      loadQuotes()
+      setSuggestions(prev => prev.map(s => s.id === id ? { ...s, status: newStatus } : s))
+    }
+  }
+
+  const handleDelete = async (id) => {
+    const { error } = await supabase
+      .from('suggestions')
+      .delete()
+      .eq('id', id)
+
+    if (!error) {
+      setSuggestions(prev => prev.filter(s => s.id !== id))
+      setConfirmDelete(null)
     }
   }
 
@@ -52,9 +65,8 @@ function AdminQuotesPage() {
   const getStatusBadge = (status) => {
     const styles = {
       new: 'bg-yellow-500/20 text-yellow-500',
-      responded: 'bg-blue-500/20 text-blue-400',
-      converted: 'bg-green-500/20 text-green-400',
-      declined: 'bg-red-500/20 text-red-400'
+      read: 'bg-gray-500/20 text-gray-400',
+      archived: 'bg-gray-700/40 text-gray-500',
     }
     return styles[status] || styles.new
   }
@@ -66,6 +78,8 @@ function AdminQuotesPage() {
       </div>
     )
   }
+
+  const newCount = suggestions.filter(s => s.status === 'new').length
 
   return (
     <div className="min-h-screen bg-ktodd-dark">
@@ -107,17 +121,20 @@ function AdminQuotesPage() {
               </svg>
               Orders
             </Link>
-            <Link to="/admin/quotes" className="flex items-center gap-3 px-4 py-3 text-yellow-500 bg-gray-800 rounded">
+            <Link to="/admin/quotes" className="flex items-center gap-3 px-4 py-3 text-gray-400 hover:text-white hover:bg-gray-800 rounded transition-colors">
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
               </svg>
               Quotes
             </Link>
-            <Link to="/admin/suggestions" className="flex items-center gap-3 px-4 py-3 text-gray-400 hover:text-white hover:bg-gray-800 rounded transition-colors">
+            <Link to="/admin/suggestions" className="flex items-center gap-3 px-4 py-3 text-yellow-500 bg-gray-800 rounded">
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
               </svg>
               Suggestions
+              {newCount > 0 && (
+                <span className="ml-auto bg-yellow-500 text-black text-xs font-bold px-2 py-0.5 rounded">{newCount}</span>
+              )}
             </Link>
             <Link to="/admin/email" className="flex items-center gap-3 px-4 py-3 text-gray-400 hover:text-white hover:bg-gray-800 rounded transition-colors">
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -148,105 +165,108 @@ function AdminQuotesPage() {
 
         {/* Main Content */}
         <main className="flex-1 p-6 lg:p-8">
-          <div className="max-w-6xl mx-auto">
+          <div className="max-w-5xl mx-auto">
             <div className="flex items-center justify-between mb-8">
-              <h1 className="text-3xl font-industrial text-white">QUOTE REQUESTS</h1>
-              <span className="text-gray-400">{quotes.length} total</span>
+              <h1 className="text-3xl font-industrial text-white">SUGGESTIONS</h1>
+              <span className="text-gray-400">
+                {suggestions.length} total{newCount > 0 ? ` · ${newCount} new` : ''}
+              </span>
             </div>
 
-            {quotes.length === 0 ? (
-              /* Empty State */
+            {suggestions.length === 0 ? (
               <div className="bg-gray-800/50 border border-gray-700 p-12 text-center">
                 <svg className="w-16 h-16 text-gray-600 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
                 </svg>
-                <h2 className="text-xl font-industrial text-white mb-2">NO QUOTE REQUESTS</h2>
-                <p className="text-gray-400">Quote requests will appear here when customers submit them.</p>
+                <h2 className="text-xl font-industrial text-white mb-2">NO SUGGESTIONS YET</h2>
+                <p className="text-gray-400">Submissions from the public /suggestions page will appear here.</p>
               </div>
             ) : (
-              /* Quotes Table */
-              <div className="bg-gray-800/50 border border-gray-700 overflow-hidden">
-                <table className="w-full">
-                  <thead>
-                    <tr className="border-b border-gray-700">
-                      <th className="text-left text-gray-400 text-sm font-normal px-6 py-4">Date</th>
-                      <th className="text-left text-gray-400 text-sm font-normal px-6 py-4">Contact</th>
-                      <th className="text-left text-gray-400 text-sm font-normal px-6 py-4">Company</th>
-                      <th className="text-left text-gray-400 text-sm font-normal px-6 py-4">Qty</th>
-                      <th className="text-left text-gray-400 text-sm font-normal px-6 py-4">Status</th>
-                      <th className="text-left text-gray-400 text-sm font-normal px-6 py-4">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {quotes.map((quote) => (
-                      <tr key={quote.id} className="border-b border-gray-700 hover:bg-gray-800/50">
-                        <td className="px-6 py-4">
-                          <div className="text-white text-sm">
-                            {format(new Date(quote.created_at), 'MMM d, yyyy')}
-                          </div>
-                          <div className="text-gray-500 text-xs">
-                            {format(new Date(quote.created_at), 'h:mm a')}
-                          </div>
-                        </td>
-                        <td className="px-6 py-4">
-                          <div className="text-white text-sm">{quote.name}</div>
-                          <div className="text-gray-400 text-xs">{quote.email}</div>
-                        </td>
-                        <td className="px-6 py-4">
-                          <span className="text-gray-300 text-sm">{quote.company || '-'}</span>
-                        </td>
-                        <td className="px-6 py-4">
-                          <span className="text-yellow-500 font-bold">{quote.quantity || '-'}</span>
-                        </td>
-                        <td className="px-6 py-4">
-                          <span className={`px-2 py-1 text-xs uppercase ${getStatusBadge(quote.status)}`}>
-                            {quote.status || 'new'}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4">
-                          <select
-                            value={quote.status || 'new'}
-                            onChange={(e) => handleStatusChange(quote.id, e.target.value)}
-                            className="bg-gray-800 border border-gray-600 text-white text-sm px-2 py-1 focus:border-yellow-500 focus:outline-none"
+              <div className="space-y-4">
+                {suggestions.map((s) => (
+                  <div
+                    key={s.id}
+                    className={`bg-gray-800/50 border p-5 ${s.status === 'new' ? 'border-yellow-500/40' : 'border-gray-700'}`}
+                  >
+                    <div className="flex items-start justify-between gap-4 mb-3">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="text-white font-bold">{s.name || '—'}</span>
+                          <a
+                            href={`mailto:${s.email}`}
+                            className="text-yellow-500 hover:text-yellow-400 text-sm break-all"
                           >
-                            <option value="new">New</option>
-                            <option value="responded">Responded</option>
-                            <option value="converted">Converted</option>
-                            <option value="declined">Declined</option>
-                          </select>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-
-            {/* Quote Detail Expandable */}
-            {quotes.length > 0 && (
-              <div className="mt-8">
-                <h2 className="text-xl font-industrial text-yellow-500 mb-4">RECENT MESSAGES</h2>
-                <div className="space-y-4">
-                  {quotes.slice(0, 5).filter(q => q.message).map((quote) => (
-                    <div key={quote.id} className="bg-gray-800/50 border border-gray-700 p-4">
-                      <div className="flex justify-between items-start mb-2">
-                        <div>
-                          <span className="text-white font-bold">{quote.name}</span>
-                          <span className="text-gray-400 text-sm ml-2">({quote.company || 'No company'})</span>
+                            {s.email}
+                          </a>
+                          <span className={`px-2 py-0.5 text-xs uppercase ${getStatusBadge(s.status)}`}>
+                            {s.status}
+                          </span>
                         </div>
-                        <span className="text-gray-500 text-xs">
-                          {format(new Date(quote.created_at), 'MMM d, yyyy')}
-                        </span>
-                      </div>
-                      <p className="text-gray-300 text-sm">{quote.message}</p>
-                      <div className="mt-2 flex items-center gap-4">
-                        <a href={`mailto:${quote.email}`} className="text-yellow-500 hover:text-yellow-400 text-sm">
-                          Reply via email →
-                        </a>
+                        <div className="text-gray-500 text-xs mt-1">
+                          {format(new Date(s.created_at), 'MMM d, yyyy · h:mm a')}
+                        </div>
                       </div>
                     </div>
-                  ))}
-                </div>
+
+                    <p className="text-gray-200 text-sm whitespace-pre-wrap mb-4">{s.message}</p>
+
+                    <div className="flex items-center gap-2 flex-wrap">
+                      {s.status === 'new' && (
+                        <button
+                          onClick={() => handleStatusChange(s.id, 'read')}
+                          className="px-3 py-1 text-xs bg-gray-700 hover:bg-gray-600 text-white transition-colors"
+                        >
+                          Mark as read
+                        </button>
+                      )}
+                      {s.status !== 'archived' && (
+                        <button
+                          onClick={() => handleStatusChange(s.id, 'archived')}
+                          className="px-3 py-1 text-xs bg-gray-700 hover:bg-gray-600 text-gray-300 transition-colors"
+                        >
+                          Archive
+                        </button>
+                      )}
+                      {s.status === 'archived' && (
+                        <button
+                          onClick={() => handleStatusChange(s.id, 'read')}
+                          className="px-3 py-1 text-xs bg-gray-700 hover:bg-gray-600 text-white transition-colors"
+                        >
+                          Unarchive
+                        </button>
+                      )}
+                      <a
+                        href={`mailto:${s.email}`}
+                        className="px-3 py-1 text-xs bg-yellow-500 hover:bg-yellow-400 text-black font-bold transition-colors"
+                      >
+                        Reply via email
+                      </a>
+                      {confirmDelete === s.id ? (
+                        <>
+                          <button
+                            onClick={() => handleDelete(s.id)}
+                            className="px-3 py-1 text-xs bg-red-500 hover:bg-red-400 text-white font-bold transition-colors"
+                          >
+                            Confirm delete
+                          </button>
+                          <button
+                            onClick={() => setConfirmDelete(null)}
+                            className="px-3 py-1 text-xs text-gray-400 hover:text-white transition-colors"
+                          >
+                            Cancel
+                          </button>
+                        </>
+                      ) : (
+                        <button
+                          onClick={() => setConfirmDelete(s.id)}
+                          className="ml-auto px-3 py-1 text-xs text-red-400 hover:text-red-300 transition-colors"
+                        >
+                          Delete
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                ))}
               </div>
             )}
           </div>
@@ -256,4 +276,4 @@ function AdminQuotesPage() {
   )
 }
 
-export default AdminQuotesPage
+export default AdminSuggestionsPage
