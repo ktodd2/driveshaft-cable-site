@@ -22,7 +22,9 @@ function AdminDashboardPage() {
     avgOrderValue: 0,
     recentOrders: [],
     paidOrdersList: [],
-    paidLast30: []
+    paidLast30: [],
+    pendingTestimonialCount: 0,
+    recentTestimonials: [],
   })
 
   // Product shipments (variable cost)
@@ -100,6 +102,24 @@ function AdminDashboardPage() {
     const unitsSold30d = countUnits(paidLast30)
     const avgOrderValue = paidOrders.length > 0 ? Math.round(revenueAllTime / paidOrders.length) : 0
 
+    // Testimonials: recent submitted/approved for the dashboard panel,
+    // plus count of orders eligible for a testimonial request that hasn't
+    // been sent yet (drives the "Send pending requests (N)" button).
+    const fourteenDaysAgo = new Date()
+    fourteenDaysAgo.setDate(fourteenDaysAgo.getDate() - 14)
+    const pendingTestimonialCount = paidOrders.filter(o =>
+      !o.testimonial_request_sent_at &&
+      o.email &&
+      new Date(o.created_at) < fourteenDaysAgo
+    ).length
+
+    const { data: recentTestimonials } = await supabase
+      .from('testimonials')
+      .select('id, display_name, customer_name, testimonial_text, status, approved, submitted_at')
+      .neq('status', 'pending')
+      .order('submitted_at', { ascending: false, nullsFirst: false })
+      .limit(3)
+
     setStats({
       pendingQuotes: quotesCount || 0,
       totalOrders: allOrders.length,
@@ -112,8 +132,26 @@ function AdminDashboardPage() {
       recentOrders: allOrders.slice(0, 5),
       paidOrdersList: paidOrders,
       paidLast30,
-      allOrders
+      allOrders,
+      pendingTestimonialCount,
+      recentTestimonials: recentTestimonials || [],
     })
+  }
+
+  const [sendingTestimonials, setSendingTestimonials] = useState(false)
+  const [sendResult, setSendResult] = useState(null)
+
+  const handleSendTestimonialRequests = async () => {
+    setSendingTestimonials(true)
+    setSendResult(null)
+    const { data, error } = await supabase.functions.invoke('process-testimonial-queue', { body: {} })
+    setSendingTestimonials(false)
+    if (error) {
+      setSendResult({ ok: false, message: error.message || 'Failed to send' })
+      return
+    }
+    setSendResult({ ok: true, message: `Sent ${data?.sent ?? 0}, failed ${data?.failed ?? 0}.` })
+    loadStats()
   }
 
   const handleFallbackShippingChange = (val) => {
@@ -269,6 +307,12 @@ function AdminDashboardPage() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
               </svg>
               Suggestions
+            </Link>
+            <Link to="/admin/testimonials" className="flex items-center gap-3 px-4 py-3 text-gray-400 hover:text-white hover:bg-gray-800 rounded transition-colors">
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
+              </svg>
+              Testimonials
             </Link>
             <Link to="/admin/email" className="flex items-center gap-3 px-4 py-3 text-gray-400 hover:text-white hover:bg-gray-800 rounded transition-colors">
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -790,11 +834,61 @@ function AdminDashboardPage() {
               </div>
             )}
 
+            {/* Recent Testimonials */}
+            {stats.recentTestimonials.length > 0 && (
+              <div className="bg-gray-800/50 border border-gray-700 p-6 mb-8">
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-xl font-industrial text-yellow-500">RECENT TESTIMONIALS</h2>
+                  <Link to="/admin/testimonials" className="text-sm text-gray-400 hover:text-yellow-500">View all →</Link>
+                </div>
+                <div className="space-y-3">
+                  {stats.recentTestimonials.map((t) => (
+                    <div key={t.id} className="p-3 bg-gray-800 rounded">
+                      <div className="flex items-center justify-between gap-2 flex-wrap mb-1">
+                        <span className="text-white font-bold text-sm">{t.display_name || t.customer_name}</span>
+                        <span className={`text-xs px-2 py-0.5 rounded ${
+                          t.status === 'approved' ? 'bg-green-500/20 text-green-400' :
+                          t.status === 'archived' ? 'bg-gray-700/40 text-gray-500' :
+                          'bg-yellow-500/20 text-yellow-400'
+                        }`}>
+                          {t.status.toUpperCase()}
+                        </span>
+                      </div>
+                      <p className="text-gray-400 text-sm italic">
+                        "{(t.testimonial_text || '').slice(0, 160)}{(t.testimonial_text || '').length > 160 ? '…' : ''}"
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {/* Quick Actions */}
             <div className="grid md:grid-cols-2 gap-6">
               <div className="bg-gray-800/50 border border-gray-700 p-6">
                 <h2 className="text-xl font-industrial text-yellow-500 mb-4">QUICK ACTIONS</h2>
                 <div className="space-y-3">
+                  <button
+                    onClick={handleSendTestimonialRequests}
+                    disabled={sendingTestimonials || stats.pendingTestimonialCount === 0}
+                    className="w-full flex items-center justify-between p-3 bg-yellow-500/10 border border-yellow-500/30 hover:bg-yellow-500/20 transition-colors rounded disabled:opacity-50 disabled:cursor-not-allowed text-left"
+                  >
+                    <span className="text-white">
+                      {sendingTestimonials
+                        ? 'Sending testimonial requests…'
+                        : stats.pendingTestimonialCount > 0
+                          ? `Send testimonial requests (${stats.pendingTestimonialCount} pending)`
+                          : 'No testimonial requests pending'}
+                    </span>
+                    <svg className="w-5 h-5 text-yellow-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                    </svg>
+                  </button>
+                  {sendResult && (
+                    <p className={`text-xs ${sendResult.ok ? 'text-green-400' : 'text-red-400'}`}>
+                      {sendResult.message}
+                    </p>
+                  )}
                   <Link to="/admin/quotes" className="flex items-center justify-between p-3 bg-gray-800 hover:bg-gray-700 transition-colors rounded">
                     <span className="text-white">Review Quote Requests</span>
                     <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">

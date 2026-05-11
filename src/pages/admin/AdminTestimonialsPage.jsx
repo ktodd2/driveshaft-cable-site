@@ -3,15 +3,16 @@ import { Link, useNavigate } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
 import { format } from 'date-fns'
 
-function AdminSuggestionsPage() {
+function AdminTestimonialsPage() {
   const navigate = useNavigate()
   const [loading, setLoading] = useState(true)
-  const [suggestions, setSuggestions] = useState([])
+  const [testimonials, setTestimonials] = useState([])
   const [confirmDelete, setConfirmDelete] = useState(null)
+  const [filter, setFilter] = useState('all')  // all | submitted | approved | archived
 
   useEffect(() => {
     checkAuth()
-    loadSuggestions()
+    loadTestimonials()
   }, [])
 
   const checkAuth = async () => {
@@ -23,36 +24,42 @@ function AdminSuggestionsPage() {
     setLoading(false)
   }
 
-  const loadSuggestions = async () => {
+  const loadTestimonials = async () => {
     const { data, error } = await supabase
-      .from('suggestions')
+      .from('testimonials')
       .select('*')
+      .neq('status', 'pending')  // hide unsubmitted requests; they're noise
       .order('created_at', { ascending: false })
 
     if (!error && data) {
-      setSuggestions(data)
+      setTestimonials(data)
     }
   }
 
-  const handleStatusChange = async (id, newStatus) => {
+  const handleApprove = async (id) => {
     const { error } = await supabase
-      .from('suggestions')
-      .update({ status: newStatus })
+      .from('testimonials')
+      .update({ approved: true, status: 'approved' })
       .eq('id', id)
-
     if (!error) {
-      setSuggestions(prev => prev.map(s => s.id === id ? { ...s, status: newStatus } : s))
+      setTestimonials(prev => prev.map(t => t.id === id ? { ...t, approved: true, status: 'approved' } : t))
+    }
+  }
+
+  const handleArchive = async (id) => {
+    const { error } = await supabase
+      .from('testimonials')
+      .update({ approved: false, status: 'archived' })
+      .eq('id', id)
+    if (!error) {
+      setTestimonials(prev => prev.map(t => t.id === id ? { ...t, approved: false, status: 'archived' } : t))
     }
   }
 
   const handleDelete = async (id) => {
-    const { error } = await supabase
-      .from('suggestions')
-      .delete()
-      .eq('id', id)
-
+    const { error } = await supabase.from('testimonials').delete().eq('id', id)
     if (!error) {
-      setSuggestions(prev => prev.filter(s => s.id !== id))
+      setTestimonials(prev => prev.filter(t => t.id !== id))
       setConfirmDelete(null)
     }
   }
@@ -64,11 +71,11 @@ function AdminSuggestionsPage() {
 
   const getStatusBadge = (status) => {
     const styles = {
-      new: 'bg-yellow-500/20 text-yellow-500',
-      read: 'bg-gray-500/20 text-gray-400',
+      submitted: 'bg-yellow-500/20 text-yellow-500',
+      approved: 'bg-green-500/20 text-green-400',
       archived: 'bg-gray-700/40 text-gray-500',
     }
-    return styles[status] || styles.new
+    return styles[status] || styles.submitted
   }
 
   if (loading) {
@@ -79,11 +86,11 @@ function AdminSuggestionsPage() {
     )
   }
 
-  const newCount = suggestions.filter(s => s.status === 'new').length
+  const submittedCount = testimonials.filter(t => t.status === 'submitted').length
+  const visible = filter === 'all' ? testimonials : testimonials.filter(t => t.status === filter)
 
   return (
     <div className="min-h-screen bg-ktodd-dark">
-      {/* Admin Header */}
       <header className="bg-ktodd-dark border-b border-gray-800 sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
@@ -106,7 +113,6 @@ function AdminSuggestionsPage() {
       </header>
 
       <div className="flex">
-        {/* Sidebar */}
         <aside className="w-64 bg-gray-900 min-h-[calc(100vh-4rem)] border-r border-gray-800 hidden md:block">
           <nav className="p-4 space-y-2">
             <Link to="/admin" className="flex items-center gap-3 px-4 py-3 text-gray-400 hover:text-white hover:bg-gray-800 rounded transition-colors">
@@ -127,20 +133,20 @@ function AdminSuggestionsPage() {
               </svg>
               Quotes
             </Link>
-            <Link to="/admin/suggestions" className="flex items-center gap-3 px-4 py-3 text-yellow-500 bg-gray-800 rounded">
+            <Link to="/admin/suggestions" className="flex items-center gap-3 px-4 py-3 text-gray-400 hover:text-white hover:bg-gray-800 rounded transition-colors">
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
               </svg>
               Suggestions
-              {newCount > 0 && (
-                <span className="ml-auto bg-yellow-500 text-black text-xs font-bold px-2 py-0.5 rounded">{newCount}</span>
-              )}
             </Link>
-            <Link to="/admin/testimonials" className="flex items-center gap-3 px-4 py-3 text-gray-400 hover:text-white hover:bg-gray-800 rounded transition-colors">
+            <Link to="/admin/testimonials" className="flex items-center gap-3 px-4 py-3 text-yellow-500 bg-gray-800 rounded">
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
               </svg>
               Testimonials
+              {submittedCount > 0 && (
+                <span className="ml-auto bg-yellow-500 text-black text-xs font-bold px-2 py-0.5 rounded">{submittedCount}</span>
+              )}
             </Link>
             <Link to="/admin/email" className="flex items-center gap-3 px-4 py-3 text-gray-400 hover:text-white hover:bg-gray-800 rounded transition-colors">
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -169,88 +175,117 @@ function AdminSuggestionsPage() {
           </nav>
         </aside>
 
-        {/* Main Content */}
         <main className="flex-1 p-6 lg:p-8">
           <div className="max-w-5xl mx-auto">
-            <div className="flex items-center justify-between mb-8">
-              <h1 className="text-3xl font-industrial text-white">SUGGESTIONS</h1>
-              <span className="text-gray-400">
-                {suggestions.length} total{newCount > 0 ? ` · ${newCount} new` : ''}
-              </span>
+            <div className="flex items-center justify-between mb-6 flex-wrap gap-4">
+              <h1 className="text-3xl font-industrial text-white">TESTIMONIALS</h1>
+              <div className="flex items-center gap-2 text-sm">
+                {['all','submitted','approved','archived'].map((f) => (
+                  <button
+                    key={f}
+                    onClick={() => setFilter(f)}
+                    className={`px-3 py-1 ${filter === f ? 'bg-yellow-500 text-black font-bold' : 'bg-gray-800 text-gray-400 hover:text-white'}`}
+                  >
+                    {f.toUpperCase()}
+                  </button>
+                ))}
+              </div>
             </div>
 
-            {suggestions.length === 0 ? (
+            <p className="text-gray-400 mb-6 text-sm">
+              {testimonials.length} total{submittedCount > 0 ? ` · ${submittedCount} awaiting review` : ''}
+            </p>
+
+            {visible.length === 0 ? (
               <div className="bg-gray-800/50 border border-gray-700 p-12 text-center">
                 <svg className="w-16 h-16 text-gray-600 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
                 </svg>
-                <h2 className="text-xl font-industrial text-white mb-2">NO SUGGESTIONS YET</h2>
-                <p className="text-gray-400">Submissions from the public /suggestions page will appear here.</p>
+                <h2 className="text-xl font-industrial text-white mb-2">NO TESTIMONIALS YET</h2>
+                <p className="text-gray-400">
+                  Submitted testimonials will appear here. Emails go out to customers 14 days after their paid order.
+                </p>
               </div>
             ) : (
               <div className="space-y-4">
-                {suggestions.map((s) => (
+                {visible.map((t) => (
                   <div
-                    key={s.id}
-                    className={`bg-gray-800/50 border p-5 ${s.status === 'new' ? 'border-yellow-500/40' : 'border-gray-700'}`}
+                    key={t.id}
+                    className={`bg-gray-800/50 border p-5 ${t.status === 'submitted' ? 'border-yellow-500/40' : 'border-gray-700'}`}
                   >
-                    <div className="flex items-start justify-between gap-4 mb-3">
+                    <div className="flex items-start justify-between gap-4 mb-3 flex-wrap">
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 flex-wrap">
-                          <span className="text-white font-bold">{s.name || '—'}</span>
+                          <span className="text-white font-bold">{t.display_name || t.customer_name}</span>
+                          {t.display_name && t.display_name !== t.customer_name && (
+                            <span className="text-gray-500 text-xs">(actual: {t.customer_name})</span>
+                          )}
                           <a
-                            href={`mailto:${s.email}`}
+                            href={`mailto:${t.customer_email}`}
                             className="text-yellow-500 hover:text-yellow-400 text-sm break-all"
                           >
-                            {s.email}
+                            {t.customer_email}
                           </a>
-                          <span className={`px-2 py-0.5 text-xs uppercase ${getStatusBadge(s.status)}`}>
-                            {s.status}
+                          <span className={`px-2 py-0.5 text-xs uppercase ${getStatusBadge(t.status)}`}>
+                            {t.status}
                           </span>
+                          {t.approved && (
+                            <span className="px-2 py-0.5 text-xs uppercase bg-green-500/10 text-green-400 border border-green-500/30">
+                              OK FOR PROMO
+                            </span>
+                          )}
                         </div>
                         <div className="text-gray-500 text-xs mt-1">
-                          {format(new Date(s.created_at), 'MMM d, yyyy · h:mm a')}
+                          Submitted {t.submitted_at ? format(new Date(t.submitted_at), 'MMM d, yyyy · h:mm a') : '—'}
                         </div>
                       </div>
                     </div>
 
-                    <p className="text-gray-200 text-sm whitespace-pre-wrap mb-4">{s.message}</p>
+                    <p className="text-gray-200 text-sm whitespace-pre-wrap mb-4 italic">"{t.testimonial_text}"</p>
 
                     <div className="flex items-center gap-2 flex-wrap">
-                      {s.status === 'new' && (
+                      {t.status === 'submitted' && (
                         <button
-                          onClick={() => handleStatusChange(s.id, 'read')}
-                          className="px-3 py-1 text-xs bg-gray-700 hover:bg-gray-600 text-white transition-colors"
+                          onClick={() => handleApprove(t.id)}
+                          className="px-3 py-1 text-xs bg-green-600 hover:bg-green-500 text-white font-bold transition-colors"
                         >
-                          Mark as read
+                          Approve for promo
                         </button>
                       )}
-                      {s.status !== 'archived' && (
+                      {t.status === 'approved' && (
                         <button
-                          onClick={() => handleStatusChange(s.id, 'archived')}
+                          onClick={() => handleArchive(t.id)}
+                          className="px-3 py-1 text-xs bg-gray-700 hover:bg-gray-600 text-white transition-colors"
+                        >
+                          Unapprove
+                        </button>
+                      )}
+                      {t.status !== 'archived' && t.status !== 'approved' && (
+                        <button
+                          onClick={() => handleArchive(t.id)}
                           className="px-3 py-1 text-xs bg-gray-700 hover:bg-gray-600 text-gray-300 transition-colors"
                         >
                           Archive
                         </button>
                       )}
-                      {s.status === 'archived' && (
+                      {t.status === 'archived' && (
                         <button
-                          onClick={() => handleStatusChange(s.id, 'read')}
+                          onClick={() => handleApprove(t.id)}
                           className="px-3 py-1 text-xs bg-gray-700 hover:bg-gray-600 text-white transition-colors"
                         >
-                          Unarchive
+                          Approve
                         </button>
                       )}
                       <a
-                        href={`mailto:${s.email}`}
+                        href={`mailto:${t.customer_email}`}
                         className="px-3 py-1 text-xs bg-yellow-500 hover:bg-yellow-400 text-black font-bold transition-colors"
                       >
                         Reply via email
                       </a>
-                      {confirmDelete === s.id ? (
+                      {confirmDelete === t.id ? (
                         <>
                           <button
-                            onClick={() => handleDelete(s.id)}
+                            onClick={() => handleDelete(t.id)}
                             className="px-3 py-1 text-xs bg-red-500 hover:bg-red-400 text-white font-bold transition-colors"
                           >
                             Confirm delete
@@ -264,7 +299,7 @@ function AdminSuggestionsPage() {
                         </>
                       ) : (
                         <button
-                          onClick={() => setConfirmDelete(s.id)}
+                          onClick={() => setConfirmDelete(t.id)}
                           className="ml-auto px-3 py-1 text-xs text-red-400 hover:text-red-300 transition-colors"
                         >
                           Delete
@@ -282,4 +317,4 @@ function AdminSuggestionsPage() {
   )
 }
 
-export default AdminSuggestionsPage
+export default AdminTestimonialsPage
