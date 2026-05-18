@@ -172,7 +172,7 @@ function OrderSuccessPage() {
               </div>
               <div>
                 <h3 className="text-white font-bold">Delivery</h3>
-                <p className="text-gray-400 text-sm">Your K.Todd Driveshaft Cable arrives!</p>
+                <p className="text-gray-400 text-sm">Your Driveshaft Cable arrives!</p>
               </div>
             </div>
           </div>

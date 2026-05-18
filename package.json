@@ -1,7 +1,7 @@
 {
   "name": "driveshaft-cable-site",
   "version": "1.0.0",
-  "description": "Driveshaft Cable by K.Todd - Heavy-Duty Towing Safety Product",
+  "description": "Driveshaft Cable - Heavy-Duty Towing Safety Product",
   "type": "module",
   "scripts": {
     "dev": "vite",

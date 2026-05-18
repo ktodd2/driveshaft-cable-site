@@ -30,11 +30,7 @@ function Hero() {
               <span className="text-yellow-500 glow-yellow">CABLE</span>
             </h1>
 
-            <p className="text-xl sm:text-2xl text-gray-300 font-industrial tracking-wide mb-2">
-              BY K.TODD
-            </p>
-
-            <p className="text-lg text-gray-400 mb-8 max-w-xl mx-auto lg:mx-0">
+            <p className="text-lg text-gray-400 mb-8 max-w-xl mx-auto lg:mx-0 mt-4">
               Keep the shaft secure. Purpose-built driveshaft suspension cable for heavy-duty towing, recovery, and transport operations.
             </p>
 
@@ -69,7 +65,7 @@ function Hero() {
             <div className="relative rounded-lg overflow-hidden industrial-border">
               <img
                 src="/inuse.jpeg"
-                alt="K.Todd Driveshaft Cable installed on vehicle"
+                alt="Driveshaft Cable installed on vehicle"
                 className="w-full h-auto object-cover"
               />
             </div>

@@ -9,7 +9,7 @@ import SEOHead from '../components/common/SEOHead'
 const products = [
   {
     id: '1',
-    name: 'K.Todd Driveshaft Cable',
+    name: 'Driveshaft Cable',
     slug: 'driveshaft-cable',
     short_description: 'Heavy-duty driveshaft safety cable for professional towing and recovery operations.',
     price_cents: PRICE_PER_UNIT, // $3.00 per unit
@@ -165,18 +165,18 @@ function ProductListPage() {
     <div className="pt-20">
       <SEOHead
         title="Shop Driveshaft Safety Cables"
-        description="Browse K.Todd heavy-duty driveshaft cables (driveshaftcable). Volume pricing from $2.90/unit. Free shipping on orders over $400."
+        description="Browse heavy-duty Driveshaft Cables (driveshaftcable). Volume pricing from $2.90/unit. Free shipping on orders over $400."
         keywords="buy driveshaft cable, driveshaftcable, driveshaft cable price, bulk driveshaft cable, towing safety cable"
         canonical="/products"
         structuredData={{
           '@context': 'https://schema.org',
           '@type': 'ItemList',
-          name: 'K.Todd Driveshaft Cables',
+          name: 'Driveshaft Cables',
           itemListElement: [{
             '@type': 'ListItem',
             position: 1,
             url: 'https://driveshaftcable.com/products/driveshaft-cable',
-            name: 'K.Todd Driveshaft Cable'
+            name: 'Driveshaft Cable'
           }]
         }}
       />

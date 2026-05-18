@@ -113,9 +113,7 @@ function AdminBlogPage() {
         <div className="flex items-center justify-between px-6 py-3">
           <div className="flex items-center gap-4">
             <Link to="/admin" className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-yellow-500 rounded flex items-center justify-center">
-                <span className="text-black font-bold text-sm font-industrial">K</span>
-              </div>
+              <img src="/logos/icon.png" alt="Driveshaft Cable" className="w-8 h-8 rounded" />
               <span className="text-yellow-500 font-industrial">ADMIN</span>
             </Link>
           </div>

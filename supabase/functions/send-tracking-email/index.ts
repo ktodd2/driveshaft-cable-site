@@ -106,7 +106,7 @@ serve(async (req) => {
           <!-- Footer -->
           <tr>
             <td style="background-color:#111;padding:20px;text-align:center;border-top:1px solid #333;">
-              <p style="color:#6b7280;font-size:12px;margin:0;">K.Todd Driveshaft Cable</p>
+              <p style="color:#6b7280;font-size:12px;margin:0;">Driveshaft Cable</p>
             </td>
           </tr>
         </table>
@@ -123,7 +123,7 @@ serve(async (req) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        from: 'K.Todd Driveshaft Cable <orders@k-todd.com>',
+        from: 'Driveshaft Cable <orders@k-todd.com>',
         to: [customerEmail],
         subject: `Your order has shipped via ${carrierName}!`,
         html: htmlEmail,

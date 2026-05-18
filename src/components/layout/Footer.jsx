@@ -14,14 +14,12 @@ function Footer() {
         <div className="grid md:grid-cols-4 gap-8">
           {/* Brand */}
           <div>
-            <Link to="/" className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 bg-yellow-500 rounded flex items-center justify-center">
-                <span className="text-black font-bold text-lg font-industrial">K</span>
-              </div>
-              <div>
-                <div className="text-yellow-500 font-industrial text-lg tracking-wider">DRIVESHAFT CABLE</div>
-                <div className="text-gray-400 text-xs tracking-widest">BY K.TODD</div>
-              </div>
+            <Link to="/" className="inline-block mb-4">
+              <img
+                src="/logos/logo-badge.png"
+                alt="Driveshaft Cable"
+                className="h-20 w-auto"
+              />
             </Link>
             <p className="text-gray-400 text-sm">
               Heavy-duty driveshaft safety cable for professional towing and recovery operations. Designed in Houston, TX.
@@ -102,7 +100,7 @@ function Footer() {
         {/* Bottom bar */}
         <div className="mt-12 pt-8 border-t border-gray-800 flex flex-col md:flex-row justify-between items-center gap-4">
           <p className="text-gray-500 text-sm">
-            © {currentYear} K.Todd. All rights reserved.
+            © {currentYear} Driveshaft Cable. All rights reserved.
           </p>
           <div className="flex items-center gap-6 text-gray-500 text-sm">
             <span>HOUSTON, TX</span>

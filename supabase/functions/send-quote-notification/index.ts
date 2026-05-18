@@ -50,7 +50,7 @@ serve(async (req) => {
           <tr>
             <td style="padding:32px;">
               <p style="color:#d1d5db;font-size:16px;margin:0 0 24px;">
-                A new quote request has been submitted on the K.Todd website.
+                A new quote request has been submitted on the Driveshaft Cable website.
               </p>
               <!-- Details Box -->
               <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#111;border:1px solid #333;margin-bottom:24px;">
@@ -92,7 +92,7 @@ serve(async (req) => {
               <table width="100%" cellpadding="0" cellspacing="0">
                 <tr>
                   <td align="center">
-                    <a href="mailto:${email}?subject=Re: K.Todd Driveshaft Cable Quote Request" style="display:inline-block;background-color:#eab308;color:#000;font-size:16px;font-weight:bold;text-decoration:none;padding:16px 48px;letter-spacing:1px;">
+                    <a href="mailto:${email}?subject=Re: Driveshaft Cable Quote Request" style="display:inline-block;background-color:#eab308;color:#000;font-size:16px;font-weight:bold;text-decoration:none;padding:16px 48px;letter-spacing:1px;">
                       REPLY TO ${name.toUpperCase()}
                     </a>
                   </td>
@@ -103,7 +103,7 @@ serve(async (req) => {
           <!-- Footer -->
           <tr>
             <td style="background-color:#111;padding:20px;text-align:center;border-top:1px solid #333;">
-              <p style="color:#6b7280;font-size:12px;margin:0;">K.Todd Driveshaft Cable - Quote Notification</p>
+              <p style="color:#6b7280;font-size:12px;margin:0;">Driveshaft Cable - Quote Notification</p>
             </td>
           </tr>
         </table>
@@ -120,7 +120,7 @@ serve(async (req) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        from: 'K.Todd Driveshaft Cable <orders@k-todd.com>',
+        from: 'Driveshaft Cable <orders@k-todd.com>',
         to: ['ktoddizzle@icloud.com'],
         subject: `New Quote Request from ${name}${quantity ? ` - ${quantity} units` : ''}`,
         html: htmlEmail,

@@ -84,7 +84,7 @@ serve(async (req) => {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            from: 'K.Todd Driveshaft Cable <orders@k-todd.com>',
+            from: 'Driveshaft Cable <orders@k-todd.com>',
             to: [to],
             subject,
             html: htmlContent,

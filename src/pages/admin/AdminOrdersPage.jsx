@@ -127,7 +127,7 @@ function AdminOrdersPage() {
     if (totalCents < 0) return setManualError('Discount cannot exceed subtotal + shipping.')
 
     const saleDateIso = new Date(manualForm.saleDate).toISOString()
-    const items = [{ productId: '1', name: 'K.Todd Driveshaft Cable', quantity: qty, price: unitPrice }]
+    const items = [{ productId: '1', name: 'Driveshaft Cable', quantity: qty, price: unitPrice }]
     const shippingAddress = manualForm.hasShipping
       ? {
           address1: manualForm.address1, address2: manualForm.address2,
@@ -378,9 +378,7 @@ ${addr.country}`
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center gap-4">
               <Link to="/admin" className="flex items-center gap-2">
-                <div className="w-8 h-8 bg-yellow-500 rounded flex items-center justify-center">
-                  <span className="text-black font-bold text-sm font-industrial">K</span>
-                </div>
+                <img src="/logos/icon.png" alt="Driveshaft Cable" className="w-8 h-8 rounded" />
                 <span className="text-yellow-500 font-industrial">ADMIN</span>
               </Link>
             </div>

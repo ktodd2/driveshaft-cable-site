@@ -6,9 +6,9 @@ function AboutPage() {
   return (
     <div className="pt-20">
       <SEOHead
-        title="About K.Todd — Driveshaft Cable Manufacturer in Houston, TX"
-        description="K.Todd LLC manufactures heavy-duty driveshaft safety cables (driveshaftcable) in Houston, TX. Made by a heavy duty operator for the heavy duty operator."
-        keywords="driveshaft cable manufacturer, driveshaftcable, K.Todd LLC, Houston towing cable"
+        title="About Driveshaft Cable — Manufacturer in Houston, TX"
+        description="Driveshaft Cable manufactures heavy-duty driveshaft safety cables (driveshaftcable) in Houston, TX. Made by a heavy duty operator for the heavy duty operator."
+        keywords="driveshaft cable manufacturer, driveshaftcable, Houston towing cable"
         canonical="/about"
       />
       {/* Hero Section */}
@@ -16,7 +16,7 @@ function AboutPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-industrial text-white mb-4">
-              ABOUT K.TODD <span className="text-yellow-500">DRIVESHAFT CABLE</span>
+              ABOUT <span className="text-yellow-500">DRIVESHAFT CABLE</span>
             </h1>
             <div className="w-24 h-1 bg-yellow-500 mx-auto mb-6"></div>
             <p className="text-xl text-gray-400 max-w-3xl mx-auto">
@@ -36,13 +36,13 @@ function AboutPage() {
               </h2>
               <div className="space-y-4 text-gray-300">
                 <p>
-                  K.Todd Driveshaft Cable was born on the streets of Houston, Texas, where heavy-duty towing and recovery is a way of life. After years of watching operators struggle with makeshift solutions—zip ties, bungee cords, and chains that weren't designed for the job—we knew there had to be a better way.
+                  Driveshaft Cable was born on the streets of Houston, Texas, where heavy-duty towing and recovery is a way of life. After years of watching operators struggle with makeshift solutions—zip ties, bungee cords, and chains that weren't designed for the job—we knew there had to be a better way.
                 </p>
                 <p>
                   The driveshaft problem is real: when you're towing a Class 7 or 8 truck with a disconnected driveline, that shaft needs to be secured. Drop it on the road and you've got a hazard. Let it drag and you'll destroy seals and transmission components. The repair bill can easily hit $10,000 or more.
                 </p>
                 <p>
-                  We designed the K.Todd Driveshaft Cable specifically for this job. Purpose-built with 5/32" galvanized steel cable and heavy-duty aluminum couplers, it installs in seconds and keeps that shaft exactly where it needs to be.
+                  We designed the Driveshaft Cable specifically for this job. Purpose-built with 5/32" galvanized steel cable and heavy-duty aluminum couplers, it installs in seconds and keeps that shaft exactly where it needs to be.
                 </p>
                 <p className="text-yellow-500 font-industrial text-lg">
                   Simple. Effective. Field-proven.
@@ -135,7 +135,7 @@ function AboutPage() {
             READY TO KEEP YOUR SHAFT SECURE?
           </h2>
           <p className="text-lg text-black/80 mb-8">
-            Join the professionals who trust K.Todd Driveshaft Cable.
+            Join the professionals who trust Driveshaft Cable.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link to="/products" className="bg-black text-yellow-500 hover:bg-gray-900 font-bold py-3 px-8 uppercase tracking-wider transition-all duration-300 font-industrial">

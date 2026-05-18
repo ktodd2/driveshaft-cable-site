@@ -62,7 +62,7 @@ function QuoteForm() {
             <div className="w-24 h-1 bg-yellow-500 mb-6"></div>
 
             <p className="text-xl text-gray-300 mb-8">
-              Get a quote for the K.Todd Driveshaft Cable. Volume discounts available for fleet and wholesale orders.
+              Get a quote for the Driveshaft Cable. Volume discounts available for fleet and wholesale orders.
             </p>
 
             <div className="space-y-6 mb-8">

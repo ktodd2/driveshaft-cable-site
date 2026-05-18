@@ -13,9 +13,9 @@ const homeStructuredData = [
   {
     '@context': 'https://schema.org',
     '@type': 'Organization',
-    name: 'K.Todd LLC',
+    name: 'Driveshaft Cable',
     url: 'https://driveshaftcable.com',
-    description: 'K.Todd LLC manufactures heavy-duty driveshaft safety cables (driveshaftcable) for professional towing and recovery operations. Made by a heavy duty operator for the heavy duty operator.',
+    description: 'Driveshaft Cable manufactures heavy-duty driveshaft safety cables (driveshaftcable) for professional towing and recovery operations. Made by a heavy duty operator for the heavy duty operator.',
     contactPoint: {
       '@type': 'ContactPoint',
       email: 'houstontruckwreck@gmail.com',
@@ -25,12 +25,12 @@ const homeStructuredData = [
   {
     '@context': 'https://schema.org',
     '@type': 'WebSite',
-    name: 'K.Todd Driveshaft Cable',
+    name: 'Driveshaft Cable',
     url: 'https://driveshaftcable.com',
     description: 'Heavy-duty driveshaft cable for towing and recovery operations',
     publisher: {
       '@type': 'Organization',
-      name: 'K.Todd LLC'
+      name: 'Driveshaft Cable'
     }
   }
 ]
@@ -40,7 +40,7 @@ function HomePage() {
     <>
       <SEOHead
         title="Heavy-Duty Driveshaft Safety Cable for Towing"
-        description="K.Todd Driveshaft Cable — 3000lb WLL galvanized steel safety cable for heavy-duty towing. Made by a heavy duty operator for the heavy duty operator. Starting at $3.45/unit."
+        description="Driveshaft Cable — 3000lb WLL galvanized steel safety cable for heavy-duty towing. Made by a heavy duty operator for the heavy duty operator. Starting at $3.45/unit."
         keywords="driveshaft cable, driveshaftcable, driveshaft safety cable, towing safety cable, heavy duty towing cable, driveshaft guard cable"
         canonical="/"
         structuredData={homeStructuredData}

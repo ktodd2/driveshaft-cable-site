@@ -54,7 +54,7 @@ function SuggestionsPage() {
     <div className="pt-20 min-h-screen bg-ktodd-dark">
       <SEOHead
         title="Suggestions"
-        description="Have an idea, product request, or feedback for K.Todd Driveshaft Cable? Drop us a suggestion."
+        description="Have an idea, product request, or feedback for Driveshaft Cable? Drop us a suggestion."
         canonical="/suggestions"
       />
 

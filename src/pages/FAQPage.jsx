@@ -8,10 +8,10 @@ const faqStructuredData = {
   mainEntity: [
     {
       '@type': 'Question',
-      name: 'What is the K.Todd Driveshaft Cable?',
+      name: 'What is the Driveshaft Cable?',
       acceptedAnswer: {
         '@type': 'Answer',
-        text: 'The K.Todd Driveshaft Cable is a purpose-built safety device designed to securely suspend disconnected driveshafts during towing and recovery operations. It features 5/32" galvanized steel cable with heavy-duty aluminum couplers, providing a professional solution for keeping drivelines safely secured during transport.'
+        text: 'The Driveshaft Cable is a purpose-built safety device designed to securely suspend disconnected driveshafts during towing and recovery operations. It features 5/32" galvanized steel cable with heavy-duty aluminum couplers, providing a professional solution for keeping drivelines safely secured during transport.'
       }
     },
     {
@@ -35,7 +35,7 @@ const faqStructuredData = {
       name: 'Is it reusable?',
       acceptedAnswer: {
         '@type': 'Answer',
-        text: 'No. The K.Todd Driveshaft Cable is a single-use product — it is cut off after the job is done. This is by design. There is no guessing whether the cable is still safe to use. One job, one cable.'
+        text: 'No. The Driveshaft Cable is a single-use product — it is cut off after the job is done. This is by design. There is no guessing whether the cable is still safe to use. One job, one cable.'
       }
     },
     {
@@ -123,7 +123,7 @@ const faqStructuredData = {
       name: 'What is a driveshaftcable?',
       acceptedAnswer: {
         '@type': 'Answer',
-        text: 'A driveshaftcable (also written as driveshaft cable) is a safety cable used to secure a disconnected driveshaft during towing operations. The K.Todd Driveshaft Cable is a purpose-built driveshaftcable featuring 5/32" galvanized steel wire and aluminum couplers with a 3000lb working load limit.'
+        text: 'A driveshaftcable (also written as driveshaft cable) is a safety cable used to secure a disconnected driveshaft during towing operations. The Driveshaft Cable is a purpose-built driveshaftcable featuring 5/32" galvanized steel wire and aluminum couplers with a 3000lb working load limit.'
       }
     }
   ]
@@ -134,8 +134,8 @@ const faqs = [
     category: 'Product',
     items: [
       {
-        question: 'What is the K.Todd Driveshaft Cable?',
-        answer: 'The K.Todd Driveshaft Cable is a purpose-built safety device designed to securely suspend disconnected driveshafts during towing and recovery operations. It features 5/32" galvanized steel cable with heavy-duty aluminum couplers, providing a professional solution for keeping drivelines safely secured during transport.'
+        question: 'What is the Driveshaft Cable?',
+        answer: 'The Driveshaft Cable is a purpose-built safety device designed to securely suspend disconnected driveshafts during towing and recovery operations. It features 5/32" galvanized steel cable with heavy-duty aluminum couplers, providing a professional solution for keeping drivelines safely secured during transport.'
       },
       {
         question: 'What vehicles is this designed for?',
@@ -147,11 +147,11 @@ const faqs = [
       },
       {
         question: 'Is it reusable?',
-        answer: 'No. The K.Todd Driveshaft Cable is a single-use product — it is cut off after the job is done. This is by design. There is no guessing whether the cable is still safe to use. One job, one cable.'
+        answer: 'No. The Driveshaft Cable is a single-use product — it is cut off after the job is done. This is by design. There is no guessing whether the cable is still safe to use. One job, one cable.'
       },
       {
         question: 'What is a driveshaftcable?',
-        answer: 'A driveshaftcable (also written as driveshaft cable) is a safety cable used to secure a disconnected driveshaft during towing operations. The K.Todd Driveshaft Cable is a purpose-built driveshaftcable featuring 5/32" galvanized steel wire and aluminum couplers with a 3000lb working load limit.'
+        answer: 'A driveshaftcable (also written as driveshaft cable) is a safety cable used to secure a disconnected driveshaft during towing operations. The Driveshaft Cable is a purpose-built driveshaftcable featuring 5/32" galvanized steel wire and aluminum couplers with a 3000lb working load limit.'
       }
     ]
   },
@@ -245,7 +245,7 @@ function FAQPage() {
     <div className="pt-20">
       <SEOHead
         title="Driveshaft Cable FAQ — Questions Answered"
-        description="Frequently asked questions about K.Todd driveshaft safety cables (driveshaftcable). Learn about WLL ratings, installation, pricing, and shipping."
+        description="Frequently asked questions about Driveshaft Cable safety cables (driveshaftcable). Learn about WLL ratings, installation, pricing, and shipping."
         keywords="driveshaft cable FAQ, driveshaftcable questions, towing cable specifications"
         canonical="/faq"
         structuredData={faqStructuredData}
@@ -259,7 +259,7 @@ function FAQPage() {
             </h1>
             <div className="w-24 h-1 bg-yellow-500 mx-auto mb-6"></div>
             <p className="text-xl text-gray-400 max-w-2xl mx-auto">
-              Everything you need to know about the K.Todd Driveshaft Cable.
+              Everything you need to know about the Driveshaft Cable.
             </p>
           </div>
         </div>

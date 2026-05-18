@@ -54,14 +54,8 @@ function AdminLoginPage() {
       <div className="max-w-md w-full">
         {/* Logo */}
         <div className="text-center mb-8">
-          <Link to="/" className="inline-flex items-center gap-3">
-            <div className="w-12 h-12 bg-yellow-500 rounded flex items-center justify-center">
-              <span className="text-black font-bold text-xl font-industrial">K</span>
-            </div>
-            <div>
-              <div className="text-yellow-500 font-industrial text-xl tracking-wider">DRIVESHAFT CABLE</div>
-              <div className="text-gray-400 text-xs tracking-widest">BY K.TODD</div>
-            </div>
+          <Link to="/" className="inline-block">
+            <img src="/logos/logo-horizontal.png" alt="Driveshaft Cable" className="h-12 w-auto" />
           </Link>
         </div>
 

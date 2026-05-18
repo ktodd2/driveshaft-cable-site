@@ -10,7 +10,7 @@ const TEMPLATES = {
   loyalty: {
     label: 'Loyalty Discount',
     description: '10% repeat customer discount reminder',
-    subject: 'Your exclusive 10% loyalty discount — K.Todd Driveshaft Cable',
+    subject: 'Your exclusive 10% loyalty discount — Driveshaft Cable',
     html: `<!DOCTYPE html>
 <html>
 <head>
@@ -29,7 +29,7 @@ const TEMPLATES = {
           </tr>
           <tr>
             <td style="padding:32px;">
-              <p style="color:#d1d5db;font-size:16px;margin:0 0 16px;">As a returning K.Todd customer, you're eligible for a 10% loyalty discount on every order.</p>
+              <p style="color:#d1d5db;font-size:16px;margin:0 0 16px;">As a returning customer, you're eligible for a 10% loyalty discount on every order.</p>
               <p style="color:#d1d5db;font-size:16px;margin:0 0 16px;">It's our way of saying thanks for your continued business. You've trusted us with your fleet — and we don't take that lightly.</p>
               <p style="color:#d1d5db;font-size:16px;margin:0 0 24px;">The discount is applied automatically at checkout — just use the same email address you ordered with before. No codes, no hassle.</p>
               <table width="100%" cellpadding="0" cellspacing="0">
@@ -45,7 +45,7 @@ const TEMPLATES = {
           </tr>
           <tr>
             <td style="background-color:#111;padding:20px;text-align:center;border-top:1px solid #333;">
-              <p style="color:#6b7280;font-size:12px;margin:0;">K.Todd Driveshaft Cable | orders@k-todd.com</p>
+              <p style="color:#6b7280;font-size:12px;margin:0;">Driveshaft Cable | orders@k-todd.com</p>
             </td>
           </tr>
         </table>
@@ -59,7 +59,7 @@ const TEMPLATES = {
   backInStock: {
     label: 'Back in Stock',
     description: 'Inventory restocked, ready to ship',
-    subject: 'Back in stock — K.Todd Driveshaft Cables ready to ship',
+    subject: 'Back in stock — Driveshaft Cables ready to ship',
     html: `<!DOCTYPE html>
 <html>
 <head>
@@ -78,7 +78,7 @@ const TEMPLATES = {
           </tr>
           <tr>
             <td style="padding:32px;">
-              <p style="color:#d1d5db;font-size:16px;margin:0 0 16px;">Great news — K.Todd Driveshaft Cables are fully restocked and ready to ship.</p>
+              <p style="color:#d1d5db;font-size:16px;margin:0 0 16px;">Great news — Driveshaft Cables are fully restocked and ready to ship.</p>
               <p style="color:#d1d5db;font-size:16px;margin:0 0 16px;">If you've been waiting to place an order, now is the time. Inventory moves fast, and we want to make sure you're not left without the parts you need.</p>
               <p style="color:#d1d5db;font-size:16px;margin:0 0 24px;">Don't miss out — order now while inventory lasts. Returning customers save 10% automatically at checkout.</p>
               <table width="100%" cellpadding="0" cellspacing="0">
@@ -94,7 +94,7 @@ const TEMPLATES = {
           </tr>
           <tr>
             <td style="background-color:#111;padding:20px;text-align:center;border-top:1px solid #333;">
-              <p style="color:#6b7280;font-size:12px;margin:0;">K.Todd Driveshaft Cable | orders@k-todd.com</p>
+              <p style="color:#6b7280;font-size:12px;margin:0;">Driveshaft Cable | orders@k-todd.com</p>
             </td>
           </tr>
         </table>
@@ -108,7 +108,7 @@ const TEMPLATES = {
   volumePricing: {
     label: 'Volume Pricing',
     description: 'Tiered pricing breakdown, bulk savings',
-    subject: 'Save more when you order more — K.Todd volume pricing',
+    subject: 'Save more when you order more — Our volume pricing',
     html: `<!DOCTYPE html>
 <html>
 <head>
@@ -127,7 +127,7 @@ const TEMPLATES = {
           </tr>
           <tr>
             <td style="padding:32px;">
-              <p style="color:#d1d5db;font-size:16px;margin:0 0 24px;">The more you order, the more you save. K.Todd volume pricing is built for operators who need reliable parts at scale.</p>
+              <p style="color:#d1d5db;font-size:16px;margin:0 0 24px;">The more you order, the more you save. Our volume pricing is built for operators who need reliable parts at scale.</p>
               <table width="100%" cellpadding="8" cellspacing="0" style="border-collapse:collapse;margin-bottom:24px;">
                 <tr style="background-color:#333;">
                   <td style="color:#eab308;font-weight:bold;font-size:14px;padding:10px 12px;">Quantity</td>
@@ -165,7 +165,7 @@ const TEMPLATES = {
           </tr>
           <tr>
             <td style="background-color:#111;padding:20px;text-align:center;border-top:1px solid #333;">
-              <p style="color:#6b7280;font-size:12px;margin:0;">K.Todd Driveshaft Cable | orders@k-todd.com</p>
+              <p style="color:#6b7280;font-size:12px;margin:0;">Driveshaft Cable | orders@k-todd.com</p>
             </td>
           </tr>
         </table>
@@ -179,7 +179,7 @@ const TEMPLATES = {
   reorderReminder: {
     label: 'Reorder Reminder',
     description: 'Nudge past customers to restock',
-    subject: "Time to restock? Your 10% loyalty discount is waiting — K.Todd",
+    subject: "Time to restock? Your 10% loyalty discount is waiting — Driveshaft Cable",
     html: `<!DOCTYPE html>
 <html>
 <head>
@@ -214,7 +214,7 @@ const TEMPLATES = {
           </tr>
           <tr>
             <td style="background-color:#111;padding:20px;text-align:center;border-top:1px solid #333;">
-              <p style="color:#6b7280;font-size:12px;margin:0;">K.Todd Driveshaft Cable | orders@k-todd.com</p>
+              <p style="color:#6b7280;font-size:12px;margin:0;">Driveshaft Cable | orders@k-todd.com</p>
             </td>
           </tr>
         </table>
@@ -228,7 +228,7 @@ const TEMPLATES = {
   holidaySale: {
     label: 'Holiday / Seasonal Sale',
     description: 'Limited-time seasonal offer template',
-    subject: 'Limited time offer — K.Todd Driveshaft Cable',
+    subject: 'Limited time offer — Driveshaft Cable',
     html: `<!DOCTYPE html>
 <html>
 <head>
@@ -263,7 +263,7 @@ const TEMPLATES = {
           </tr>
           <tr>
             <td style="background-color:#111;padding:20px;text-align:center;border-top:1px solid #333;">
-              <p style="color:#6b7280;font-size:12px;margin:0;">K.Todd Driveshaft Cable | orders@k-todd.com</p>
+              <p style="color:#6b7280;font-size:12px;margin:0;">Driveshaft Cable | orders@k-todd.com</p>
             </td>
           </tr>
         </table>
@@ -277,7 +277,7 @@ const TEMPLATES = {
   newProduct: {
     label: 'New Product',
     description: 'Announce a new product or improvement',
-    subject: "Something new from K.Todd — take a look",
+    subject: "Something new from Driveshaft Cable — take a look",
     html: `<!DOCTYPE html>
 <html>
 <head>
@@ -291,7 +291,7 @@ const TEMPLATES = {
         <table width="600" cellpadding="0" cellspacing="0" style="background-color:#1a1a1a;border:1px solid #333;">
           <tr>
             <td style="background-color:#eab308;padding:24px;text-align:center;">
-              <h1 style="margin:0;color:#000;font-size:24px;font-weight:bold;letter-spacing:2px;">SOMETHING NEW FROM K.TODD</h1>
+              <h1 style="margin:0;color:#000;font-size:24px;font-weight:bold;letter-spacing:2px;">SOMETHING NEW</h1>
             </td>
           </tr>
           <tr>
@@ -312,7 +312,7 @@ const TEMPLATES = {
           </tr>
           <tr>
             <td style="background-color:#111;padding:20px;text-align:center;border-top:1px solid #333;">
-              <p style="color:#6b7280;font-size:12px;margin:0;">K.Todd Driveshaft Cable | orders@k-todd.com</p>
+              <p style="color:#6b7280;font-size:12px;margin:0;">Driveshaft Cable | orders@k-todd.com</p>
             </td>
           </tr>
         </table>
@@ -326,7 +326,7 @@ const TEMPLATES = {
   priceChange: {
     label: 'Price Change Notice',
     description: 'Notify customers of upcoming price change',
-    subject: 'Important pricing update from K.Todd Driveshaft Cable',
+    subject: 'Important pricing update from Driveshaft Cable',
     html: `<!DOCTYPE html>
 <html>
 <head>
@@ -361,7 +361,7 @@ const TEMPLATES = {
           </tr>
           <tr>
             <td style="background-color:#111;padding:20px;text-align:center;border-top:1px solid #333;">
-              <p style="color:#6b7280;font-size:12px;margin:0;">K.Todd Driveshaft Cable | orders@k-todd.com</p>
+              <p style="color:#6b7280;font-size:12px;margin:0;">Driveshaft Cable | orders@k-todd.com</p>
             </td>
           </tr>
         </table>
@@ -375,7 +375,7 @@ const TEMPLATES = {
   thankYou: {
     label: 'Thank You',
     description: 'Post-purchase appreciation, loyalty reminder',
-    subject: 'Thank you for your order — K.Todd Driveshaft Cable',
+    subject: 'Thank you for your order — Driveshaft Cable',
     html: `<!DOCTYPE html>
 <html>
 <head>
@@ -394,15 +394,15 @@ const TEMPLATES = {
           </tr>
           <tr>
             <td style="padding:32px;">
-              <p style="color:#d1d5db;font-size:16px;margin:0 0 16px;">We appreciate your business. Your K.Todd Driveshaft Cable is built to last — and so is our commitment to you.</p>
+              <p style="color:#d1d5db;font-size:16px;margin:0 0 16px;">We appreciate your business. Your Driveshaft Cable is built to last — and so is our commitment to you.</p>
               <p style="color:#d1d5db;font-size:16px;margin:0 0 16px;">As a valued customer, you'll receive a 10% loyalty discount on your next order, applied automatically at checkout. No codes needed — just use the same email address.</p>
               <p style="color:#d1d5db;font-size:16px;margin:0 0 8px;">Questions or feedback? Reply to this email anytime. We read every message.</p>
-              <p style="color:#d1d5db;font-size:16px;margin:0;">— The K.Todd Team</p>
+              <p style="color:#d1d5db;font-size:16px;margin:0;">— The Driveshaft Cable Team</p>
             </td>
           </tr>
           <tr>
             <td style="background-color:#111;padding:20px;text-align:center;border-top:1px solid #333;">
-              <p style="color:#6b7280;font-size:12px;margin:0;">K.Todd Driveshaft Cable | orders@k-todd.com</p>
+              <p style="color:#6b7280;font-size:12px;margin:0;">Driveshaft Cable | orders@k-todd.com</p>
             </td>
           </tr>
         </table>
@@ -416,7 +416,7 @@ const TEMPLATES = {
   fleetOutreach: {
     label: 'Fleet / Wholesale',
     description: 'Target fleet operators and bulk buyers',
-    subject: 'Built for your fleet — K.Todd Driveshaft Cable',
+    subject: 'Built for your fleet — Driveshaft Cable',
     html: `<!DOCTYPE html>
 <html>
 <head>
@@ -435,8 +435,8 @@ const TEMPLATES = {
           </tr>
           <tr>
             <td style="padding:32px;">
-              <p style="color:#d1d5db;font-size:16px;margin:0 0 16px;">K.Todd Driveshaft Cables are engineered for heavy-duty use and trusted by fleet operators across the country.</p>
-              <p style="color:#d1d5db;font-size:16px;margin:0 0 16px;">When you're managing a fleet, you can't afford downtime from inferior parts. Every K.Todd cable is built to spec and ships fast — so your vehicles stay on the road and your operation stays on schedule.</p>
+              <p style="color:#d1d5db;font-size:16px;margin:0 0 16px;">Driveshaft Cables are engineered for heavy-duty use and trusted by fleet operators across the country.</p>
+              <p style="color:#d1d5db;font-size:16px;margin:0 0 16px;">When you're managing a fleet, you can't afford downtime from inferior parts. Every Driveshaft Cable is built to spec and ships fast — so your vehicles stay on the road and your operation stays on schedule.</p>
               <p style="color:#d1d5db;font-size:16px;margin:0 0 24px;">With volume pricing starting at just $2.90/unit, free shipping on orders over $400, and a 10% loyalty discount for returning customers — we're built to keep your fleet moving.</p>
               <table width="100%" cellpadding="0" cellspacing="0">
                 <tr>
@@ -451,7 +451,7 @@ const TEMPLATES = {
           </tr>
           <tr>
             <td style="background-color:#111;padding:20px;text-align:center;border-top:1px solid #333;">
-              <p style="color:#6b7280;font-size:12px;margin:0;">K.Todd Driveshaft Cable | orders@k-todd.com</p>
+              <p style="color:#6b7280;font-size:12px;margin:0;">Driveshaft Cable | orders@k-todd.com</p>
             </td>
           </tr>
         </table>
@@ -465,7 +465,7 @@ const TEMPLATES = {
   freeShipping: {
     label: 'Free Shipping',
     description: 'Highlight free shipping on orders over $400',
-    subject: 'Free shipping on orders over $400 — K.Todd Driveshaft Cable',
+    subject: 'Free shipping on orders over $400 — Driveshaft Cable',
     html: `<!DOCTYPE html>
 <html>
 <head>
@@ -500,7 +500,7 @@ const TEMPLATES = {
           </tr>
           <tr>
             <td style="background-color:#111;padding:20px;text-align:center;border-top:1px solid #333;">
-              <p style="color:#6b7280;font-size:12px;margin:0;">K.Todd Driveshaft Cable | orders@k-todd.com</p>
+              <p style="color:#6b7280;font-size:12px;margin:0;">Driveshaft Cable | orders@k-todd.com</p>
             </td>
           </tr>
         </table>
@@ -514,7 +514,7 @@ const TEMPLATES = {
   general: {
     label: 'General Update',
     description: 'Blank template for any announcement',
-    subject: 'A message from K.Todd Driveshaft Cable',
+    subject: 'A message from Driveshaft Cable',
     html: `<!DOCTYPE html>
 <html>
 <head>
@@ -528,18 +528,18 @@ const TEMPLATES = {
         <table width="600" cellpadding="0" cellspacing="0" style="background-color:#1a1a1a;border:1px solid #333;">
           <tr>
             <td style="background-color:#eab308;padding:24px;text-align:center;">
-              <h1 style="margin:0;color:#000;font-size:24px;font-weight:bold;letter-spacing:2px;">A MESSAGE FROM K.TODD</h1>
+              <h1 style="margin:0;color:#000;font-size:24px;font-weight:bold;letter-spacing:2px;">A MESSAGE</h1>
             </td>
           </tr>
           <tr>
             <td style="padding:32px;">
               <p style="color:#d1d5db;font-size:16px;margin:0 0 16px;">[Your message here. Replace this text with your announcement, update, or message to customers.]</p>
-              <p style="color:#d1d5db;font-size:16px;margin:0;">— The K.Todd Team</p>
+              <p style="color:#d1d5db;font-size:16px;margin:0;">— The Driveshaft Cable Team</p>
             </td>
           </tr>
           <tr>
             <td style="background-color:#111;padding:20px;text-align:center;border-top:1px solid #333;">
-              <p style="color:#6b7280;font-size:12px;margin:0;">K.Todd Driveshaft Cable | orders@k-todd.com</p>
+              <p style="color:#6b7280;font-size:12px;margin:0;">Driveshaft Cable | orders@k-todd.com</p>
             </td>
           </tr>
         </table>
@@ -553,7 +553,7 @@ const TEMPLATES = {
   outOfStock: {
     label: 'Out of Stock Notice',
     description: 'Temporarily sold out, restocking soon',
-    subject: 'Temporarily out of stock — new inventory arriving soon | K.Todd',
+    subject: 'Temporarily out of stock — new inventory arriving soon | Driveshaft Cable',
     html: `<!DOCTYPE html>
 <html>
 <head>
@@ -572,7 +572,7 @@ const TEMPLATES = {
           </tr>
           <tr>
             <td style="padding:32px;">
-              <p style="color:#d1d5db;font-size:16px;margin:0 0 16px;">We wanted to give you a heads up — K.Todd Driveshaft Cables are currently sold out due to high demand.</p>
+              <p style="color:#d1d5db;font-size:16px;margin:0 0 16px;">We wanted to give you a heads up — Driveshaft Cables are currently sold out due to high demand.</p>
               <p style="color:#d1d5db;font-size:16px;margin:0 0 16px;">The good news: <strong style="color:#eab308;">new inventory is on the way and expected within the next 20 days.</strong> We're working to get restocked as fast as possible so you're never without the parts you need.</p>
               <p style="color:#d1d5db;font-size:16px;margin:0 0 16px;">If you'd like to get ahead of the rush, you can request a quote now to lock in your order. We'll have it ready to ship the moment inventory arrives.</p>
               <p style="color:#d1d5db;font-size:16px;margin:0 0 24px;">We appreciate your patience and your business. As always, returning customers receive a 10% loyalty discount — applied automatically at checkout.</p>
@@ -590,7 +590,7 @@ const TEMPLATES = {
           </tr>
           <tr>
             <td style="background-color:#111;padding:20px;text-align:center;border-top:1px solid #333;">
-              <p style="color:#6b7280;font-size:12px;margin:0;">K.Todd Driveshaft Cable | orders@k-todd.com</p>
+              <p style="color:#6b7280;font-size:12px;margin:0;">Driveshaft Cable | orders@k-todd.com</p>
             </td>
           </tr>
         </table>
@@ -939,9 +939,7 @@ function AdminEmailPage() {
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center gap-4">
               <Link to="/admin" className="flex items-center gap-2">
-                <div className="w-8 h-8 bg-yellow-500 rounded flex items-center justify-center">
-                  <span className="text-black font-bold text-sm font-industrial">K</span>
-                </div>
+                <img src="/logos/icon.png" alt="Driveshaft Cable" className="w-8 h-8 rounded" />
                 <span className="text-yellow-500 font-industrial">ADMIN</span>
               </Link>
             </div>

@@ -20,7 +20,7 @@ function Product() {
             <div className="rounded-lg overflow-hidden industrial-border">
               <img
                 src="/inuse.jpeg"
-                alt="K.Todd Driveshaft Cable installed on vehicle"
+                alt="Driveshaft Cable installed on vehicle"
                 className="w-full h-auto object-cover"
                 loading="lazy"
               />
@@ -29,7 +29,7 @@ function Product() {
 
           {/* Benefits list */}
           <div>
-            <h3 className="text-2xl font-industrial text-yellow-500 mb-6">WHY K.TODD DRIVESHAFT CABLE?</h3>
+            <h3 className="text-2xl font-industrial text-yellow-500 mb-6">WHY DRIVESHAFT CABLE?</h3>
 
             <div className="space-y-6">
               <div className="flex items-start gap-4 p-4 bg-gray-800/50 border-l-4 border-yellow-500">

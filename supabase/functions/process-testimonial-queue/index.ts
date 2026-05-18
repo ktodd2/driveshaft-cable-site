@@ -43,7 +43,7 @@ function buildEmailHtml(firstName: string, magicUrl: string): string {
           <tr>
             <td style="padding:32px;">
               <p style="color:#d1d5db;font-size:16px;margin:0 0 16px;">
-                Hey ${firstName}, it's been a couple weeks since your K.Todd cable shipped.
+                Hey ${firstName}, it's been a couple weeks since your Driveshaft Cable shipped.
               </p>
               <p style="color:#d1d5db;font-size:16px;margin:0 0 16px;">
                 We'd love to hear how it's working out for you. A quick honest sentence or two would mean a lot.
@@ -61,13 +61,13 @@ function buildEmailHtml(firstName: string, magicUrl: string): string {
                 </tr>
               </table>
               <p style="color:#9ca3af;font-size:13px;margin:24px 0 0;line-height:1.5;">
-                <strong style="color:#d1d5db;">Heads up:</strong> by submitting your testimonial you grant K.Todd permission to use it in promotional materials (website, social media, marketing emails). You'll get to pick how you want to be credited on the form.
+                <strong style="color:#d1d5db;">Heads up:</strong> by submitting your testimonial you grant Driveshaft Cable permission to use it in promotional materials (website, social media, marketing emails). You'll get to pick how you want to be credited on the form.
               </p>
             </td>
           </tr>
           <tr>
             <td style="background-color:#111;padding:20px;text-align:center;border-top:1px solid #333;">
-              <p style="color:#6b7280;font-size:12px;margin:0;">K.Todd Driveshaft Cable</p>
+              <p style="color:#6b7280;font-size:12px;margin:0;">Driveshaft Cable</p>
               <p style="color:#4b5563;font-size:11px;margin:8px 0 0;">If you're not interested, just ignore this email — we won't send another.</p>
             </td>
           </tr>
@@ -175,9 +175,9 @@ serve(async (req) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        from: 'K.Todd Driveshaft Cable <orders@k-todd.com>',
+        from: 'Driveshaft Cable <orders@k-todd.com>',
         to: [order.email],
-        subject: `How's your K.Todd cable holding up, ${firstName}?`,
+        subject: `How's your Driveshaft Cable holding up, ${firstName}?`,
         html,
       }),
     })

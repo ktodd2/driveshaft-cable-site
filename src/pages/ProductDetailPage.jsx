@@ -9,11 +9,11 @@ const productStructuredData = [
   {
     '@context': 'https://schema.org',
     '@type': 'Product',
-    name: 'K.Todd Driveshaft Cable',
-    description: 'K.Todd Driveshaft Safety Cable (driveshaftcable). 3000lb working load limit, 5/32" galvanized steel, 39" length, aluminum couplers. Purpose-built for heavy-duty towing and recovery operations.',
+    name: 'Driveshaft Cable',
+    description: 'Driveshaft Safety Cable (driveshaftcable). 3000lb working load limit, 5/32" galvanized steel, 39" length, aluminum couplers. Purpose-built for heavy-duty towing and recovery operations.',
     brand: {
       '@type': 'Brand',
-      name: 'K.Todd'
+      name: 'Driveshaft Cable'
     },
     sku: 'KTDC-001',
     mpn: 'KTDC-001',
@@ -63,13 +63,13 @@ const productImages = [
 const products = {
   'driveshaft-cable': {
     id: '1',
-    name: 'K.Todd Driveshaft Cable',
+    name: 'Driveshaft Cable',
     slug: 'driveshaft-cable',
-    description: `The K.Todd Driveshaft Cable is a purpose-built safety device designed to securely suspend disconnected driveshafts during towing and recovery operations.
+    description: `The Driveshaft Cable is a purpose-built safety device designed to securely suspend disconnected driveshafts during towing and recovery operations.
 
 Built with 5/32" galvanized steel cable and heavy-duty aluminum couplers, it provides a professional, single-use solution for keeping drivelines safely secured during transport. The cable is cut off after the job — no reuse, no guessing if it's still safe.
 
-No more makeshift solutions with bungee cords, zip ties, or chains. The K.Todd Driveshaft Cable installs in seconds and keeps that shaft exactly where it needs to be.`,
+No more makeshift solutions with bungee cords, zip ties, or chains. The Driveshaft Cable installs in seconds and keeps that shaft exactly where it needs to be.`,
     short_description: 'Heavy-duty driveshaft safety cable for professional towing and recovery operations.',
     price_cents: 300,
     bulk_threshold: 10,
@@ -154,9 +154,9 @@ function ProductDetailPage() {
   return (
     <div className="pt-20">
       <SEOHead
-        title="K.Todd Driveshaft Cable — 3000lb WLL"
-        description='K.Todd Driveshaft Safety Cable. 3000lb working load limit, 5/32" galvanized steel, 39" length, aluminum couplers. Starting at $3.45/unit with volume discounts.'
-        keywords="K.Todd driveshaft cable, driveshaftcable, 3000lb WLL cable, towing safety cable, driveshaft guard"
+        title="Driveshaft Cable — 3000lb WLL"
+        description='Driveshaft Safety Cable. 3000lb working load limit, 5/32" galvanized steel, 39" length, aluminum couplers. Starting at $3.45/unit with volume discounts.'
+        keywords="driveshaft cable, driveshaftcable, 3000lb WLL cable, towing safety cable, driveshaft guard"
         canonical="/products/driveshaft-cable"
         structuredData={productStructuredData}
       />
@@ -360,7 +360,7 @@ function ProductDetailPage() {
       <section className="py-16 bg-ktodd-dark">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <h2 className="text-2xl font-industrial text-white mb-8">
-            WHY <span className="text-yellow-500">K.TODD?</span>
+            WHY <span className="text-yellow-500">DRIVESHAFT CABLE?</span>
           </h2>
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {product.features.map((feature, index) => (

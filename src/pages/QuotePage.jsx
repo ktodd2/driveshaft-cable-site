@@ -75,7 +75,7 @@ function QuotePage() {
     <div className="pt-20">
       <SEOHead
         title="Request a Driveshaft Cable Quote — Wholesale & Bulk"
-        description="Request a custom quote for K.Todd driveshaft cables (driveshaftcable). Wholesale pricing available for fleet and bulk orders."
+        description="Request a custom quote for Driveshaft Cable (driveshaftcable). Wholesale pricing available for fleet and bulk orders."
         keywords="driveshaft cable quote, bulk driveshaftcable, wholesale driveshaft cable pricing"
         canonical="/quote"
       />
@@ -221,7 +221,7 @@ function QuotePage() {
                   {items.length > 0 && (
                     <div className="bg-gray-700/50 border border-gray-600 p-4 mb-6">
                       <p className="text-gray-400 text-sm mb-2">Cart items included in quote:</p>
-                      <div className="text-white font-bold">{totalItems} x K.Todd Driveshaft Cable</div>
+                      <div className="text-white font-bold">{totalItems} x Driveshaft Cable</div>
                     </div>
                   )}
 

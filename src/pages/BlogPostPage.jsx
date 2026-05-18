@@ -107,11 +107,11 @@ function BlogPostPage() {
     dateModified: post.updated_at,
     author: {
       '@type': 'Organization',
-      name: 'K.Todd Driveshaft Cable',
+      name: 'Driveshaft Cable',
     },
     publisher: {
       '@type': 'Organization',
-      name: 'K.Todd Driveshaft Cable',
+      name: 'Driveshaft Cable',
     },
     mainEntityOfPage: {
       '@type': 'WebPage',
@@ -122,7 +122,7 @@ function BlogPostPage() {
   return (
     <div className="pt-20">
       <SEOHead
-        title={`${post.title} | K.Todd Driveshaft Cable`}
+        title={`${post.title} | Driveshaft Cable`}
         description={post.meta_description || post.excerpt}
         keywords={post.tags ? post.tags.join(', ') : 'heavy duty towing, towing tips'}
         canonical={`/blog/${post.slug}`}
@@ -248,7 +248,7 @@ function BlogPostPage() {
             PROTECT YOUR <span className="text-yellow-500">DRIVESHAFT</span>
           </h2>
           <p className="text-gray-400 mb-8">
-            K.Todd Driveshaft Cable — built by a heavy duty operator for heavy duty operators.
+            Driveshaft Cable — built by a heavy duty operator for heavy duty operators.
           </p>
           <Link to="/products/driveshaft-cable" className="btn-primary">
             Shop Driveshaft Cable

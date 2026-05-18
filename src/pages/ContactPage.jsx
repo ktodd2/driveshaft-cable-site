@@ -44,8 +44,8 @@ function ContactPage() {
   return (
     <div className="pt-20">
       <SEOHead
-        title="Contact K.Todd — Driveshaft Cable Inquiries"
-        description="Contact K.Todd LLC for driveshaft cable (driveshaftcable) inquiries, wholesale pricing, or support. Based in Houston, TX."
+        title="Contact Driveshaft Cable — Inquiries"
+        description="Contact Driveshaft Cable for driveshaft cable (driveshaftcable) inquiries, wholesale pricing, or support. Based in Houston, TX."
         keywords="contact driveshaft cable, driveshaftcable supplier, buy driveshaft cable Houston"
         canonical="/contact"
       />
@@ -54,7 +54,7 @@ function ContactPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-industrial text-white mb-4">
-              CONTACT K.TODD <span className="text-yellow-500">DRIVESHAFT CABLE</span>
+              CONTACT <span className="text-yellow-500">DRIVESHAFT CABLE</span>
             </h1>
             <div className="w-24 h-1 bg-yellow-500 mx-auto mb-6"></div>
             <p className="text-xl text-gray-400 max-w-2xl mx-auto">

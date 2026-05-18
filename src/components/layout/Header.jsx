@@ -77,14 +77,12 @@ function Header() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16 md:h-20">
             {/* Logo */}
-            <Link to="/" className="flex items-center gap-3">
-              <div className="w-10 h-10 md:w-12 md:h-12 bg-yellow-500 rounded flex items-center justify-center">
-                <span className="text-black font-bold text-lg md:text-xl font-industrial">K</span>
-              </div>
-              <div className="hidden sm:block">
-                <div className="text-yellow-500 font-industrial text-lg md:text-xl tracking-wider">DRIVESHAFT CABLE</div>
-                <div className="text-gray-400 text-xs tracking-widest">BY K.TODD</div>
-              </div>
+            <Link to="/" className="flex items-center">
+              <img
+                src="/logos/logo-horizontal.png"
+                alt="Driveshaft Cable"
+                className="h-10 md:h-12 w-auto"
+              />
             </Link>
 
             {/* Desktop Navigation */}

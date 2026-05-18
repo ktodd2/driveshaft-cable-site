@@ -78,20 +78,20 @@ function BlogListPage() {
   const structuredData = {
     '@context': 'https://schema.org',
     '@type': 'Blog',
-    name: 'K.Todd Towing & Recovery Blog',
+    name: 'Driveshaft Cable Towing & Recovery Blog',
     description: 'Expert tips, industry news, and safety guides for heavy duty towing and recovery professionals.',
     url: 'https://driveshaftcable.com/blog',
     publisher: {
       '@type': 'Organization',
-      name: 'K.Todd Driveshaft Cable',
+      name: 'Driveshaft Cable',
     },
   }
 
   return (
     <div className="pt-20">
       <SEOHead
-        title="Towing & Recovery Blog | K.Todd Driveshaft Cable"
-        description="Expert tips, industry news, and safety guides for heavy duty towing and recovery professionals. Stay informed with K.Todd."
+        title="Towing & Recovery Blog | Driveshaft Cable"
+        description="Expert tips, industry news, and safety guides for heavy duty towing and recovery professionals. Stay informed with Driveshaft Cable."
         keywords="heavy duty towing blog, tow truck tips, towing safety, recovery techniques, driveshaft cable, towing industry news"
         canonical="/blog"
         ogImage="https://driveshaftcable.com/og-blog.jpg"
@@ -261,7 +261,7 @@ function BlogListPage() {
             PROTECT YOUR <span className="text-yellow-500">DRIVESHAFT</span>
           </h2>
           <p className="text-gray-400 mb-8">
-            K.Todd Driveshaft Cable — built by a heavy duty operator for heavy duty operators.
+            Driveshaft Cable — built by a heavy duty operator for heavy duty operators.
           </p>
           <Link to="/products/driveshaft-cable" className="btn-primary">
             Shop Driveshaft Cable

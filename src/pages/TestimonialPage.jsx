@@ -129,7 +129,7 @@ function TestimonialPage() {
                 <p className="text-gray-400 mb-6">
                   Your testimonial is in. We may feature it on our site, social media, or marketing emails — credited as <span className="text-yellow-500">{displayName.trim() || defaultDisplayName(row?.customer_name)}</span>.
                 </p>
-                <Link to="/" className="text-yellow-500 hover:text-yellow-400 underline">Back to K.Todd</Link>
+                <Link to="/" className="text-yellow-500 hover:text-yellow-400 underline">Back to Driveshaft Cable</Link>
               </div>
             )}
 
@@ -151,7 +151,7 @@ function TestimonialPage() {
                 <p className="text-gray-400 mb-6">
                   Looks like this testimonial has already been sent in. Thanks again!
                 </p>
-                <Link to="/" className="text-yellow-500 hover:text-yellow-400 underline">Back to K.Todd</Link>
+                <Link to="/" className="text-yellow-500 hover:text-yellow-400 underline">Back to Driveshaft Cable</Link>
               </div>
             )}
 
@@ -161,7 +161,7 @@ function TestimonialPage() {
                 <p className="text-gray-400 mb-6">
                   This link isn't valid. If you got here from a recent email and think it's a mistake, please reply to the email directly.
                 </p>
-                <Link to="/" className="text-yellow-500 hover:text-yellow-400 underline">Back to K.Todd</Link>
+                <Link to="/" className="text-yellow-500 hover:text-yellow-400 underline">Back to Driveshaft Cable</Link>
               </div>
             )}
 
@@ -212,7 +212,7 @@ function TestimonialPage() {
                       className="mt-1 w-4 h-4 accent-yellow-500"
                     />
                     <span>
-                      I grant K.Todd permission to use this testimonial (and the credit name above) in promotional materials including the website, social media, and marketing emails.
+                      I grant Driveshaft Cable permission to use this testimonial (and the credit name above) in promotional materials including the website, social media, and marketing emails.
                     </span>
                   </label>
 
