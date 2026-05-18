@@ -78,7 +78,7 @@ function BlogPostPage() {
 
   if (loading) {
     return (
-      <div className="pt-20 min-h-screen bg-ktodd-dark">
+      <div className="pt-24 md:pt-32 min-h-screen bg-ktodd-dark">
         <div className="flex justify-center py-40">
           <div className="w-8 h-8 border-2 border-yellow-500 border-t-transparent rounded-full animate-spin"></div>
         </div>
@@ -88,7 +88,7 @@ function BlogPostPage() {
 
   if (!post) {
     return (
-      <div className="pt-20 min-h-screen bg-ktodd-dark">
+      <div className="pt-24 md:pt-32 min-h-screen bg-ktodd-dark">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-20 text-center">
           <h1 className="text-3xl font-industrial text-white mb-4">POST NOT FOUND</h1>
           <p className="text-gray-400 mb-8">This blog post doesn't exist or has been removed.</p>
@@ -120,7 +120,7 @@ function BlogPostPage() {
   }
 
   return (
-    <div className="pt-20">
+    <div className="pt-24 md:pt-32">
       <SEOHead
         title={`${post.title} | Driveshaft Cable`}
         description={post.meta_description || post.excerpt}

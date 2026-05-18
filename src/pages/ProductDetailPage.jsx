@@ -124,7 +124,7 @@ function ProductDetailPage() {
 
   if (!product) {
     return (
-      <div className="pt-20 min-h-screen flex items-center justify-center bg-ktodd-dark">
+      <div className="pt-24 md:pt-32 min-h-screen flex items-center justify-center bg-ktodd-dark">
         <div className="text-center">
           <h1 className="text-3xl font-industrial text-white mb-4">Product Not Found</h1>
           <Link to="/products" className="text-yellow-500 hover:text-yellow-400">
@@ -152,7 +152,7 @@ function ProductDetailPage() {
   const currentPrice = getPriceForQuantity(quantity)
 
   return (
-    <div className="pt-20">
+    <div className="pt-24 md:pt-32">
       <SEOHead
         title="Driveshaft Cable — 3000lb WLL"
         description='Driveshaft Safety Cable. 3000lb working load limit, 5/32" galvanized steel, 39" length, aluminum couplers. Starting at $3.45/unit with volume discounts.'

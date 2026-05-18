@@ -3,7 +3,7 @@ import { Helmet } from 'react-helmet-async'
 const SITE_NAME = 'Driveshaft Cable'
 const SITE_URL = 'https://driveshaftcable.com'
 const DEFAULT_DESCRIPTION = 'Heavy-duty driveshaft safety cables for towing. 3000lb WLL, galvanized steel, aluminum couplers. Made by a heavy duty operator for the heavy duty operator.'
-const DEFAULT_IMAGE = `${SITE_URL}/logos/og-image.png`
+const DEFAULT_IMAGE = `${SITE_URL}/logos/main-logo.png`
 
 function SEOHead({
   title,

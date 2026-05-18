@@ -60,7 +60,7 @@ function CartPage() {
 
   if (items.length === 0) {
     return (
-      <div className="pt-20 min-h-screen bg-ktodd-dark">
+      <div className="pt-24 md:pt-32 min-h-screen bg-ktodd-dark">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-20 text-center">
           <div className="w-24 h-24 bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-6">
             <svg className="w-12 h-12 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -78,7 +78,7 @@ function CartPage() {
   }
 
   return (
-    <div className="pt-20">
+    <div className="pt-24 md:pt-32">
       <SEOHead
         title="Your Cart"
         noindex={true}

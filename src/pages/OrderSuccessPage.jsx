@@ -71,7 +71,7 @@ function OrderSuccessPage() {
 
   if (paymentStatus === 'failed') {
     return (
-      <div className="pt-20 min-h-screen bg-ktodd-dark">
+      <div className="pt-24 md:pt-32 min-h-screen bg-ktodd-dark">
         <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
           <div className="text-center mb-8">
             <div className="w-24 h-24 bg-red-500/20 border-2 border-red-500 rounded-full flex items-center justify-center mx-auto mb-6">
@@ -100,7 +100,7 @@ function OrderSuccessPage() {
   }
 
   return (
-    <div className="pt-20 min-h-screen bg-ktodd-dark">
+    <div className="pt-24 md:pt-32 min-h-screen bg-ktodd-dark">
       <SEOHead title="Order Confirmed" noindex />
       <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
         {/* Success Icon */}

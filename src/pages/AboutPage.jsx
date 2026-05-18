@@ -4,7 +4,7 @@ import SEOHead from '../components/common/SEOHead'
 
 function AboutPage() {
   return (
-    <div className="pt-20">
+    <div className="pt-24 md:pt-32">
       <SEOHead
         title="About Driveshaft Cable — Manufacturer in Houston, TX"
         description="Driveshaft Cable manufactures heavy-duty driveshaft safety cables (driveshaftcable) in Houston, TX. Made by a heavy duty operator for the heavy duty operator."

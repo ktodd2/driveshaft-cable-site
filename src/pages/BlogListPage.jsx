@@ -88,7 +88,7 @@ function BlogListPage() {
   }
 
   return (
-    <div className="pt-20">
+    <div className="pt-24 md:pt-32">
       <SEOHead
         title="Towing & Recovery Blog | Driveshaft Cable"
         description="Expert tips, industry news, and safety guides for heavy duty towing and recovery professionals. Stay informed with Driveshaft Cable."

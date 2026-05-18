@@ -51,7 +51,7 @@ function SuggestionsPage() {
   }
 
   return (
-    <div className="pt-20 min-h-screen bg-ktodd-dark">
+    <div className="pt-24 md:pt-32 min-h-screen bg-ktodd-dark">
       <SEOHead
         title="Suggestions"
         description="Have an idea, product request, or feedback for Driveshaft Cable? Drop us a suggestion."

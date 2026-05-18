@@ -162,7 +162,7 @@ function ProductCard({ product }) {
 
 function ProductListPage() {
   return (
-    <div className="pt-20">
+    <div className="pt-24 md:pt-32">
       <SEOHead
         title="Shop Driveshaft Safety Cables"
         description="Browse heavy-duty Driveshaft Cables (driveshaftcable). Volume pricing from $2.90/unit. Free shipping on orders over $400."

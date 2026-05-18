@@ -72,7 +72,7 @@ function QuotePage() {
   }
 
   return (
-    <div className="pt-20">
+    <div className="pt-24 md:pt-32">
       <SEOHead
         title="Request a Driveshaft Cable Quote — Wholesale & Bulk"
         description="Request a custom quote for Driveshaft Cable (driveshaftcable). Wholesale pricing available for fleet and bulk orders."

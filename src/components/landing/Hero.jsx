@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 
 function Hero() {
   return (
-    <section className="relative min-h-screen flex items-center justify-center pt-20 overflow-hidden">
+    <section className="relative min-h-screen flex items-center justify-center pt-24 md:pt-32 overflow-hidden">
       {/* Background with industrial pattern */}
       <div className="absolute inset-0 bg-gradient-to-br from-ktodd-dark via-ktodd-charcoal to-ktodd-dark"></div>
 

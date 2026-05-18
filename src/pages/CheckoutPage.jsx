@@ -226,7 +226,7 @@ function CheckoutPage() {
 
   if (items.length === 0) {
     return (
-      <div className="pt-20 min-h-screen bg-ktodd-dark">
+      <div className="pt-24 md:pt-32 min-h-screen bg-ktodd-dark">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-20 text-center">
           <h1 className="text-3xl font-industrial text-white mb-4">YOUR CART IS EMPTY</h1>
           <p className="text-gray-400 mb-8">Add some items before checking out.</p>
@@ -239,7 +239,7 @@ function CheckoutPage() {
   }
 
   return (
-    <div className="pt-20">
+    <div className="pt-24 md:pt-32">
       <SEOHead
         title="Checkout"
         noindex={true}

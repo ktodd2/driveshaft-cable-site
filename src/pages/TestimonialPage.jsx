@@ -92,14 +92,14 @@ function TestimonialPage() {
 
   if (loading) {
     return (
-      <div className="pt-20 min-h-screen bg-ktodd-dark flex items-center justify-center">
+      <div className="pt-24 md:pt-32 min-h-screen bg-ktodd-dark flex items-center justify-center">
         <p className="text-yellow-500">Loading...</p>
       </div>
     )
   }
 
   return (
-    <div className="pt-20 min-h-screen bg-ktodd-dark">
+    <div className="pt-24 md:pt-32 min-h-screen bg-ktodd-dark">
       <SEOHead title="Leave a Testimonial" noindex canonical="/testimonial" />
 
       <section className="py-12 bg-ktodd-dark border-b border-gray-800">

@@ -242,7 +242,7 @@ function FAQItem({ question, answer }) {
 
 function FAQPage() {
   return (
-    <div className="pt-20">
+    <div className="pt-24 md:pt-32">
       <SEOHead
         title="Driveshaft Cable FAQ — Questions Answered"
         description="Frequently asked questions about Driveshaft Cable safety cables (driveshaftcable). Learn about WLL ratings, installation, pricing, and shipping."

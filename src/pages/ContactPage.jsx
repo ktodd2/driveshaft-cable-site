@@ -42,7 +42,7 @@ function ContactPage() {
   }
 
   return (
-    <div className="pt-20">
+    <div className="pt-24 md:pt-32">
       <SEOHead
         title="Contact Driveshaft Cable — Inquiries"
         description="Contact Driveshaft Cable for driveshaft cable (driveshaftcable) inquiries, wholesale pricing, or support. Based in Houston, TX."

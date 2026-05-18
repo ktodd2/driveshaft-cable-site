@@ -75,13 +75,13 @@ function Header() {
       <CartNotification />
       <header className="fixed top-0 left-0 right-0 z-50 bg-ktodd-dark/95 backdrop-blur-sm border-b border-yellow-500/30">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16 md:h-20">
+          <div className="flex justify-between items-center h-24 md:h-32">
             {/* Logo */}
             <Link to="/" className="flex items-center">
               <img
-                src="/logos/logo-horizontal.png"
+                src="/logos/main-logo.png"
                 alt="Driveshaft Cable"
-                className="h-14 md:h-16 w-auto"
+                className="h-20 md:h-28 w-auto"
               />
             </Link>
 
