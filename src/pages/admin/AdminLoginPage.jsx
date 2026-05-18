@@ -55,7 +55,7 @@ function AdminLoginPage() {
         {/* Logo */}
         <div className="text-center mb-8">
           <Link to="/" className="inline-block">
-            <img src="/logos/logo-horizontal.png" alt="Driveshaft Cable" className="h-12 w-auto" />
+            <img src="/logos/logo-horizontal.png" alt="Driveshaft Cable" className="h-20 w-auto" />
           </Link>
         </div>
 

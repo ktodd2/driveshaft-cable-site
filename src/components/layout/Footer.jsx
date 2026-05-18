@@ -18,7 +18,7 @@ function Footer() {
               <img
                 src="/logos/logo-badge.png"
                 alt="Driveshaft Cable"
-                className="h-20 w-auto"
+                className="h-28 w-auto"
               />
             </Link>
             <p className="text-gray-400 text-sm">

@@ -81,7 +81,7 @@ function Header() {
               <img
                 src="/logos/logo-horizontal.png"
                 alt="Driveshaft Cable"
-                className="h-10 md:h-12 w-auto"
+                className="h-14 md:h-16 w-auto"
               />
             </Link>
 
