@@ -634,6 +634,89 @@ function formatDate(dateString) {
 // Component
 // ---------------------------------------------------------------------------
 
+// Status panel for the four automated email workflows. Pulls counts and last-
+// run times from get_email_automation_stats RPC. Refreshes when admin returns
+// to the page or clicks the refresh button.
+function EmailAutomationStatusPanel() {
+  const [stats, setStats] = useState(null)
+  const [loading, setLoading] = useState(true)
+
+  const fetchStats = async () => {
+    setLoading(true)
+    const { data, error } = await supabase.rpc('get_email_automation_stats')
+    if (!error && data) {
+      // RPC returns an array of one row with the stats; unwrap.
+      setStats(Array.isArray(data) ? data[0] : data)
+    }
+    setLoading(false)
+  }
+
+  useEffect(() => {
+    fetchStats()
+  }, [])
+
+  const fmtTime = (ts) => {
+    if (!ts) return 'never'
+    const date = new Date(ts)
+    const diffMs = Date.now() - date.getTime()
+    const diffHours = Math.floor(diffMs / (1000 * 60 * 60))
+    if (diffHours < 1) return 'just now'
+    if (diffHours < 24) return `${diffHours}h ago`
+    return `${Math.floor(diffHours / 24)}d ago`
+  }
+
+  const fmtMoney = (cents) => `$${((cents || 0) / 100).toFixed(2)}`
+
+  return (
+    <div className="bg-gray-800/50 border border-gray-700 p-6 mb-6">
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="text-xl font-industrial text-yellow-500">EMAIL AUTOMATION STATUS</h2>
+        <button
+          onClick={fetchStats}
+          disabled={loading}
+          className="text-sm text-gray-400 hover:text-yellow-500 disabled:opacity-50"
+        >
+          {loading ? 'Loading...' : 'Refresh'}
+        </button>
+      </div>
+      {stats ? (
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
+          <div className="bg-gray-900 border border-gray-700 p-3">
+            <div className="text-gray-400 text-xs uppercase tracking-wide mb-1">Abandoned Cart</div>
+            <div className="text-white font-industrial text-2xl">{stats.abandoned_cart_sent_7d ?? 0}</div>
+            <div className="text-gray-500 text-xs">last 7d · {fmtTime(stats.abandoned_cart_last_run)}</div>
+          </div>
+          <div className="bg-gray-900 border border-gray-700 p-3">
+            <div className="text-gray-400 text-xs uppercase tracking-wide mb-1">Welcome Series</div>
+            <div className="text-white font-industrial text-2xl">{stats.welcome_started_total ?? 0}</div>
+            <div className="text-gray-500 text-xs">{stats.welcome_completed_total ?? 0} completed</div>
+          </div>
+          <div className="bg-gray-900 border border-gray-700 p-3">
+            <div className="text-gray-400 text-xs uppercase tracking-wide mb-1">Reorder Reminder</div>
+            <div className="text-white font-industrial text-2xl">{stats.reorder_sent_7d ?? 0}</div>
+            <div className="text-gray-500 text-xs">last 7d · {fmtTime(stats.reorder_last_run)}</div>
+          </div>
+          <div className="bg-gray-900 border border-gray-700 p-3">
+            <div className="text-gray-400 text-xs uppercase tracking-wide mb-1">Win-Back</div>
+            <div className="text-white font-industrial text-2xl">{stats.winback_sent_7d ?? 0}</div>
+            <div className="text-gray-500 text-xs">last 7d · {fmtTime(stats.winback_last_run)}</div>
+          </div>
+        </div>
+      ) : (
+        <p className="text-gray-500 text-sm">Loading stats...</p>
+      )}
+      {stats && (
+        <div className="bg-green-500/10 border border-green-500/30 px-4 py-3">
+          <div className="flex justify-between items-baseline">
+            <span className="text-gray-400 text-sm">Recovered cart revenue (all-time)</span>
+            <span className="text-green-400 font-bold text-lg">{fmtMoney(stats.recovered_cart_revenue_cents)}</span>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
 function AdminEmailPage() {
   const navigate = useNavigate()
 
@@ -1028,6 +1111,11 @@ function AdminEmailPage() {
         <main className="flex-1 p-6 lg:p-8">
           <div className="max-w-4xl mx-auto">
             <h1 className="text-3xl font-industrial text-white mb-8">EMAIL BLAST</h1>
+
+            {/* ----------------------------------------------------------------
+                Email Automation Status
+            ---------------------------------------------------------------- */}
+            <EmailAutomationStatusPanel />
 
             {/* ----------------------------------------------------------------
                 Template Picker

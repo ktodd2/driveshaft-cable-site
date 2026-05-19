@@ -18,6 +18,7 @@ import BlogListPage from './pages/BlogListPage'
 import BlogPostPage from './pages/BlogPostPage'
 import SuggestionsPage from './pages/SuggestionsPage'
 import TestimonialPage from './pages/TestimonialPage'
+import CartRecoverPage from './pages/CartRecoverPage'
 
 // Admin pages (lazy loaded — excluded from public bundle)
 const AdminLoginPage = React.lazy(() => import('./pages/admin/AdminLoginPage'))
@@ -53,6 +54,7 @@ function App() {
           <Route path="blog/:slug" element={<BlogPostPage />} />
           <Route path="suggestions" element={<SuggestionsPage />} />
           <Route path="testimonial" element={<TestimonialPage />} />
+          <Route path="cart/recover/:token" element={<CartRecoverPage />} />
           <Route path="*" element={<NotFoundPage />} />
         </Route>
 

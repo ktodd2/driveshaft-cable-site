@@ -41,7 +41,7 @@ serve(async (req) => {
       // needs to ensure that flip happens; the trigger does the rest.
       const { data: existingOrder } = await supabase
         .from('orders')
-        .select('payment_status, stripe_tax_transaction_id')
+        .select('payment_status, stripe_tax_transaction_id, discount_code, email')
         .eq('id', orderId)
         .single()
 
@@ -63,6 +63,23 @@ serve(async (req) => {
         }
       } else {
         console.log(`Order ${orderId} already marked paid, skipping`)
+      }
+
+      // Record discount-code redemption if one was used. Insert is guarded
+      // by the (code, email) UNIQUE constraint so webhook re-fires can't
+      // double-insert. We only redeem on actual payment success so an
+      // abandoned checkout doesn't burn the code.
+      if (existingOrder?.discount_code && existingOrder.email) {
+        const { error: redemptionError } = await supabase
+          .from('discount_redemptions')
+          .insert({
+            code: existingOrder.discount_code,
+            email: existingOrder.email.toLowerCase().trim(),
+            order_id: orderId,
+          })
+        if (redemptionError && !redemptionError.message?.includes('duplicate')) {
+          console.error(`Order ${orderId} failed to record discount redemption:`, redemptionError)
+        }
       }
 
       // Finalize the Stripe Tax calculation into a transaction so this sale

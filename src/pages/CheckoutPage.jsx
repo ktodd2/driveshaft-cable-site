@@ -119,12 +119,32 @@ function CheckoutPage() {
   const [isCalculatingTax, setIsCalculatingTax] = useState(false)
   const [taxError, setTaxError] = useState(null)
 
+  // Discount code state. Codes (WELCOME5, COMEBACK5) are 5% off, single-use
+  // per email. The actual redemption row is written by stripe-webhook on
+  // payment_intent.succeeded so an abandoned checkout doesn't burn the code.
+  const [showCodeInput, setShowCodeInput] = useState(false)
+  const [codeInput, setCodeInput] = useState('')
+  const [appliedCode, setAppliedCode] = useState(null) // string | null
+  const [appliedCodePercentOff, setAppliedCodePercentOff] = useState(0)
+  const [validatingCode, setValidatingCode] = useState(false)
+  const [codeError, setCodeError] = useState(null)
+
   const shippingCents = useCartStore(selectShipping)
   const baseTotal = useCartStore(selectOrderTotal)
   const pricePerUnit = useCartStore(selectPricePerUnit)
 
-  // Calculate loyalty discount
-  const discountCents = isRepeatCustomer ? Math.round(subtotal * REPEAT_CUSTOMER_DISCOUNT) : 0
+  // Discount math: loyalty (10% for repeat customers) and discount codes (5%)
+  // are MUTUALLY EXCLUSIVE — apply whichever is larger. In practice this
+  // means a repeat customer's loyalty discount wins; a new customer can use
+  // a code. The order_reason text reflects whichever applied.
+  const loyaltyDiscountCents = isRepeatCustomer ? Math.round(subtotal * REPEAT_CUSTOMER_DISCOUNT) : 0
+  const codeDiscountCents = appliedCodePercentOff > 0
+    ? Math.round(subtotal * appliedCodePercentOff / 100)
+    : 0
+  const discountCents = Math.max(loyaltyDiscountCents, codeDiscountCents)
+  const discountSource =
+    discountCents === 0 ? null :
+    loyaltyDiscountCents >= codeDiscountCents ? 'loyalty' : 'code'
   const totalCents = baseTotal - discountCents + taxCents
 
   // Recalculate tax whenever the address (city + state + zip), the cart, or
@@ -194,6 +214,79 @@ function CheckoutPage() {
     items, discountCents
   ])
 
+  // Write an abandoned-cart row when the customer has entered a valid email
+  // and has items in the cart but hasn't yet reached payment. Debounced 5s
+  // so we don't write on every keystroke. Only writes once per email change.
+  // The hourly cron picks these up and sends a recovery email.
+  const abandonmentEmailRef = React.useRef(null)
+  useEffect(() => {
+    const email = formData.email.toLowerCase().trim()
+    if (!email || !email.includes('@') || items.length === 0 || step !== 1) return
+    if (email === abandonmentEmailRef.current) return
+
+    const handle = setTimeout(async () => {
+      const recoveryToken = (crypto.randomUUID && crypto.randomUUID()) || `${Date.now()}-${Math.random()}`
+      const { error } = await supabase.from('cart_abandonments').insert({
+        email,
+        items: items.map(item => ({
+          productId: item.productId,
+          name: item.name,
+          quantity: item.quantity,
+          price: item.price,
+        })),
+        subtotal_cents: subtotal,
+        recovery_token: recoveryToken,
+      })
+      if (!error) {
+        abandonmentEmailRef.current = email
+      }
+    }, 5000)
+
+    return () => clearTimeout(handle)
+  }, [formData.email, items, subtotal, step])
+
+  const handleApplyCode = async () => {
+    const code = codeInput.trim().toUpperCase()
+    const email = formData.email.toLowerCase().trim()
+    setCodeError(null)
+    if (!code) {
+      setCodeError('Enter a code first.')
+      return
+    }
+    if (!email || !email.includes('@')) {
+      setCodeError('Enter your email above first — codes are tied to your address.')
+      return
+    }
+    setValidatingCode(true)
+    try {
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/validate-discount-code`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+          },
+          body: JSON.stringify({ code, email }),
+        }
+      )
+      const data = await response.json()
+      if (!data.valid) {
+        setCodeError(data.reason || 'Invalid code.')
+        setAppliedCode(null)
+        setAppliedCodePercentOff(0)
+      } else {
+        setAppliedCode(data.code)
+        setAppliedCodePercentOff(data.percentOff)
+        setCodeError(null)
+      }
+    } catch (err) {
+      setCodeError(err.message || 'Could not verify code.')
+    } finally {
+      setValidatingCode(false)
+    }
+  }
+
   // Check if email belongs to a returning customer
   const checkRepeatCustomer = async (email) => {
     if (!email || !email.includes('@')) return
@@ -250,7 +343,11 @@ function CheckoutPage() {
           })),
           subtotal_cents: subtotal,
           discount_cents: discountCents,
-          discount_reason: isRepeatCustomer ? 'Returning customer 10% loyalty discount' : null,
+          discount_reason:
+            discountSource === 'loyalty' ? 'Returning customer 10% loyalty discount' :
+            discountSource === 'code' ? `Discount code ${appliedCode}` :
+            null,
+          discount_code: discountSource === 'code' ? appliedCode : null,
           shipping_cents: shippingCents,
           tax_cents: taxCents,
           stripe_tax_calculation_id: taxCalculationId,
@@ -617,6 +714,63 @@ function CheckoutPage() {
                   ))}
                 </div>
 
+                {/* Discount code (only on step 1 — once we have a clientSecret the amount is locked) */}
+                {step === 1 && !isRepeatCustomer && (
+                  <div className="border-t border-gray-700 pt-4 mb-4">
+                    {!showCodeInput && !appliedCode && (
+                      <button
+                        type="button"
+                        onClick={() => setShowCodeInput(true)}
+                        className="text-yellow-500 hover:text-yellow-400 text-sm"
+                      >
+                        Have a discount code?
+                      </button>
+                    )}
+                    {showCodeInput && !appliedCode && (
+                      <div className="space-y-2">
+                        <div className="flex gap-2">
+                          <input
+                            type="text"
+                            value={codeInput}
+                            onChange={(e) => setCodeInput(e.target.value)}
+                            placeholder="Enter code"
+                            className="flex-1 bg-gray-800 border border-gray-600 text-white px-3 py-2 text-sm uppercase focus:border-yellow-500 focus:outline-none font-mono"
+                          />
+                          <button
+                            type="button"
+                            onClick={handleApplyCode}
+                            disabled={validatingCode}
+                            className="bg-yellow-500 hover:bg-yellow-400 text-black px-4 py-2 text-sm font-bold disabled:opacity-50"
+                          >
+                            {validatingCode ? '...' : 'Apply'}
+                          </button>
+                        </div>
+                        {codeError && <p className="text-red-400 text-xs">{codeError}</p>}
+                      </div>
+                    )}
+                    {appliedCode && (
+                      <div className="flex justify-between items-center bg-green-500/10 border border-green-500/30 px-3 py-2">
+                        <div>
+                          <p className="text-green-400 text-sm font-bold">{appliedCode} applied</p>
+                          <p className="text-green-400/70 text-xs">{appliedCodePercentOff}% off</p>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setAppliedCode(null)
+                            setAppliedCodePercentOff(0)
+                            setCodeInput('')
+                            setShowCodeInput(false)
+                          }}
+                          className="text-gray-400 hover:text-white text-xs"
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                )}
+
                 {/* Totals */}
                 <div className="space-y-3 border-t border-gray-700 pt-4">
                   <div className="flex justify-between text-gray-400">
@@ -625,7 +779,11 @@ function CheckoutPage() {
                   </div>
                   {discountCents > 0 && (
                     <div className="flex justify-between text-green-400">
-                      <span>Loyalty Discount (10%)</span>
+                      <span>
+                        {discountSource === 'loyalty'
+                          ? 'Loyalty Discount (10%)'
+                          : `Discount (${appliedCode})`}
+                      </span>
                       <span className="font-bold">-{formatPrice(discountCents)}</span>
                     </div>
                   )}
