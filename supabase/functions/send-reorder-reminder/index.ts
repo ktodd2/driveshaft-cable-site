@@ -74,7 +74,8 @@ serve(async (req) => {
   const authHeader = req.headers.get('Authorization') || ''
   const token = authHeader.replace(/^Bearer\s+/i, '')
 
-  let authorized = token === serviceRoleKey
+  const cronTriggerKey = Deno.env.get('CRON_TRIGGER_KEY') || ''
+  let authorized = token === serviceRoleKey || (cronTriggerKey && token === cronTriggerKey)
   if (!authorized && token) {
     const userClient = createClient(supabaseUrl, Deno.env.get('SUPABASE_ANON_KEY')!, {
       global: { headers: { Authorization: `Bearer ${token}` } },
