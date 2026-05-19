@@ -111,13 +111,88 @@ function CheckoutPage() {
   const [isRepeatCustomer, setIsRepeatCustomer] = useState(false)
   const [checkingEmail, setCheckingEmail] = useState(false)
 
+  // Stripe Tax state. taxCalculationId is the id of a stripe.tax.calculations
+  // record that the webhook will finalize into a transaction after payment.
+  // Without it, the sale won't appear in Stripe Tax's filing reports.
+  const [taxCents, setTaxCents] = useState(0)
+  const [taxCalculationId, setTaxCalculationId] = useState(null)
+  const [isCalculatingTax, setIsCalculatingTax] = useState(false)
+  const [taxError, setTaxError] = useState(null)
+
   const shippingCents = useCartStore(selectShipping)
   const baseTotal = useCartStore(selectOrderTotal)
   const pricePerUnit = useCartStore(selectPricePerUnit)
 
   // Calculate loyalty discount
   const discountCents = isRepeatCustomer ? Math.round(subtotal * REPEAT_CUSTOMER_DISCOUNT) : 0
-  const totalCents = baseTotal - discountCents
+  const totalCents = baseTotal - discountCents + taxCents
+
+  // Recalculate tax whenever the address (city + state + zip), the cart, or
+  // the loyalty discount changes. Debounced 500ms so each keystroke doesn't
+  // burn a Stripe Tax API call. Tax calculations are billed per-request once
+  // Stripe Tax is on a paid plan, so this debounce matters.
+  useEffect(() => {
+    const hasMinimumAddress =
+      formData.country &&
+      formData.zip && formData.zip.trim().length >= 5 &&
+      formData.state && formData.state.trim().length > 0
+    if (!hasMinimumAddress || items.length === 0) {
+      setTaxCents(0)
+      setTaxCalculationId(null)
+      setTaxError(null)
+      return
+    }
+
+    const handle = setTimeout(async () => {
+      setIsCalculatingTax(true)
+      setTaxError(null)
+      try {
+        const response = await fetch(
+          `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/calculate-tax`,
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+            },
+            body: JSON.stringify({
+              items: items.map(item => ({
+                productId: item.productId,
+                name: item.name,
+                quantity: item.quantity,
+              })),
+              shippingAddress: {
+                line1: formData.address1,
+                line2: formData.address2,
+                city: formData.city,
+                state: formData.state,
+                postal_code: formData.zip,
+                country: formData.country,
+              },
+              discountCents,
+            }),
+          }
+        )
+        const data = await response.json()
+        if (data.error) throw new Error(data.error)
+        setTaxCents(data.taxCents || 0)
+        setTaxCalculationId(data.calculationId)
+      } catch (err) {
+        // Fail closed: don't show a tax line, but surface the error so the
+        // customer knows their address may need attention.
+        setTaxCents(0)
+        setTaxCalculationId(null)
+        setTaxError(err.message || 'Could not calculate tax for this address.')
+      } finally {
+        setIsCalculatingTax(false)
+      }
+    }, 500)
+
+    return () => clearTimeout(handle)
+  }, [
+    formData.address1, formData.city, formData.state, formData.zip, formData.country,
+    items, discountCents
+  ])
 
   // Check if email belongs to a returning customer
   const checkRepeatCustomer = async (email) => {
@@ -177,6 +252,8 @@ function CheckoutPage() {
           discount_cents: discountCents,
           discount_reason: isRepeatCustomer ? 'Returning customer 10% loyalty discount' : null,
           shipping_cents: shippingCents,
+          tax_cents: taxCents,
+          stripe_tax_calculation_id: taxCalculationId,
           total_cents: totalCents,
           status: 'pending',
           payment_status: 'pending',
@@ -205,7 +282,8 @@ function CheckoutPage() {
             items: items.map(item => ({
               productId: item.productId,
               quantity: item.quantity
-            }))
+            })),
+            taxCalculationId,
           })
         }
       )
@@ -440,7 +518,7 @@ function CheckoutPage() {
 
                   <button
                     type="submit"
-                    disabled={isCreatingOrder}
+                    disabled={isCreatingOrder || isCalculatingTax}
                     className="btn-primary w-full disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {isCreatingOrder ? (
@@ -451,6 +529,8 @@ function CheckoutPage() {
                         </svg>
                         Processing...
                       </span>
+                    ) : isCalculatingTax ? (
+                      'Calculating tax…'
                     ) : (
                       'Continue to Payment'
                     )}
@@ -556,6 +636,19 @@ function CheckoutPage() {
                       : <span className="text-white">{formatPrice(shippingCents)}</span>
                     }
                   </div>
+                  <div className="flex justify-between text-gray-400">
+                    <span>Tax</span>
+                    {isCalculatingTax ? (
+                      <span className="text-gray-500 text-sm italic">Calculating…</span>
+                    ) : taxCalculationId ? (
+                      <span className="text-white">{formatPrice(taxCents)}</span>
+                    ) : (
+                      <span className="text-gray-500 text-sm italic">Enter address</span>
+                    )}
+                  </div>
+                  {taxError && (
+                    <div className="text-red-400 text-xs">{taxError}</div>
+                  )}
                   <div className="flex justify-between pt-3 border-t border-gray-700">
                     <span className="text-white font-bold">Total</span>
                     <span className="text-yellow-500 font-bold text-xl">{formatPrice(totalCents)}</span>

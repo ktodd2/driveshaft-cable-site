@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
+import { formatPrice } from '../stores/cartStore'
 import SEOHead from '../components/common/SEOHead'
 
 function OrderSuccessPage() {
@@ -31,7 +32,7 @@ function OrderSuccessPage() {
           // Fetch order for display (stock is decremented by the orders_decrement_stock_trigger DB trigger)
           const { data: orderData } = await supabase
             .from('orders')
-            .select('email, name')
+            .select('email, name, subtotal_cents, discount_cents, shipping_cents, tax_cents, total_cents')
             .eq('id', orderId)
             .single()
 
@@ -132,6 +133,44 @@ function OrderSuccessPage() {
             We'll process your order and send you shipping information once it's on the way.
           </p>
         </div>
+
+        {/* Order Summary */}
+        {order && order.total_cents != null && (
+          <div className="bg-gray-800/50 border border-gray-700 p-6 mb-8">
+            <h2 className="text-xl font-industrial text-yellow-500 mb-4">ORDER SUMMARY</h2>
+            <div className="space-y-2 text-sm">
+              {order.subtotal_cents != null && (
+                <div className="flex justify-between text-gray-400">
+                  <span>Subtotal</span>
+                  <span className="text-white">{formatPrice(order.subtotal_cents)}</span>
+                </div>
+              )}
+              {order.discount_cents > 0 && (
+                <div className="flex justify-between text-green-400">
+                  <span>Loyalty Discount</span>
+                  <span className="font-bold">-{formatPrice(order.discount_cents)}</span>
+                </div>
+              )}
+              <div className="flex justify-between text-gray-400">
+                <span>Shipping</span>
+                {order.shipping_cents === 0
+                  ? <span className="text-green-400 font-bold">FREE</span>
+                  : <span className="text-white">{formatPrice(order.shipping_cents)}</span>
+                }
+              </div>
+              {order.tax_cents > 0 && (
+                <div className="flex justify-between text-gray-400">
+                  <span>Tax</span>
+                  <span className="text-white">{formatPrice(order.tax_cents)}</span>
+                </div>
+              )}
+              <div className="flex justify-between pt-2 border-t border-gray-700">
+                <span className="text-white font-bold">Total</span>
+                <span className="text-yellow-500 font-bold text-lg">{formatPrice(order.total_cents)}</span>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* What's Next */}
         <div className="bg-gray-800/50 border border-gray-700 p-6 mb-8">

@@ -1,7 +1,8 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 
-// Pricing constants
+// Pricing constants — server-side copy lives at supabase/functions/_shared/pricing.ts
+// and MUST be updated in the same commit if any of these change.
 export const PRICE_PER_UNIT = 345 // $3.45 in cents
 export const MIN_ORDER_QUANTITY = 10 // Minimum order is 10 units
 

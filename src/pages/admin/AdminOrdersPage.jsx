@@ -23,6 +23,8 @@ function getEmptyManualForm() {
     paymentMethod: 'cash',
     hasShipping: false,
     address1: '', address2: '', city: '', state: '', zip: '', country: 'US',
+    taxCents: '',
+    taxCalculationId: null,
   }
 }
 
@@ -58,6 +60,8 @@ function AdminOrdersPage() {
   const [savingManual, setSavingManual] = useState(false)
   const [manualError, setManualError] = useState(null)
   const [manualForm, setManualForm] = useState(getEmptyManualForm())
+  const [calculatingManualTax, setCalculatingManualTax] = useState(false)
+  const [manualTaxError, setManualTaxError] = useState(null)
 
   useEffect(() => {
     if (stock !== null && stockInput === '') setStockInput(String(stock))
@@ -110,6 +114,66 @@ function AdminOrdersPage() {
     setManualForm({ ...manualForm, unitPriceCents: val, unitPriceManuallyEdited: true })
   }
 
+  // Manual orders may lack a shipping address (in-person handoff). For those,
+  // fall back to the business's home jurisdiction so the admin can still
+  // record the sale to Stripe Tax for filing reports. Update this default if
+  // the business location ever moves.
+  const BUSINESS_DEFAULT_ADDRESS = {
+    line1: '',
+    city: 'Houston',
+    state: 'TX',
+    postal_code: '77001',
+    country: 'US',
+  }
+
+  const calculateManualTax = async () => {
+    setManualTaxError(null)
+    const qty = parseInt(manualForm.quantity)
+    const unitPrice = parseInt(manualForm.unitPriceCents)
+    if (isNaN(qty) || qty <= 0 || isNaN(unitPrice) || unitPrice <= 0) {
+      setManualTaxError('Set quantity and unit price first.')
+      return
+    }
+
+    const address = manualForm.hasShipping && manualForm.zip
+      ? {
+          line1: manualForm.address1, line2: manualForm.address2,
+          city: manualForm.city, state: manualForm.state,
+          postal_code: manualForm.zip, country: manualForm.country,
+        }
+      : BUSINESS_DEFAULT_ADDRESS
+
+    setCalculatingManualTax(true)
+    try {
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/calculate-tax`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+          },
+          body: JSON.stringify({
+            items: [{ productId: '1', name: 'Driveshaft Cable', quantity: qty }],
+            shippingAddress: address,
+            discountCents: parseInt(manualForm.discountCents) || 0,
+          }),
+        }
+      )
+      const data = await response.json()
+      if (data.error) throw new Error(data.error)
+      setManualForm({
+        ...manualForm,
+        taxCents: String(data.taxCents || 0),
+        taxCalculationId: data.calculationId,
+      })
+    } catch (err) {
+      setManualTaxError(err.message || 'Tax calculation failed.')
+    } finally {
+      setCalculatingManualTax(false)
+    }
+  }
+
   const submitManualOrder = async (e) => {
     e.preventDefault()
     setManualError(null)
@@ -122,9 +186,10 @@ function AdminOrdersPage() {
 
     const discountCents = parseInt(manualForm.discountCents) || 0
     const shippingCents = parseInt(manualForm.shippingCents) || 0
+    const taxCents = parseInt(manualForm.taxCents) || 0
     const subtotalCents = qty * unitPrice
-    const totalCents = subtotalCents - discountCents + shippingCents
-    if (totalCents < 0) return setManualError('Discount cannot exceed subtotal + shipping.')
+    const totalCents = subtotalCents - discountCents + shippingCents + taxCents
+    if (totalCents < 0) return setManualError('Discount cannot exceed subtotal + shipping + tax.')
 
     const saleDateIso = new Date(manualForm.saleDate).toISOString()
     const items = [{ productId: '1', name: 'Driveshaft Cable', quantity: qty, price: unitPrice }]
@@ -151,6 +216,8 @@ function AdminOrdersPage() {
         discount_cents: discountCents || null,
         discount_reason: manualForm.discountReason.trim() || null,
         shipping_cents: shippingCents,
+        tax_cents: taxCents,
+        stripe_tax_calculation_id: manualForm.taxCalculationId,
         total_cents: totalCents,
         status: 'confirmed',
         payment_status: 'pending',
@@ -171,12 +238,26 @@ function AdminOrdersPage() {
       .update({ payment_status: 'paid' })
       .eq('id', inserted.id)
 
-    setSavingManual(false)
-
     if (updateError) {
+      setSavingManual(false)
       return setManualError(`Order created but payment flip failed: ${updateError.message}. Stock not decremented.`)
     }
 
+    // Finalize the Stripe Tax calculation into a transaction so this manual
+    // sale appears in Stripe Tax filing reports. The stripe-webhook only fires
+    // for Stripe-processed payments, so manual orders need this explicit call.
+    // Failure here doesn't roll back the order — the admin can retry later.
+    if (manualForm.taxCalculationId) {
+      try {
+        await supabase.functions.invoke('finalize-tax-transaction', {
+          body: { calculationId: manualForm.taxCalculationId, orderId: inserted.id },
+        })
+      } catch (taxErr) {
+        console.error('Manual order tax finalization failed:', taxErr)
+      }
+    }
+
+    setSavingManual(false)
     setShowManualModal(false)
     setManualForm(getEmptyManualForm())
     fetchOrders()
@@ -751,10 +832,22 @@ ${addr.country}`
                             {selectedOrder.shipping_cents > 0 ? formatPrice(selectedOrder.shipping_cents) : 'FREE'}
                           </span>
                         </div>
+                        {selectedOrder.tax_cents > 0 && (
+                          <div className="flex justify-between text-sm pt-2">
+                            <span className="text-gray-400">Tax</span>
+                            <span className="text-white">{formatPrice(selectedOrder.tax_cents)}</span>
+                          </div>
+                        )}
                         <div className="flex justify-between font-bold pt-2">
                           <span className="text-white">Total</span>
                           <span className="text-yellow-500">{formatPrice(selectedOrder.total_cents)}</span>
                         </div>
+                        {selectedOrder.stripe_tax_transaction_id && (
+                          <div className="text-xs text-gray-500 pt-2 flex justify-between">
+                            <span>Stripe Tax txn</span>
+                            <span className="font-mono">{selectedOrder.stripe_tax_transaction_id}</span>
+                          </div>
+                        )}
                       </div>
 
                       {/* Tracking */}
@@ -1138,6 +1231,44 @@ ${addr.country}`
                 </div>
               )}
 
+              {/* Sales tax (uses shipping address if provided, otherwise the
+                  business default address in Houston, TX). Recorded to Stripe
+                  Tax on submit so it appears in filing reports. */}
+              <div className="bg-gray-800/50 border border-gray-700 p-3">
+                <label className="block text-gray-400 text-sm mb-2">Sales tax (cents)</label>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="number"
+                    min="0"
+                    value={manualForm.taxCents}
+                    onChange={(e) => setManualForm({ ...manualForm, taxCents: e.target.value, taxCalculationId: null })}
+                    placeholder="0"
+                    className="flex-1 bg-gray-800 border border-gray-600 text-white px-3 py-2 focus:border-yellow-500 focus:outline-none"
+                  />
+                  <button
+                    type="button"
+                    onClick={calculateManualTax}
+                    disabled={calculatingManualTax}
+                    className="bg-yellow-500 hover:bg-yellow-400 text-black px-4 py-2 text-sm font-bold whitespace-nowrap disabled:opacity-50"
+                  >
+                    {calculatingManualTax ? 'Calculating…' : 'Calculate Tax'}
+                  </button>
+                </div>
+                {manualForm.taxCalculationId && (
+                  <p className="text-green-400 text-xs mt-1">
+                    Will be recorded to Stripe Tax reports on save.
+                  </p>
+                )}
+                {manualTaxError && (
+                  <p className="text-red-400 text-xs mt-1">{manualTaxError}</p>
+                )}
+                {!manualForm.hasShipping && !manualTaxError && !manualForm.taxCalculationId && (
+                  <p className="text-gray-500 text-xs mt-1">
+                    In-person sales use the Texas business address for tax.
+                  </p>
+                )}
+              </div>
+
               {/* Live preview */}
               {(() => {
                 const qty = parseInt(manualForm.quantity) || 0
@@ -1145,12 +1276,14 @@ ${addr.country}`
                 const subtotal = qty * unitPrice
                 const discount = parseInt(manualForm.discountCents) || 0
                 const ship = parseInt(manualForm.shippingCents) || 0
-                const total = subtotal - discount + ship
+                const tax = parseInt(manualForm.taxCents) || 0
+                const total = subtotal - discount + ship + tax
                 return (
                   <div className="bg-gray-800/50 border border-gray-700 p-3 text-sm space-y-1">
                     <div className="flex justify-between text-gray-400"><span>Subtotal ({qty} × {formatPrice(unitPrice)})</span><span className="text-white">{formatPrice(subtotal)}</span></div>
                     {discount > 0 && <div className="flex justify-between text-green-400"><span>Discount</span><span>-{formatPrice(discount)}</span></div>}
                     <div className="flex justify-between text-gray-400"><span>Shipping</span><span className="text-white">{formatPrice(ship)}</span></div>
+                    {tax > 0 && <div className="flex justify-between text-gray-400"><span>Tax</span><span className="text-white">{formatPrice(tax)}</span></div>}
                     <div className="flex justify-between border-t border-gray-700 pt-1 mt-1"><span className="text-white font-bold">Total</span><span className="text-yellow-500 font-bold">{formatPrice(total)}</span></div>
                   </div>
                 )

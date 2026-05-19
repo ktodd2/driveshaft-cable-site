@@ -22,7 +22,7 @@ serve(async (req) => {
     const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     const adminClient = createClient(supabaseUrl, serviceRoleKey)
 
-    const { amount, orderId, customerEmail, items } = await req.json()
+    const { amount, orderId, customerEmail, items, taxCalculationId } = await req.json()
 
     // Validate stock for each item before creating payment
     if (items && items.length > 0) {
@@ -52,12 +52,48 @@ serve(async (req) => {
       }
     }
 
+    // If the checkout produced a tax calculation, re-retrieve it server-side
+    // to verify it exists and isn't expired. Tax calculations live for 48h.
+    // The retrieved tax_amount_exclusive is the authoritative tax that the
+    // webhook will turn into a tax transaction after payment succeeds.
+    let serverTaxCents = 0
+    if (taxCalculationId) {
+      try {
+        const calculation = await stripe.tax.calculations.retrieve(taxCalculationId)
+        serverTaxCents = calculation.tax_amount_exclusive
+
+        // Persist the tax amount and calculation id to the order row now so
+        // that even if the webhook fires before the success page redirect,
+        // the order has the authoritative tax already recorded.
+        await adminClient
+          .from('orders')
+          .update({
+            tax_cents: serverTaxCents,
+            stripe_tax_calculation_id: taxCalculationId,
+          })
+          .eq('id', orderId)
+      } catch (taxError) {
+        // The calculation expired or doesn't exist. Block checkout rather
+        // than silently charging without tax.
+        return new Response(
+          JSON.stringify({
+            error: 'Tax calculation expired. Please review your address and try again.',
+          }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+        )
+      }
+    }
+
     const paymentIntent = await stripe.paymentIntents.create({
-      amount: amount, // Amount in cents
+      amount: amount, // Amount in cents — already includes server-calculated tax from the client side
       currency: 'usd',
       metadata: {
         order_id: orderId,
         items: items ? JSON.stringify(items) : '[]',
+        // Stored so the webhook can call stripe.tax.transactions.createFromCalculation
+        // after payment succeeds. Without this metadata, the calculation never
+        // becomes a reportable tax transaction in Stripe's reports.
+        tax_calculation_id: taxCalculationId || '',
       },
       receipt_email: customerEmail,
     })
