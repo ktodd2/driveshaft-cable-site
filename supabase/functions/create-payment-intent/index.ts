@@ -52,37 +52,12 @@ serve(async (req) => {
       }
     }
 
-    // If the checkout produced a tax calculation, re-retrieve it server-side
-    // to verify it exists and isn't expired. Tax calculations live for 48h.
-    // The retrieved tax_amount_exclusive is the authoritative tax that the
-    // webhook will turn into a tax transaction after payment succeeds.
-    let serverTaxCents = 0
-    if (taxCalculationId) {
-      try {
-        const calculation = await stripe.tax.calculations.retrieve(taxCalculationId)
-        serverTaxCents = calculation.tax_amount_exclusive
-
-        // Persist the tax amount and calculation id to the order row now so
-        // that even if the webhook fires before the success page redirect,
-        // the order has the authoritative tax already recorded.
-        await adminClient
-          .from('orders')
-          .update({
-            tax_cents: serverTaxCents,
-            stripe_tax_calculation_id: taxCalculationId,
-          })
-          .eq('id', orderId)
-      } catch (taxError) {
-        // The calculation expired or doesn't exist. Block checkout rather
-        // than silently charging without tax.
-        return new Response(
-          JSON.stringify({
-            error: 'Tax calculation expired. Please review your address and try again.',
-          }),
-          { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
-        )
-      }
-    }
+    // tax_cents and stripe_tax_calculation_id were already persisted to the
+    // order row by the INSERT in CheckoutPage.handleShippingSubmit, using the
+    // amounts returned by calculate-tax (server-trusted prices). The webhook
+    // calls stripe.tax.transactions.createFromCalculation(taxCalculationId)
+    // on payment_intent.succeeded, which is what produces the authoritative
+    // tax transaction for filing reports.
 
     const paymentIntent = await stripe.paymentIntents.create({
       amount: amount, // Amount in cents — already includes server-calculated tax from the client side
