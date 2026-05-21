@@ -36,7 +36,7 @@ function AdminOrdersPage() {
   const [orders, setOrders] = useState([])
   const [selectedOrder, setSelectedOrder] = useState(null)
   const [copiedId, setCopiedId] = useState(null)
-  const [statusFilter, setStatusFilter] = useState('all')
+  const [statusFilter, setStatusFilter] = useState('confirmed')
   const [paymentFilter, setPaymentFilter] = useState('all')
   const [trackingNumber, setTrackingNumber] = useState('')
   const [trackingCarrier, setTrackingCarrier] = useState('ups')
@@ -577,42 +577,63 @@ ${addr.country}`
                 </button>
               </div>
 
-              {/* Status Filter */}
-              <div className="flex items-center gap-2 flex-wrap">
-                <span className="text-gray-400 text-sm">Status:</span>
-                <select
-                  value={statusFilter}
-                  onChange={(e) => setStatusFilter(e.target.value)}
-                  className="bg-gray-800 border border-gray-700 text-white px-3 py-2 text-sm rounded"
-                >
-                  <option value="all">All</option>
-                  <option value="pending">Pending</option>
-                  <option value="confirmed">Confirmed</option>
-                  <option value="shipped">Shipped</option>
-                  <option value="delivered">Delivered</option>
-                  <option value="cancelled">Cancelled</option>
-                </select>
-                <span className="text-gray-400 text-sm">Payment:</span>
-                <select
-                  value={paymentFilter}
-                  onChange={(e) => setPaymentFilter(e.target.value)}
-                  className="bg-gray-800 border border-gray-700 text-white px-3 py-2 text-sm rounded"
-                >
-                  <option value="all">All</option>
-                  <option value="paid">Paid</option>
-                  <option value="pending">Unpaid</option>
-                  <option value="failed">Failed</option>
-                </select>
-                <button
-                  onClick={fetchOrders}
-                  className="p-2 text-gray-400 hover:text-yellow-500 transition-colors"
-                  title="Refresh"
-                >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                  </svg>
-                </button>
-              </div>
+              {/* Status Tabs — Confirmed is the default workflow; Pending is
+                  online-only abandoned checkouts; All shows everything. */}
+              {(() => {
+                const pendingCount = orders.filter(o => o.status === 'pending').length
+                const tabs = [
+                  { value: 'confirmed', label: 'Confirmed' },
+                  { value: 'pending',   label: 'Pending', badge: pendingCount },
+                  { value: 'all',       label: 'All' },
+                ]
+                return (
+                  <div className="flex items-center gap-2 flex-wrap">
+                    {tabs.map(t => {
+                      const isActive = statusFilter === t.value
+                      return (
+                        <button
+                          key={t.value}
+                          onClick={() => setStatusFilter(t.value)}
+                          className={`px-4 py-2 text-sm font-bold rounded transition-colors ${
+                            isActive
+                              ? 'bg-yellow-500 text-black'
+                              : 'bg-gray-800 text-gray-400 hover:text-white'
+                          }`}
+                        >
+                          {t.label}
+                          {t.badge > 0 && (
+                            <span className={`ml-2 inline-block px-2 py-0.5 text-xs rounded-full ${
+                              isActive ? 'bg-black/30 text-black' : 'bg-yellow-500 text-black'
+                            }`}>
+                              {t.badge}
+                            </span>
+                          )}
+                        </button>
+                      )
+                    })}
+                    <span className="text-gray-400 text-sm ml-2">Payment:</span>
+                    <select
+                      value={paymentFilter}
+                      onChange={(e) => setPaymentFilter(e.target.value)}
+                      className="bg-gray-800 border border-gray-700 text-white px-3 py-2 text-sm rounded"
+                    >
+                      <option value="all">All</option>
+                      <option value="paid">Paid</option>
+                      <option value="pending">Unpaid</option>
+                      <option value="failed">Failed</option>
+                    </select>
+                    <button
+                      onClick={fetchOrders}
+                      className="p-2 text-gray-400 hover:text-yellow-500 transition-colors"
+                      title="Refresh"
+                    >
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                      </svg>
+                    </button>
+                  </div>
+                )
+              })()}
             </div>
 
             {/* Inventory Management */}
