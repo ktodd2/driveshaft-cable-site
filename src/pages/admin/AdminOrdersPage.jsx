@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
 import { formatPrice, getPriceForQuantity, MIN_ORDER_QUANTITY, PRODUCT_PRICING } from '../../stores/cartStore'
@@ -36,6 +36,10 @@ function AdminOrdersPage() {
   const [orders, setOrders] = useState([])
   const [selectedOrder, setSelectedOrder] = useState(null)
   const [copiedId, setCopiedId] = useState(null)
+  // Refs on the two panes so we can reset their internal scroll on order
+  // change (desktop) and bring the detail into view on mobile.
+  const listPaneRef = useRef(null)
+  const detailPaneRef = useRef(null)
   const [statusFilter, setStatusFilter] = useState('confirmed')
   const [paymentFilter, setPaymentFilter] = useState('all')
   const [trackingNumber, setTrackingNumber] = useState('')
@@ -73,6 +77,21 @@ function AdminOrdersPage() {
     if (stock !== null) setStockInput(String(stock))
     setStockSaved(false)
   }, [stock, stockProductId])
+
+  // When the selected order changes, reset the detail pane's scroll so users
+  // always land on the order's header. On mobile (<lg the panes stack), the
+  // detail pane is below the list — smoothly scroll it into view so the user
+  // doesn't have to flick down to find it.
+  useEffect(() => {
+    if (!selectedOrder) return
+    const el = detailPaneRef.current
+    if (!el) return
+    if (window.matchMedia('(min-width: 1024px)').matches) {
+      el.scrollTop = 0
+    } else {
+      el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }
+  }, [selectedOrder?.id])
 
   useEffect(() => {
     if (selectedOrder) {
@@ -728,9 +747,9 @@ ${addr.country}`
                 <p className="text-gray-400 mb-6">Orders will appear here once customers start placing them.</p>
               </div>
             ) : (
-              <div className="grid lg:grid-cols-2 gap-6">
-                {/* Orders List */}
-                <div className="space-y-4">
+              <div className="grid lg:grid-cols-2 gap-6 lg:h-[calc(100vh-8rem)]">
+                {/* Orders List — independent scroll on desktop */}
+                <div ref={listPaneRef} className="space-y-4 lg:overflow-y-auto lg:pr-2">
                   <h2 className="text-lg font-industrial text-gray-400">
                     {filteredOrders.length} {statusFilter === 'all' ? 'Total' : statusFilter} Order{filteredOrders.length !== 1 ? 's' : ''}
                   </h2>
@@ -787,19 +806,31 @@ ${addr.country}`
                   ))}
                 </div>
 
-                {/* Order Detail */}
-                <div className="lg:sticky lg:top-24 h-fit">
+                {/* Order Detail — independent scroll on desktop, replaces the
+                    old lg:sticky lg:top-24 h-fit so long shipping/tracking
+                    sections at the bottom don't require scrolling the whole page. */}
+                <div ref={detailPaneRef} className="lg:overflow-y-auto lg:pr-2">
                   {selectedOrder ? (
                     <div className="bg-gray-800/50 border border-gray-700 p-6">
                       <div className="flex items-start justify-between mb-6">
                         <h2 className="text-xl font-industrial text-yellow-500">ORDER DETAILS</h2>
                         <button
-                          onClick={() => setSelectedOrder(null)}
-                          className="text-gray-400 hover:text-white lg:hidden"
+                          onClick={() => {
+                            setSelectedOrder(null)
+                            // On mobile, also scroll back up to the orders list
+                            // so the user lands somewhere useful instead of on
+                            // the empty placeholder.
+                            if (typeof window !== 'undefined' && !window.matchMedia('(min-width: 1024px)').matches) {
+                              listPaneRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+                            }
+                          }}
+                          className="text-gray-400 hover:text-white lg:hidden flex items-center gap-1 text-sm"
+                          aria-label="Back to orders list"
                         >
-                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                           </svg>
+                          Back to list
                         </button>
                       </div>
 
@@ -1079,7 +1110,7 @@ ${addr.country}`
                       </div>
                     </div>
                   ) : (
-                    <div className="bg-gray-800/50 border border-gray-700 p-12 text-center">
+                    <div className="bg-gray-800/50 border border-gray-700 p-12 text-center lg:h-full lg:flex lg:flex-col lg:items-center lg:justify-center">
                       <svg className="w-12 h-12 text-gray-600 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
