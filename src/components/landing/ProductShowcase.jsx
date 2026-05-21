@@ -1,108 +1,113 @@
 import React from 'react'
+import { Link } from 'react-router-dom'
+import { PRODUCT_PRICING, formatPrice } from '../../stores/cartStore'
 
-function Product() {
+const PRODUCTS = [
+  {
+    id: '1',
+    slug: 'driveshaft-cable',
+    name: 'Driveshaft Cable',
+    tagline: 'The original. Coupler positioned for angled pull paths.',
+    image: '/inuse.jpeg',
+    bullets: [
+      'Crimped aluminum coupler in standard orientation',
+      'Designed for the typical driveline geometry',
+      '5/32" galvanized steel · 40" · 3000 lb WLL',
+    ],
+    ctaLabel: 'Shop Driveshaft Cable',
+  },
+  {
+    id: '2',
+    slug: 'driveshaft-cable-plus',
+    name: 'Driveshaft Cable +',
+    tagline: 'Coupler reversed — for straight-line pull when your geometry needs it.',
+    image: '/cable-plus-1.jpeg',
+    bullets: [
+      'Same heavy-duty cable, coupler turned around',
+      'For applications that need a straight pull path',
+      '5/32" galvanized steel · 40" · 3000 lb WLL',
+    ],
+    ctaLabel: 'Shop Driveshaft Cable +',
+  },
+]
+
+function ProductShowcase() {
   return (
     <section id="product" className="py-20 bg-gradient-to-b from-ktodd-dark to-green-950/20">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-12">
           <h2 className="text-3xl sm:text-4xl lg:text-5xl font-industrial text-white mb-4">
-            THE <span className="text-yellow-500">SOLUTION</span>
+            TWO <span className="text-yellow-500">CONFIGURATIONS</span>
           </h2>
           <div className="w-24 h-1 bg-yellow-500 mx-auto mb-6"></div>
           <p className="text-xl text-gray-400 max-w-3xl mx-auto">
-            Purpose-built driveshaft safety cable that keeps the shaft securely suspended — fast, simple, and field-ready.
+            Same cable. Same breaking strength. Pick the coupler orientation that matches your driveline geometry.
           </p>
         </div>
 
-        <div className="grid lg:grid-cols-2 gap-12 items-center">
-          {/* Product image */}
-          <div className="relative">
-            <div className="rounded-lg overflow-hidden industrial-border">
-              <img
-                src="/inuse.jpeg"
-                alt="Driveshaft Cable installed on vehicle"
-                className="w-full h-auto object-cover"
-                loading="lazy"
-              />
-            </div>
-          </div>
+        <div className="grid md:grid-cols-2 gap-8 mb-12">
+          {PRODUCTS.map(product => {
+            const pricing = PRODUCT_PRICING[product.id]
+            return (
+              <div key={product.id} className="bg-gray-800/50 border border-gray-700 hover:border-yellow-500 transition-colors duration-300 overflow-hidden flex flex-col">
+                <Link to={`/products/${product.slug}`} className="block">
+                  <div className="aspect-[4/3] bg-gray-900 overflow-hidden">
+                    <img
+                      src={product.image}
+                      alt={`${product.name} — driveshaft safety cable`}
+                      className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+                      loading="lazy"
+                    />
+                  </div>
+                </Link>
 
-          {/* Benefits list */}
-          <div>
-            <h3 className="text-2xl font-industrial text-yellow-500 mb-6">WHY DRIVESHAFT CABLE?</h3>
+                <div className="p-6 flex flex-col flex-grow">
+                  <Link to={`/products/${product.slug}`}>
+                    <h3 className="text-2xl font-industrial text-white hover:text-yellow-500 transition-colors mb-2">
+                      {product.name}
+                    </h3>
+                  </Link>
+                  <p className="text-yellow-500 text-sm mb-4 font-medium">{product.tagline}</p>
 
-            <div className="space-y-6">
-              <div className="flex items-start gap-4 p-4 bg-gray-800/50 border-l-4 border-yellow-500">
-                <div className="flex-shrink-0 w-10 h-10 bg-yellow-500 rounded flex items-center justify-center">
-                  <svg className="w-6 h-6 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                  </svg>
-                </div>
-                <div>
-                  <h4 className="text-lg font-bold text-white">Prevents Driveshaft Drop</h4>
-                  <p className="text-gray-400">Secure suspension keeps the shaft in place during entire transport.</p>
+                  <ul className="space-y-2 mb-6 flex-grow">
+                    {product.bullets.map((b, i) => (
+                      <li key={i} className="flex items-start gap-2 text-gray-300 text-sm">
+                        <svg className="w-4 h-4 text-yellow-500 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                        </svg>
+                        <span>{b}</span>
+                      </li>
+                    ))}
+                  </ul>
+
+                  <div className="flex items-baseline justify-between mb-4">
+                    <div>
+                      <span className="text-gray-400 text-xs uppercase tracking-wider">Starting at</span>
+                      <div className="text-yellow-500 text-2xl font-industrial">{formatPrice(pricing.basePrice)}<span className="text-gray-500 text-sm">/ea</span></div>
+                    </div>
+                    <div className="text-xs text-gray-500 text-right">
+                      Bulk: as low as<br/>
+                      <span className="text-green-400 font-bold">{formatPrice(pricing.tiers[0].price)}/ea</span>
+                    </div>
+                  </div>
+
+                  <Link to={`/products/${product.slug}`} className="btn-primary w-full text-center">
+                    {product.ctaLabel}
+                  </Link>
                 </div>
               </div>
+            )
+          })}
+        </div>
 
-              <div className="flex items-start gap-4 p-4 bg-gray-800/50 border-l-4 border-yellow-500">
-                <div className="flex-shrink-0 w-10 h-10 bg-yellow-500 rounded flex items-center justify-center">
-                  <svg className="w-6 h-6 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-                  </svg>
-                </div>
-                <div>
-                  <h4 className="text-lg font-bold text-white">Protects Drivetrain Components</h4>
-                  <p className="text-gray-400">Eliminates seal damage and secondary transmission failures.</p>
-                </div>
-              </div>
-
-              <div className="flex items-start gap-4 p-4 bg-gray-800/50 border-l-4 border-yellow-500">
-                <div className="flex-shrink-0 w-10 h-10 bg-yellow-500 rounded flex items-center justify-center">
-                  <svg className="w-6 h-6 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                  </svg>
-                </div>
-                <div>
-                  <h4 className="text-lg font-bold text-white">Faster Than Makeshift Solutions</h4>
-                  <p className="text-gray-400">No more chains, bungees, or zip ties. Install in seconds.</p>
-                </div>
-              </div>
-
-              <div className="flex items-start gap-4 p-4 bg-gray-800/50 border-l-4 border-yellow-500">
-                <div className="flex-shrink-0 w-10 h-10 bg-yellow-500 rounded flex items-center justify-center">
-                  <svg className="w-6 h-6 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-                  </svg>
-                </div>
-                <div>
-                  <h4 className="text-lg font-bold text-white">Compact & Field-Ready</h4>
-                  <p className="text-gray-400">Fits in glove box or tool tray. Always ready when you need it.</p>
-                </div>
-              </div>
-
-              <div className="flex items-start gap-4 p-4 bg-gray-800/50 border-l-4 border-yellow-500">
-                <div className="flex-shrink-0 w-10 h-10 bg-yellow-500 rounded flex items-center justify-center">
-                  <svg className="w-6 h-6 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                  </svg>
-                </div>
-                <div>
-                  <h4 className="text-lg font-bold text-white">Single-Use by Design</h4>
-                  <p className="text-gray-400">Cut off after each job — one cable per use, no risk.</p>
-                </div>
-              </div>
-            </div>
-
-            <div className="mt-8 p-4 bg-yellow-500/10 border border-yellow-500">
-              <p className="text-yellow-500 font-industrial text-lg">
-                ★ MADE BY A HEAVY DUTY OPERATOR FOR THE HEAVY DUTY OPERATOR
-              </p>
-            </div>
-          </div>
+        <div className="p-4 bg-yellow-500/10 border border-yellow-500 text-center">
+          <p className="text-yellow-500 font-industrial text-lg">
+            ★ MADE BY A HEAVY DUTY OPERATOR FOR THE HEAVY DUTY OPERATOR
+          </p>
         </div>
       </div>
     </section>
   )
 }
 
-export default Product
+export default ProductShowcase

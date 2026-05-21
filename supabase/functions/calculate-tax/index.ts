@@ -80,12 +80,18 @@ serve(async (req) => {
       )
     }
 
-    // Server-side price computation. The current site sells ONE product
-    // (Driveshaft Cable) and uses volume pricing on TOTAL quantity, not
-    // per-line — so the price is the same across all line items.
-    const totalQty = items.reduce((sum, item) => sum + (item.quantity || 0), 0)
-    const unitPrice = getPriceForQuantity(totalQty)
-    const subtotalCents = totalQty * unitPrice
+    // Server-side price computation. Volume tier qualifies per-product (each
+    // line item's tier is based on its own quantity), so each item gets its
+    // own unit price from PRODUCT_PRICING.
+    const linePrices = items.map((item) => ({
+      productId: item.productId,
+      quantity: item.quantity || 0,
+      unitPrice: getPriceForQuantity(item.productId, item.quantity || 0),
+    }))
+    const subtotalCents = linePrices.reduce(
+      (sum, l) => sum + l.unitPrice * l.quantity,
+      0
+    )
     const shippingCents = computeShipping(subtotalCents)
 
     // Apply the loyalty discount proportionally across line items. Tax is
@@ -94,13 +100,13 @@ serve(async (req) => {
     const safeDiscount = Math.max(0, Math.min(discountCents, subtotalCents))
     const discountRatio = subtotalCents > 0 ? safeDiscount / subtotalCents : 0
 
-    const lineItems = items.map((item) => {
-      const lineGross = unitPrice * item.quantity
+    const lineItems = linePrices.map((line) => {
+      const lineGross = line.unitPrice * line.quantity
       const lineNet = Math.round(lineGross * (1 - discountRatio))
       return {
         amount: lineNet,
-        reference: item.productId,
-        quantity: item.quantity,
+        reference: line.productId,
+        quantity: line.quantity,
         tax_code: PRODUCT_TAX_CODE,
         tax_behavior: 'exclusive' as const,
       }

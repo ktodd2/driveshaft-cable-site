@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { useCartStore, formatPrice, PRICE_PER_UNIT, PRICING_TIERS, getPriceForQuantity, MIN_ORDER_QUANTITY } from '../stores/cartStore'
+import { useCartStore, formatPrice, PRODUCT_PRICING, getPriceForQuantity, MIN_ORDER_QUANTITY } from '../stores/cartStore'
 import { useInventory } from '../hooks/useInventory'
 import InventoryProgressBar from '../components/common/InventoryProgressBar'
 import SEOHead from '../components/common/SEOHead'
@@ -12,7 +12,7 @@ const products = [
     name: 'Driveshaft Cable',
     slug: 'driveshaft-cable',
     short_description: 'Heavy-duty driveshaft safety cable for professional towing and recovery operations.',
-    price_cents: PRICE_PER_UNIT, // $3.00 per unit
+    price_cents: PRODUCT_PRICING['1'].basePrice,
     sku: 'KTDC-001',
     specs: {
       cable_diameter: '5/32"',
@@ -21,7 +21,26 @@ const products = [
       material: 'Galvanized Steel',
       couplers: 'Aluminum'
     },
-    images: ['/product-image.jpg'],
+    images: ['/IMG_5493.jpeg'],
+    image: '/IMG_5493.jpeg',
+    in_stock: true
+  },
+  {
+    id: '2',
+    name: 'Driveshaft Cable +',
+    slug: 'driveshaft-cable-plus',
+    short_description: 'Reversed-coupler driveshaft cable for straight-line pull. Same 5/32" galvanized steel, 40" length, 3000 lb WLL.',
+    price_cents: PRODUCT_PRICING['2'].basePrice,
+    sku: 'KTDC-002',
+    specs: {
+      cable_diameter: '5/32"',
+      length: '1000mm (40")',
+      working_load: '3000 lbs',
+      material: 'Galvanized Steel',
+      couplers: 'Aluminum (reversed)'
+    },
+    images: ['/cable-plus-1.jpeg'],
+    image: '/cable-plus-1.jpeg',
     in_stock: true
   }
 ]
@@ -49,8 +68,9 @@ function ProductCard({ product }) {
     setQuantity(newQty)
   }
 
-  const currentPrice = getPriceForQuantity(quantity)
+  const currentPrice = getPriceForQuantity(product.id, quantity)
   const totalPrice = currentPrice * quantity
+  const basePrice = PRODUCT_PRICING[product.id]?.basePrice ?? product.price_cents
 
   return (
     <div className="bg-gray-800/50 border border-gray-700 hover:border-yellow-500 transition-all duration-300 group">
@@ -58,7 +78,7 @@ function ProductCard({ product }) {
       <Link to={`/products/${product.slug}`} className="block">
         <div className="aspect-square bg-gray-900 relative overflow-hidden">
           <img
-            src="/IMG_5493.jpeg"
+            src={product.image || product.images?.[0] || '/IMG_5493.jpeg'}
             alt={product.name}
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
             loading="lazy"
@@ -96,7 +116,7 @@ function ProductCard({ product }) {
             <span className="text-yellow-500 text-2xl font-industrial">{formatPrice(currentPrice)}</span>
             <span className="text-gray-400 text-sm">per unit</span>
           </div>
-          {currentPrice < PRICE_PER_UNIT && (
+          {currentPrice < basePrice && (
             <div className="text-green-400 text-sm mt-1">Volume discount applied!</div>
           )}
         </div>
@@ -165,19 +185,19 @@ function ProductListPage() {
     <div className="pt-24 md:pt-32">
       <SEOHead
         title="Shop Driveshaft Safety Cables"
-        description="Browse heavy-duty Driveshaft Cables (driveshaftcable). Volume pricing from $2.90/unit. Free shipping on orders over $400."
+        description="Browse heavy-duty Driveshaft Cables (driveshaftcable). Two configurations — standard and reversed-coupler. Volume pricing from $2.90/unit. Free shipping on orders over $400."
         keywords="buy driveshaft cable, driveshaftcable, driveshaft cable price, bulk driveshaft cable, towing safety cable"
         canonical="/products"
         structuredData={{
           '@context': 'https://schema.org',
           '@type': 'ItemList',
           name: 'Driveshaft Cables',
-          itemListElement: [{
+          itemListElement: products.map((p, i) => ({
             '@type': 'ListItem',
-            position: 1,
-            url: 'https://driveshaftcable.com/products/driveshaft-cable',
-            name: 'Driveshaft Cable'
-          }]
+            position: i + 1,
+            url: `https://driveshaftcable.com/products/${p.slug}`,
+            name: p.name
+          }))
         }}
       />
       {/* Hero Section */}
@@ -200,25 +220,32 @@ function ProductListPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Pricing Info Banner */}
           <div className="bg-yellow-500/10 border border-yellow-500 p-4 mb-8">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-              <div>
-                <h3 className="text-white font-bold mb-2">Volume Pricing</h3>
-                <div className="flex flex-wrap gap-4 text-sm">
-                  <div className="flex items-center gap-2">
-                    <span className="text-gray-400">10-49 units:</span>
-                    <span className="text-yellow-500 font-bold">{formatPrice(PRICE_PER_UNIT)}/ea</span>
-                  </div>
-                  {PRICING_TIERS.slice().reverse().map((tier, i) => (
-                    <div key={i} className="flex items-center gap-2">
-                      <span className="text-gray-400">{tier.label} units:</span>
-                      <span className="text-green-400 font-bold">{formatPrice(tier.price)}/ea</span>
-                    </div>
-                  ))}
+            <div className="flex flex-col gap-4">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                <h3 className="text-white font-bold">Volume Pricing (per product)</h3>
+                <div className="text-sm text-gray-300 space-y-1">
+                  <div><span className="text-yellow-500">FREE SHIPPING</span> on orders over $400 · $15 flat rate under $400</div>
+                  <div><span className="text-green-400">LOYALTY DISCOUNT</span> — returning customers get an extra 10% off!</div>
                 </div>
               </div>
-              <div className="text-sm text-gray-300 space-y-1">
-                <div><span className="text-yellow-500">FREE SHIPPING</span> on orders over $400 · $15 flat rate under $400</div>
-                <div><span className="text-green-400">LOYALTY DISCOUNT</span> — returning customers get an extra 10% off!</div>
+              <div className="grid sm:grid-cols-2 gap-4">
+                {Object.entries(PRODUCT_PRICING).map(([pid, pricing]) => (
+                  <div key={pid} className="bg-black/20 border border-yellow-500/30 p-3">
+                    <div className="text-xs uppercase tracking-wider text-yellow-500 font-bold mb-2">{pricing.name}</div>
+                    <div className="flex flex-wrap gap-3 text-sm">
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-gray-400">10-49:</span>
+                        <span className="text-yellow-500 font-bold">{formatPrice(pricing.basePrice)}/ea</span>
+                      </div>
+                      {pricing.tiers.slice().reverse().map((tier, i) => (
+                        <div key={i} className="flex items-center gap-1.5">
+                          <span className="text-gray-400">{tier.label}:</span>
+                          <span className="text-green-400 font-bold">{formatPrice(tier.price)}/ea</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
           </div>

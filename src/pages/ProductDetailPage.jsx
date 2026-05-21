@@ -1,63 +1,99 @@
 import React, { useState, useEffect } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
-import { useCartStore, formatPrice, getPriceForQuantity, PRICE_PER_UNIT, PRICING_TIERS, MIN_ORDER_QUANTITY } from '../stores/cartStore'
+import { useCartStore, formatPrice, getPriceForQuantity, PRODUCT_PRICING, MIN_ORDER_QUANTITY } from '../stores/cartStore'
 import { useInventory } from '../hooks/useInventory'
 import InventoryProgressBar from '../components/common/InventoryProgressBar'
 import SEOHead from '../components/common/SEOHead'
 
-const productStructuredData = [
-  {
-    '@context': 'https://schema.org',
-    '@type': 'Product',
-    name: 'Driveshaft Cable',
-    description: 'Driveshaft Safety Cable (driveshaftcable). 3000lb working load limit, 5/32" galvanized steel, 39" length, aluminum couplers. Purpose-built for heavy-duty towing and recovery operations.',
-    brand: {
-      '@type': 'Brand',
-      name: 'Driveshaft Cable'
+const structuredDataBySlug = {
+  'driveshaft-cable': [
+    {
+      '@context': 'https://schema.org',
+      '@type': 'Product',
+      name: 'Driveshaft Cable',
+      description: 'Driveshaft Safety Cable (driveshaftcable). 3000lb working load limit, 5/32" galvanized steel, 39" length, aluminum couplers. Purpose-built for heavy-duty towing and recovery operations.',
+      brand: { '@type': 'Brand', name: 'Driveshaft Cable' },
+      sku: 'KTDC-001',
+      mpn: 'KTDC-001',
+      image: [
+        'https://driveshaftcable.com/IMG_5489.jpeg',
+        'https://driveshaftcable.com/inuse.jpeg',
+        'https://driveshaftcable.com/IMG_5491.jpeg',
+        'https://driveshaftcable.com/IMG_5492.jpeg'
+      ],
+      material: 'Galvanized Steel Wire with Aluminum Couplers',
+      weight: { '@type': 'QuantitativeValue', value: '1.2', unitCode: 'LBR' },
+      offers: {
+        '@type': 'AggregateOffer',
+        lowPrice: '2.90',
+        highPrice: '3.45',
+        priceCurrency: 'USD',
+        offerCount: '4',
+        availability: 'https://schema.org/InStock',
+        url: 'https://driveshaftcable.com/products/driveshaft-cable'
+      }
     },
-    sku: 'KTDC-001',
-    mpn: 'KTDC-001',
-    image: [
-      'https://driveshaftcable.com/IMG_5489.jpeg',
-      'https://driveshaftcable.com/inuse.jpeg',
-      'https://driveshaftcable.com/IMG_5491.jpeg',
-      'https://driveshaftcable.com/IMG_5492.jpeg'
-    ],
-    material: 'Galvanized Steel Wire with Aluminum Couplers',
-    weight: {
-      '@type': 'QuantitativeValue',
-      value: '1.2',
-      unitCode: 'LBR'
-    },
-    offers: {
-      '@type': 'AggregateOffer',
-      lowPrice: '2.50',
-      highPrice: '3.00',
-      priceCurrency: 'USD',
-      offerCount: '4',
-      availability: 'https://schema.org/InStock',
-      url: 'https://driveshaftcable.com/products/driveshaft-cable'
+    {
+      '@context': 'https://schema.org',
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://driveshaftcable.com/' },
+        { '@type': 'ListItem', position: 2, name: 'Products', item: 'https://driveshaftcable.com/products' },
+        { '@type': 'ListItem', position: 3, name: 'Driveshaft Cable', item: 'https://driveshaftcable.com/products/driveshaft-cable' }
+      ]
     }
-  },
-  {
-    '@context': 'https://schema.org',
-    '@type': 'BreadcrumbList',
-    itemListElement: [
-      { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://driveshaftcable.com/' },
-      { '@type': 'ListItem', position: 2, name: 'Products', item: 'https://driveshaftcable.com/products' },
-      { '@type': 'ListItem', position: 3, name: 'Driveshaft Cable', item: 'https://driveshaftcable.com/products/driveshaft-cable' }
-    ]
-  }
-]
+  ],
+  'driveshaft-cable-plus': [
+    {
+      '@context': 'https://schema.org',
+      '@type': 'Product',
+      name: 'Driveshaft Cable +',
+      description: 'Driveshaft Cable + — reversed coupler configuration for straight-line pull. 3000lb working load limit, 5/32" galvanized steel, 40" length, aluminum couplers. Same heavy-duty safety cable with the coupler turned around so it can pull in a straight line.',
+      brand: { '@type': 'Brand', name: 'Driveshaft Cable' },
+      sku: 'KTDC-002',
+      mpn: 'KTDC-002',
+      image: [
+        'https://driveshaftcable.com/cable-plus-1.jpeg',
+        'https://driveshaftcable.com/cable-plus-2.jpeg'
+      ],
+      material: 'Galvanized Steel Wire with Aluminum Couplers',
+      weight: { '@type': 'QuantitativeValue', value: '1.2', unitCode: 'LBR' },
+      offers: {
+        '@type': 'AggregateOffer',
+        lowPrice: '3.40',
+        highPrice: '3.95',
+        priceCurrency: 'USD',
+        offerCount: '4',
+        availability: 'https://schema.org/InStock',
+        url: 'https://driveshaftcable.com/products/driveshaft-cable-plus'
+      }
+    },
+    {
+      '@context': 'https://schema.org',
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://driveshaftcable.com/' },
+        { '@type': 'ListItem', position: 2, name: 'Products', item: 'https://driveshaftcable.com/products' },
+        { '@type': 'ListItem', position: 3, name: 'Driveshaft Cable +', item: 'https://driveshaftcable.com/products/driveshaft-cable-plus' }
+      ]
+    }
+  ]
+}
 
-const productImages = [
-  '/inuse.jpeg',
-  '/IMG_5491.jpeg',
-  '/IMG_5492.jpeg',
-  '/IMG_5493.jpeg',
-  '/IMG_5490.jpeg',
-  '/IMG_5489.jpeg',
-]
+const productImagesBySlug = {
+  'driveshaft-cable': [
+    '/inuse.jpeg',
+    '/IMG_5491.jpeg',
+    '/IMG_5492.jpeg',
+    '/IMG_5493.jpeg',
+    '/IMG_5490.jpeg',
+    '/IMG_5489.jpeg',
+  ],
+  'driveshaft-cable-plus': [
+    '/cable-plus-1.jpeg',
+    '/cable-plus-2.jpeg',
+  ]
+}
 
 // Hardcoded product data - will come from Supabase later
 const products = {
@@ -71,7 +107,7 @@ Built with 5/32" galvanized steel cable and heavy-duty aluminum couplers, it pro
 
 No more makeshift solutions with bungee cords, zip ties, or chains. The Driveshaft Cable installs in seconds and keeps that shaft exactly where it needs to be.`,
     short_description: 'Heavy-duty driveshaft safety cable for professional towing and recovery operations.',
-    price_cents: 300,
+    price_cents: PRODUCT_PRICING['1'].basePrice,
     bulk_threshold: 10,
     sku: 'KTDC-001',
     specs: {
@@ -101,6 +137,48 @@ No more makeshift solutions with bungee cords, zip ties, or chains. The Drivesha
       { title: 'Single-Use by Design', description: 'Cut off after each job — no reuse, no guessing if it\'s still safe.' }
     ],
     in_stock: true
+  },
+  'driveshaft-cable-plus': {
+    id: '2',
+    name: 'Driveshaft Cable +',
+    slug: 'driveshaft-cable-plus',
+    description: `Driveshaft Cable + is the same heavy-duty driveshaft safety cable as our original, but with the red coupler reversed so it can pull in a straight line. When your driveline geometry needs a straight pull path instead of an angled one, this is the configuration you want.
+
+Built with the same 5/32" galvanized steel cable and the same crimped aluminum coupler — just turned around. Same 40" length. Same 3000 lb working load limit. Same single-use, cut-it-off-after-the-job design.
+
+If you've used the original Driveshaft Cable and wished the coupler faced the other way for your specific application, this is for you.`,
+    short_description: 'Reversed-coupler driveshaft cable for straight-line pull.',
+    price_cents: PRODUCT_PRICING['2'].basePrice,
+    bulk_threshold: 10,
+    sku: 'KTDC-002',
+    specs: {
+      'Cable Diameter': '5/32" (4mm)',
+      'Total Length': '1000mm (40")',
+      'Working Load Limit': '3000 lbs',
+      'Cable Material': 'Galvanized Steel Wire',
+      'Coupler Material': 'Anodized Aluminum (Reversed)',
+      'Coupler Orientation': 'Reversed — for straight-line pull',
+      'End Construction': 'Crimped Loops',
+      'Weight': '1.2 lb'
+    },
+    applications: [
+      'Class 7-8 Trucks',
+      'Semi-Tractors',
+      'Vocational Trucks',
+      'Transit Buses',
+      'Construction Equipment',
+      'Agricultural Equipment',
+      'Emergency Vehicles',
+      'Military Vehicles'
+    ],
+    features: [
+      { title: 'Straight-Line Pull', description: 'Reversed coupler lets the cable pull in a straight line — ideal when geometry calls for it.' },
+      { title: 'Same Heavy-Duty Build', description: 'Identical 5/32" galvanized steel cable and 3000 lb WLL as the original.' },
+      { title: 'Prevents Driveshaft Drop', description: 'Secure suspension keeps the shaft in place during entire transport.' },
+      { title: 'Faster Than Makeshift Solutions', description: 'No more chains, bungees, or zip ties. Install in seconds.' },
+      { title: 'Single-Use by Design', description: 'Cut off after each job — no reuse, no guessing if it\'s still safe.' }
+    ],
+    in_stock: true
   }
 }
 
@@ -112,6 +190,8 @@ function ProductDetailPage() {
   const addItem = useCartStore((state) => state.addItem)
 
   const product = products[slug]
+  const productImages = productImagesBySlug[slug] || []
+  const productStructuredData = structuredDataBySlug[slug] || []
   const { stock, totalStock, loading: stockLoading } = useInventory(product?.id)
 
   const isLowStock = !stockLoading && stock !== null && stock > 0 && stock < MIN_ORDER_QUANTITY
@@ -149,15 +229,18 @@ function ProductDetailPage() {
     navigate('/cart')
   }
 
-  const currentPrice = getPriceForQuantity(quantity)
+  const currentPrice = getPriceForQuantity(product.id, quantity)
+  const productPricing = PRODUCT_PRICING[product.id] || PRODUCT_PRICING['1']
+  const basePrice = productPricing.basePrice
+  const productTiers = productPricing.tiers
 
   return (
     <div className="pt-24 md:pt-32">
       <SEOHead
-        title="Driveshaft Cable — 3000lb WLL"
-        description='Driveshaft Safety Cable. 3000lb working load limit, 5/32" galvanized steel, 39" length, aluminum couplers. Starting at $3.45/unit with volume discounts.'
+        title={`${product.name} — 3000lb WLL`}
+        description={`${product.name} safety cable. 3000lb working load limit, 5/32" galvanized steel, aluminum couplers. Starting at ${formatPrice(basePrice)}/unit with volume discounts.`}
         keywords="driveshaft cable, driveshaftcable, 3000lb WLL cable, towing safety cable, driveshaft guard"
-        canonical="/products/driveshaft-cable"
+        canonical={`/products/${product.slug}`}
         structuredData={productStructuredData}
       />
       {/* Breadcrumb */}
@@ -236,10 +319,10 @@ function ProductDetailPage() {
 
               {/* Volume Pricing Tiers */}
               <div className="flex flex-wrap gap-3 mb-6 mt-6">
-                <span className={`text-xs px-3 py-1 border ${currentPrice === PRICE_PER_UNIT ? 'border-yellow-500 text-yellow-500' : 'border-gray-700 text-gray-500'}`}>
-                  10-49: {formatPrice(PRICE_PER_UNIT)}/ea
+                <span className={`text-xs px-3 py-1 border ${currentPrice === basePrice ? 'border-yellow-500 text-yellow-500' : 'border-gray-700 text-gray-500'}`}>
+                  10-49: {formatPrice(basePrice)}/ea
                 </span>
-                {PRICING_TIERS.slice().reverse().map((tier, i) => (
+                {productTiers.slice().reverse().map((tier, i) => (
                   <span key={i} className={`text-xs px-3 py-1 border ${currentPrice === tier.price ? 'border-green-500 text-green-400' : 'border-gray-700 text-gray-500'}`}>
                     {tier.label}: {formatPrice(tier.price)}/ea
                   </span>
@@ -360,7 +443,7 @@ function ProductDetailPage() {
       <section className="py-16 bg-ktodd-dark">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <h2 className="text-2xl font-industrial text-white mb-8">
-            WHY <span className="text-yellow-500">DRIVESHAFT CABLE?</span>
+            WHY <span className="text-yellow-500">{product.name.toUpperCase()}?</span>
           </h2>
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {product.features.map((feature, index) => (

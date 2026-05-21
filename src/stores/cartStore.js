@@ -3,8 +3,7 @@ import { persist } from 'zustand/middleware'
 
 // Pricing constants — server-side copy lives at supabase/functions/_shared/pricing.ts
 // and MUST be updated in the same commit if any of these change.
-export const PRICE_PER_UNIT = 345 // $3.45 in cents
-export const MIN_ORDER_QUANTITY = 10 // Minimum order is 10 units
+export const MIN_ORDER_QUANTITY = 10 // Minimum order is 10 units (total across cart)
 
 // Shipping constants
 export const SHIPPING_FEE = 1500 // $15.00 in cents
@@ -13,19 +12,51 @@ export const FREE_SHIPPING_THRESHOLD = 40000 // $400.00 in cents - free shipping
 // Loyalty discount for repeat customers (stacks with volume pricing)
 export const REPEAT_CUSTOMER_DISCOUNT = 0.10 // 10% off subtotal
 
-// Volume pricing tiers (must be ordered highest threshold first)
-export const PRICING_TIERS = [
-  { min: 200, price: 290, label: '200+' },
-  { min: 100, price: 315, label: '100-199' },
-  { min: 50, price: 335, label: '50-99' },
-]
+// Per-product pricing — each product carries its own base price and tier table.
+// Volume tier qualification is PER-PRODUCT (each line item's tier is based on
+// its own quantity, not the cart total). All tiers MUST be ordered highest
+// threshold first so the linear scan picks the best applicable tier.
+export const PRODUCT_PRICING = {
+  '1': {
+    name: 'Driveshaft Cable',
+    basePrice: 345, // $3.45
+    tiers: [
+      { min: 200, price: 290, label: '200+' },
+      { min: 100, price: 315, label: '100-199' },
+      { min: 50,  price: 335, label: '50-99' },
+    ],
+  },
+  '2': {
+    name: 'Driveshaft Cable +',
+    basePrice: 395, // $3.95 — $0.50 more per piece than the original
+    tiers: [
+      { min: 200, price: 340, label: '200+' },
+      { min: 100, price: 365, label: '100-199' },
+      { min: 50,  price: 385, label: '50-99' },
+    ],
+  },
+}
 
-// Get price per unit for a given quantity
-export function getPriceForQuantity(qty) {
-  for (const tier of PRICING_TIERS) {
+// Back-compat aliases — existing pages still display tier tables using these
+// constants. They mirror product '1' (the original Driveshaft Cable) so the
+// existing "starting at $3.45" copy stays accurate.
+export const PRICE_PER_UNIT = PRODUCT_PRICING['1'].basePrice
+export const PRICING_TIERS = PRODUCT_PRICING['1'].tiers
+
+// Get price per unit for a given (productId, qty). Falls back to product '1'
+// pricing if the productId is unknown — defensive default so a stale cart from
+// a previous deploy still renders sensibly.
+export function getPriceForQuantity(productId, qty) {
+  const pricing = PRODUCT_PRICING[productId] || PRODUCT_PRICING['1']
+  for (const tier of pricing.tiers) {
     if (qty >= tier.min) return tier.price
   }
-  return PRICE_PER_UNIT
+  return pricing.basePrice
+}
+
+// Convenience: line total for a single cart item.
+export function lineSubtotal(item) {
+  return getPriceForQuantity(item.productId, item.quantity) * item.quantity
 }
 
 export const useCartStore = create(
@@ -98,43 +129,53 @@ export const useCartStore = create(
 export const selectTotalItems = (state) =>
   state.items.reduce((sum, item) => sum + item.quantity, 0)
 
-// Calculate subtotal with volume discount
-export const selectSubtotal = (state) => {
-  const totalQty = state.items.reduce((sum, item) => sum + item.quantity, 0)
-  const pricePerUnit = getPriceForQuantity(totalQty)
-  return totalQty * pricePerUnit
-}
+// Subtotal sums per-line totals using each product's own tier price.
+export const selectSubtotal = (state) =>
+  state.items.reduce((sum, item) => sum + lineSubtotal(item), 0)
 
-// Get the current price per unit based on quantity
+// Weighted average price per unit across the cart. Kept for back-compat with
+// summary displays that show one "per unit" figure — actual line items render
+// their own per-item price now.
 export const selectPricePerUnit = (state) => {
   const totalQty = state.items.reduce((sum, item) => sum + item.quantity, 0)
-  return getPriceForQuantity(totalQty)
+  if (totalQty === 0) return 0
+  return Math.round(selectSubtotal(state) / totalQty)
 }
 
-// Check if order meets minimum (reduced-minimum items bypass the threshold)
+// Cart-total volume savings: how much the cart saved versus the products'
+// base prices. Used for the "Volume Discount Applied!" line.
+export const selectVolumeSavings = (state) =>
+  state.items.reduce((sum, item) => {
+    const basePrice = PRODUCT_PRICING[item.productId]?.basePrice ?? PRICE_PER_UNIT
+    const tierPrice = getPriceForQuantity(item.productId, item.quantity)
+    return sum + (basePrice - tierPrice) * item.quantity
+  }, 0)
+
+// Check if order meets minimum (reduced-minimum items bypass the threshold).
+// Minimum is TOTAL cart quantity — so 5 + 5 across two products still qualifies.
 export const selectMeetsMinimum = (state) => {
   const totalQty = state.items.reduce((sum, item) => sum + item.quantity, 0)
   const hasReducedMinimum = state.items.some(item => item.reducedMinimum)
   return totalQty >= MIN_ORDER_QUANTITY || hasReducedMinimum
 }
 
-// Check if getting bulk discount
-export const selectHasBulkDiscount = (state) => {
-  const totalQty = state.items.reduce((sum, item) => sum + item.quantity, 0)
-  return totalQty >= PRICING_TIERS[PRICING_TIERS.length - 1].min
-}
+// True if ANY line item has hit a volume tier (i.e. is paying below its base
+// price). Used to show the "Volume Discount Applied!" banner.
+export const selectHasBulkDiscount = (state) =>
+  state.items.some(item => {
+    const basePrice = PRODUCT_PRICING[item.productId]?.basePrice ?? PRICE_PER_UNIT
+    return getPriceForQuantity(item.productId, item.quantity) < basePrice
+  })
 
 // Calculate shipping cost based on subtotal
 export const selectShipping = (state) => {
-  const totalQty = state.items.reduce((sum, item) => sum + item.quantity, 0)
-  const subtotal = totalQty * getPriceForQuantity(totalQty)
+  const subtotal = selectSubtotal(state)
   return subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : SHIPPING_FEE
 }
 
 // Calculate order total (subtotal + shipping)
 export const selectOrderTotal = (state) => {
-  const totalQty = state.items.reduce((sum, item) => sum + item.quantity, 0)
-  const subtotal = totalQty * getPriceForQuantity(totalQty)
+  const subtotal = selectSubtotal(state)
   const shipping = subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : SHIPPING_FEE
   return subtotal + shipping
 }

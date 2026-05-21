@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
-import { formatPrice, getPriceForQuantity, MIN_ORDER_QUANTITY } from '../../stores/cartStore'
+import { formatPrice, getPriceForQuantity, MIN_ORDER_QUANTITY, PRODUCT_PRICING } from '../../stores/cartStore'
 import { useInventory, updateStock } from '../../hooks/useInventory'
 
 function getEmptyManualForm() {
@@ -10,6 +10,7 @@ function getEmptyManualForm() {
   const pad = (n) => String(n).padStart(2, '0')
   const localNow = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}T${pad(now.getHours())}:${pad(now.getMinutes())}`
   return {
+    productId: '1',
     name: '',
     email: '',
     phone: '',
@@ -41,8 +42,9 @@ function AdminOrdersPage() {
   const [savingTracking, setSavingTracking] = useState(false)
   const [trackingEmailStatus, setTrackingEmailStatus] = useState(null) // 'sent', 'failed', null
 
-  // Inventory state
-  const { stock, loading: stockLoading, refetch: refetchStock } = useInventory('1')
+  // Inventory state — admin picks which product to manage stock for.
+  const [stockProductId, setStockProductId] = useState('1')
+  const { stock, loading: stockLoading, refetch: refetchStock } = useInventory(stockProductId)
   const [stockInput, setStockInput] = useState('')
   const [savingStock, setSavingStock] = useState(false)
   const [stockSaved, setStockSaved] = useState(false)
@@ -64,8 +66,11 @@ function AdminOrdersPage() {
   const [manualTaxError, setManualTaxError] = useState(null)
 
   useEffect(() => {
-    if (stock !== null && stockInput === '') setStockInput(String(stock))
-  }, [stock])
+    // Reset the input when switching products or when stock first loads so
+    // the editor always reflects the actually-selected product's stock.
+    if (stock !== null) setStockInput(String(stock))
+    setStockSaved(false)
+  }, [stock, stockProductId])
 
   useEffect(() => {
     if (selectedOrder) {
@@ -84,7 +89,7 @@ function AdminOrdersPage() {
     if (isNaN(qty) || qty < 0) return
     setSavingStock(true)
     setStockSaved(false)
-    const { error } = await updateStock('1', qty)
+    const { error } = await updateStock(stockProductId, qty)
     if (!error) {
       setStockSaved(true)
       refetchStock()
@@ -100,12 +105,21 @@ function AdminOrdersPage() {
   }
 
   // Auto-fill the unit-price field with the volume-pricing tier whenever
-  // quantity changes, unless the admin has manually overridden it.
+  // quantity or product changes, unless the admin has manually overridden it.
   const onManualQuantityChange = (val) => {
     const qty = parseInt(val) || 0
     const next = { ...manualForm, quantity: val }
     if (!manualForm.unitPriceManuallyEdited && qty > 0) {
-      next.unitPriceCents = String(getPriceForQuantity(qty))
+      next.unitPriceCents = String(getPriceForQuantity(manualForm.productId, qty))
+    }
+    setManualForm(next)
+  }
+
+  const onManualProductChange = (pid) => {
+    const qty = parseInt(manualForm.quantity) || 0
+    const next = { ...manualForm, productId: pid }
+    if (!manualForm.unitPriceManuallyEdited && qty > 0) {
+      next.unitPriceCents = String(getPriceForQuantity(pid, qty))
     }
     setManualForm(next)
   }
@@ -154,7 +168,11 @@ function AdminOrdersPage() {
             'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
           },
           body: JSON.stringify({
-            items: [{ productId: '1', name: 'Driveshaft Cable', quantity: qty }],
+            items: [{
+              productId: manualForm.productId,
+              name: PRODUCT_PRICING[manualForm.productId]?.name || 'Driveshaft Cable',
+              quantity: qty,
+            }],
             shippingAddress: address,
             discountCents: parseInt(manualForm.discountCents) || 0,
           }),
@@ -192,7 +210,8 @@ function AdminOrdersPage() {
     if (totalCents < 0) return setManualError('Discount cannot exceed subtotal + shipping + tax.')
 
     const saleDateIso = new Date(manualForm.saleDate).toISOString()
-    const items = [{ productId: '1', name: 'Driveshaft Cable', quantity: qty, price: unitPrice }]
+    const productName = PRODUCT_PRICING[manualForm.productId]?.name || 'Driveshaft Cable'
+    const items = [{ productId: manualForm.productId, name: productName, quantity: qty, price: unitPrice }]
     const shippingAddress = manualForm.hasShipping
       ? {
           address1: manualForm.address1, address2: manualForm.address2,
@@ -596,7 +615,21 @@ ${addr.country}`
 
             {/* Inventory Management */}
             <div className="bg-gray-800/50 border border-gray-700 p-6 mb-8">
-              <h2 className="text-xl font-industrial text-yellow-500 mb-4">INVENTORY</h2>
+              <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
+                <h2 className="text-xl font-industrial text-yellow-500">INVENTORY</h2>
+                <div className="flex items-center gap-2">
+                  <label className="text-gray-400 text-sm">Product:</label>
+                  <select
+                    value={stockProductId}
+                    onChange={(e) => setStockProductId(e.target.value)}
+                    className="bg-gray-800 border border-gray-600 text-white px-3 py-1.5 text-sm focus:border-yellow-500 focus:outline-none"
+                  >
+                    {Object.entries(PRODUCT_PRICING).map(([pid, pricing]) => (
+                      <option key={pid} value={pid}>{pricing.name}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
               <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6">
                 {/* Current Stock Display */}
                 <div className="text-center">
@@ -1115,6 +1148,19 @@ ${addr.country}`
                     <option value="stripe">Stripe link (incurs 2.9% + $0.30 fee)</option>
                   </select>
                 </div>
+              </div>
+
+              <div>
+                <label className="block text-gray-400 text-sm mb-1">Product *</label>
+                <select
+                  value={manualForm.productId}
+                  onChange={(e) => onManualProductChange(e.target.value)}
+                  className="w-full bg-gray-800 border border-gray-600 text-white px-3 py-2 focus:border-yellow-500 focus:outline-none"
+                >
+                  {Object.entries(PRODUCT_PRICING).map(([pid, pricing]) => (
+                    <option key={pid} value={pid}>{pricing.name}</option>
+                  ))}
+                </select>
               </div>
 
               <div className="grid grid-cols-2 gap-3">

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
-import { formatPrice } from '../../stores/cartStore'
+import { formatPrice, PRODUCT_PRICING } from '../../stores/cartStore'
 import { useInventory } from '../../hooks/useInventory'
 import { useProductShipments } from '../../hooks/useProductShipments'
 import { calcProfitStats } from '../../lib/costCalculations'
@@ -49,7 +49,12 @@ function AdminDashboardPage() {
   const [csvApplyResults, setCsvApplyResults] = useState(null)
   const [csvCheckedRows, setCsvCheckedRows] = useState(new Set())
 
-  const { stock, loading: stockLoading, refetch: refetchStock } = useInventory('1')
+  // Per-product inventory. Each entry mirrors the original single-product
+  // hook so adding a third product later is just one more line.
+  const productInventories = {
+    '1': useInventory('1'),
+    '2': useInventory('2'),
+  }
 
   useEffect(() => {
     checkAuth()
@@ -174,7 +179,7 @@ function AdminDashboardPage() {
     setNewShipmentCost('')
     setNewShipmentSupplier('')
     setSavingShipment(false)
-    refetchStock()
+    Object.values(productInventories).forEach(inv => inv.refetch())
   }
 
   const handleDeleteShipment = async (id) => {
@@ -394,16 +399,35 @@ function AdminDashboardPage() {
               </div>
 
               <div className="bg-gray-800/50 border border-gray-700 p-6">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-gray-400 text-sm">Stock Level</span>
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-gray-400 text-sm">Stock Levels</span>
                   <svg className="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
                   </svg>
                 </div>
-                <div className={`text-3xl font-industrial ${
-                  stockLoading ? 'text-gray-500' : stock === 0 ? 'text-red-400' : stock <= 20 ? 'text-yellow-400' : 'text-white'
-                }`}>{stockLoading ? '...' : stock ?? '--'}</div>
-                <Link to="/admin/orders" className="text-sm text-gray-400 hover:text-yellow-500 mt-2 inline-block">
+                <div className="space-y-2">
+                  {Object.entries(productInventories).map(([pid, inv]) => {
+                    const s = inv.stock
+                    const colorClass = inv.loading
+                      ? 'text-gray-500'
+                      : s === 0
+                      ? 'text-red-400'
+                      : s !== null && s <= 20
+                      ? 'text-yellow-400'
+                      : 'text-white'
+                    return (
+                      <div key={pid} className="flex items-baseline justify-between">
+                        <span className="text-xs text-gray-400 truncate pr-2">
+                          {PRODUCT_PRICING[pid]?.name || `Product ${pid}`}
+                        </span>
+                        <span className={`text-2xl font-industrial ${colorClass}`}>
+                          {inv.loading ? '...' : s ?? '--'}
+                        </span>
+                      </div>
+                    )
+                  })}
+                </div>
+                <Link to="/admin/orders" className="text-sm text-gray-400 hover:text-yellow-500 mt-3 inline-block">
                   Manage →
                 </Link>
               </div>

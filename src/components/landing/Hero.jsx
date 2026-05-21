@@ -31,7 +31,7 @@ function Hero() {
             </h1>
 
             <p className="text-lg text-gray-400 mb-8 max-w-xl mx-auto lg:mx-0 mt-4">
-              Keep the shaft secure. Purpose-built driveshaft suspension cable for heavy-duty towing, recovery, and transport operations.
+              Keep the shaft secure. Purpose-built driveshaft suspension cable for heavy-duty towing, recovery, and transport operations. Now in two coupler configurations — pick the one that fits your driveline geometry.
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">

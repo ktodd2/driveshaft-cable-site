@@ -9,9 +9,11 @@ import {
   selectHasBulkDiscount,
   selectShipping,
   selectOrderTotal,
+  selectVolumeSavings,
   formatPrice,
   PRICE_PER_UNIT,
   PRICING_TIERS,
+  PRODUCT_PRICING,
   getPriceForQuantity,
   MIN_ORDER_QUANTITY,
   FREE_SHIPPING_THRESHOLD,
@@ -29,6 +31,7 @@ function CartPage() {
   const hasBulkDiscount = useCartStore(selectHasBulkDiscount)
   const shipping = useCartStore(selectShipping)
   const orderTotal = useCartStore(selectOrderTotal)
+  const volumeSavings = useCartStore(selectVolumeSavings)
 
   const handleQuantityChange = (productId, delta) => {
     const item = items.find(i => i.productId === productId)
@@ -46,15 +49,26 @@ function CartPage() {
     }
   }
 
-  // Find the next pricing tier the user can unlock
+  // Find the closest next-tier unlock across all line items. With per-product
+  // tier qualification, the cart-wide "Unlock better pricing" hint becomes
+  // per-line — pick whichever line is closest to its own next tier.
   const getNextTier = () => {
-    const sortedTiers = [...PRICING_TIERS].sort((a, b) => a.min - b.min)
-    for (const tier of sortedTiers) {
-      if (totalItems < tier.min) {
-        return { unitsNeeded: tier.min - totalItems, price: tier.price }
+    let best = null
+    for (const item of items) {
+      const pricing = PRODUCT_PRICING[item.productId]
+      if (!pricing) continue
+      const sortedTiers = [...pricing.tiers].sort((a, b) => a.min - b.min)
+      for (const tier of sortedTiers) {
+        if (item.quantity < tier.min) {
+          const unitsNeeded = tier.min - item.quantity
+          if (!best || unitsNeeded < best.unitsNeeded) {
+            best = { unitsNeeded, price: tier.price, productName: item.name }
+          }
+          break
+        }
       }
     }
-    return null
+    return best
   }
   const nextTier = getNextTier()
 
@@ -127,7 +141,7 @@ function CartPage() {
                     <div>
                       <p className="text-white font-bold">Volume Discount Applied!</p>
                       <p className="text-gray-300 text-sm">
-                        You're getting {formatPrice(pricePerUnit)}/unit instead of {formatPrice(PRICE_PER_UNIT)}/unit
+                        You're saving {formatPrice(volumeSavings)} with bulk pricing.
                       </p>
                     </div>
                   </div>
@@ -144,7 +158,7 @@ function CartPage() {
                     <div>
                       <p className="text-white font-bold">Unlock Better Pricing!</p>
                       <p className="text-gray-300 text-sm">
-                        Add {nextTier.unitsNeeded} more unit{nextTier.unitsNeeded !== 1 ? 's' : ''} to get {formatPrice(nextTier.price)}/unit
+                        Add {nextTier.unitsNeeded} more {nextTier.productName} unit{nextTier.unitsNeeded !== 1 ? 's' : ''} to get {formatPrice(nextTier.price)}/unit
                       </p>
                     </div>
                   </div>
@@ -152,7 +166,11 @@ function CartPage() {
               )}
 
               <div className="space-y-4">
-                {items.map((item) => (
+                {items.map((item) => {
+                  const linePrice = getPriceForQuantity(item.productId, item.quantity)
+                  const basePrice = PRODUCT_PRICING[item.productId]?.basePrice ?? PRICE_PER_UNIT
+                  const lineHasDiscount = linePrice < basePrice
+                  return (
                   <div key={item.productId} className="bg-gray-800/50 border border-gray-700 p-4 sm:p-6">
                     <div className="flex gap-4 sm:gap-6">
                       {/* Product Image */}
@@ -172,7 +190,12 @@ function CartPage() {
                           {item.name}
                         </Link>
                         <p className="text-gray-400 text-sm mb-2">SKU: {item.sku}</p>
-                        <p className="text-yellow-500 text-sm mb-4">{formatPrice(pricePerUnit)}/unit</p>
+                        <p className={`text-sm mb-4 ${lineHasDiscount ? 'text-green-400' : 'text-yellow-500'}`}>
+                          {formatPrice(linePrice)}/unit
+                          {lineHasDiscount && (
+                            <span className="text-gray-500 line-through ml-2">{formatPrice(basePrice)}</span>
+                          )}
+                        </p>
 
                         <div className="flex flex-wrap items-center gap-4">
                           {/* Quantity */}
@@ -208,7 +231,7 @@ function CartPage() {
 
                           {/* Price */}
                           <div className="text-yellow-500 font-bold">
-                            {formatPrice(pricePerUnit * item.quantity)}
+                            {formatPrice(linePrice * item.quantity)}
                           </div>
 
                           {/* Remove */}
@@ -224,7 +247,8 @@ function CartPage() {
                       </div>
                     </div>
                   </div>
-                ))}
+                  )
+                })}
               </div>
 
               {/* Clear Cart */}
@@ -247,9 +271,20 @@ function CartPage() {
                 <h2 className="text-xl font-industrial text-yellow-500 mb-6">ORDER SUMMARY</h2>
 
                 <div className="space-y-4 mb-6">
-                  <div className="flex justify-between text-gray-400">
-                    <span>{totalItems} units × {formatPrice(pricePerUnit)}</span>
-                    <span className="text-white">{formatPrice(subtotal)}</span>
+                  <div className="text-gray-400 space-y-1">
+                    {items.map(item => {
+                      const linePrice = getPriceForQuantity(item.productId, item.quantity)
+                      return (
+                        <div key={item.productId} className="flex justify-between text-sm">
+                          <span>{item.quantity} × {item.name}</span>
+                          <span className="text-white">{formatPrice(linePrice * item.quantity)}</span>
+                        </div>
+                      )
+                    })}
+                    <div className="flex justify-between pt-2 border-t border-gray-700/50">
+                      <span>Subtotal</span>
+                      <span className="text-white">{formatPrice(subtotal)}</span>
+                    </div>
                   </div>
                   <div className="flex justify-between text-gray-400">
                     <span>Shipping</span>
@@ -266,7 +301,7 @@ function CartPage() {
                   {hasBulkDiscount && (
                     <div className="flex justify-between text-green-400 text-sm">
                       <span>Volume discount</span>
-                      <span>-{formatPrice((PRICE_PER_UNIT - pricePerUnit) * totalItems)}</span>
+                      <span>-{formatPrice(volumeSavings)}</span>
                     </div>
                   )}
                   <div className="border-t border-gray-700 pt-4 flex justify-between">
@@ -283,21 +318,32 @@ function CartPage() {
                   {meetsMinimum ? 'Proceed to Checkout' : `Add ${MIN_ORDER_QUANTITY - totalItems} More Units`}
                 </button>
 
-                {/* Pricing tiers */}
+                {/* Per-product pricing tiers */}
                 <div className="mt-6 pt-6 border-t border-gray-700">
-                  <p className="text-gray-400 text-sm mb-3">Volume Pricing:</p>
-                  <div className="space-y-2 text-sm">
-                    <div className={`flex justify-between ${totalItems < 50 && totalItems >= MIN_ORDER_QUANTITY ? 'text-yellow-500' : 'text-gray-500'}`}>
-                      <span>10-49 units</span>
-                      <span>{formatPrice(PRICE_PER_UNIT)}/ea</span>
-                    </div>
-                    {PRICING_TIERS.slice().reverse().map((tier, i) => (
-                      <div key={i} className={`flex justify-between ${pricePerUnit === tier.price ? 'text-green-400' : 'text-gray-500'}`}>
-                        <span>{tier.label} units</span>
-                        <span>{formatPrice(tier.price)}/ea</span>
+                  <p className="text-gray-400 text-sm mb-3">Volume Pricing (per product):</p>
+                  {Object.entries(PRODUCT_PRICING).map(([pid, pricing]) => {
+                    const cartItem = items.find(i => i.productId === pid)
+                    const activePrice = cartItem
+                      ? getPriceForQuantity(pid, cartItem.quantity)
+                      : null
+                    return (
+                      <div key={pid} className="mb-3 last:mb-0">
+                        <div className="text-gray-400 text-xs uppercase tracking-wider mb-1">{pricing.name}</div>
+                        <div className="space-y-1 text-sm">
+                          <div className={`flex justify-between ${activePrice === pricing.basePrice ? 'text-yellow-500' : 'text-gray-500'}`}>
+                            <span>10-49 units</span>
+                            <span>{formatPrice(pricing.basePrice)}/ea</span>
+                          </div>
+                          {pricing.tiers.slice().reverse().map((tier, i) => (
+                            <div key={i} className={`flex justify-between ${activePrice === tier.price ? 'text-green-400' : 'text-gray-500'}`}>
+                              <span>{tier.label} units</span>
+                              <span>{formatPrice(tier.price)}/ea</span>
+                            </div>
+                          ))}
+                        </div>
                       </div>
-                    ))}
-                  </div>
+                    )
+                  })}
                 </div>
 
                 {/* Loyalty Discount Note */}
