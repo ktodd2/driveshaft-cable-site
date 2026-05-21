@@ -90,6 +90,10 @@ function CheckoutPage() {
   const { items, clearCart } = useCartStore()
   const totalItems = useCartStore(selectTotalItems)
   const subtotal = useCartStore(selectSubtotal)
+  // Carried in from an abandoned-cart recovery link so we can auto-apply the
+  // 5% code without the customer typing it.
+  const recoveryDiscountCode = useCartStore(s => s.recoveryDiscountCode)
+  const recoveryEmail = useCartStore(s => s.recoveryEmail)
 
   const [formData, setFormData] = useState({
     email: '',
@@ -245,9 +249,12 @@ function CheckoutPage() {
     return () => clearTimeout(handle)
   }, [formData.email, items, subtotal, step])
 
-  const handleApplyCode = async () => {
-    const code = codeInput.trim().toUpperCase()
-    const email = formData.email.toLowerCase().trim()
+  // Validate + apply a discount code. Accepts explicit code/email so the
+  // abandoned-cart recovery flow can drive it programmatically; falls back to
+  // the manual input state when called from the Apply button.
+  const applyCode = async (rawCode, rawEmail) => {
+    const code = (rawCode ?? codeInput).trim().toUpperCase()
+    const email = (rawEmail ?? formData.email).toLowerCase().trim()
     setCodeError(null)
     if (!code) {
       setCodeError('Enter a code first.')
@@ -287,6 +294,8 @@ function CheckoutPage() {
     }
   }
 
+  const handleApplyCode = () => applyCode()
+
   // Check if email belongs to a returning customer
   const checkRepeatCustomer = async (email) => {
     if (!email || !email.includes('@')) return
@@ -312,6 +321,28 @@ function CheckoutPage() {
     const { name, value } = e.target
     setFormData(prev => ({ ...prev, [name]: value }))
   }
+
+  // Prefill the email from an abandoned-cart recovery link so the customer
+  // doesn't retype it — and so the recovery discount can validate immediately.
+  // Also kicks off the repeat-customer check.
+  useEffect(() => {
+    if (recoveryEmail && !formData.email) {
+      setFormData(prev => ({ ...prev, email: recoveryEmail }))
+      checkRepeatCustomer(recoveryEmail)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [recoveryEmail])
+
+  // Auto-apply the recovery discount once we have a code and a usable email,
+  // and nothing's applied yet. validate-discount-code still enforces validity
+  // and single-use, so a burnt/invalid code just no-ops here.
+  useEffect(() => {
+    const email = formData.email.toLowerCase().trim()
+    if (recoveryDiscountCode && !appliedCode && !validatingCode && email.includes('@')) {
+      applyCode(recoveryDiscountCode, email)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [recoveryDiscountCode, formData.email, appliedCode, validatingCode])
 
   const handleShippingSubmit = async (e) => {
     e.preventDefault()
@@ -751,6 +782,9 @@ function CheckoutPage() {
                     {appliedCode && (
                       <div className="flex justify-between items-center bg-green-500/10 border border-green-500/30 px-3 py-2">
                         <div>
+                          {recoveryDiscountCode === appliedCode && (
+                            <p className="text-green-400/90 text-xs mb-0.5">Welcome back — recovery discount applied automatically</p>
+                          )}
                           <p className="text-green-400 text-sm font-bold">{appliedCode} applied</p>
                           <p className="text-green-400/70 text-xs">{appliedCodePercentOff}% off</p>
                         </div>

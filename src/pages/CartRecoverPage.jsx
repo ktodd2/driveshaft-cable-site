@@ -31,8 +31,14 @@ function CartRecoverPage() {
       const row = data[0]
       const items = Array.isArray(row.items) ? row.items : []
 
-      // Reset the cart and load the abandoned items back.
-      useCartStore.setState({ items })
+      // Reset the cart, load the abandoned items back, and carry the recovery
+      // discount through so checkout auto-applies it. Code must match the one
+      // advertised in supabase/functions/send-abandoned-cart/index.ts.
+      useCartStore.setState({
+        items,
+        recoveryDiscountCode: 'COMEBACK5',
+        recoveryEmail: row.email || null,
+      })
       navigate('/cart', { replace: true })
     }
 

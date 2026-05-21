@@ -130,6 +130,11 @@ export const useCartStore = create(
     (set, get) => ({
       items: [],
       notification: null,
+      // Carried in from an abandoned-cart recovery link so checkout can
+      // auto-apply the 5% code without the customer typing it. Cleared on
+      // clearCart so a completed order doesn't leak the discount forward.
+      recoveryDiscountCode: null,
+      recoveryEmail: null,
       // Bumped every time loadProducts() successfully refreshes livePricing.
       // Components that want to re-render after a price edit can subscribe
       // to this field; pure cart-math reads from livePricing directly.
@@ -222,13 +227,17 @@ export const useCartStore = create(
         set({ items: get().items.filter(item => item.productId !== productId) })
       },
 
-      clearCart: () => set({ items: [] }),
+      clearCart: () => set({ items: [], recoveryDiscountCode: null, recoveryEmail: null }),
 
       clearNotification: () => set({ notification: null }),
     }),
     {
       name: 'ktodd-cart',
-      partialize: (state) => ({ items: state.items }), // Don't persist notification
+      partialize: (state) => ({
+        items: state.items,
+        recoveryDiscountCode: state.recoveryDiscountCode,
+        recoveryEmail: state.recoveryEmail,
+      }), // Don't persist notification
     }
   )
 )
