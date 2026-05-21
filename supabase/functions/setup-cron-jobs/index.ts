@@ -43,6 +43,12 @@ const CRON_JOBS: CronJob[] = [
     functionSlug: 'send-winback',
     description: 'Mondays at 14:00 UTC — 6-9 month win-back campaign',
   },
+  {
+    name: 'check-tracking-twice-daily',
+    schedule: '0 9,17 * * *',
+    functionSlug: 'check-tracking-status',
+    description: '9:00 + 17:00 UTC — poll EasyPost; auto-flip delivered orders + send delivery emails',
+  },
 ]
 
 serve(async (_req) => {

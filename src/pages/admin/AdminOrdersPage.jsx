@@ -483,6 +483,27 @@ ${addr.country}`
     })
   }
 
+  // EasyPost tracking status codes are snake_case ('out_for_delivery'); turn
+  // them into "Out For Delivery" for the admin UI.
+  const prettyTrackingStatus = (s) => {
+    if (!s) return ''
+    return s.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')
+  }
+
+  // Lightweight relative-time formatter for the "checked Nm ago" hint.
+  const formatRelative = (dateString) => {
+    if (!dateString) return ''
+    const diffMs = Date.now() - new Date(dateString).getTime()
+    if (diffMs < 0) return 'just now'
+    const mins = Math.floor(diffMs / 60000)
+    if (mins < 1)  return 'just now'
+    if (mins < 60) return `${mins}m ago`
+    const hours = Math.floor(mins / 60)
+    if (hours < 24) return `${hours}h ago`
+    const days = Math.floor(hours / 24)
+    return `${days}d ago`
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen bg-ktodd-dark flex items-center justify-center">
@@ -596,19 +617,27 @@ ${addr.country}`
                 </button>
               </div>
 
-              {/* Status Tabs — Confirmed is the default workflow; Pending is
-                  online-only abandoned checkouts; All shows everything. */}
+              {/* Status Tabs — Confirmed is the default working queue;
+                  Pending is online-only abandoned checkouts; Shipped is the
+                  in-transit queue (auto-flips to Delivered when EasyPost
+                  cron detects delivery); Delivered is past tense, badge
+                  styled neutral. All shows everything. */}
               {(() => {
-                const pendingCount = orders.filter(o => o.status === 'pending').length
+                const pendingCount   = orders.filter(o => o.status === 'pending').length
+                const shippedCount   = orders.filter(o => o.status === 'shipped').length
+                const deliveredCount = orders.filter(o => o.status === 'delivered').length
                 const tabs = [
                   { value: 'confirmed', label: 'Confirmed' },
-                  { value: 'pending',   label: 'Pending', badge: pendingCount },
+                  { value: 'pending',   label: 'Pending',   badge: pendingCount },
+                  { value: 'shipped',   label: 'Shipped',   badge: shippedCount, badgeMuted: true },
+                  { value: 'delivered', label: 'Delivered', badge: deliveredCount, badgeMuted: true },
                   { value: 'all',       label: 'All' },
                 ]
                 return (
                   <div className="flex items-center gap-2 flex-wrap">
                     {tabs.map(t => {
                       const isActive = statusFilter === t.value
+                      const mutedBadge = t.badgeMuted
                       return (
                         <button
                           key={t.value}
@@ -622,7 +651,11 @@ ${addr.country}`
                           {t.label}
                           {t.badge > 0 && (
                             <span className={`ml-2 inline-block px-2 py-0.5 text-xs rounded-full ${
-                              isActive ? 'bg-black/30 text-black' : 'bg-yellow-500 text-black'
+                              isActive
+                                ? 'bg-black/30 text-black'
+                                : mutedBadge
+                                ? 'bg-gray-600 text-gray-200'
+                                : 'bg-yellow-500 text-black'
                             }`}>
                               {t.badge}
                             </span>
@@ -959,6 +992,25 @@ ${addr.country}`
                                 Track
                               </a>
                             </div>
+                            {/* Auto-tracking status from the EasyPost cron */}
+                            {selectedOrder.tracking_status && (
+                              <div className="text-xs text-gray-400">
+                                Carrier status:{' '}
+                                <span className={`font-bold ${
+                                  selectedOrder.tracking_status === 'delivered' ? 'text-green-400' : 'text-gray-200'
+                                }`}>
+                                  {prettyTrackingStatus(selectedOrder.tracking_status)}
+                                </span>
+                                {selectedOrder.tracking_last_checked_at && (
+                                  <span className="text-gray-500"> · checked {formatRelative(selectedOrder.tracking_last_checked_at)}</span>
+                                )}
+                              </div>
+                            )}
+                            {selectedOrder.delivered_at && (
+                              <div className="text-green-400 text-sm">
+                                Delivered {formatDate(selectedOrder.delivered_at)}
+                              </div>
+                            )}
                             <button
                               onClick={() => {
                                 setTrackingNumber(selectedOrder.tracking_number)
