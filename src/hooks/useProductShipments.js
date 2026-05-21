@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
-import { calcWeightedAvgCost } from '../lib/costCalculations'
+import { calcWeightedAvgCost, calcWeightedAvgCostByProduct } from '../lib/costCalculations'
 
 export function useProductShipments() {
   const [shipments, setShipments] = useState([])
@@ -19,16 +19,28 @@ export function useProductShipments() {
 
   useEffect(() => { fetchShipments() }, [])
 
+  // Global weighted average across all products — kept for any caller that
+  // hasn't been refactored to use the per-product map yet.
   const avgCostPerUnit = calcWeightedAvgCost(shipments)
 
-  const addShipment = async ({ quantity, totalCostCents, supplierName, notes }) => {
+  // Per-product weighted averages: { '1': 200, '2': 220, ... }
+  const avgCostPerUnitByProduct = calcWeightedAvgCostByProduct(shipments)
+
+  const addShipment = async ({ productId, quantity, totalCostCents, supplierName, notes }) => {
+    if (!productId) return { error: new Error('productId is required for new shipments') }
     const { error } = await supabase
       .from('product_shipments')
-      .insert([{ quantity, total_cost_cents: totalCostCents, supplier_name: supplierName || null, notes: notes || null }])
+      .insert([{
+        product_id: productId,
+        quantity,
+        total_cost_cents: totalCostCents,
+        supplier_name: supplierName || null,
+        notes: notes || null,
+      }])
     if (!error) {
       await fetchShipments()
-      // Auto-increment inventory atomically
-      await supabase.rpc('increment_stock', { p_product_id: '1', p_quantity: quantity })
+      // Auto-increment inventory atomically for the shipment's product.
+      await supabase.rpc('increment_stock', { p_product_id: productId, p_quantity: quantity })
     }
     return { error }
   }
@@ -42,5 +54,13 @@ export function useProductShipments() {
     return { error }
   }
 
-  return { shipments, loading, avgCostPerUnit, addShipment, deleteShipment, refetch: fetchShipments }
+  return {
+    shipments,
+    loading,
+    avgCostPerUnit,
+    avgCostPerUnitByProduct,
+    addShipment,
+    deleteShipment,
+    refetch: fetchShipments,
+  }
 }

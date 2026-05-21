@@ -3,7 +3,11 @@ import { Link, useNavigate } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
 import { formatPrice } from '../../stores/cartStore'
 import { useProductShipments } from '../../hooks/useProductShipments'
-import { calcOrderProfit as calcOrderProfitShared } from '../../lib/costCalculations'
+import { useProducts } from '../../hooks/useProducts'
+import {
+  calcOrderProfit as calcOrderProfitShared,
+  calcPerProductStats,
+} from '../../lib/costCalculations'
 import Papa from 'papaparse'
 import {
   LineChart, Line, BarChart, Bar, PieChart, Pie, Cell,
@@ -58,7 +62,9 @@ function AdminAnalyticsPage() {
   const [dateRange, setDateRange] = useState('30d')
   const [customStart, setCustomStart] = useState('')
   const [customEnd, setCustomEnd] = useState('')
-  const { shipments, avgCostPerUnit, loading: shipmentsLoading } = useProductShipments()
+  const { shipments, avgCostPerUnit, avgCostPerUnitByProduct, loading: shipmentsLoading } = useProductShipments()
+  const { activeProducts, productsMap } = useProducts()
+  const [productFilter, setProductFilter] = useState('all')
   const [fallbackShipping, setFallbackShipping] = useState(
     () => parseInt(localStorage.getItem('ktodd-admin-shipping-fallback') || '0')
   )
@@ -100,7 +106,9 @@ function AdminAnalyticsPage() {
     localStorage.setItem('ktodd-admin-shipping-fallback', String(n))
   }
 
-  const getFilteredOrders = () => {
+  // Date-range filter only — independent of product filter so the per-product
+  // KPI strip can use the date-scoped orders without losing other products.
+  const getDateFilteredOrders = () => {
     const now = new Date()
     let startDate
     if (dateRange === '7d') startDate = new Date(now - 7 * 86400000)
@@ -114,8 +122,45 @@ function AdminAnalyticsPage() {
     return orders.filter(o => { const d = new Date(o.created_at); return d >= startDate && d <= endDate })
   }
 
+  // Reshape an order so it represents ONLY the selected product's contribution.
+  // Revenue, shipping, and Stripe fees split proportionally by line value so a
+  // 50 Cable + 20 Cable+ order contributes its Cable+ slice to Cable+ analytics
+  // instead of showing the full order total under both products.
+  const scopeOrderToProduct = (order, productId) => {
+    const items = order.items || []
+    const lineValues = items.map(i => (i.price || 0) * (i.quantity || 0))
+    const totalLineValue = lineValues.reduce((a, b) => a + b, 0)
+    if (totalLineValue === 0) return null
+    const matchIdx = items.findIndex(i => i.productId === productId)
+    if (matchIdx === -1) return null
+    const share = lineValues[matchIdx] / totalLineValue
+    const scopedTotal = Math.round((order.total_cents || 0) * share)
+    const scopedShipping = order.actual_shipping_cost_cents != null
+      ? Math.round(order.actual_shipping_cost_cents * share)
+      : null
+    return {
+      ...order,
+      items: [items[matchIdx]],
+      total_cents: scopedTotal,
+      actual_shipping_cost_cents: scopedShipping,
+      // Mark so downstream code knows this is a synthetic scoped order.
+      _scopedToProduct: productId,
+    }
+  }
+
+  // Orders filtered by date AND product. When productFilter is 'all' this is
+  // identical to getDateFilteredOrders; otherwise each surviving order is
+  // narrowed to its slice for the selected product.
+  const getFilteredOrders = () => {
+    const dateScoped = getDateFilteredOrders()
+    if (productFilter === 'all') return dateScoped
+    return dateScoped
+      .map(o => scopeOrderToProduct(o, productFilter))
+      .filter(Boolean)
+  }
+
   const calcOrderProfit = (order) => {
-    return calcOrderProfitShared(order, avgCostPerUnit, fallbackShipping)
+    return calcOrderProfitShared(order, avgCostPerUnitByProduct, fallbackShipping)
   }
 
   const getPeriodKey = (date) => {
@@ -542,8 +587,8 @@ function AdminAnalyticsPage() {
               </div>
             </div>
 
-            {/* Date Range Picker */}
-            <div className="flex flex-wrap items-center gap-2 mb-8">
+            {/* Date Range + Product Filter */}
+            <div className="flex flex-wrap items-center gap-2 mb-4">
               {['7d', '30d', '90d', 'year', 'all'].map(range => (
                 <button key={range} onClick={() => setDateRange(range)}
                   className={`px-4 py-2 text-sm font-bold rounded ${dateRange === range ? 'bg-yellow-500 text-black' : 'bg-gray-800 text-gray-400 hover:text-white'}`}>
@@ -558,9 +603,72 @@ function AdminAnalyticsPage() {
                   className="bg-gray-800 border border-gray-700 text-white px-3 py-2 text-sm rounded" />
               </div>
             </div>
+            <div className="flex flex-wrap items-center gap-2 mb-8">
+              <span className="text-gray-400 text-sm">Product:</span>
+              <select
+                value={productFilter}
+                onChange={e => setProductFilter(e.target.value)}
+                className="bg-gray-800 border border-gray-700 text-white px-3 py-2 text-sm rounded focus:border-yellow-500 focus:outline-none"
+              >
+                <option value="all">All products (combined)</option>
+                {activeProducts.map(p => (
+                  <option key={p.id} value={p.id}>{p.name}</option>
+                ))}
+              </select>
+              {productFilter !== 'all' && (
+                <span className="text-yellow-500/80 text-xs ml-2">
+                  Charts & summary scoped to {productsMap[productFilter]?.name}
+                </span>
+              )}
+            </div>
 
             {/* Exportable Report Content */}
             <div ref={reportRef} style={{ backgroundColor: '#1A1A1A' }}>
+
+            {/* Per-Product Breakdown — uses date-filtered orders but ignores
+                the product filter so the side-by-side comparison is always
+                visible. */}
+            {activeProducts.length > 0 && (() => {
+              const perProductStats = calcPerProductStats(
+                getDateFilteredOrders(),
+                avgCostPerUnitByProduct,
+                fallbackShipping
+              )
+              return (
+                <div className="mb-8">
+                  <h3 className="text-gray-400 text-xs uppercase tracking-wider mb-3">By Product</h3>
+                  <div className={`grid gap-3 ${activeProducts.length >= 3 ? 'grid-cols-2 lg:grid-cols-3' : 'grid-cols-1 sm:grid-cols-2'}`}>
+                    {activeProducts.map(p => {
+                      const s = perProductStats[p.id] || { revenue: 0, units: 0, profit: 0, margin: 0 }
+                      return (
+                        <div key={p.id} className="bg-gray-800/30 border border-gray-700 p-4 rounded">
+                          <div className="text-yellow-500 font-bold text-sm mb-2 truncate">{p.name}</div>
+                          <div className="grid grid-cols-3 gap-2 text-center">
+                            <div>
+                              <div className="text-gray-500 text-xs">Revenue</div>
+                              <div className="text-green-400 font-industrial text-lg">{formatPrice(s.revenue)}</div>
+                            </div>
+                            <div>
+                              <div className="text-gray-500 text-xs">Profit</div>
+                              <div className={`font-industrial text-lg ${s.profit >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                                {formatPrice(s.profit)}
+                              </div>
+                            </div>
+                            <div>
+                              <div className="text-gray-500 text-xs">Units</div>
+                              <div className="text-white font-industrial text-lg">{s.units}</div>
+                            </div>
+                          </div>
+                          <div className="text-center text-xs text-gray-500 mt-2">
+                            Margin {s.margin.toFixed(1)}%
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </div>
+                </div>
+              )
+            })()}
 
             {/* Summary Cards */}
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">

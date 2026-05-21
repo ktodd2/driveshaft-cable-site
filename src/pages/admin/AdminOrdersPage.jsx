@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
 import { formatPrice, getPriceForQuantity, MIN_ORDER_QUANTITY, PRODUCT_PRICING } from '../../stores/cartStore'
 import { useInventory, updateStock } from '../../hooks/useInventory'
+import { useProducts } from '../../hooks/useProducts'
 
 function getEmptyManualForm() {
   // datetime-local needs YYYY-MM-DDTHH:MM in local time, not ISO/UTC.
@@ -43,6 +44,7 @@ function AdminOrdersPage() {
   const [trackingEmailStatus, setTrackingEmailStatus] = useState(null) // 'sent', 'failed', null
 
   // Inventory state — admin picks which product to manage stock for.
+  const { activeProducts, productsMap } = useProducts()
   const [stockProductId, setStockProductId] = useState('1')
   const { stock, loading: stockLoading, refetch: refetchStock } = useInventory(stockProductId)
   const [stockInput, setStockInput] = useState('')
@@ -170,7 +172,7 @@ function AdminOrdersPage() {
           body: JSON.stringify({
             items: [{
               productId: manualForm.productId,
-              name: PRODUCT_PRICING[manualForm.productId]?.name || 'Driveshaft Cable',
+              name: productsMap[manualForm.productId]?.name || PRODUCT_PRICING[manualForm.productId]?.name || 'Product',
               quantity: qty,
             }],
             shippingAddress: address,
@@ -210,7 +212,7 @@ function AdminOrdersPage() {
     if (totalCents < 0) return setManualError('Discount cannot exceed subtotal + shipping + tax.')
 
     const saleDateIso = new Date(manualForm.saleDate).toISOString()
-    const productName = PRODUCT_PRICING[manualForm.productId]?.name || 'Driveshaft Cable'
+    const productName = productsMap[manualForm.productId]?.name || PRODUCT_PRICING[manualForm.productId]?.name || 'Product'
     const items = [{ productId: manualForm.productId, name: productName, quantity: qty, price: unitPrice }]
     const shippingAddress = manualForm.hasShipping
       ? {
@@ -624,8 +626,8 @@ ${addr.country}`
                     onChange={(e) => setStockProductId(e.target.value)}
                     className="bg-gray-800 border border-gray-600 text-white px-3 py-1.5 text-sm focus:border-yellow-500 focus:outline-none"
                   >
-                    {Object.entries(PRODUCT_PRICING).map(([pid, pricing]) => (
-                      <option key={pid} value={pid}>{pricing.name}</option>
+                    {activeProducts.map(p => (
+                      <option key={p.id} value={p.id}>{p.name}</option>
                     ))}
                   </select>
                 </div>
@@ -1157,8 +1159,8 @@ ${addr.country}`
                   onChange={(e) => onManualProductChange(e.target.value)}
                   className="w-full bg-gray-800 border border-gray-600 text-white px-3 py-2 focus:border-yellow-500 focus:outline-none"
                 >
-                  {Object.entries(PRODUCT_PRICING).map(([pid, pricing]) => (
-                    <option key={pid} value={pid}>{pricing.name}</option>
+                  {activeProducts.map(p => (
+                    <option key={p.id} value={p.id}>{p.name}</option>
                   ))}
                 </select>
               </div>

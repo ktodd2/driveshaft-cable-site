@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
-import { formatPrice, PRODUCT_PRICING } from '../../stores/cartStore'
-import { useInventory } from '../../hooks/useInventory'
+import { formatPrice } from '../../stores/cartStore'
+import { useAllInventory } from '../../hooks/useInventory'
 import { useProductShipments } from '../../hooks/useProductShipments'
+import { useProducts } from '../../hooks/useProducts'
 import { calcProfitStats } from '../../lib/costCalculations'
 import { parsePirateShipFile } from '../../lib/csvParser'
 
@@ -27,13 +28,33 @@ function AdminDashboardPage() {
     recentTestimonials: [],
   })
 
+  // Product catalog + inventory (used by every product-aware card on this page)
+  const { activeProducts, productsMap, loading: productsLoading } = useProducts()
+  const { inventoryMap, loading: inventoryLoading, refetch: refetchInventory } = useAllInventory()
+
   // Product shipments (variable cost)
-  const { shipments, loading: shipmentsLoading, avgCostPerUnit, addShipment, deleteShipment } = useProductShipments()
+  const {
+    shipments,
+    loading: shipmentsLoading,
+    avgCostPerUnit,
+    avgCostPerUnitByProduct,
+    addShipment,
+    deleteShipment,
+  } = useProductShipments()
+  const [newShipmentProductId, setNewShipmentProductId] = useState('')
   const [newShipmentQty, setNewShipmentQty] = useState('')
   const [newShipmentCost, setNewShipmentCost] = useState('')
   const [newShipmentSupplier, setNewShipmentSupplier] = useState('')
   const [savingShipment, setSavingShipment] = useState(false)
   const [deletingId, setDeletingId] = useState(null)
+
+  // Default the shipment form's product picker to the first active product
+  // once products load. This avoids submitting with a blank productId.
+  useEffect(() => {
+    if (!newShipmentProductId && activeProducts.length > 0) {
+      setNewShipmentProductId(activeProducts[0].id)
+    }
+  }, [activeProducts, newShipmentProductId])
 
   // Fallback shipping cost for orders without actual_shipping_cost_cents
   const [fallbackShipping, setFallbackShipping] = useState(
@@ -49,12 +70,8 @@ function AdminDashboardPage() {
   const [csvApplyResults, setCsvApplyResults] = useState(null)
   const [csvCheckedRows, setCsvCheckedRows] = useState(new Set())
 
-  // Per-product inventory. Each entry mirrors the original single-product
-  // hook so adding a third product later is just one more line.
-  const productInventories = {
-    '1': useInventory('1'),
-    '2': useInventory('2'),
-  }
+  // (Per-product inventory now comes from useAllInventory above so any number
+  // of products from the DB are supported without re-rendering hook order.)
 
   useEffect(() => {
     checkAuth()
@@ -169,8 +186,10 @@ function AdminDashboardPage() {
     const qty = parseInt(newShipmentQty)
     const costDollars = parseFloat(newShipmentCost)
     if (!qty || qty <= 0 || isNaN(costDollars) || costDollars <= 0) return
+    if (!newShipmentProductId) return
     setSavingShipment(true)
     await addShipment({
+      productId: newShipmentProductId,
       quantity: qty,
       totalCostCents: Math.round(costDollars * 100),
       supplierName: newShipmentSupplier.trim() || null
@@ -179,7 +198,7 @@ function AdminDashboardPage() {
     setNewShipmentCost('')
     setNewShipmentSupplier('')
     setSavingShipment(false)
-    Object.values(productInventories).forEach(inv => inv.refetch())
+    refetchInventory()
   }
 
   const handleDeleteShipment = async (id) => {
@@ -329,6 +348,12 @@ function AdminDashboardPage() {
               </svg>
               Analytics
             </Link>
+            <Link to="/admin/products" className="flex items-center gap-3 px-4 py-3 text-gray-400 hover:text-white hover:bg-gray-800 rounded transition-colors">
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+              </svg>
+              Products
+            </Link>
             <Link to="/admin/newsletter" className="flex items-center gap-3 px-4 py-3 text-gray-400 hover:text-white hover:bg-gray-800 rounded transition-colors">
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
@@ -406,9 +431,10 @@ function AdminDashboardPage() {
                   </svg>
                 </div>
                 <div className="space-y-2">
-                  {Object.entries(productInventories).map(([pid, inv]) => {
-                    const s = inv.stock
-                    const colorClass = inv.loading
+                  {activeProducts.map(p => {
+                    const inv = inventoryMap[p.id]
+                    const s = inv?.stock ?? null
+                    const colorClass = inventoryLoading
                       ? 'text-gray-500'
                       : s === 0
                       ? 'text-red-400'
@@ -416,16 +442,19 @@ function AdminDashboardPage() {
                       ? 'text-yellow-400'
                       : 'text-white'
                     return (
-                      <div key={pid} className="flex items-baseline justify-between">
+                      <div key={p.id} className="flex items-baseline justify-between">
                         <span className="text-xs text-gray-400 truncate pr-2">
-                          {PRODUCT_PRICING[pid]?.name || `Product ${pid}`}
+                          {p.name}
                         </span>
                         <span className={`text-2xl font-industrial ${colorClass}`}>
-                          {inv.loading ? '...' : s ?? '--'}
+                          {inventoryLoading ? '...' : s ?? '--'}
                         </span>
                       </div>
                     )
                   })}
+                  {!productsLoading && activeProducts.length === 0 && (
+                    <div className="text-xs text-gray-500">No products yet.</div>
+                  )}
                 </div>
                 <Link to="/admin/orders" className="text-sm text-gray-400 hover:text-yellow-500 mt-3 inline-block">
                   Manage →
@@ -458,13 +487,27 @@ function AdminDashboardPage() {
 
             {/* Product Shipments */}
             <div className="bg-gray-800/50 border border-gray-700 p-6 mb-8">
-              <div className="flex items-center justify-between mb-4">
+              <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-4">
                 <h2 className="text-xl font-industrial text-yellow-500">PRODUCT SHIPMENTS</h2>
                 <div className="text-right">
-                  <div className="text-gray-400 text-xs">Weighted Avg Cost/Unit</div>
-                  <div className={`text-2xl font-industrial ${avgCostPerUnit > 0 ? 'text-white' : 'text-gray-500'}`}>
-                    {avgCostPerUnit > 0 ? formatPrice(avgCostPerUnit) : '--'}
-                  </div>
+                  <div className="text-gray-400 text-xs mb-1">Weighted Avg Cost/Unit</div>
+                  {activeProducts.length === 0 ? (
+                    <div className="text-2xl font-industrial text-gray-500">--</div>
+                  ) : (
+                    <div className="space-y-1">
+                      {activeProducts.map(p => {
+                        const c = avgCostPerUnitByProduct[p.id]
+                        return (
+                          <div key={p.id} className="flex items-baseline justify-end gap-3 text-sm">
+                            <span className="text-gray-400">{p.name}</span>
+                            <span className={`font-industrial text-lg ${c > 0 ? 'text-white' : 'text-gray-500'}`}>
+                              {c > 0 ? formatPrice(c) : '--'}
+                            </span>
+                          </div>
+                        )
+                      })}
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -481,6 +524,7 @@ function AdminDashboardPage() {
                     <thead>
                       <tr className="text-gray-400 text-xs uppercase border-b border-gray-700">
                         <th className="text-left py-2 pr-4">Date</th>
+                        <th className="text-left py-2 px-4">Product</th>
                         <th className="text-right py-2 px-4">Qty</th>
                         <th className="text-right py-2 px-4">Total Cost</th>
                         <th className="text-right py-2 px-4">Cost/Unit</th>
@@ -493,6 +537,9 @@ function AdminDashboardPage() {
                         <tr key={s.id} className="border-b border-gray-700/50">
                           <td className="py-2 pr-4 text-gray-300">
                             {new Date(s.received_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                          </td>
+                          <td className="py-2 px-4 text-gray-300">
+                            {productsMap[s.product_id]?.name || `Product ${s.product_id}`}
                           </td>
                           <td className="py-2 px-4 text-right text-white font-bold">{s.quantity}</td>
                           <td className="py-2 px-4 text-right text-white">{formatPrice(s.total_cost_cents)}</td>
@@ -516,6 +563,19 @@ function AdminDashboardPage() {
 
               {/* Add Shipment Form */}
               <div className="flex flex-wrap items-end gap-3 pt-2 border-t border-gray-700">
+                <div>
+                  <label className="text-gray-400 text-xs block mb-1">Product</label>
+                  <select
+                    value={newShipmentProductId}
+                    onChange={e => setNewShipmentProductId(e.target.value)}
+                    className="bg-gray-900 border border-gray-700 text-white px-3 py-2 text-sm rounded focus:border-yellow-500 focus:outline-none"
+                  >
+                    {activeProducts.length === 0 && <option value="">No products</option>}
+                    {activeProducts.map(p => (
+                      <option key={p.id} value={p.id}>{p.name}</option>
+                    ))}
+                  </select>
+                </div>
                 <div>
                   <label className="text-gray-400 text-xs block mb-1">Quantity</label>
                   <input
@@ -551,7 +611,7 @@ function AdminDashboardPage() {
                 </div>
                 <button
                   onClick={handleAddShipment}
-                  disabled={savingShipment || !newShipmentQty || !newShipmentCost}
+                  disabled={savingShipment || !newShipmentQty || !newShipmentCost || !newShipmentProductId}
                   className="bg-yellow-500 hover:bg-yellow-400 text-black px-4 py-2 text-sm font-bold transition-colors disabled:opacity-50 disabled:cursor-not-allowed rounded"
                 >
                   {savingShipment ? 'Adding...' : 'Add Shipment'}

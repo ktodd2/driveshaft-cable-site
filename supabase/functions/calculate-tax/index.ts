@@ -11,7 +11,12 @@
 
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import Stripe from 'https://esm.sh/stripe@13.10.0?target=deno'
-import { getPriceForQuantity, computeShipping } from '../_shared/pricing.ts'
+import {
+  computeShipping,
+  createAdminClient,
+  getPriceForQuantityFromDb,
+  makeDbCache,
+} from '../_shared/pricing.ts'
 
 const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY') as string, {
   apiVersion: '2023-10-16',
@@ -81,13 +86,22 @@ serve(async (req) => {
     }
 
     // Server-side price computation. Volume tier qualifies per-product (each
-    // line item's tier is based on its own quantity), so each item gets its
-    // own unit price from PRODUCT_PRICING.
-    const linePrices = items.map((item) => ({
+    // line item's tier is based on its own quantity). Prices come from the
+    // `products` table so admin edits via /admin/products take effect for
+    // tax calculations immediately; falls back to the hardcoded constant in
+    // pricing.ts if a row can't be resolved.
+    const adminClient = createAdminClient()
+    const dbCache = makeDbCache()
+    const linePrices = await Promise.all(items.map(async (item) => ({
       productId: item.productId,
       quantity: item.quantity || 0,
-      unitPrice: getPriceForQuantity(item.productId, item.quantity || 0),
-    }))
+      unitPrice: await getPriceForQuantityFromDb(
+        item.productId,
+        item.quantity || 0,
+        adminClient,
+        dbCache,
+      ),
+    })))
     const subtotalCents = linePrices.reduce(
       (sum, l) => sum + l.unitPrice * l.quantity,
       0

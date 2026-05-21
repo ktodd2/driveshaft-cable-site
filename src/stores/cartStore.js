@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
+import { supabase } from '../lib/supabase'
 
 // Pricing constants — server-side copy lives at supabase/functions/_shared/pricing.ts
 // and MUST be updated in the same commit if any of these change.
@@ -16,6 +17,12 @@ export const REPEAT_CUSTOMER_DISCOUNT = 0.10 // 10% off subtotal
 // Volume tier qualification is PER-PRODUCT (each line item's tier is based on
 // its own quantity, not the cart total). All tiers MUST be ordered highest
 // threshold first so the linear scan picks the best applicable tier.
+//
+// PRODUCT_PRICING is the *initial fallback* — used at first paint and if the
+// DB query fails. The cart store's `loadProducts()` action refreshes the
+// in-memory map from the `products` table at app mount; admin edits via
+// /admin/products call loadProducts() again so changes propagate without
+// reloading the page.
 export const PRODUCT_PRICING = {
   '1': {
     name: 'Driveshaft Cable',
@@ -37,21 +44,65 @@ export const PRODUCT_PRICING = {
   },
 }
 
+// Decode the JSONB tiers stored in the DB into the in-memory tier shape the
+// rest of the app expects. The DB stores `[{ min, price }, ...]`; the runtime
+// shape adds a human-readable `label` for tier-table displays.
+function makeTierLabel(min, allMins) {
+  // Sort the tier minimums so we can compute "min-(next-1)" ranges. The
+  // top tier is open-ended ("200+").
+  const sorted = [...allMins].sort((a, b) => a - b)
+  const idx = sorted.indexOf(min)
+  if (idx === sorted.length - 1) return `${min}+`
+  return `${min}-${sorted[idx + 1] - 1}`
+}
+
+function normalizeDbProduct(row) {
+  const rawTiers = Array.isArray(row.tiers) ? row.tiers : []
+  // Sort descending so getPriceForQuantity's first-match scan picks the
+  // highest applicable tier.
+  const sortedDesc = [...rawTiers].sort((a, b) => b.min - a.min)
+  const allMins = rawTiers.map(t => t.min)
+  const tiers = sortedDesc.map(t => ({
+    min: t.min,
+    price: t.price,
+    label: makeTierLabel(t.min, allMins),
+  }))
+  return {
+    name: row.name,
+    basePrice: row.base_price_cents,
+    tiers,
+  }
+}
+
 // Back-compat aliases — existing pages still display tier tables using these
 // constants. They mirror product '1' (the original Driveshaft Cable) so the
 // existing "starting at $3.45" copy stays accurate.
 export const PRICE_PER_UNIT = PRODUCT_PRICING['1'].basePrice
 export const PRICING_TIERS = PRODUCT_PRICING['1'].tiers
 
+// `livePricing` is the runtime source of truth for pricing — it starts as a
+// clone of PRODUCT_PRICING (so first-paint and offline both work) and gets
+// replaced by `loadProducts()` once the DB query resolves. We keep it as a
+// module-scoped variable instead of zustand state because pricing reads happen
+// in plain functions (selectors, cart math) that don't subscribe to the store.
+let livePricing = { ...PRODUCT_PRICING }
+
 // Get price per unit for a given (productId, qty). Falls back to product '1'
 // pricing if the productId is unknown — defensive default so a stale cart from
 // a previous deploy still renders sensibly.
 export function getPriceForQuantity(productId, qty) {
-  const pricing = PRODUCT_PRICING[productId] || PRODUCT_PRICING['1']
+  const pricing = livePricing[productId] || livePricing['1'] || PRODUCT_PRICING['1']
   for (const tier of pricing.tiers) {
     if (qty >= tier.min) return tier.price
   }
   return pricing.basePrice
+}
+
+// Read-only accessor for components that want the current pricing snapshot
+// without re-rendering. For React subscriptions, use the zustand store's
+// `productsLoadedAt` field as a re-render trigger.
+export function getLivePricing() {
+  return livePricing
 }
 
 // Convenience: line total for a single cart item.
@@ -64,6 +115,32 @@ export const useCartStore = create(
     (set, get) => ({
       items: [],
       notification: null,
+      // Bumped every time loadProducts() successfully refreshes livePricing.
+      // Components that want to re-render after a price edit can subscribe
+      // to this field; pure cart-math reads from livePricing directly.
+      productsLoadedAt: 0,
+
+      loadProducts: async () => {
+        try {
+          const { data, error } = await supabase
+            .from('products')
+            .select('id, name, base_price_cents, tiers, is_active')
+            .eq('is_active', true)
+          if (error) {
+            console.warn('cartStore.loadProducts: falling back to hardcoded pricing', error)
+            return
+          }
+          if (!data || data.length === 0) return
+          const next = {}
+          for (const row of data) {
+            next[row.id] = normalizeDbProduct(row)
+          }
+          livePricing = next
+          set({ productsLoadedAt: Date.now() })
+        } catch (err) {
+          console.warn('cartStore.loadProducts: unexpected error', err)
+        }
+      },
 
       addItem: (product, quantity = 1, options = {}) => {
         const items = get().items
@@ -146,7 +223,7 @@ export const selectPricePerUnit = (state) => {
 // base prices. Used for the "Volume Discount Applied!" line.
 export const selectVolumeSavings = (state) =>
   state.items.reduce((sum, item) => {
-    const basePrice = PRODUCT_PRICING[item.productId]?.basePrice ?? PRICE_PER_UNIT
+    const basePrice = livePricing[item.productId]?.basePrice ?? PRICE_PER_UNIT
     const tierPrice = getPriceForQuantity(item.productId, item.quantity)
     return sum + (basePrice - tierPrice) * item.quantity
   }, 0)
@@ -163,7 +240,7 @@ export const selectMeetsMinimum = (state) => {
 // price). Used to show the "Volume Discount Applied!" banner.
 export const selectHasBulkDiscount = (state) =>
   state.items.some(item => {
-    const basePrice = PRODUCT_PRICING[item.productId]?.basePrice ?? PRICE_PER_UNIT
+    const basePrice = livePricing[item.productId]?.basePrice ?? PRICE_PER_UNIT
     return getPriceForQuantity(item.productId, item.quantity) < basePrice
   })
 
