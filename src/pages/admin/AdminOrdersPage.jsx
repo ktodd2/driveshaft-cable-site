@@ -500,6 +500,15 @@ ${addr.country}`
     })
   }
 
+  // Color line items by product so packing is unambiguous: yellow = the
+  // original Driveshaft Cable (gold coupler), red = Driveshaft Cable + (red
+  // reversed coupler). Anything else stays neutral but legible.
+  const productTextColor = (productId) => {
+    if (productId === '1') return 'text-yellow-400'
+    if (productId === '2') return 'text-red-400'
+    return 'text-gray-100'
+  }
+
   // EasyPost tracking status codes are snake_case ('out_for_delivery'); turn
   // them into "Out For Delivery" for the admin UI.
   const prettyTrackingStatus = (s) => {
@@ -953,7 +962,7 @@ ${addr.country}`
                         <h3 className="text-sm font-bold text-gray-400 mb-3">ITEMS</h3>
                         {selectedOrder.items?.map((item, index) => (
                           <div key={index} className="flex justify-between text-sm py-2">
-                            <span className="text-gray-300">{item.quantity}x {item.name}</span>
+                            <span className={`font-bold ${productTextColor(item.productId)}`}>{item.quantity}x {item.name}</span>
                             <span className="text-white">{formatPrice(item.price * item.quantity)}</span>
                           </div>
                         ))}
