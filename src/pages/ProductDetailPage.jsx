@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
-import { useCartStore, formatPrice, getPriceForQuantity, PRODUCT_PRICING, MIN_ORDER_QUANTITY } from '../stores/cartStore'
+import { useCartStore, formatPrice, getPriceForQuantity, PRODUCT_PRICING, MIN_ORDER_QUANTITY, ORDER_QUANTITY_STEP } from '../stores/cartStore'
 import { useInventory } from '../hooks/useInventory'
 import InventoryProgressBar from '../components/common/InventoryProgressBar'
 import SEOHead from '../components/common/SEOHead'
@@ -186,6 +186,10 @@ function ProductDetailPage() {
   const { slug } = useParams()
   const navigate = useNavigate()
   const [quantity, setQuantity] = useState(MIN_ORDER_QUANTITY)
+  // Separate string state for the input field so the user can clear it and
+  // type freely without each keystroke snapping back to the min. The
+  // committed `quantity` only changes on blur (and on +10/-10 clicks).
+  const [quantityDraft, setQuantityDraft] = useState(String(MIN_ORDER_QUANTITY))
   const [selectedImage, setSelectedImage] = useState(0)
   const addItem = useCartStore((state) => state.addItem)
 
@@ -201,6 +205,11 @@ function ProductDetailPage() {
   useEffect(() => {
     if (isLowStock) setQuantity(stock)
   }, [stock, stockLoading])
+
+  // Keep the draft in sync when buttons (or low-stock useEffect) move
+  // quantity programmatically. Doesn't run while the user is typing because
+  // setQuantity isn't called during keystrokes.
+  useEffect(() => { setQuantityDraft(String(quantity)) }, [quantity])
 
   if (!product) {
     return (
@@ -349,30 +358,40 @@ function ProductDetailPage() {
 
               {/* Quantity Selector */}
               <div className="mb-6">
-                <label className="block text-gray-400 text-sm mb-2">Quantity (min. {effectiveMin})</label>
+                <label className="block text-gray-400 text-sm mb-2">Quantity (min. {effectiveMin}, in increments of {ORDER_QUANTITY_STEP})</label>
                 <div className="flex items-center gap-4">
                   <div className="flex items-center border border-gray-700">
                     <button
-                      onClick={() => handleQuantityChange(-1)}
-                      className="px-4 py-2 text-white hover:bg-gray-700 transition-colors"
+                      onClick={() => handleQuantityChange(-ORDER_QUANTITY_STEP)}
+                      className="px-3 py-2 text-white hover:bg-gray-700 transition-colors text-sm font-bold"
                     >
-                      -
+                      -{ORDER_QUANTITY_STEP}
                     </button>
                     <input
                       type="number"
-                      value={quantity}
+                      value={quantityDraft}
                       min={effectiveMin}
                       max={stock ?? undefined}
-                      onChange={(e) => {
-                        setQuantity(Math.min(maxQty, Math.max(effectiveMin, parseInt(e.target.value) || effectiveMin)))
+                      step={ORDER_QUANTITY_STEP}
+                      onChange={(e) => setQuantityDraft(e.target.value)}
+                      onBlur={() => {
+                        const raw = parseInt(quantityDraft, 10)
+                        // Low-stock items skip the rounding so the customer
+                        // can buy exactly what's left (e.g. 5).
+                        const rounded = isLowStock
+                          ? (isNaN(raw) ? effectiveMin : raw)
+                          : Math.round((isNaN(raw) ? effectiveMin : raw) / ORDER_QUANTITY_STEP) * ORDER_QUANTITY_STEP
+                        const clamped = Math.min(maxQty, Math.max(effectiveMin, rounded))
+                        setQuantity(clamped)
+                        setQuantityDraft(String(clamped))
                       }}
-                      className="w-16 text-center bg-transparent text-white border-x border-gray-700 py-2"
+                      className="w-20 text-center bg-transparent text-white border-x border-gray-700 py-2"
                     />
                     <button
-                      onClick={() => handleQuantityChange(1)}
-                      className="px-4 py-2 text-white hover:bg-gray-700 transition-colors"
+                      onClick={() => handleQuantityChange(ORDER_QUANTITY_STEP)}
+                      className="px-3 py-2 text-white hover:bg-gray-700 transition-colors text-sm font-bold"
                     >
-                      +
+                      +{ORDER_QUANTITY_STEP}
                     </button>
                   </div>
                   <span className="text-gray-400">

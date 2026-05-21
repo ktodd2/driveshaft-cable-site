@@ -6,6 +6,21 @@ import { supabase } from '../lib/supabase'
 // and MUST be updated in the same commit if any of these change.
 export const MIN_ORDER_QUANTITY = 10 // Minimum order is 10 units (total across cart)
 
+// All order quantities round to multiples of this number. We pack and ship
+// cables in 10-counts, so any odd quantity creates friction at fulfillment.
+export const ORDER_QUANTITY_STEP = 10
+
+// Normalize a typed/passed quantity to the order-step rule. The reducedMinimum
+// exception lets a customer buy the final partial pack of stock (e.g. 5
+// remaining when the shelf is otherwise empty) without being forced to a
+// multiple of 10 they can't actually receive.
+export function normalizeOrderQuantity(qty, opts = {}) {
+  const n = Math.max(0, Math.floor(qty || 0))
+  if (opts.reducedMinimum) return n
+  if (n < ORDER_QUANTITY_STEP) return ORDER_QUANTITY_STEP
+  return Math.round(n / ORDER_QUANTITY_STEP) * ORDER_QUANTITY_STEP
+}
+
 // Shipping constants
 export const SHIPPING_FEE = 1500 // $15.00 in cents
 export const FREE_SHIPPING_THRESHOLD = 40000 // $400.00 in cents - free shipping at or above this
@@ -145,10 +160,22 @@ export const useCartStore = create(
       addItem: (product, quantity = 1, options = {}) => {
         const items = get().items
         const existingIndex = items.findIndex(item => item.productId === product.id)
+        const existingItem = existingIndex >= 0 ? items[existingIndex] : null
+
+        // If the existing line is reducedMinimum (partial pack), preserve the
+        // exception. Otherwise round the incoming quantity to a multiple of 10.
+        const effectiveReducedMin =
+          options.reducedMinimum || existingItem?.reducedMinimum
+        const safeQty = normalizeOrderQuantity(quantity, {
+          reducedMinimum: effectiveReducedMin,
+        })
 
         if (existingIndex >= 0) {
           const newItems = [...items]
-          newItems[existingIndex].quantity += quantity
+          const combined = (newItems[existingIndex].quantity || 0) + safeQty
+          newItems[existingIndex].quantity = normalizeOrderQuantity(combined, {
+            reducedMinimum: effectiveReducedMin,
+          })
           if (options.reducedMinimum) newItems[existingIndex].reducedMinimum = true
           set({ items: newItems })
         } else {
@@ -160,7 +187,7 @@ export const useCartStore = create(
               price: product.price_cents,
               sku: product.sku,
               image: product.images?.[0] || null,
-              quantity,
+              quantity: safeQty,
               ...(options.reducedMinimum && { reducedMinimum: true })
             }]
           })
@@ -181,9 +208,13 @@ export const useCartStore = create(
           return
         }
         set({
-          items: get().items.map(item =>
-            item.productId === productId ? { ...item, quantity } : item
-          )
+          items: get().items.map(item => {
+            if (item.productId !== productId) return item
+            const safeQty = normalizeOrderQuantity(quantity, {
+              reducedMinimum: item.reducedMinimum,
+            })
+            return { ...item, quantity: safeQty }
+          })
         })
       },
 

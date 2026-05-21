@@ -198,32 +198,20 @@ function CartPage() {
                         </p>
 
                         <div className="flex flex-wrap items-center gap-4">
-                          {/* Quantity */}
+                          {/* Quantity — orders move in multiples of 10 */}
                           <div className="flex items-center border border-gray-700">
                             <button
                               onClick={() => handleQuantityChange(item.productId, -10)}
-                              className="px-2 py-1 text-white hover:bg-gray-700 transition-colors text-sm"
+                              className="px-3 py-1 text-white hover:bg-gray-700 transition-colors text-sm font-bold"
                             >
                               -10
-                            </button>
-                            <button
-                              onClick={() => handleQuantityChange(item.productId, -1)}
-                              className="px-2 py-1 text-white hover:bg-gray-700 transition-colors border-l border-gray-700"
-                            >
-                              -
                             </button>
                             <span className="px-4 py-1 text-white border-x border-gray-700 min-w-[60px] text-center">
                               {item.quantity}
                             </span>
                             <button
-                              onClick={() => handleQuantityChange(item.productId, 1)}
-                              className="px-2 py-1 text-white hover:bg-gray-700 transition-colors border-r border-gray-700"
-                            >
-                              +
-                            </button>
-                            <button
                               onClick={() => handleQuantityChange(item.productId, 10)}
-                              className="px-2 py-1 text-white hover:bg-gray-700 transition-colors text-sm"
+                              className="px-3 py-1 text-white hover:bg-gray-700 transition-colors text-sm font-bold"
                             >
                               +10
                             </button>

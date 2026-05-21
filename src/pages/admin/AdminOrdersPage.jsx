@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
-import { formatPrice, getPriceForQuantity, MIN_ORDER_QUANTITY, PRODUCT_PRICING } from '../../stores/cartStore'
+import { formatPrice, getPriceForQuantity, MIN_ORDER_QUANTITY, ORDER_QUANTITY_STEP, PRODUCT_PRICING } from '../../stores/cartStore'
 import { useInventory, updateStock } from '../../hooks/useInventory'
 import { useProducts } from '../../hooks/useProducts'
 
@@ -132,6 +132,23 @@ function AdminOrdersPage() {
     const next = { ...manualForm, quantity: val }
     if (!manualForm.unitPriceManuallyEdited && qty > 0) {
       next.unitPriceCents = String(getPriceForQuantity(manualForm.productId, qty))
+    }
+    setManualForm(next)
+  }
+
+  // Round to the nearest multiple of 10 on blur, matching the storefront
+  // rule that orders ship in 10-counts. Also re-syncs the unit price.
+  const onManualQuantityBlur = () => {
+    const raw = parseInt(manualForm.quantity, 10)
+    if (isNaN(raw) || raw <= 0) return
+    const rounded = Math.max(
+      MIN_ORDER_QUANTITY,
+      Math.round(raw / ORDER_QUANTITY_STEP) * ORDER_QUANTITY_STEP
+    )
+    if (rounded === raw) return
+    const next = { ...manualForm, quantity: String(rounded) }
+    if (!manualForm.unitPriceManuallyEdited) {
+      next.unitPriceCents = String(getPriceForQuantity(manualForm.productId, rounded))
     }
     setManualForm(next)
   }
@@ -1271,12 +1288,14 @@ ${addr.country}`
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-gray-400 text-sm mb-1">Quantity *</label>
+                  <label className="block text-gray-400 text-sm mb-1">Quantity * <span className="text-gray-500 text-xs">(multiples of {ORDER_QUANTITY_STEP})</span></label>
                   <input
                     type="number"
                     min={MIN_ORDER_QUANTITY}
+                    step={ORDER_QUANTITY_STEP}
                     value={manualForm.quantity}
                     onChange={(e) => onManualQuantityChange(e.target.value)}
+                    onBlur={onManualQuantityBlur}
                     required
                     placeholder={`min ${MIN_ORDER_QUANTITY}`}
                     className="w-full bg-gray-800 border border-gray-600 text-white px-3 py-2 focus:border-yellow-500 focus:outline-none"

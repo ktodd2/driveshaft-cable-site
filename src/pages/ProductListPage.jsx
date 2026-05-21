@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { useCartStore, formatPrice, PRODUCT_PRICING, getPriceForQuantity, MIN_ORDER_QUANTITY } from '../stores/cartStore'
+import { useCartStore, formatPrice, PRODUCT_PRICING, getPriceForQuantity, MIN_ORDER_QUANTITY, ORDER_QUANTITY_STEP } from '../stores/cartStore'
 import { useInventory } from '../hooks/useInventory'
 import InventoryProgressBar from '../components/common/InventoryProgressBar'
 import SEOHead from '../components/common/SEOHead'
@@ -48,6 +48,9 @@ const products = [
 function ProductCard({ product }) {
   const addItem = useCartStore((state) => state.addItem)
   const [quantity, setQuantity] = useState(MIN_ORDER_QUANTITY)
+  // Draft string for the input so the user can clear it and type freely
+  // without snapping to the minimum on every keystroke.
+  const [quantityDraft, setQuantityDraft] = useState(String(MIN_ORDER_QUANTITY))
   const { stock, totalStock, loading: stockLoading } = useInventory(product.id)
   const outOfStock = !stockLoading && stock === 0
 
@@ -58,6 +61,8 @@ function ProductCard({ product }) {
   useEffect(() => {
     if (isLowStock) setQuantity(stock)
   }, [stock, stockLoading])
+
+  useEffect(() => { setQuantityDraft(String(quantity)) }, [quantity])
 
   const handleAddToCart = () => {
     addItem(product, quantity, isLowStock ? { reducedMinimum: true } : {})
@@ -126,7 +131,7 @@ function ProductCard({ product }) {
 
         {/* Quantity Selector */}
         <div className="mb-4 mt-4">
-          <label className="block text-gray-400 text-xs mb-2">Quantity (min. {effectiveMin})</label>
+          <label className="block text-gray-400 text-xs mb-2">Quantity (min. {effectiveMin}, in {ORDER_QUANTITY_STEP}s)</label>
           <div className="flex items-center gap-3">
             <div className="flex items-center border border-gray-700">
               <button
@@ -137,10 +142,20 @@ function ProductCard({ product }) {
               </button>
               <input
                 type="number"
-                value={quantity}
-                onChange={(e) => setQuantity(Math.min(Math.max(effectiveMin, parseInt(e.target.value) || effectiveMin), maxQty))}
-                className="w-16 text-center bg-transparent text-white border-x border-gray-700 py-2 text-sm"
+                value={quantityDraft}
+                onChange={(e) => setQuantityDraft(e.target.value)}
+                onBlur={() => {
+                  const raw = parseInt(quantityDraft, 10)
+                  const rounded = isLowStock
+                    ? (isNaN(raw) ? effectiveMin : raw)
+                    : Math.round((isNaN(raw) ? effectiveMin : raw) / ORDER_QUANTITY_STEP) * ORDER_QUANTITY_STEP
+                  const clamped = Math.min(maxQty, Math.max(effectiveMin, rounded))
+                  setQuantity(clamped)
+                  setQuantityDraft(String(clamped))
+                }}
+                className="w-20 text-center bg-transparent text-white border-x border-gray-700 py-2 text-sm"
                 min={MIN_ORDER_QUANTITY}
+                step={ORDER_QUANTITY_STEP}
               />
               <button
                 onClick={() => handleQuantityChange(10)}
