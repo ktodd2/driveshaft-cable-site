@@ -39,8 +39,8 @@ const products = [
       material: 'Galvanized Steel',
       couplers: 'Aluminum (reversed)'
     },
-    images: ['/cable-plus-1.jpeg'],
-    image: '/cable-plus-1.jpeg',
+    images: ['/IMG_6707.jpeg'],
+    image: '/IMG_6707.jpeg',
     in_stock: true
   }
 ]

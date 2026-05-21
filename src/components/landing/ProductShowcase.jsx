@@ -21,7 +21,7 @@ const PRODUCTS = [
     slug: 'driveshaft-cable-plus',
     name: 'Driveshaft Cable +',
     tagline: 'Coupler reversed — for straight-line pull when your geometry needs it.',
-    image: '/cable-plus-1.jpeg',
+    image: '/IMG_6707.jpeg',
     bullets: [
       'Same heavy-duty cable, coupler turned around',
       'For applications that need a straight pull path',

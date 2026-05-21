@@ -53,8 +53,8 @@ const structuredDataBySlug = {
       sku: 'KTDC-002',
       mpn: 'KTDC-002',
       image: [
-        'https://driveshaftcable.com/cable-plus-1.jpeg',
-        'https://driveshaftcable.com/cable-plus-2.jpeg'
+        'https://driveshaftcable.com/IMG_6707.jpeg',
+        'https://driveshaftcable.com/IMG_6708.jpeg'
       ],
       material: 'Galvanized Steel Wire with Aluminum Couplers',
       weight: { '@type': 'QuantitativeValue', value: '1.2', unitCode: 'LBR' },
@@ -90,8 +90,8 @@ const productImagesBySlug = {
     '/IMG_5489.jpeg',
   ],
   'driveshaft-cable-plus': [
-    '/cable-plus-1.jpeg',
-    '/cable-plus-2.jpeg',
+    '/IMG_6707.jpeg',
+    '/IMG_6708.jpeg',
   ]
 }
 
