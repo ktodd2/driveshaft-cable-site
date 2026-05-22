@@ -102,10 +102,36 @@ export const PRICING_TIERS = PRODUCT_PRICING['1'].tiers
 // in plain functions (selectors, cart math) that don't subscribe to the store.
 let livePricing = { ...PRODUCT_PRICING }
 
-// Get price per unit for a given (productId, qty). Falls back to product '1'
-// pricing if the productId is unknown — defensive default so a stale cart from
-// a previous deploy still renders sensibly.
-export function getPriceForQuantity(productId, qty) {
+// Active sales loaded from the DB (loadSales). Same module-scope pattern as
+// livePricing so plain pricing functions can read it without a hook. The
+// active-window filter is applied at read time (not load time) so sales that
+// start during a user's session kick in automatically.
+let liveSales = []
+
+// Find the best active sale that applies to a given product. Highest % wins;
+// ties prefer the product-scoped sale over the sitewide one (so a product can
+// be deeper-discounted than the rest of the store).
+export function getActiveSaleForProduct(productId, sales = liveSales, now = Date.now()) {
+  if (!sales || sales.length === 0) return null
+  const candidates = []
+  for (const s of sales) {
+    if (!s.is_active) continue
+    const start = new Date(s.starts_at).getTime()
+    const end   = new Date(s.ends_at).getTime()
+    if (now < start || now >= end) continue
+    if (s.scope === 'sitewide' || s.product_id === productId) candidates.push(s)
+  }
+  if (!candidates.length) return null
+  candidates.sort((a, b) =>
+    b.discount_percent - a.discount_percent ||
+    (b.scope === 'product' ? 1 : -1)
+  )
+  return candidates[0]
+}
+
+// Returns the tier-or-base price WITHOUT applying a sale. Used by the UI to
+// render the strike-through "was" price next to the sale price.
+export function getTierPriceForQuantity(productId, qty) {
   const pricing = livePricing[productId] || livePricing['1'] || PRODUCT_PRICING['1']
   for (const tier of pricing.tiers) {
     if (qty >= tier.min) return tier.price
@@ -113,11 +139,32 @@ export function getPriceForQuantity(productId, qty) {
   return pricing.basePrice
 }
 
+function applySalePercent(basePrice, percent) {
+  return Math.round((basePrice * (100 - percent)) / 100)
+}
+
+// Get price per unit for a given (productId, qty). Falls back to product '1'
+// pricing if the productId is unknown — defensive default so a stale cart from
+// a previous deploy still renders sensibly. Applies the best active sale, if
+// any, on top of the tier/base price.
+export function getPriceForQuantity(productId, qty) {
+  const tierPrice = getTierPriceForQuantity(productId, qty)
+  const sale = getActiveSaleForProduct(productId)
+  if (!sale) return tierPrice
+  return applySalePercent(tierPrice, sale.discount_percent)
+}
+
 // Read-only accessor for components that want the current pricing snapshot
 // without re-rendering. For React subscriptions, use the zustand store's
 // `productsLoadedAt` field as a re-render trigger.
 export function getLivePricing() {
   return livePricing
+}
+
+// Read-only accessor for the loaded sales list. Components should subscribe
+// to `salesLoadedAt` on the zustand store to re-render when this updates.
+export function getLiveSales() {
+  return liveSales
 }
 
 // Convenience: line total for a single cart item.
@@ -139,6 +186,8 @@ export const useCartStore = create(
       // Components that want to re-render after a price edit can subscribe
       // to this field; pure cart-math reads from livePricing directly.
       productsLoadedAt: 0,
+      // Same pattern for sales — bumped when loadSales() refreshes liveSales.
+      salesLoadedAt: 0,
 
       loadProducts: async () => {
         try {
@@ -159,6 +208,22 @@ export const useCartStore = create(
           set({ productsLoadedAt: Date.now() })
         } catch (err) {
           console.warn('cartStore.loadProducts: unexpected error', err)
+        }
+      },
+
+      loadSales: async () => {
+        try {
+          const { data, error } = await supabase
+            .from('sales')
+            .select('id, name, discount_percent, scope, product_id, starts_at, ends_at, is_active')
+          if (error) {
+            console.warn('cartStore.loadSales: falling back to empty sales list', error)
+            return
+          }
+          liveSales = Array.isArray(data) ? data : []
+          set({ salesLoadedAt: Date.now() })
+        } catch (err) {
+          console.warn('cartStore.loadSales: unexpected error', err)
         }
       },
 

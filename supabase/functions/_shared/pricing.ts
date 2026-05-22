@@ -6,8 +6,10 @@
 // used when the DB query fails (network blip, RLS misconfig, etc.) so a
 // transient infra problem never blocks checkout.
 //
-// If you add a new product via admin, this file does NOT need editing —
-// getPriceForQuantityFromDb() will resolve it dynamically.
+// Sales are also applied here: when a customer is mid-checkout and a
+// time-limited sale is active, calculate-tax pulls the sale, applies the
+// % off on top of the tier/base price, and Stripe Tax is computed against
+// the discounted line totals.
 
 import { createClient, SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
@@ -62,10 +64,31 @@ export function computeShipping(subtotalCents: number): number {
   return subtotalCents >= FREE_SHIPPING_THRESHOLD ? 0 : SHIPPING_FEE
 }
 
-// Small in-function cache so a single request handling N line items doesn't
-// hit the products table N times. Lifetime is one Edge Function invocation.
+// ---- Per-invocation cache (one cron / tax-calc call = one cache) -----------
+
 type CachedProduct = { base_price_cents: number; tiers: { min: number; price: number }[] }
-type DbCache = Map<string, CachedProduct | null>
+
+interface Sale {
+  id: string
+  discount_percent: number
+  scope: 'sitewide' | 'product'
+  product_id: string | null
+  starts_at: string
+  ends_at: string
+  is_active: boolean
+}
+
+// One cache per Edge Function invocation. Holds both per-product pricing rows
+// and the active-sales array so each piece of data is fetched at most once
+// across an arbitrary number of line items in the same request.
+export interface DbCache {
+  products: Map<string, CachedProduct | null>
+  sales: Sale[] | null   // null = not yet loaded; [] = loaded, none active
+}
+
+export function makeDbCache(): DbCache {
+  return { products: new Map(), sales: null }
+}
 
 function pickTierPrice(p: CachedProduct, qty: number): number {
   const sorted = [...p.tiers].sort((a, b) => b.min - a.min)
@@ -75,8 +98,64 @@ function pickTierPrice(p: CachedProduct, qty: number): number {
   return p.base_price_cents
 }
 
-export function makeDbCache(): DbCache {
-  return new Map()
+async function loadProduct(
+  productId: string,
+  client: SupabaseClient,
+  cache?: DbCache,
+): Promise<CachedProduct | null> {
+  if (cache?.products.has(productId)) return cache.products.get(productId) ?? null
+  const { data, error } = await client
+    .from('products')
+    .select('base_price_cents, tiers')
+    .eq('id', productId)
+    .maybeSingle()
+  let row: CachedProduct | null = null
+  if (error) {
+    console.warn('pricing.loadProduct: query failed, falling back', error)
+  } else if (data) {
+    row = {
+      base_price_cents: data.base_price_cents,
+      tiers: Array.isArray(data.tiers) ? data.tiers : [],
+    }
+  }
+  cache?.products.set(productId, row)
+  return row
+}
+
+async function loadActiveSales(
+  client: SupabaseClient,
+  cache?: DbCache,
+): Promise<Sale[]> {
+  if (cache && cache.sales !== null) return cache.sales
+  const nowIso = new Date().toISOString()
+  const { data, error } = await client
+    .from('sales')
+    .select('id, discount_percent, scope, product_id, starts_at, ends_at, is_active')
+    .eq('is_active', true)
+    .lte('starts_at', nowIso)
+    .gt('ends_at', nowIso)
+  let rows: Sale[] = []
+  if (error) {
+    console.warn('pricing.loadActiveSales: query failed, treating as no sales', error)
+  } else if (Array.isArray(data)) {
+    rows = data as Sale[]
+  }
+  if (cache) cache.sales = rows
+  return rows
+}
+
+// Pick the best (highest %) sale applicable to a product. Product-scoped wins
+// ties over sitewide so a product can be discounted deeper than the rest.
+function bestSaleFor(productId: string, sales: Sale[]): Sale | null {
+  const candidates = sales.filter(s =>
+    s.scope === 'sitewide' || s.product_id === productId
+  )
+  if (!candidates.length) return null
+  candidates.sort((a, b) =>
+    b.discount_percent - a.discount_percent ||
+    (b.scope === 'product' ? 1 : -1)
+  )
+  return candidates[0]
 }
 
 export async function getPriceForQuantityFromDb(
@@ -85,30 +164,13 @@ export async function getPriceForQuantityFromDb(
   client: SupabaseClient,
   cache?: DbCache,
 ): Promise<number> {
-  let row: CachedProduct | null
-  if (cache?.has(productId)) {
-    row = cache.get(productId) ?? null
-  } else {
-    const { data, error } = await client
-      .from('products')
-      .select('base_price_cents, tiers')
-      .eq('id', productId)
-      .maybeSingle()
-    if (error) {
-      console.warn('pricing.getPriceForQuantityFromDb: query failed, falling back', error)
-      row = null
-    } else {
-      row = data
-        ? {
-            base_price_cents: data.base_price_cents,
-            tiers: Array.isArray(data.tiers) ? data.tiers : [],
-          }
-        : null
-    }
-    cache?.set(productId, row)
-  }
-  if (!row) return getPriceForQuantity(productId, qty)
-  return pickTierPrice(row, qty)
+  const row = await loadProduct(productId, client, cache)
+  const tierPrice = row ? pickTierPrice(row, qty) : getPriceForQuantity(productId, qty)
+
+  const sales = await loadActiveSales(client, cache)
+  const sale = bestSaleFor(productId, sales)
+  if (!sale) return tierPrice
+  return Math.round((tierPrice * (100 - sale.discount_percent)) / 100)
 }
 
 // Convenience for callers that have a Supabase URL + service key but no

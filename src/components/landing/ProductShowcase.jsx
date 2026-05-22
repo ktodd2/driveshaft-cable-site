@@ -1,6 +1,7 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { PRODUCT_PRICING, formatPrice } from '../../stores/cartStore'
+import { PRODUCT_PRICING, formatPrice, getActiveSaleForProduct, useCartStore } from '../../stores/cartStore'
+import SaleCountdown from '../common/SaleCountdown'
 
 const PRODUCTS = [
   {
@@ -32,6 +33,10 @@ const PRODUCTS = [
 ]
 
 function ProductShowcase() {
+  // Re-render when sales reload / countdown expires.
+  useCartStore(s => s.salesLoadedAt)
+  const [, forceTick] = useState(0)
+
   return (
     <section id="product" className="py-20 bg-gradient-to-b from-ktodd-dark to-green-950/20">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -80,16 +85,42 @@ function ProductShowcase() {
                     ))}
                   </ul>
 
-                  <div className="flex items-baseline justify-between mb-4">
-                    <div>
-                      <span className="text-gray-400 text-xs uppercase tracking-wider">Starting at</span>
-                      <div className="text-yellow-500 text-2xl font-industrial">{formatPrice(pricing.basePrice)}<span className="text-gray-500 text-sm">/ea</span></div>
-                    </div>
-                    <div className="text-xs text-gray-500 text-right">
-                      Bulk: as low as<br/>
-                      <span className="text-green-400 font-bold">{formatPrice(pricing.tiers[0].price)}/ea</span>
-                    </div>
-                  </div>
+                  {(() => {
+                    const appliedSale = getActiveSaleForProduct(product.id)
+                    const saleBase = appliedSale
+                      ? Math.round(pricing.basePrice * (100 - appliedSale.discount_percent) / 100)
+                      : null
+                    return (
+                      <>
+                        <div className={`flex items-baseline justify-between ${appliedSale ? 'mb-2' : 'mb-4'}`}>
+                          <div>
+                            <span className="text-gray-400 text-xs uppercase tracking-wider">Starting at</span>
+                            {appliedSale ? (
+                              <div className="flex items-baseline gap-2 flex-wrap">
+                                <span className="text-gray-500 line-through text-lg">{formatPrice(pricing.basePrice)}</span>
+                                <span className="text-red-400 text-2xl font-industrial">{formatPrice(saleBase)}<span className="text-gray-500 text-sm">/ea</span></span>
+                                <span className="text-red-400 text-xs font-bold bg-red-500/20 px-2 py-0.5 rounded">−{appliedSale.discount_percent}%</span>
+                              </div>
+                            ) : (
+                              <div className="text-yellow-500 text-2xl font-industrial">{formatPrice(pricing.basePrice)}<span className="text-gray-500 text-sm">/ea</span></div>
+                            )}
+                          </div>
+                          <div className="text-xs text-gray-500 text-right">
+                            Bulk: as low as<br/>
+                            <span className="text-green-400 font-bold">{formatPrice(pricing.tiers[0].price)}/ea</span>
+                          </div>
+                        </div>
+                        {appliedSale && (
+                          <div className="text-red-400/90 text-xs mb-4 flex items-center gap-1.5">
+                            <span className="font-bold uppercase tracking-wider">{appliedSale.name}</span>
+                            <span className="text-gray-500">·</span>
+                            <span>Ends in </span>
+                            <SaleCountdown endsAt={appliedSale.ends_at} className="font-mono" onExpire={() => forceTick(t => t + 1)} />
+                          </div>
+                        )}
+                      </>
+                    )
+                  })()}
 
                   <Link to={`/products/${product.slug}`} className="btn-primary w-full text-center">
                     {product.ctaLabel}

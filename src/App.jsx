@@ -33,6 +33,7 @@ const AdminBlogPage = React.lazy(() => import('./pages/admin/AdminBlogPage'))
 const AdminSuggestionsPage = React.lazy(() => import('./pages/admin/AdminSuggestionsPage'))
 const AdminTestimonialsPage = React.lazy(() => import('./pages/admin/AdminTestimonialsPage'))
 const AdminProductsPage = React.lazy(() => import('./pages/admin/AdminProductsPage'))
+const AdminSalesPage = React.lazy(() => import('./pages/admin/AdminSalesPage'))
 
 function App() {
   // Hydrate the in-memory pricing map from the `products` table once at app
@@ -40,7 +41,9 @@ function App() {
   // store falls back to the hardcoded PRODUCT_PRICING constant if the fetch
   // fails, so a flaky DB never blocks rendering.
   useEffect(() => {
-    useCartStore.getState().loadProducts()
+    const cart = useCartStore.getState()
+    cart.loadProducts()
+    cart.loadSales()
   }, [])
 
   return (
@@ -80,6 +83,7 @@ function App() {
         <Route path="/admin/suggestions" element={<Suspense fallback={<div />}><AdminSuggestionsPage /></Suspense>} />
         <Route path="/admin/testimonials" element={<Suspense fallback={<div />}><AdminTestimonialsPage /></Suspense>} />
         <Route path="/admin/products" element={<Suspense fallback={<div />}><AdminProductsPage /></Suspense>} />
+        <Route path="/admin/sales" element={<Suspense fallback={<div />}><AdminSalesPage /></Suspense>} />
       </Routes>
     </BrowserRouter>
     </HelmetProvider>

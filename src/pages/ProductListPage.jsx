@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { useCartStore, formatPrice, PRODUCT_PRICING, getPriceForQuantity, MIN_ORDER_QUANTITY, ORDER_QUANTITY_STEP } from '../stores/cartStore'
+import { useCartStore, formatPrice, PRODUCT_PRICING, getPriceForQuantity, getTierPriceForQuantity, getActiveSaleForProduct, MIN_ORDER_QUANTITY, ORDER_QUANTITY_STEP } from '../stores/cartStore'
+import SaleCountdown from '../components/common/SaleCountdown'
 import { useInventory } from '../hooks/useInventory'
 import InventoryProgressBar from '../components/common/InventoryProgressBar'
 import SEOHead from '../components/common/SEOHead'
@@ -73,9 +74,16 @@ function ProductCard({ product }) {
     setQuantity(newQty)
   }
 
+  // Re-render when sales reload or a countdown expires so the card flips
+  // back to the non-sale price without a manual refresh.
+  useCartStore(s => s.salesLoadedAt)
+  const [, forceTick] = useState(0)
+
   const currentPrice = getPriceForQuantity(product.id, quantity)
-  const totalPrice = currentPrice * quantity
-  const basePrice = PRODUCT_PRICING[product.id]?.basePrice ?? product.price_cents
+  const tierPrice    = getTierPriceForQuantity(product.id, quantity)
+  const totalPrice   = currentPrice * quantity
+  const basePrice    = PRODUCT_PRICING[product.id]?.basePrice ?? product.price_cents
+  const appliedSale  = getActiveSaleForProduct(product.id)
 
   return (
     <div className="bg-gray-800/50 border border-gray-700 hover:border-yellow-500 transition-all duration-300 group">
@@ -117,12 +125,35 @@ function ProductCard({ product }) {
 
         {/* Price */}
         <div className="mb-4">
-          <div className="flex items-baseline gap-2">
-            <span className="text-yellow-500 text-2xl font-industrial">{formatPrice(currentPrice)}</span>
-            <span className="text-gray-400 text-sm">per unit</span>
-          </div>
-          {currentPrice < basePrice && (
-            <div className="text-green-400 text-sm mt-1">Volume discount applied!</div>
+          {appliedSale ? (
+            <>
+              <div className="flex items-baseline gap-2 flex-wrap">
+                <span className="text-gray-500 line-through text-lg">{formatPrice(tierPrice)}</span>
+                <span className="text-red-400 text-2xl font-industrial">{formatPrice(currentPrice)}</span>
+                <span className="text-red-400 text-xs font-bold bg-red-500/20 px-2 py-0.5 rounded">−{appliedSale.discount_percent}%</span>
+                <span className="text-gray-400 text-sm">per unit</span>
+              </div>
+              <div className="text-red-400/90 text-xs mt-1 flex items-center gap-1.5">
+                <span className="font-bold uppercase tracking-wider">{appliedSale.name}</span>
+                <span className="text-gray-500">·</span>
+                <span>Ends in </span>
+                <SaleCountdown
+                  endsAt={appliedSale.ends_at}
+                  className="font-mono"
+                  onExpire={() => forceTick(t => t + 1)}
+                />
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="flex items-baseline gap-2">
+                <span className="text-yellow-500 text-2xl font-industrial">{formatPrice(currentPrice)}</span>
+                <span className="text-gray-400 text-sm">per unit</span>
+              </div>
+              {currentPrice < basePrice && (
+                <div className="text-green-400 text-sm mt-1">Volume discount applied!</div>
+              )}
+            </>
           )}
         </div>
 

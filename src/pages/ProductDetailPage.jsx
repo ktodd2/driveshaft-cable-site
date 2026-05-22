@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
-import { useCartStore, formatPrice, getPriceForQuantity, PRODUCT_PRICING, MIN_ORDER_QUANTITY, ORDER_QUANTITY_STEP } from '../stores/cartStore'
+import { useCartStore, formatPrice, getPriceForQuantity, getTierPriceForQuantity, getActiveSaleForProduct, PRODUCT_PRICING, MIN_ORDER_QUANTITY, ORDER_QUANTITY_STEP } from '../stores/cartStore'
+import SaleCountdown from '../components/common/SaleCountdown'
 import { useInventory } from '../hooks/useInventory'
 import InventoryProgressBar from '../components/common/InventoryProgressBar'
 import SEOHead from '../components/common/SEOHead'
@@ -238,10 +239,16 @@ function ProductDetailPage() {
     navigate('/cart')
   }
 
+  // Re-render when sales reload / countdown expires.
+  useCartStore(s => s.salesLoadedAt)
+  const [, forceTick] = useState(0)
+
   const currentPrice = getPriceForQuantity(product.id, quantity)
+  const tierPrice    = getTierPriceForQuantity(product.id, quantity)
   const productPricing = PRODUCT_PRICING[product.id] || PRODUCT_PRICING['1']
   const basePrice = productPricing.basePrice
   const productTiers = productPricing.tiers
+  const appliedSale = getActiveSaleForProduct(product.id)
 
   return (
     <div className="pt-24 md:pt-32">
@@ -307,8 +314,16 @@ function ProductDetailPage() {
               </div>
               <h1 className="text-3xl sm:text-4xl font-industrial text-white mb-4">{product.name}</h1>
 
-              <div className="flex items-center gap-4 mb-4">
-                <span className="text-yellow-500 text-4xl font-industrial">{formatPrice(currentPrice)}</span>
+              <div className="flex items-center gap-4 mb-4 flex-wrap">
+                {appliedSale ? (
+                  <>
+                    <span className="text-gray-500 line-through text-2xl">{formatPrice(tierPrice)}</span>
+                    <span className="text-red-400 text-4xl font-industrial">{formatPrice(currentPrice)}</span>
+                    <span className="text-red-400 text-xs font-bold bg-red-500/20 px-2 py-0.5 rounded">−{appliedSale.discount_percent}%</span>
+                  </>
+                ) : (
+                  <span className="text-yellow-500 text-4xl font-industrial">{formatPrice(currentPrice)}</span>
+                )}
                 <span className="text-gray-400 text-sm">per unit</span>
                 {stockLoading ? (
                   <span className="bg-gray-500/20 text-gray-400 px-3 py-1 text-sm">Checking stock...</span>
@@ -322,6 +337,19 @@ function ProductDetailPage() {
                   <span className="bg-green-500/20 text-green-400 px-3 py-1 text-sm">{stock} units in stock</span>
                 )}
               </div>
+
+              {appliedSale && (
+                <div className="bg-red-500/10 border border-red-500/40 text-red-400 px-3 py-2 mb-4 text-sm flex items-center gap-2 flex-wrap">
+                  <span className="font-bold uppercase tracking-wider">{appliedSale.name}</span>
+                  <span className="text-gray-500">·</span>
+                  <span>Ends in </span>
+                  <SaleCountdown
+                    endsAt={appliedSale.ends_at}
+                    className="font-mono font-bold"
+                    onExpire={() => forceTick(t => t + 1)}
+                  />
+                </div>
+              )}
 
               {/* Inventory Progress Bar */}
               <InventoryProgressBar stock={stock} totalStock={totalStock} loading={stockLoading} />

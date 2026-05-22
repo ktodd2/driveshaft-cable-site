@@ -15,10 +15,13 @@ import {
   PRICING_TIERS,
   PRODUCT_PRICING,
   getPriceForQuantity,
+  getTierPriceForQuantity,
+  getActiveSaleForProduct,
   MIN_ORDER_QUANTITY,
   FREE_SHIPPING_THRESHOLD,
   SHIPPING_FEE
 } from '../stores/cartStore'
+import SaleCountdown from '../components/common/SaleCountdown'
 import SEOHead from '../components/common/SEOHead'
 
 function CartPage() {
@@ -168,8 +171,15 @@ function CartPage() {
               <div className="space-y-4">
                 {items.map((item) => {
                   const linePrice = getPriceForQuantity(item.productId, item.quantity)
+                  const tierPrice = getTierPriceForQuantity(item.productId, item.quantity)
                   const basePrice = PRODUCT_PRICING[item.productId]?.basePrice ?? PRICE_PER_UNIT
+                  const appliedSale = getActiveSaleForProduct(item.productId)
                   const lineHasDiscount = linePrice < basePrice
+                  // When a sale is active, the strike-through shows the tier price the
+                  // customer would have paid pre-sale (more honest than basePrice when
+                  // they qualify for a tier). Otherwise we fall back to the original
+                  // base-vs-tier behavior.
+                  const struckPrice = appliedSale ? tierPrice : basePrice
                   return (
                   <div key={item.productId} className="bg-gray-800/50 border border-gray-700 p-4 sm:p-6">
                     <div className="flex gap-4 sm:gap-6">
@@ -190,12 +200,24 @@ function CartPage() {
                           {item.name}
                         </Link>
                         <p className="text-gray-400 text-sm mb-2">SKU: {item.sku}</p>
-                        <p className={`text-sm mb-4 ${lineHasDiscount ? 'text-green-400' : 'text-yellow-500'}`}>
+                        <p className={`text-sm ${appliedSale ? 'text-red-400' : lineHasDiscount ? 'text-green-400' : 'text-yellow-500'}`}>
                           {formatPrice(linePrice)}/unit
-                          {lineHasDiscount && (
-                            <span className="text-gray-500 line-through ml-2">{formatPrice(basePrice)}</span>
+                          {(appliedSale || lineHasDiscount) && (
+                            <span className="text-gray-500 line-through ml-2">{formatPrice(struckPrice)}</span>
+                          )}
+                          {appliedSale && (
+                            <span className="text-red-400 text-xs font-bold bg-red-500/20 px-2 py-0.5 rounded ml-2">−{appliedSale.discount_percent}%</span>
                           )}
                         </p>
+                        {appliedSale && (
+                          <p className="text-red-400/90 text-xs mb-3 flex items-center gap-1.5">
+                            <span className="font-bold uppercase tracking-wider">{appliedSale.name}</span>
+                            <span className="text-gray-500">·</span>
+                            <span>Ends in </span>
+                            <SaleCountdown endsAt={appliedSale.ends_at} className="font-mono" />
+                          </p>
+                        )}
+                        {!appliedSale && <div className="mb-4" />}
 
                         <div className="flex flex-wrap items-center gap-4">
                           {/* Quantity — orders move in multiples of 10 */}
