@@ -63,7 +63,15 @@ export function useProducts() {
   const activeProducts = products.filter(p => p.is_active)
 
   // Mutations — each invalidates the cache so the next refetch hits the DB.
-  const addProduct = async ({ id, name, sku, basePriceCents, tiers, isStorefront = false, sortOrder = 0 }) => {
+  const addProduct = async (input) => {
+    const {
+      id, name, sku, basePriceCents, tiers,
+      isStorefront = false, sortOrder = 0,
+      // Phase 2 storefront-content fields. All optional on add; the
+      // admin form may save them empty and fill in later.
+      slug, shortDescription, description, specs, applications, features,
+      images, tagline, showcaseBullets, ctaLabel,
+    } = input
     const { error } = await supabase
       .from('products')
       .insert([{
@@ -75,6 +83,16 @@ export function useProducts() {
         is_active: true,
         is_storefront: isStorefront,
         sort_order: sortOrder,
+        slug,
+        short_description: shortDescription ?? null,
+        description: description ?? null,
+        specs: specs ?? {},
+        applications: applications ?? [],
+        features: features ?? [],
+        images: images ?? [],
+        tagline: tagline ?? null,
+        showcase_bullets: showcaseBullets ?? [],
+        cta_label: ctaLabel ?? null,
       }])
     if (error) return { error }
 
@@ -92,13 +110,24 @@ export function useProducts() {
 
   const updateProduct = async (id, patch) => {
     const dbPatch = {
-      ...(patch.name !== undefined        && { name: patch.name }),
-      ...(patch.sku !== undefined         && { sku: patch.sku }),
-      ...(patch.basePriceCents !== undefined && { base_price_cents: patch.basePriceCents }),
-      ...(patch.tiers !== undefined       && { tiers: patch.tiers }),
-      ...(patch.isActive !== undefined    && { is_active: patch.isActive }),
-      ...(patch.isStorefront !== undefined && { is_storefront: patch.isStorefront }),
-      ...(patch.sortOrder !== undefined   && { sort_order: patch.sortOrder }),
+      ...(patch.name !== undefined            && { name: patch.name }),
+      ...(patch.sku !== undefined             && { sku: patch.sku }),
+      ...(patch.basePriceCents !== undefined  && { base_price_cents: patch.basePriceCents }),
+      ...(patch.tiers !== undefined           && { tiers: patch.tiers }),
+      ...(patch.isActive !== undefined        && { is_active: patch.isActive }),
+      ...(patch.isStorefront !== undefined    && { is_storefront: patch.isStorefront }),
+      ...(patch.sortOrder !== undefined       && { sort_order: patch.sortOrder }),
+      // Phase 2 fields — only included if the caller explicitly sets them.
+      ...(patch.slug !== undefined             && { slug: patch.slug }),
+      ...(patch.shortDescription !== undefined && { short_description: patch.shortDescription }),
+      ...(patch.description !== undefined      && { description: patch.description }),
+      ...(patch.specs !== undefined            && { specs: patch.specs }),
+      ...(patch.applications !== undefined     && { applications: patch.applications }),
+      ...(patch.features !== undefined         && { features: patch.features }),
+      ...(patch.images !== undefined           && { images: patch.images }),
+      ...(patch.tagline !== undefined          && { tagline: patch.tagline }),
+      ...(patch.showcaseBullets !== undefined  && { showcase_bullets: patch.showcaseBullets }),
+      ...(patch.ctaLabel !== undefined         && { cta_label: patch.ctaLabel }),
       updated_at: new Date().toISOString(),
     }
     const { error } = await supabase.from('products').update(dbPatch).eq('id', id)

@@ -3,48 +3,17 @@ import { Link } from 'react-router-dom'
 import { useCartStore, formatPrice, PRODUCT_PRICING, getPriceForQuantity, getTierPriceForQuantity, getActiveSaleForProduct, MIN_ORDER_QUANTITY, ORDER_QUANTITY_STEP } from '../stores/cartStore'
 import SaleCountdown from '../components/common/SaleCountdown'
 import { useInventory } from '../hooks/useInventory'
+import { useStorefrontProducts } from '../hooks/useStorefrontProducts'
 import InventoryProgressBar from '../components/common/InventoryProgressBar'
 import SEOHead from '../components/common/SEOHead'
 
-// For now, hardcoded product data - will come from Supabase later
-const products = [
-  {
-    id: '1',
-    name: 'Driveshaft Cable',
-    slug: 'driveshaft-cable',
-    short_description: 'Heavy-duty driveshaft safety cable for professional towing and recovery operations.',
-    price_cents: PRODUCT_PRICING['1'].basePrice,
-    sku: 'KTDC-001',
-    specs: {
-      cable_diameter: '5/32"',
-      length: '1000mm (39")',
-      working_load: '3000 lbs',
-      material: 'Galvanized Steel',
-      couplers: 'Aluminum'
-    },
-    images: ['/IMG_5493.jpeg'],
-    image: '/IMG_5493.jpeg',
-    in_stock: true
-  },
-  {
-    id: '2',
-    name: 'Driveshaft Cable +',
-    slug: 'driveshaft-cable-plus',
-    short_description: 'Reversed-coupler driveshaft cable for straight-line pull. Same 5/32" galvanized steel, 40" length, 3000 lb WLL.',
-    price_cents: PRODUCT_PRICING['2'].basePrice,
-    sku: 'KTDC-002',
-    specs: {
-      cable_diameter: '5/32"',
-      length: '1000mm (40")',
-      working_load: '3000 lbs',
-      material: 'Galvanized Steel',
-      couplers: 'Aluminum (reversed)'
-    },
-    images: ['/IMG_6707.jpeg'],
-    image: '/IMG_6707.jpeg',
-    in_stock: true
-  }
-]
+// Pull the first three spec entries to render as small chips beside the
+// product name. Generic enough to work for any product the admin creates;
+// the order admin chooses in the Specs tab is preserved.
+function topSpecChips(specs) {
+  if (!specs || typeof specs !== 'object') return []
+  return Object.entries(specs).slice(0, 3).map(([key, value]) => ({ key, value }))
+}
 
 function ProductCard({ product }) {
   const addItem = useCartStore((state) => state.addItem)
@@ -66,7 +35,20 @@ function ProductCard({ product }) {
   useEffect(() => { setQuantityDraft(String(quantity)) }, [quantity])
 
   const handleAddToCart = () => {
-    addItem(product, quantity, isLowStock ? { reducedMinimum: true } : {})
+    // The cart store expects `price_cents` and `images` on the product
+    // object; DB row uses `base_price_cents`. Normalize at the call site.
+    addItem(
+      {
+        id: product.id,
+        name: product.name,
+        slug: product.slug,
+        price_cents: product.base_price_cents,
+        sku: product.sku,
+        images: product.images || [],
+      },
+      quantity,
+      isLowStock ? { reducedMinimum: true } : {}
+    )
   }
 
   const handleQuantityChange = (delta) => {
@@ -74,16 +56,18 @@ function ProductCard({ product }) {
     setQuantity(newQty)
   }
 
-  // Re-render when sales reload or a countdown expires so the card flips
-  // back to the non-sale price without a manual refresh.
+  // Re-render when sales reload or a countdown expires.
   useCartStore(s => s.salesLoadedAt)
   const [, forceTick] = useState(0)
 
   const currentPrice = getPriceForQuantity(product.id, quantity)
   const tierPrice    = getTierPriceForQuantity(product.id, quantity)
   const totalPrice   = currentPrice * quantity
-  const basePrice    = PRODUCT_PRICING[product.id]?.basePrice ?? product.price_cents
+  const basePrice    = PRODUCT_PRICING[product.id]?.basePrice ?? product.base_price_cents
   const appliedSale  = getActiveSaleForProduct(product.id)
+
+  const thumbnail = (product.images && product.images[0]) || '/IMG_5493.jpeg'
+  const chips = topSpecChips(product.specs)
 
   return (
     <div className="bg-gray-800/50 border border-gray-700 hover:border-yellow-500 transition-all duration-300 group">
@@ -91,7 +75,7 @@ function ProductCard({ product }) {
       <Link to={`/products/${product.slug}`} className="block">
         <div className="aspect-square bg-gray-900 relative overflow-hidden">
           <img
-            src={product.image || product.images?.[0] || '/IMG_5493.jpeg'}
+            src={thumbnail}
             alt={product.name}
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
             loading="lazy"
@@ -116,12 +100,14 @@ function ProductCard({ product }) {
         </Link>
         <p className="text-gray-400 text-sm mb-4">{product.short_description}</p>
 
-        {/* Specs preview */}
-        <div className="flex flex-wrap gap-2 mb-4">
-          <span className="text-xs bg-gray-700 text-gray-300 px-2 py-1">{product.specs.cable_diameter} Cable</span>
-          <span className="text-xs bg-gray-700 text-gray-300 px-2 py-1">{product.specs.length}</span>
-          <span className="text-xs bg-gray-700 text-gray-300 px-2 py-1">{product.specs.working_load} WLL</span>
-        </div>
+        {/* Specs preview — first three values from product.specs */}
+        {chips.length > 0 && (
+          <div className="flex flex-wrap gap-2 mb-4">
+            {chips.map(c => (
+              <span key={c.key} className="text-xs bg-gray-700 text-gray-300 px-2 py-1">{c.value}</span>
+            ))}
+          </div>
+        )}
 
         {/* Price */}
         <div className="mb-4">
@@ -227,11 +213,13 @@ function ProductCard({ product }) {
 }
 
 function ProductListPage() {
+  const { products, loading } = useStorefrontProducts()
+
   return (
     <div className="pt-24 md:pt-32">
       <SEOHead
         title="Shop Driveshaft Safety Cables"
-        description="Browse heavy-duty Driveshaft Cables (driveshaftcable). Two configurations — standard and reversed-coupler. Volume pricing from $2.90/unit. Free shipping on orders over $400."
+        description="Browse heavy-duty Driveshaft Cables (driveshaftcable). Volume pricing from $2.90/unit. Free shipping on orders over $400."
         keywords="buy driveshaft cable, driveshaftcable, driveshaft cable price, bulk driveshaft cable, towing safety cable"
         canonical="/products"
         structuredData={{
@@ -274,24 +262,28 @@ function ProductListPage() {
                   <div><span className="text-green-400">LOYALTY DISCOUNT</span> — returning customers get an extra 10% off!</div>
                 </div>
               </div>
-              <div className="grid sm:grid-cols-2 gap-4">
-                {Object.entries(PRODUCT_PRICING).map(([pid, pricing]) => (
-                  <div key={pid} className="bg-black/20 border border-yellow-500/30 p-3">
-                    <div className="text-xs uppercase tracking-wider text-yellow-500 font-bold mb-2">{pricing.name}</div>
-                    <div className="flex flex-wrap gap-3 text-sm">
-                      <div className="flex items-center gap-1.5">
-                        <span className="text-gray-400">10-49:</span>
-                        <span className="text-yellow-500 font-bold">{formatPrice(pricing.basePrice)}/ea</span>
-                      </div>
-                      {pricing.tiers.slice().reverse().map((tier, i) => (
-                        <div key={i} className="flex items-center gap-1.5">
-                          <span className="text-gray-400">{tier.label}:</span>
-                          <span className="text-green-400 font-bold">{formatPrice(tier.price)}/ea</span>
+              <div className={`grid gap-4 ${products.length >= 3 ? 'sm:grid-cols-3' : 'sm:grid-cols-2'}`}>
+                {products.map(p => {
+                  const pricing = PRODUCT_PRICING[p.id]
+                  if (!pricing) return null
+                  return (
+                    <div key={p.id} className="bg-black/20 border border-yellow-500/30 p-3">
+                      <div className="text-xs uppercase tracking-wider text-yellow-500 font-bold mb-2">{p.name}</div>
+                      <div className="flex flex-wrap gap-3 text-sm">
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-gray-400">10-49:</span>
+                          <span className="text-yellow-500 font-bold">{formatPrice(pricing.basePrice)}/ea</span>
                         </div>
-                      ))}
+                        {pricing.tiers.slice().reverse().map((tier, i) => (
+                          <div key={i} className="flex items-center gap-1.5">
+                            <span className="text-gray-400">{tier.label}:</span>
+                            <span className="text-green-400 font-bold">{formatPrice(tier.price)}/ea</span>
+                          </div>
+                        ))}
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  )
+                })}
               </div>
             </div>
           </div>
@@ -307,11 +299,19 @@ function ProductListPage() {
           </div>
 
           {/* Products */}
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {products.map((product) => (
-              <ProductCard key={product.id} product={product} />
-            ))}
-          </div>
+          {loading && products.length === 0 ? (
+            <div className="text-gray-500 py-12 text-center">Loading products…</div>
+          ) : products.length === 0 ? (
+            <div className="text-gray-500 py-12 text-center border border-dashed border-gray-700 rounded">
+              No products available right now. Check back soon.
+            </div>
+          ) : (
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {products.map((product) => (
+                <ProductCard key={product.id} product={product} />
+              ))}
+            </div>
+          )}
 
           {/* More products coming */}
           <div className="mt-16 text-center">

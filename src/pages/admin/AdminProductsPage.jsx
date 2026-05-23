@@ -3,6 +3,8 @@ import { Link, useNavigate } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
 import { formatPrice, useCartStore } from '../../stores/cartStore'
 import { useProducts } from '../../hooks/useProducts'
+import { invalidateStorefrontProductsCache } from '../../hooks/useStorefrontProducts'
+import ImageUploader from '../../components/admin/ImageUploader'
 
 // Convert a dollar-string input ("3.45") to integer cents (345). Returns null
 // if blank/invalid so the caller can validate.
@@ -23,33 +25,74 @@ function emptyForm() {
     tier100: '',
     tier200: '',
     isStorefront: false,
+    sortOrder: 0,
+    // Phase 2: storefront content
+    slug: '',
+    shortDescription: '',
+    description: '',
+    specs: [],            // [{ key, value }, ...]
+    applications: [],     // [string, ...]
+    features: [],         // [{ title, description }, ...]
+    images: [],           // [url, ...]
+    tagline: '',
+    showcaseBullets: ['', '', ''],
+    ctaLabel: '',
   }
 }
 
+// Convert a saved product row into the form shape used by the modal.
 function rowToForm(p) {
-  // Tier prices are stored as JSONB [{ min, price }, ...]. Pull the prices
-  // for the three canonical tiers (50/100/200); missing tiers stay blank.
   const byMin = {}
   for (const t of (p.tiers || [])) byMin[t.min] = t.price
+  // Specs JSONB is an object {label: value}; form uses an array of rows
+  // so we can preserve order and allow blank rows during editing.
+  const specsArr = Object.entries(p.specs || {}).map(([key, value]) => ({ key, value }))
+  const bullets = Array.isArray(p.showcase_bullets) ? p.showcase_bullets : []
   return {
     id: p.id,
     name: p.name,
     sku: p.sku,
     basePrice: (p.base_price_cents / 100).toFixed(2),
-    tier50: byMin[50] != null ? (byMin[50] / 100).toFixed(2) : '',
+    tier50:  byMin[50]  != null ? (byMin[50]  / 100).toFixed(2) : '',
     tier100: byMin[100] != null ? (byMin[100] / 100).toFixed(2) : '',
     tier200: byMin[200] != null ? (byMin[200] / 100).toFixed(2) : '',
     isStorefront: !!p.is_storefront,
+    sortOrder: p.sort_order ?? 0,
+    slug: p.slug || '',
+    shortDescription: p.short_description || '',
+    description: p.description || '',
+    specs: specsArr,
+    applications: Array.isArray(p.applications) ? [...p.applications] : [],
+    features: Array.isArray(p.features) ? p.features.map(f => ({ ...f })) : [],
+    images: Array.isArray(p.images) ? [...p.images] : [],
+    tagline: p.tagline || '',
+    showcaseBullets: [
+      bullets[0] || '',
+      bullets[1] || '',
+      bullets[2] || '',
+    ],
+    ctaLabel: p.cta_label || '',
   }
 }
+
+const TABS = [
+  { key: 'basics',     label: 'Basics' },
+  { key: 'pricing',    label: 'Pricing' },
+  { key: 'storefront', label: 'Storefront' },
+  { key: 'specs',      label: 'Specs' },
+  { key: 'applications', label: 'Applications' },
+  { key: 'features',   label: 'Features' },
+  { key: 'images',     label: 'Images' },
+]
 
 function AdminProductsPage() {
   const navigate = useNavigate()
   const [authChecked, setAuthChecked] = useState(false)
-  const { products, loading, addProduct, updateProduct, deleteProduct, refetch } = useProducts()
+  const { products, loading, addProduct, updateProduct, deleteProduct } = useProducts()
   const [showAddModal, setShowAddModal] = useState(false)
-  const [editingId, setEditingId] = useState(null) // product.id being edited
+  const [editingId, setEditingId] = useState(null)
   const [form, setForm] = useState(emptyForm())
+  const [activeTab, setActiveTab] = useState('basics')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState(null)
   const [confirmDelete, setConfirmDelete] = useState(null)
@@ -71,6 +114,7 @@ function AdminProductsPage() {
   const startAdd = () => {
     setEditingId(null)
     setForm(emptyForm())
+    setActiveTab('basics')
     setError(null)
     setShowAddModal(true)
   }
@@ -78,6 +122,7 @@ function AdminProductsPage() {
   const startEdit = (product) => {
     setEditingId(product.id)
     setForm(rowToForm(product))
+    setActiveTab('basics')
     setError(null)
     setShowAddModal(true)
   }
@@ -86,9 +131,36 @@ function AdminProductsPage() {
     setShowAddModal(false)
     setEditingId(null)
     setForm(emptyForm())
+    setActiveTab('basics')
     setError(null)
   }
 
+  const setField = (patch) => setForm(prev => ({ ...prev, ...patch }))
+
+  // ---- Repeating-row editors (specs / applications / features) ----------
+  const updateSpec = (idx, patch) => {
+    const next = form.specs.map((row, i) => i === idx ? { ...row, ...patch } : row)
+    setField({ specs: next })
+  }
+  const addSpec = () => setField({ specs: [...form.specs, { key: '', value: '' }] })
+  const removeSpec = (idx) => setField({ specs: form.specs.filter((_, i) => i !== idx) })
+
+  const updateApp = (idx, value) => {
+    const next = [...form.applications]
+    next[idx] = value
+    setField({ applications: next })
+  }
+  const addApp = () => setField({ applications: [...form.applications, ''] })
+  const removeApp = (idx) => setField({ applications: form.applications.filter((_, i) => i !== idx) })
+
+  const updateFeature = (idx, patch) => {
+    const next = form.features.map((row, i) => i === idx ? { ...row, ...patch } : row)
+    setField({ features: next })
+  }
+  const addFeature = () => setField({ features: [...form.features, { title: '', description: '' }] })
+  const removeFeature = (idx) => setField({ features: form.features.filter((_, i) => i !== idx) })
+
+  // ---- Validation --------------------------------------------------------
   const validate = () => {
     if (!editingId && !/^[a-z0-9-]+$/.test(form.id)) {
       return 'Product ID must be lowercase letters, numbers, and hyphens only.'
@@ -99,52 +171,79 @@ function AdminProductsPage() {
     if (baseCents == null) return 'Base price must be a positive number.'
     const tierCents = [form.tier50, form.tier100, form.tier200].map(dollarsToCents)
     if (tierCents.some(c => c == null)) return 'All three tier prices must be filled.'
-    // Sanity: tier prices should be <= base price and descending as min increases.
     if (tierCents[0] > baseCents) return 'Tier 50+ price should be lower than base price.'
     if (tierCents[1] > tierCents[0]) return 'Tier 100+ should be <= Tier 50+.'
     if (tierCents[2] > tierCents[1]) return 'Tier 200+ should be <= Tier 100+.'
+    if (form.slug && !/^[a-z0-9-]+$/.test(form.slug)) {
+      return 'Slug must be lowercase letters, numbers, and hyphens only.'
+    }
+    if (form.isStorefront) {
+      if (!form.slug.trim()) return 'Storefront-visible products need a slug.'
+      if (form.images.length === 0) return 'Storefront-visible products need at least one image.'
+    }
     return null
   }
 
+  // ---- Save --------------------------------------------------------------
   const handleSave = async () => {
     setError(null)
     const v = validate()
     if (v) return setError(v)
     setBusy(true)
+
     const baseCents = dollarsToCents(form.basePrice)
     const tiers = [
       { min: 50,  price: dollarsToCents(form.tier50) },
       { min: 100, price: dollarsToCents(form.tier100) },
       { min: 200, price: dollarsToCents(form.tier200) },
     ]
+    // Strip blank rows from repeating editors before persisting.
+    const specsObj = {}
+    for (const row of form.specs) {
+      const k = row.key?.trim()
+      const v = row.value?.trim()
+      if (k && v) specsObj[k] = v
+    }
+    const applications = form.applications.map(s => s.trim()).filter(Boolean)
+    const features = form.features
+      .map(f => ({ title: (f.title || '').trim(), description: (f.description || '').trim() }))
+      .filter(f => f.title && f.description)
+    const bullets = form.showcaseBullets.map(s => (s || '').trim()).filter(Boolean)
+
+    const payload = {
+      name: form.name.trim(),
+      sku: form.sku.trim(),
+      basePriceCents: baseCents,
+      tiers,
+      isStorefront: form.isStorefront,
+      sortOrder: parseInt(form.sortOrder, 10) || 0,
+      slug: form.slug.trim() || null,
+      shortDescription: form.shortDescription.trim() || null,
+      description: form.description.trim() || null,
+      specs: specsObj,
+      applications,
+      features,
+      images: form.images,
+      tagline: form.tagline.trim() || null,
+      showcaseBullets: bullets,
+      ctaLabel: form.ctaLabel.trim() || null,
+    }
+
     let result
     if (editingId) {
-      result = await updateProduct(editingId, {
-        name: form.name.trim(),
-        sku: form.sku.trim(),
-        basePriceCents: baseCents,
-        tiers,
-        isStorefront: form.isStorefront,
-      })
+      result = await updateProduct(editingId, payload)
     } else {
-      result = await addProduct({
-        id: form.id.trim(),
-        name: form.name.trim(),
-        sku: form.sku.trim(),
-        basePriceCents: baseCents,
-        tiers,
-        isStorefront: form.isStorefront,
-        sortOrder: products.length + 1,
-      })
+      result = await addProduct({ id: form.id.trim(), ...payload })
     }
     setBusy(false)
     if (result.error) {
       setError(result.error.message || 'Save failed.')
       return
     }
-    // Push the new pricing into the in-memory cart store so storefront pages
-    // see the change without a reload.
+
+    // Refresh both cart-side pricing and the storefront content cache.
     await useCartStore.getState().loadProducts()
+    invalidateStorefrontProductsCache()
     closeModal()
     setSavedMsg(editingId ? 'Product updated' : 'Product added')
     setTimeout(() => setSavedMsg(null), 2500)
@@ -156,10 +255,11 @@ function AdminProductsPage() {
     setBusy(false)
     setConfirmDelete(null)
     if (delError) {
-      setError(`Delete failed: ${delError.message}. Products referenced by shipments cannot be removed — set them inactive instead.`)
+      setError(`Delete failed: ${delError.message}. Products referenced by orders/shipments cannot be removed — set them inactive instead.`)
       return
     }
     await useCartStore.getState().loadProducts()
+    invalidateStorefrontProductsCache()
     setSavedMsg('Product deleted')
     setTimeout(() => setSavedMsg(null), 2500)
   }
@@ -169,6 +269,7 @@ function AdminProductsPage() {
     await updateProduct(product.id, { isActive: !product.is_active })
     setBusy(false)
     await useCartStore.getState().loadProducts()
+    invalidateStorefrontProductsCache()
   }
 
   if (!authChecked) {
@@ -192,10 +293,7 @@ function AdminProductsPage() {
               <span className="text-gray-600">/</span>
               <span className="text-white font-industrial">PRODUCTS</span>
             </div>
-            <button
-              onClick={handleSignOut}
-              className="text-gray-400 hover:text-red-500 transition-colors text-sm"
-            >
+            <button onClick={handleSignOut} className="text-gray-400 hover:text-red-500 transition-colors text-sm">
               Sign Out
             </button>
           </div>
@@ -207,7 +305,7 @@ function AdminProductsPage() {
           <div>
             <h1 className="text-3xl font-industrial text-white">PRODUCTS</h1>
             <p className="text-gray-400 text-sm mt-1">
-              Manage the catalog: edit prices/names/SKU or add new product slots.
+              Manage every per-product field — pricing, descriptions, specs, applications, features, photos, and homepage card copy.
             </p>
           </div>
           <button
@@ -220,10 +318,9 @@ function AdminProductsPage() {
 
         <div className="bg-blue-500/10 border border-blue-500/40 px-4 py-3 mb-6 rounded text-sm">
           <p className="text-blue-300">
-            <span className="font-bold">Heads up:</span> New products added here show up in admin inventory,
-            shipments, analytics, and manual-order entry. They <em>do not</em> auto-list on the
-            public storefront — wiring a new product onto <code className="text-blue-200">/products</code> still
-            requires a code update. Editing prices or names for existing storefront products DOES flow through to the public site.
+            <span className="font-bold">Tip:</span> Toggle <em>Storefront visible</em> in Basics to make a product appear on
+            <code className="text-blue-200 mx-1">/products</code> and the homepage. Storefront-visible products need a slug AND at least one image.
+            Edits flow through to the live site as soon as you save.
           </p>
         </div>
 
@@ -244,82 +341,77 @@ function AdminProductsPage() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="text-gray-400 text-xs uppercase border-b border-gray-700">
-                  <th className="text-left py-3 px-4">ID</th>
-                  <th className="text-left py-3 px-4">Name</th>
-                  <th className="text-left py-3 px-4">SKU</th>
+                  <th className="text-left  py-3 px-4">ID</th>
+                  <th className="text-left  py-3 px-4">Name</th>
+                  <th className="text-left  py-3 px-4">SKU</th>
+                  <th className="text-left  py-3 px-4">Slug</th>
                   <th className="text-right py-3 px-4">Base</th>
-                  <th className="text-right py-3 px-4">50+</th>
-                  <th className="text-right py-3 px-4">100+</th>
-                  <th className="text-right py-3 px-4">200+</th>
+                  <th className="text-center py-3 px-4">Images</th>
                   <th className="text-center py-3 px-4">Storefront</th>
                   <th className="text-center py-3 px-4">Active</th>
                   <th className="text-right py-3 px-4">Actions</th>
                 </tr>
               </thead>
               <tbody>
-                {products.map(p => {
-                  const tierByMin = Object.fromEntries((p.tiers || []).map(t => [t.min, t.price]))
-                  return (
-                    <tr key={p.id} className={`border-b border-gray-700/50 ${!p.is_active ? 'opacity-50' : ''}`}>
-                      <td className="py-3 px-4 text-gray-300 font-mono text-xs">{p.id}</td>
-                      <td className="py-3 px-4 text-white font-bold">{p.name}</td>
-                      <td className="py-3 px-4 text-gray-300 font-mono text-xs">{p.sku}</td>
-                      <td className="py-3 px-4 text-right text-white">{formatPrice(p.base_price_cents)}</td>
-                      <td className="py-3 px-4 text-right text-gray-300">{tierByMin[50] != null ? formatPrice(tierByMin[50]) : '—'}</td>
-                      <td className="py-3 px-4 text-right text-gray-300">{tierByMin[100] != null ? formatPrice(tierByMin[100]) : '—'}</td>
-                      <td className="py-3 px-4 text-right text-gray-300">{tierByMin[200] != null ? formatPrice(tierByMin[200]) : '—'}</td>
-                      <td className="py-3 px-4 text-center">
-                        {p.is_storefront ? (
-                          <span className="text-green-400 text-xs">Yes</span>
-                        ) : (
-                          <span className="text-gray-500 text-xs">Admin only</span>
-                        )}
-                      </td>
-                      <td className="py-3 px-4 text-center">
-                        <button
-                          onClick={() => handleToggleActive(p)}
-                          disabled={busy}
-                          className={`text-xs px-2 py-1 rounded ${p.is_active ? 'bg-green-500/20 text-green-400 hover:bg-green-500/30' : 'bg-gray-600/30 text-gray-400 hover:bg-gray-600/50'}`}
-                        >
-                          {p.is_active ? 'Active' : 'Disabled'}
-                        </button>
-                      </td>
-                      <td className="py-3 px-4 text-right">
-                        <button
-                          onClick={() => startEdit(p)}
-                          className="text-yellow-500 hover:text-yellow-400 text-xs mr-3"
-                        >
-                          Edit
-                        </button>
-                        {confirmDelete === p.id ? (
-                          <>
-                            <button
-                              onClick={() => handleDelete(p.id)}
-                              disabled={busy}
-                              className="text-red-400 hover:text-red-300 text-xs mr-2"
-                            >
-                              Confirm
-                            </button>
-                            <button
-                              onClick={() => setConfirmDelete(null)}
-                              className="text-gray-500 hover:text-gray-400 text-xs"
-                            >
-                              Cancel
-                            </button>
-                          </>
-                        ) : (
+                {products.map(p => (
+                  <tr key={p.id} className={`border-b border-gray-700/50 ${!p.is_active ? 'opacity-50' : ''}`}>
+                    <td className="py-3 px-4 text-gray-300 font-mono text-xs">{p.id}</td>
+                    <td className="py-3 px-4 text-white font-bold">{p.name}</td>
+                    <td className="py-3 px-4 text-gray-300 font-mono text-xs">{p.sku}</td>
+                    <td className="py-3 px-4 text-gray-300 font-mono text-xs">{p.slug || '—'}</td>
+                    <td className="py-3 px-4 text-right text-white">{formatPrice(p.base_price_cents)}</td>
+                    <td className="py-3 px-4 text-center text-gray-300 text-xs">{(p.images || []).length}</td>
+                    <td className="py-3 px-4 text-center">
+                      {p.is_storefront ? (
+                        <span className="text-green-400 text-xs">Yes</span>
+                      ) : (
+                        <span className="text-gray-500 text-xs">Admin only</span>
+                      )}
+                    </td>
+                    <td className="py-3 px-4 text-center">
+                      <button
+                        onClick={() => handleToggleActive(p)}
+                        disabled={busy}
+                        className={`text-xs px-2 py-1 rounded ${p.is_active ? 'bg-green-500/20 text-green-400 hover:bg-green-500/30' : 'bg-gray-600/30 text-gray-400 hover:bg-gray-600/50'}`}
+                      >
+                        {p.is_active ? 'Active' : 'Disabled'}
+                      </button>
+                    </td>
+                    <td className="py-3 px-4 text-right">
+                      <button
+                        onClick={() => startEdit(p)}
+                        className="text-yellow-500 hover:text-yellow-400 text-xs mr-3"
+                      >
+                        Edit
+                      </button>
+                      {confirmDelete === p.id ? (
+                        <>
                           <button
-                            onClick={() => setConfirmDelete(p.id)}
+                            onClick={() => handleDelete(p.id)}
                             disabled={busy}
-                            className="text-red-500 hover:text-red-400 text-xs"
+                            className="text-red-400 hover:text-red-300 text-xs mr-2"
                           >
-                            Delete
+                            Confirm
                           </button>
-                        )}
-                      </td>
-                    </tr>
-                  )
-                })}
+                          <button
+                            onClick={() => setConfirmDelete(null)}
+                            className="text-gray-500 hover:text-gray-400 text-xs"
+                          >
+                            Cancel
+                          </button>
+                        </>
+                      ) : (
+                        <button
+                          onClick={() => setConfirmDelete(p.id)}
+                          disabled={busy}
+                          className="text-red-500 hover:text-red-400 text-xs"
+                        >
+                          Delete
+                        </button>
+                      )}
+                    </td>
+                  </tr>
+                ))}
               </tbody>
             </table>
           </div>
@@ -333,124 +425,294 @@ function AdminProductsPage() {
       </main>
 
       {showAddModal && (
-        <div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4">
-          <div className="bg-gray-900 border border-gray-700 rounded max-w-lg w-full p-6">
-            <h2 className="text-xl font-industrial text-yellow-500 mb-4">
-              {editingId ? `EDIT PRODUCT ${editingId}` : 'ADD PRODUCT'}
-            </h2>
+        <div className="fixed inset-0 bg-black/70 z-50 flex items-start justify-center p-4 overflow-y-auto">
+          <div className="bg-gray-900 border border-gray-700 rounded w-full max-w-3xl my-8">
+            <div className="sticky top-0 bg-gray-900 border-b border-gray-700 p-4 z-10">
+              <h2 className="text-xl font-industrial text-yellow-500">
+                {editingId ? `EDIT ${editingId}` : 'ADD PRODUCT'}
+              </h2>
+              <div className="flex gap-1 mt-3 flex-wrap">
+                {TABS.map(t => (
+                  <button
+                    key={t.key}
+                    onClick={() => setActiveTab(t.key)}
+                    className={`text-xs px-3 py-1.5 rounded transition-colors ${
+                      activeTab === t.key
+                        ? 'bg-yellow-500 text-black font-bold'
+                        : 'bg-gray-800 text-gray-300 hover:text-white'
+                    }`}
+                  >
+                    {t.label}
+                  </button>
+                ))}
+              </div>
+            </div>
 
-            <div className="space-y-3">
-              {!editingId && (
-                <div>
-                  <label className="block text-gray-400 text-sm mb-1">
-                    Product ID <span className="text-gray-500">(lowercase, used as the key)</span>
-                  </label>
-                  <input
-                    type="text"
-                    value={form.id}
-                    onChange={e => setForm({ ...form, id: e.target.value })}
-                    placeholder="e.g. 3 or driveshaft-cable-xl"
-                    className="w-full bg-gray-800 border border-gray-600 text-white px-3 py-2 text-sm rounded focus:border-yellow-500 focus:outline-none font-mono"
-                  />
+            <div className="p-6">
+              {/* --- Basics --- */}
+              {activeTab === 'basics' && (
+                <div className="space-y-3">
+                  {!editingId && (
+                    <div>
+                      <label className="block text-gray-400 text-sm mb-1">
+                        Product ID <span className="text-gray-500">(unique key, lowercase a-z 0-9 -)</span>
+                      </label>
+                      <input
+                        type="text"
+                        value={form.id}
+                        onChange={e => setField({ id: e.target.value })}
+                        placeholder="e.g. 3 or driveshaft-cable-xl"
+                        className="w-full bg-gray-800 border border-gray-600 text-white px-3 py-2 text-sm rounded focus:border-yellow-500 focus:outline-none font-mono"
+                      />
+                    </div>
+                  )}
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-gray-400 text-sm mb-1">Name *</label>
+                      <input
+                        type="text"
+                        value={form.name}
+                        onChange={e => setField({ name: e.target.value })}
+                        className="w-full bg-gray-800 border border-gray-600 text-white px-3 py-2 text-sm rounded focus:border-yellow-500 focus:outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-gray-400 text-sm mb-1">SKU *</label>
+                      <input
+                        type="text"
+                        value={form.sku}
+                        onChange={e => setField({ sku: e.target.value })}
+                        placeholder="KTDC-XXX"
+                        className="w-full bg-gray-800 border border-gray-600 text-white px-3 py-2 text-sm rounded focus:border-yellow-500 focus:outline-none font-mono"
+                      />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <label className="flex items-center gap-2 text-gray-300 text-sm cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={form.isStorefront}
+                        onChange={e => setField({ isStorefront: e.target.checked })}
+                        className="w-4 h-4"
+                      />
+                      <span>Storefront-visible</span>
+                    </label>
+                    <div>
+                      <label className="block text-gray-400 text-sm mb-1">Sort order</label>
+                      <input
+                        type="number"
+                        value={form.sortOrder}
+                        onChange={e => setField({ sortOrder: e.target.value })}
+                        className="w-full bg-gray-800 border border-gray-600 text-white px-3 py-2 text-sm rounded focus:border-yellow-500 focus:outline-none"
+                      />
+                    </div>
+                  </div>
                 </div>
               )}
 
-              <div>
-                <label className="block text-gray-400 text-sm mb-1">Name *</label>
-                <input
-                  type="text"
-                  value={form.name}
-                  onChange={e => setForm({ ...form, name: e.target.value })}
-                  className="w-full bg-gray-800 border border-gray-600 text-white px-3 py-2 text-sm rounded focus:border-yellow-500 focus:outline-none"
-                />
-              </div>
+              {/* --- Pricing --- */}
+              {activeTab === 'pricing' && (
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-gray-400 text-sm mb-1">Base price ($) *</label>
+                    <input type="number" step="0.01" min="0" value={form.basePrice}
+                      onChange={e => setField({ basePrice: e.target.value })}
+                      className="w-full bg-gray-800 border border-gray-600 text-white px-3 py-2 text-sm rounded focus:border-yellow-500 focus:outline-none" />
+                  </div>
+                  <div>
+                    <label className="block text-gray-400 text-sm mb-1">Tier 50+ ($) *</label>
+                    <input type="number" step="0.01" min="0" value={form.tier50}
+                      onChange={e => setField({ tier50: e.target.value })}
+                      className="w-full bg-gray-800 border border-gray-600 text-white px-3 py-2 text-sm rounded focus:border-yellow-500 focus:outline-none" />
+                  </div>
+                  <div>
+                    <label className="block text-gray-400 text-sm mb-1">Tier 100+ ($) *</label>
+                    <input type="number" step="0.01" min="0" value={form.tier100}
+                      onChange={e => setField({ tier100: e.target.value })}
+                      className="w-full bg-gray-800 border border-gray-600 text-white px-3 py-2 text-sm rounded focus:border-yellow-500 focus:outline-none" />
+                  </div>
+                  <div>
+                    <label className="block text-gray-400 text-sm mb-1">Tier 200+ ($) *</label>
+                    <input type="number" step="0.01" min="0" value={form.tier200}
+                      onChange={e => setField({ tier200: e.target.value })}
+                      className="w-full bg-gray-800 border border-gray-600 text-white px-3 py-2 text-sm rounded focus:border-yellow-500 focus:outline-none" />
+                  </div>
+                </div>
+              )}
 
-              <div>
-                <label className="block text-gray-400 text-sm mb-1">SKU *</label>
-                <input
-                  type="text"
-                  value={form.sku}
-                  onChange={e => setForm({ ...form, sku: e.target.value })}
-                  placeholder="KTDC-XXX"
-                  className="w-full bg-gray-800 border border-gray-600 text-white px-3 py-2 text-sm rounded focus:border-yellow-500 focus:outline-none font-mono"
-                />
-              </div>
+              {/* --- Storefront text --- */}
+              {activeTab === 'storefront' && (
+                <div className="space-y-3">
+                  <div>
+                    <label className="block text-gray-400 text-sm mb-1">
+                      Slug <span className="text-gray-500">{'(URL path: /products/<slug>)'}</span>
+                    </label>
+                    <input type="text" value={form.slug}
+                      onChange={e => setField({ slug: e.target.value })}
+                      placeholder="driveshaft-cable-xl"
+                      className="w-full bg-gray-800 border border-gray-600 text-white px-3 py-2 text-sm rounded focus:border-yellow-500 focus:outline-none font-mono" />
+                    {editingId && (
+                      <p className="text-yellow-500/80 text-xs mt-1">
+                        Heads up: changing the slug breaks any existing bookmarks or links to this product.
+                      </p>
+                    )}
+                  </div>
+                  <div>
+                    <label className="block text-gray-400 text-sm mb-1">Short description <span className="text-gray-500">(one line)</span></label>
+                    <input type="text" value={form.shortDescription}
+                      onChange={e => setField({ shortDescription: e.target.value })}
+                      className="w-full bg-gray-800 border border-gray-600 text-white px-3 py-2 text-sm rounded focus:border-yellow-500 focus:outline-none" />
+                  </div>
+                  <div>
+                    <label className="block text-gray-400 text-sm mb-1">Long description</label>
+                    <textarea rows={8} value={form.description}
+                      onChange={e => setField({ description: e.target.value })}
+                      placeholder="A few paragraphs. Newlines render as paragraphs on the detail page."
+                      className="w-full bg-gray-800 border border-gray-600 text-white px-3 py-2 text-sm rounded focus:border-yellow-500 focus:outline-none font-mono" />
+                  </div>
+                  <div className="border-t border-gray-700 pt-3">
+                    <p className="text-gray-400 text-xs uppercase tracking-wider mb-2">Homepage card</p>
+                    <div className="space-y-3">
+                      <div>
+                        <label className="block text-gray-400 text-sm mb-1">Tagline <span className="text-gray-500">(yellow text under card title)</span></label>
+                        <input type="text" value={form.tagline}
+                          onChange={e => setField({ tagline: e.target.value })}
+                          className="w-full bg-gray-800 border border-gray-600 text-white px-3 py-2 text-sm rounded focus:border-yellow-500 focus:outline-none" />
+                      </div>
+                      <div>
+                        <label className="block text-gray-400 text-sm mb-1">Bullets (up to 3)</label>
+                        <div className="space-y-2">
+                          {form.showcaseBullets.map((b, i) => (
+                            <input key={i} type="text" value={b}
+                              onChange={e => {
+                                const next = [...form.showcaseBullets]; next[i] = e.target.value
+                                setField({ showcaseBullets: next })
+                              }}
+                              placeholder={`Bullet ${i + 1}`}
+                              className="w-full bg-gray-800 border border-gray-600 text-white px-3 py-2 text-sm rounded focus:border-yellow-500 focus:outline-none" />
+                          ))}
+                        </div>
+                      </div>
+                      <div>
+                        <label className="block text-gray-400 text-sm mb-1">CTA button label</label>
+                        <input type="text" value={form.ctaLabel}
+                          onChange={e => setField({ ctaLabel: e.target.value })}
+                          placeholder="Shop Driveshaft Cable"
+                          className="w-full bg-gray-800 border border-gray-600 text-white px-3 py-2 text-sm rounded focus:border-yellow-500 focus:outline-none" />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
 
-              <div className="grid grid-cols-2 gap-3">
+              {/* --- Specs --- */}
+              {activeTab === 'specs' && (
                 <div>
-                  <label className="block text-gray-400 text-sm mb-1">Base price ($) *</label>
-                  <input
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    value={form.basePrice}
-                    onChange={e => setForm({ ...form, basePrice: e.target.value })}
-                    placeholder="3.45"
-                    className="w-full bg-gray-800 border border-gray-600 text-white px-3 py-2 text-sm rounded focus:border-yellow-500 focus:outline-none"
-                  />
+                  <p className="text-gray-400 text-sm mb-3">Key/value pairs shown in the specifications table on the detail page.</p>
+                  <div className="space-y-2">
+                    {form.specs.map((row, idx) => (
+                      <div key={idx} className="flex gap-2">
+                        <input type="text" value={row.key}
+                          onChange={e => updateSpec(idx, { key: e.target.value })}
+                          placeholder="Label (e.g. Cable Diameter)"
+                          className="w-1/3 bg-gray-800 border border-gray-600 text-white px-3 py-2 text-sm rounded focus:border-yellow-500 focus:outline-none" />
+                        <input type="text" value={row.value}
+                          onChange={e => updateSpec(idx, { value: e.target.value })}
+                          placeholder='Value (e.g. 5/32" (4mm))'
+                          className="flex-1 bg-gray-800 border border-gray-600 text-white px-3 py-2 text-sm rounded focus:border-yellow-500 focus:outline-none" />
+                        <button type="button" onClick={() => removeSpec(idx)}
+                          className="text-red-500 hover:text-red-400 px-2 text-sm">✕</button>
+                      </div>
+                    ))}
+                  </div>
+                  <button type="button" onClick={addSpec}
+                    className="mt-3 text-yellow-500 hover:text-yellow-400 text-sm">
+                    + Add spec row
+                  </button>
                 </div>
-                <div>
-                  <label className="block text-gray-400 text-sm mb-1">Tier 50+ ($) *</label>
-                  <input
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    value={form.tier50}
-                    onChange={e => setForm({ ...form, tier50: e.target.value })}
-                    placeholder="3.35"
-                    className="w-full bg-gray-800 border border-gray-600 text-white px-3 py-2 text-sm rounded focus:border-yellow-500 focus:outline-none"
-                  />
-                </div>
-                <div>
-                  <label className="block text-gray-400 text-sm mb-1">Tier 100+ ($) *</label>
-                  <input
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    value={form.tier100}
-                    onChange={e => setForm({ ...form, tier100: e.target.value })}
-                    placeholder="3.15"
-                    className="w-full bg-gray-800 border border-gray-600 text-white px-3 py-2 text-sm rounded focus:border-yellow-500 focus:outline-none"
-                  />
-                </div>
-                <div>
-                  <label className="block text-gray-400 text-sm mb-1">Tier 200+ ($) *</label>
-                  <input
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    value={form.tier200}
-                    onChange={e => setForm({ ...form, tier200: e.target.value })}
-                    placeholder="2.90"
-                    className="w-full bg-gray-800 border border-gray-600 text-white px-3 py-2 text-sm rounded focus:border-yellow-500 focus:outline-none"
-                  />
-                </div>
-              </div>
+              )}
 
-              <label className="flex items-center gap-2 text-gray-300 text-sm cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={form.isStorefront}
-                  onChange={e => setForm({ ...form, isStorefront: e.target.checked })}
-                  className="w-4 h-4"
-                />
-                <span>Shown on public storefront</span>
-                <span className="text-gray-500 text-xs">(toggle only flags it — actual listing still requires code)</span>
-              </label>
+              {/* --- Applications --- */}
+              {activeTab === 'applications' && (
+                <div>
+                  <p className="text-gray-400 text-sm mb-3">Each entry shows as a bullet in the "Designed for" section.</p>
+                  <div className="space-y-2">
+                    {form.applications.map((value, idx) => (
+                      <div key={idx} className="flex gap-2">
+                        <input type="text" value={value}
+                          onChange={e => updateApp(idx, e.target.value)}
+                          placeholder="e.g. Class 7-8 Trucks"
+                          className="flex-1 bg-gray-800 border border-gray-600 text-white px-3 py-2 text-sm rounded focus:border-yellow-500 focus:outline-none" />
+                        <button type="button" onClick={() => removeApp(idx)}
+                          className="text-red-500 hover:text-red-400 px-2 text-sm">✕</button>
+                      </div>
+                    ))}
+                  </div>
+                  <button type="button" onClick={addApp}
+                    className="mt-3 text-yellow-500 hover:text-yellow-400 text-sm">
+                    + Add application
+                  </button>
+                </div>
+              )}
+
+              {/* --- Features --- */}
+              {activeTab === 'features' && (
+                <div>
+                  <p className="text-gray-400 text-sm mb-3">Each feature renders as a titled callout in the "Why" section.</p>
+                  <div className="space-y-3">
+                    {form.features.map((row, idx) => (
+                      <div key={idx} className="bg-gray-800/40 border border-gray-700 rounded p-3 space-y-2">
+                        <div className="flex gap-2">
+                          <input type="text" value={row.title}
+                            onChange={e => updateFeature(idx, { title: e.target.value })}
+                            placeholder="Feature title"
+                            className="flex-1 bg-gray-800 border border-gray-600 text-white px-3 py-2 text-sm rounded focus:border-yellow-500 focus:outline-none" />
+                          <button type="button" onClick={() => removeFeature(idx)}
+                            className="text-red-500 hover:text-red-400 px-2 text-sm">✕</button>
+                        </div>
+                        <textarea rows={2} value={row.description}
+                          onChange={e => updateFeature(idx, { description: e.target.value })}
+                          placeholder="Feature description"
+                          className="w-full bg-gray-800 border border-gray-600 text-white px-3 py-2 text-sm rounded focus:border-yellow-500 focus:outline-none" />
+                      </div>
+                    ))}
+                  </div>
+                  <button type="button" onClick={addFeature}
+                    className="mt-3 text-yellow-500 hover:text-yellow-400 text-sm">
+                    + Add feature
+                  </button>
+                </div>
+              )}
+
+              {/* --- Images --- */}
+              {activeTab === 'images' && (
+                <div>
+                  <p className="text-gray-400 text-sm mb-3">
+                    First image is the storefront thumbnail; the full list is the detail-page gallery in order. Drag to upload, hover a thumbnail to reorder or remove.
+                  </p>
+                  {!form.id && !editingId ? (
+                    <div className="bg-yellow-500/10 border border-yellow-500/40 px-3 py-2 rounded text-yellow-300 text-sm">
+                      Fill in the product ID on the Basics tab first — uploads are namespaced per product.
+                    </div>
+                  ) : (
+                    <ImageUploader
+                      value={form.images}
+                      onChange={imgs => setField({ images: imgs })}
+                      productId={editingId || form.id}
+                    />
+                  )}
+                </div>
+              )}
             </div>
 
             {error && (
-              <div className="mt-4 bg-red-500/10 border border-red-500/40 px-3 py-2 rounded text-red-400 text-sm">
+              <div className="mx-6 mb-4 bg-red-500/10 border border-red-500/40 px-3 py-2 rounded text-red-400 text-sm">
                 {error}
               </div>
             )}
 
-            <div className="flex justify-end gap-2 mt-6">
-              <button
-                onClick={closeModal}
-                disabled={busy}
-                className="px-4 py-2 text-gray-400 hover:text-white text-sm transition-colors"
-              >
+            <div className="sticky bottom-0 bg-gray-900 border-t border-gray-700 p-4 flex justify-end gap-2">
+              <button onClick={closeModal} disabled={busy} className="px-4 py-2 text-gray-400 hover:text-white text-sm transition-colors">
                 Cancel
               </button>
               <button

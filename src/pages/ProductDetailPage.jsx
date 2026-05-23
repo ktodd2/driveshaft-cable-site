@@ -3,200 +3,75 @@ import { useParams, Link, useNavigate } from 'react-router-dom'
 import { useCartStore, formatPrice, getPriceForQuantity, getTierPriceForQuantity, getActiveSaleForProduct, PRODUCT_PRICING, MIN_ORDER_QUANTITY, ORDER_QUANTITY_STEP } from '../stores/cartStore'
 import SaleCountdown from '../components/common/SaleCountdown'
 import { useInventory } from '../hooks/useInventory'
+import { useStorefrontProduct } from '../hooks/useStorefrontProduct'
 import InventoryProgressBar from '../components/common/InventoryProgressBar'
 import SEOHead from '../components/common/SEOHead'
 
-const structuredDataBySlug = {
-  'driveshaft-cable': [
-    {
-      '@context': 'https://schema.org',
-      '@type': 'Product',
-      name: 'Driveshaft Cable',
-      description: 'Driveshaft Safety Cable (driveshaftcable). 3000lb working load limit, 5/32" galvanized steel, 39" length, aluminum couplers. Purpose-built for heavy-duty towing and recovery operations.',
-      brand: { '@type': 'Brand', name: 'Driveshaft Cable' },
-      sku: 'KTDC-001',
-      mpn: 'KTDC-001',
-      image: [
-        'https://driveshaftcable.com/IMG_5489.jpeg',
-        'https://driveshaftcable.com/inuse.jpeg',
-        'https://driveshaftcable.com/IMG_5491.jpeg',
-        'https://driveshaftcable.com/IMG_5492.jpeg'
-      ],
-      material: 'Galvanized Steel Wire with Aluminum Couplers',
-      weight: { '@type': 'QuantitativeValue', value: '1.2', unitCode: 'LBR' },
-      offers: {
-        '@type': 'AggregateOffer',
-        lowPrice: '2.90',
-        highPrice: '3.45',
-        priceCurrency: 'USD',
-        offerCount: '4',
-        availability: 'https://schema.org/InStock',
-        url: 'https://driveshaftcable.com/products/driveshaft-cable'
-      }
-    },
-    {
-      '@context': 'https://schema.org',
-      '@type': 'BreadcrumbList',
-      itemListElement: [
-        { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://driveshaftcable.com/' },
-        { '@type': 'ListItem', position: 2, name: 'Products', item: 'https://driveshaftcable.com/products' },
-        { '@type': 'ListItem', position: 3, name: 'Driveshaft Cable', item: 'https://driveshaftcable.com/products/driveshaft-cable' }
-      ]
-    }
-  ],
-  'driveshaft-cable-plus': [
-    {
-      '@context': 'https://schema.org',
-      '@type': 'Product',
-      name: 'Driveshaft Cable +',
-      description: 'Driveshaft Cable + — reversed coupler configuration for straight-line pull. 3000lb working load limit, 5/32" galvanized steel, 40" length, aluminum couplers. Same heavy-duty safety cable with the coupler turned around so it can pull in a straight line.',
-      brand: { '@type': 'Brand', name: 'Driveshaft Cable' },
-      sku: 'KTDC-002',
-      mpn: 'KTDC-002',
-      image: [
-        'https://driveshaftcable.com/IMG_6707.jpeg',
-        'https://driveshaftcable.com/IMG_6708.jpeg'
-      ],
-      material: 'Galvanized Steel Wire with Aluminum Couplers',
-      weight: { '@type': 'QuantitativeValue', value: '1.2', unitCode: 'LBR' },
-      offers: {
-        '@type': 'AggregateOffer',
-        lowPrice: '3.40',
-        highPrice: '3.95',
-        priceCurrency: 'USD',
-        offerCount: '4',
-        availability: 'https://schema.org/InStock',
-        url: 'https://driveshaftcable.com/products/driveshaft-cable-plus'
-      }
-    },
-    {
-      '@context': 'https://schema.org',
-      '@type': 'BreadcrumbList',
-      itemListElement: [
-        { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://driveshaftcable.com/' },
-        { '@type': 'ListItem', position: 2, name: 'Products', item: 'https://driveshaftcable.com/products' },
-        { '@type': 'ListItem', position: 3, name: 'Driveshaft Cable +', item: 'https://driveshaftcable.com/products/driveshaft-cable-plus' }
-      ]
-    }
-  ]
+const SITE_ORIGIN = 'https://driveshaftcable.com'
+
+// Image URLs in the DB might be relative ('/IMG_5489.jpeg') or absolute
+// (Supabase Storage public URLs). For Schema.org we need absolute URLs.
+function toAbsolute(url) {
+  if (!url) return url
+  if (url.startsWith('http://') || url.startsWith('https://')) return url
+  return `${SITE_ORIGIN}${url.startsWith('/') ? '' : '/'}${url}`
 }
 
-const productImagesBySlug = {
-  'driveshaft-cable': [
-    '/inuse.jpeg',
-    '/IMG_5491.jpeg',
-    '/IMG_5492.jpeg',
-    '/IMG_5493.jpeg',
-    '/IMG_5490.jpeg',
-    '/IMG_5489.jpeg',
-  ],
-  'driveshaft-cable-plus': [
-    '/IMG_6707.jpeg',
-    '/IMG_6708.jpeg',
-  ]
+function formatDecimal(cents) {
+  return ((cents || 0) / 100).toFixed(2)
 }
 
-// Hardcoded product data - will come from Supabase later
-const products = {
-  'driveshaft-cable': {
-    id: '1',
-    name: 'Driveshaft Cable',
-    slug: 'driveshaft-cable',
-    description: `The Driveshaft Cable is a purpose-built safety device designed to securely suspend disconnected driveshafts during towing and recovery operations.
-
-Built with 5/32" galvanized steel cable and heavy-duty aluminum couplers, it provides a professional, single-use solution for keeping drivelines safely secured during transport. The cable is cut off after the job — no reuse, no guessing if it's still safe.
-
-No more makeshift solutions with bungee cords, zip ties, or chains. The Driveshaft Cable installs in seconds and keeps that shaft exactly where it needs to be.`,
-    short_description: 'Heavy-duty driveshaft safety cable for professional towing and recovery operations.',
-    price_cents: PRODUCT_PRICING['1'].basePrice,
-    bulk_threshold: 10,
-    sku: 'KTDC-001',
-    specs: {
-      'Cable Diameter': '5/32" (4mm)',
-      'Total Length': '1000mm (39")',
-      'Working Load Limit': '3000 lbs',
-      'Cable Material': 'Galvanized Steel Wire',
-      'Coupler Material': 'Yellow Anodized Aluminum',
-      'End Construction': 'Crimped Loops',
-      'Weight': '1.2 lb'
+// Build the Schema.org JSON-LD blob for the detail page from the DB row,
+// so any new product the admin creates automatically gets sound SEO markup.
+function buildStructuredData(product) {
+  if (!product) return []
+  const tiers = Array.isArray(product.tiers) ? product.tiers : []
+  const lowest = tiers.length
+    ? Math.min(product.base_price_cents, ...tiers.map(t => t.price))
+    : product.base_price_cents
+  const offerCount = 1 + tiers.length
+  const productJson = {
+    '@context': 'https://schema.org',
+    '@type': 'Product',
+    name: product.name,
+    description: product.short_description || (product.description || '').slice(0, 220),
+    brand: { '@type': 'Brand', name: 'Driveshaft Cable' },
+    sku: product.sku,
+    mpn: product.sku,
+    image: (product.images || []).map(toAbsolute),
+    offers: {
+      '@type': 'AggregateOffer',
+      lowPrice: formatDecimal(lowest),
+      highPrice: formatDecimal(product.base_price_cents),
+      priceCurrency: 'USD',
+      offerCount: String(offerCount),
+      availability: 'https://schema.org/InStock',
+      url: `${SITE_ORIGIN}/products/${product.slug}`,
     },
-    applications: [
-      'Class 7-8 Trucks',
-      'Semi-Tractors',
-      'Vocational Trucks',
-      'Transit Buses',
-      'Construction Equipment',
-      'Agricultural Equipment',
-      'Emergency Vehicles',
-      'Military Vehicles'
-    ],
-    features: [
-      { title: 'Prevents Driveshaft Drop', description: 'Secure suspension keeps the shaft in place during entire transport.' },
-      { title: 'Protects Drivetrain Components', description: 'Eliminates seal damage and secondary transmission failures.' },
-      { title: 'Faster Than Makeshift Solutions', description: 'No more chains, bungees, or zip ties. Install in seconds.' },
-      { title: 'Compact & Field-Ready', description: 'Fits in glove box or tool tray. Always ready when you need it.' },
-      { title: 'Single-Use by Design', description: 'Cut off after each job — no reuse, no guessing if it\'s still safe.' }
-    ],
-    in_stock: true
-  },
-  'driveshaft-cable-plus': {
-    id: '2',
-    name: 'Driveshaft Cable +',
-    slug: 'driveshaft-cable-plus',
-    description: `Driveshaft Cable + is the same heavy-duty driveshaft safety cable as our original, but with the red coupler reversed so it can pull in a straight line. When your driveline geometry needs a straight pull path instead of an angled one, this is the configuration you want.
-
-Built with the same 5/32" galvanized steel cable and the same crimped aluminum coupler — just turned around. Same 40" length. Same 3000 lb working load limit. Same single-use, cut-it-off-after-the-job design.
-
-If you've used the original Driveshaft Cable and wished the coupler faced the other way for your specific application, this is for you.`,
-    short_description: 'Reversed-coupler driveshaft cable for straight-line pull.',
-    price_cents: PRODUCT_PRICING['2'].basePrice,
-    bulk_threshold: 10,
-    sku: 'KTDC-002',
-    specs: {
-      'Cable Diameter': '5/32" (4mm)',
-      'Total Length': '1000mm (40")',
-      'Working Load Limit': '3000 lbs',
-      'Cable Material': 'Galvanized Steel Wire',
-      'Coupler Material': 'Anodized Aluminum (Reversed)',
-      'Coupler Orientation': 'Reversed — for straight-line pull',
-      'End Construction': 'Crimped Loops',
-      'Weight': '1.2 lb'
-    },
-    applications: [
-      'Class 7-8 Trucks',
-      'Semi-Tractors',
-      'Vocational Trucks',
-      'Transit Buses',
-      'Construction Equipment',
-      'Agricultural Equipment',
-      'Emergency Vehicles',
-      'Military Vehicles'
-    ],
-    features: [
-      { title: 'Straight-Line Pull', description: 'Reversed coupler lets the cable pull in a straight line — ideal when geometry calls for it.' },
-      { title: 'Same Heavy-Duty Build', description: 'Identical 5/32" galvanized steel cable and 3000 lb WLL as the original.' },
-      { title: 'Prevents Driveshaft Drop', description: 'Secure suspension keeps the shaft in place during entire transport.' },
-      { title: 'Faster Than Makeshift Solutions', description: 'No more chains, bungees, or zip ties. Install in seconds.' },
-      { title: 'Single-Use by Design', description: 'Cut off after each job — no reuse, no guessing if it\'s still safe.' }
-    ],
-    in_stock: true
   }
+  const breadcrumb = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Home', item: `${SITE_ORIGIN}/` },
+      { '@type': 'ListItem', position: 2, name: 'Products', item: `${SITE_ORIGIN}/products` },
+      { '@type': 'ListItem', position: 3, name: product.name, item: `${SITE_ORIGIN}/products/${product.slug}` },
+    ],
+  }
+  return [productJson, breadcrumb]
 }
 
 function ProductDetailPage() {
   const { slug } = useParams()
   const navigate = useNavigate()
   const [quantity, setQuantity] = useState(MIN_ORDER_QUANTITY)
-  // Separate string state for the input field so the user can clear it and
-  // type freely without each keystroke snapping back to the min. The
-  // committed `quantity` only changes on blur (and on +10/-10 clicks).
+  // String state for the input so the user can clear and type freely.
   const [quantityDraft, setQuantityDraft] = useState(String(MIN_ORDER_QUANTITY))
   const [selectedImage, setSelectedImage] = useState(0)
   const addItem = useCartStore((state) => state.addItem)
 
-  const product = products[slug]
-  const productImages = productImagesBySlug[slug] || []
-  const productStructuredData = structuredDataBySlug[slug] || []
+  const { product, loading, notFound } = useStorefrontProduct(slug)
+  const productImages = (product?.images && product.images.length > 0) ? product.images : []
   const { stock, totalStock, loading: stockLoading } = useInventory(product?.id)
 
   const isLowStock = !stockLoading && stock !== null && stock > 0 && stock < MIN_ORDER_QUANTITY
@@ -207,12 +82,21 @@ function ProductDetailPage() {
     if (isLowStock) setQuantity(stock)
   }, [stock, stockLoading])
 
-  // Keep the draft in sync when buttons (or low-stock useEffect) move
-  // quantity programmatically. Doesn't run while the user is typing because
-  // setQuantity isn't called during keystrokes.
   useEffect(() => { setQuantityDraft(String(quantity)) }, [quantity])
 
-  if (!product) {
+  // Re-render when sales reload / countdown expires.
+  useCartStore(s => s.salesLoadedAt)
+  const [, forceTick] = useState(0)
+
+  if (loading) {
+    return (
+      <div className="pt-24 md:pt-32 min-h-screen flex items-center justify-center bg-ktodd-dark">
+        <div className="text-yellow-500">Loading product…</div>
+      </div>
+    )
+  }
+
+  if (notFound || !product) {
     return (
       <div className="pt-24 md:pt-32 min-h-screen flex items-center justify-center bg-ktodd-dark">
         <div className="text-center">
@@ -225,36 +109,45 @@ function ProductDetailPage() {
     )
   }
 
+  const productPricing = PRODUCT_PRICING[product.id] || PRODUCT_PRICING['1']
+  const basePrice = productPricing.basePrice
+  const productTiers = productPricing.tiers
+  const currentPrice = getPriceForQuantity(product.id, quantity)
+  const tierPrice    = getTierPriceForQuantity(product.id, quantity)
+  const appliedSale  = getActiveSaleForProduct(product.id)
+  const productStructuredData = buildStructuredData(product)
+  const specsEntries = Object.entries(product.specs || {})
+  const features     = Array.isArray(product.features) ? product.features : []
+  const applications = Array.isArray(product.applications) ? product.applications : []
+
   const handleQuantityChange = (delta) => {
     const newQty = Math.min(Math.max(effectiveMin, quantity + delta), maxQty)
     setQuantity(newQty)
   }
 
+  const cartProduct = {
+    id: product.id,
+    name: product.name,
+    slug: product.slug,
+    price_cents: product.base_price_cents,
+    sku: product.sku,
+    images: product.images || [],
+  }
+
   const handleAddToCart = () => {
-    addItem(product, quantity, isLowStock ? { reducedMinimum: true } : {})
+    addItem(cartProduct, quantity, isLowStock ? { reducedMinimum: true } : {})
   }
 
   const handleBuyNow = () => {
-    addItem(product, quantity, isLowStock ? { reducedMinimum: true } : {})
+    addItem(cartProduct, quantity, isLowStock ? { reducedMinimum: true } : {})
     navigate('/cart')
   }
-
-  // Re-render when sales reload / countdown expires.
-  useCartStore(s => s.salesLoadedAt)
-  const [, forceTick] = useState(0)
-
-  const currentPrice = getPriceForQuantity(product.id, quantity)
-  const tierPrice    = getTierPriceForQuantity(product.id, quantity)
-  const productPricing = PRODUCT_PRICING[product.id] || PRODUCT_PRICING['1']
-  const basePrice = productPricing.basePrice
-  const productTiers = productPricing.tiers
-  const appliedSale = getActiveSaleForProduct(product.id)
 
   return (
     <div className="pt-24 md:pt-32">
       <SEOHead
         title={`${product.name} — 3000lb WLL`}
-        description={`${product.name} safety cable. 3000lb working load limit, 5/32" galvanized steel, aluminum couplers. Starting at ${formatPrice(basePrice)}/unit with volume discounts.`}
+        description={`${product.name} safety cable. ${product.short_description || ''} Starting at ${formatPrice(basePrice)}/unit with volume discounts.`}
         keywords="driveshaft cable, driveshaftcable, 3000lb WLL cable, towing safety cable, driveshaft guard"
         canonical={`/products/${product.slug}`}
         structuredData={productStructuredData}
@@ -280,31 +173,37 @@ function ProductDetailPage() {
             <div className="flex flex-col gap-3">
               {/* Main Image */}
               <div className="relative bg-gray-900 rounded-lg overflow-hidden aspect-[4/3]">
-                <img
-                  src={productImages[selectedImage]}
-                  alt={`${product.name} - view ${selectedImage + 1}`}
-                  className="w-full h-full object-cover"
-                />
+                {productImages.length > 0 ? (
+                  <img
+                    src={productImages[Math.min(selectedImage, productImages.length - 1)]}
+                    alt={`${product.name} - view ${selectedImage + 1}`}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center text-gray-600">No image</div>
+                )}
               </div>
               {/* Thumbnails */}
-              <div className="flex gap-2">
-                {productImages.map((img, idx) => (
-                  <button
-                    key={idx}
-                    onClick={() => setSelectedImage(idx)}
-                    className={`flex-1 aspect-square overflow-hidden rounded border-2 transition-colors ${
-                      selectedImage === idx ? 'border-yellow-500' : 'border-gray-700 hover:border-gray-500'
-                    }`}
-                  >
-                    <img
-                      src={img}
-                      alt={`${product.name} thumbnail ${idx + 1}`}
-                      className="w-full h-full object-cover"
-                      loading="lazy"
-                    />
-                  </button>
-                ))}
-              </div>
+              {productImages.length > 1 && (
+                <div className="flex gap-2 flex-wrap">
+                  {productImages.map((img, idx) => (
+                    <button
+                      key={idx}
+                      onClick={() => setSelectedImage(idx)}
+                      className={`flex-1 min-w-[80px] aspect-square overflow-hidden rounded border-2 transition-colors ${
+                        selectedImage === idx ? 'border-yellow-500' : 'border-gray-700 hover:border-gray-500'
+                      }`}
+                    >
+                      <img
+                        src={img}
+                        alt={`${product.name} thumbnail ${idx + 1}`}
+                        className="w-full h-full object-cover"
+                        loading="lazy"
+                      />
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
 
             {/* Product Info */}
@@ -371,7 +270,9 @@ function ProductDetailPage() {
                 Returning customers save an extra <span className="font-bold">10%</span> — applied automatically at checkout!
               </div>
 
-              <p className="text-gray-300 mb-6 whitespace-pre-line">{product.description}</p>
+              {product.description && (
+                <p className="text-gray-300 mb-6 whitespace-pre-line">{product.description}</p>
+              )}
 
               {/* Single-Use Notice */}
               <div className="bg-yellow-500/10 border border-yellow-500/40 px-4 py-3 mb-8 flex items-start gap-3">
@@ -404,8 +305,6 @@ function ProductDetailPage() {
                       onChange={(e) => setQuantityDraft(e.target.value)}
                       onBlur={() => {
                         const raw = parseInt(quantityDraft, 10)
-                        // Low-stock items skip the rounding so the customer
-                        // can buy exactly what's left (e.g. 5).
                         const rounded = isLowStock
                           ? (isNaN(raw) ? effectiveMin : raw)
                           : Math.round((isNaN(raw) ? effectiveMin : raw) / ORDER_QUANTITY_STEP) * ORDER_QUANTITY_STEP
@@ -453,81 +352,89 @@ function ProductDetailPage() {
               </div>
 
               {/* Quick Specs */}
-              <div className="border-t border-gray-700 pt-6">
-                <h3 className="text-lg font-industrial text-yellow-500 mb-4">KEY SPECIFICATIONS</h3>
-                <div className="grid grid-cols-2 gap-4">
-                  {Object.entries(product.specs).slice(0, 4).map(([key, value]) => (
-                    <div key={key}>
-                      <div className="text-gray-400 text-sm">{key}</div>
-                      <div className="text-white font-bold">{value}</div>
-                    </div>
-                  ))}
+              {specsEntries.length > 0 && (
+                <div className="border-t border-gray-700 pt-6">
+                  <h3 className="text-lg font-industrial text-yellow-500 mb-4">KEY SPECIFICATIONS</h3>
+                  <div className="grid grid-cols-2 gap-4">
+                    {specsEntries.slice(0, 4).map(([key, value]) => (
+                      <div key={key}>
+                        <div className="text-gray-400 text-sm">{key}</div>
+                        <div className="text-white font-bold">{value}</div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
           </div>
         </div>
       </section>
 
       {/* Full Specs Section */}
-      <section className="py-16 bg-ktodd-charcoal">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="text-2xl font-industrial text-white mb-8">
-            TECHNICAL <span className="text-yellow-500">SPECIFICATIONS</span>
-          </h2>
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {Object.entries(product.specs).map(([key, value]) => (
-              <div key={key} className="bg-gray-800/50 border border-gray-700 p-4">
-                <div className="text-gray-400 text-sm uppercase tracking-wider mb-1">{key}</div>
-                <div className="text-yellow-500 text-xl font-industrial">{value}</div>
-              </div>
-            ))}
+      {specsEntries.length > 0 && (
+        <section className="py-16 bg-ktodd-charcoal">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <h2 className="text-2xl font-industrial text-white mb-8">
+              TECHNICAL <span className="text-yellow-500">SPECIFICATIONS</span>
+            </h2>
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {specsEntries.map(([key, value]) => (
+                <div key={key} className="bg-gray-800/50 border border-gray-700 p-4">
+                  <div className="text-gray-400 text-sm uppercase tracking-wider mb-1">{key}</div>
+                  <div className="text-yellow-500 text-xl font-industrial">{value}</div>
+                </div>
+              ))}
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* Features Section */}
-      <section className="py-16 bg-ktodd-dark">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="text-2xl font-industrial text-white mb-8">
-            WHY <span className="text-yellow-500">{product.name.toUpperCase()}?</span>
-          </h2>
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {product.features.map((feature, index) => (
-              <div key={index} className="flex items-start gap-4 p-4 bg-gray-800/30 border-l-4 border-yellow-500">
-                <div className="flex-shrink-0 w-10 h-10 bg-yellow-500 rounded flex items-center justify-center">
-                  <svg className="w-6 h-6 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                  </svg>
+      {features.length > 0 && (
+        <section className="py-16 bg-ktodd-dark">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <h2 className="text-2xl font-industrial text-white mb-8">
+              WHY <span className="text-yellow-500">{product.name.toUpperCase()}?</span>
+            </h2>
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {features.map((feature, index) => (
+                <div key={index} className="flex items-start gap-4 p-4 bg-gray-800/30 border-l-4 border-yellow-500">
+                  <div className="flex-shrink-0 w-10 h-10 bg-yellow-500 rounded flex items-center justify-center">
+                    <svg className="w-6 h-6 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h4 className="text-lg font-bold text-white">{feature.title}</h4>
+                    <p className="text-gray-400">{feature.description}</p>
+                  </div>
                 </div>
-                <div>
-                  <h4 className="text-lg font-bold text-white">{feature.title}</h4>
-                  <p className="text-gray-400">{feature.description}</p>
-                </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* Applications Section */}
-      <section className="py-16 bg-ktodd-charcoal">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="text-2xl font-industrial text-white mb-8">
-            DESIGNED FOR <span className="text-yellow-500">HEAVY-DUTY APPLICATIONS</span>
-          </h2>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            {product.applications.map((app, index) => (
-              <div key={index} className="flex items-center gap-3 bg-gray-800/30 px-4 py-3 border-l-2 border-yellow-500">
-                <svg className="w-5 h-5 text-yellow-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                </svg>
-                <span className="text-gray-300">{app}</span>
-              </div>
-            ))}
+      {applications.length > 0 && (
+        <section className="py-16 bg-ktodd-charcoal">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <h2 className="text-2xl font-industrial text-white mb-8">
+              DESIGNED FOR <span className="text-yellow-500">HEAVY-DUTY APPLICATIONS</span>
+            </h2>
+            <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              {applications.map((app, index) => (
+                <div key={index} className="flex items-center gap-3 bg-gray-800/30 px-4 py-3 border-l-2 border-yellow-500">
+                  <svg className="w-5 h-5 text-yellow-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                  </svg>
+                  <span className="text-gray-300">{app}</span>
+                </div>
+              ))}
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
     </div>
   )
 }
