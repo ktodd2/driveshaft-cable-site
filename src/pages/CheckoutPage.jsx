@@ -568,6 +568,13 @@ function CheckoutPage() {
                   {/* Shipping Address */}
                   <div className="bg-gray-800/50 border border-gray-700 p-6 mb-8">
                     <h2 className="text-xl font-industrial text-yellow-500 mb-6">SHIPPING ADDRESS</h2>
+                    <div className="bg-blue-500/10 border border-blue-500/40 px-4 py-3 mb-4 rounded text-sm text-blue-300">
+                      <p>
+                        <span aria-hidden="true">🇨🇦 </span>
+                        <span className="font-bold">Shipping to Canada?</span>{' '}
+                        Please <Link to="/contact" className="underline hover:text-blue-200">contact us</Link> first to discuss shipping costs before placing this order — international rates aren't auto-calculated, so the shipping line below only reflects US delivery.
+                      </p>
+                    </div>
                     <div className="space-y-4">
                       <div>
                         <label htmlFor="address1" className="block text-gray-400 text-sm mb-1">Address *</label>

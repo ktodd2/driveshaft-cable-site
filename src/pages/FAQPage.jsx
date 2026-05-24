@@ -83,7 +83,7 @@ const faqStructuredData = {
       name: 'Where do you ship?',
       acceptedAnswer: {
         '@type': 'Answer',
-        text: 'We ship throughout the United States from our Houston, Texas location. Contact us for international shipping inquiries.'
+        text: 'We ship throughout the United States from our Houston, Texas location. We also ship to Canada — please contact us first so we can quote actual cross-border shipping costs before you order, since international rates are not calculated automatically at checkout.'
       }
     },
     {
@@ -185,7 +185,7 @@ const faqs = [
       },
       {
         question: 'Where do you ship?',
-        answer: 'We ship throughout the United States from our Houston, Texas location. Contact us for international shipping inquiries.'
+        answer: 'We ship throughout the United States from our Houston, Texas location. We also ship to Canada — please contact us first so we can quote the actual cross-border shipping cost before you order. International shipping is not calculated automatically at checkout.'
       },
       {
         question: 'What payment methods do you accept?',

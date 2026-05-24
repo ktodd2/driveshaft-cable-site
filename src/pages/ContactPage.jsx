@@ -122,6 +122,15 @@ function ContactPage() {
                   Request a Quote →
                 </a>
               </div>
+
+              <div className="bg-gray-800/50 border border-gray-700 p-6">
+                <h3 className="text-lg font-industrial text-white mb-4">
+                  <span aria-hidden="true">🇨🇦 </span>SHIPPING TO CANADA?
+                </h3>
+                <p className="text-gray-400">
+                  Yes — we ship to Canada. Send us your shipping address (or just a postal code if you'd rather not share full details yet) and we'll quote the cross-border shipping cost so you know the total before you order. International rates aren't auto-calculated at checkout, so always contact us first for Canadian orders.
+                </p>
+              </div>
             </div>
 
             {/* Contact Form */}
