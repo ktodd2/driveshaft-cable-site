@@ -94,6 +94,7 @@ function Header() {
                 <NavLink to="/#specs">Specs</NavLink>
               )}
               <NavLink to="/about">About</NavLink>
+              <NavLink to="/instructions">Instructions</NavLink>
               <NavLink to="/faq">FAQ</NavLink>
               <NavLink to="/blog">Blog</NavLink>
 
@@ -152,6 +153,7 @@ function Header() {
                   <NavLink to="/#specs">Specs</NavLink>
                 )}
                 <NavLink to="/about">About</NavLink>
+                <NavLink to="/instructions">Instructions</NavLink>
                 <NavLink to="/faq">FAQ</NavLink>
                 <NavLink to="/blog">Blog</NavLink>
                 <NavLink to="/contact">Contact</NavLink>

@@ -56,6 +56,9 @@ function Footer() {
                 <Link to="/contact" className="text-gray-400 hover:text-yellow-500 transition-colors text-sm">Contact</Link>
               </li>
               <li>
+                <Link to="/instructions" className="text-gray-400 hover:text-yellow-500 transition-colors text-sm">Instructions</Link>
+              </li>
+              <li>
                 <Link to="/faq" className="text-gray-400 hover:text-yellow-500 transition-colors text-sm">FAQ</Link>
               </li>
               <li>

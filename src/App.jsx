@@ -7,6 +7,7 @@ import HomePage from './pages/HomePage'
 import AboutPage from './pages/AboutPage'
 import ContactPage from './pages/ContactPage'
 import FAQPage from './pages/FAQPage'
+import InstructionsPage from './pages/InstructionsPage'
 import NotFoundPage from './pages/NotFoundPage'
 import ProductListPage from './pages/ProductListPage'
 import ProductDetailPage from './pages/ProductDetailPage'
@@ -56,6 +57,7 @@ function App() {
           <Route path="about" element={<AboutPage />} />
           <Route path="contact" element={<ContactPage />} />
           <Route path="faq" element={<FAQPage />} />
+          <Route path="instructions" element={<InstructionsPage />} />
           <Route path="products" element={<ProductListPage />} />
           <Route path="products/:slug" element={<ProductDetailPage />} />
           <Route path="cart" element={<CartPage />} />
