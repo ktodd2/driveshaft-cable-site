@@ -2,9 +2,7 @@ import React from 'react'
 import { Link } from 'react-router-dom'
 import SEOHead from '../components/common/SEOHead'
 
-// Swap this with the hosted Supabase URL once the infographic is uploaded
-// via the admin image uploader. Falls back gracefully if the file is missing.
-const INFOGRAPHIC_URL = '/instructions/driveshaft-tie-up.jpeg'
+const INFOGRAPHIC_URL = 'https://twrihhyfvomqiqbxkitc.supabase.co/storage/v1/object/public/product-images/123/w5fd2d9xnu.png'
 
 const howToStructuredData = {
   '@context': 'https://schema.org',
