@@ -27,20 +27,20 @@ interface ProductPricing {
 export const PRODUCT_PRICING: Record<string, ProductPricing> = {
   '1': {
     name: 'Driveshaft Cable',
-    basePrice: 345,
+    basePrice: 300,
     tiers: [
-      { min: 200, price: 290 },
-      { min: 100, price: 315 },
-      { min: 50,  price: 335 },
+      { min: 200, price: 245 },
+      { min: 100, price: 270 },
+      { min: 50,  price: 290 },
     ],
   },
   '2': {
     name: 'Driveshaft Cable +',
-    basePrice: 395,
+    basePrice: 350,
     tiers: [
-      { min: 200, price: 340 },
-      { min: 100, price: 365 },
-      { min: 50,  price: 385 },
+      { min: 200, price: 295 },
+      { min: 100, price: 320 },
+      { min: 50,  price: 340 },
     ],
   },
 }

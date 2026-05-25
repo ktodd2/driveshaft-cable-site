@@ -41,20 +41,20 @@ export const REPEAT_CUSTOMER_DISCOUNT = 0.10 // 10% off subtotal
 export const PRODUCT_PRICING = {
   '1': {
     name: 'Driveshaft Cable',
-    basePrice: 345, // $3.45
+    basePrice: 300, // $3.00
     tiers: [
-      { min: 200, price: 290, label: '200+' },
-      { min: 100, price: 315, label: '100-199' },
-      { min: 50,  price: 335, label: '50-99' },
+      { min: 200, price: 245, label: '200+' },
+      { min: 100, price: 270, label: '100-199' },
+      { min: 50,  price: 290, label: '50-99' },
     ],
   },
   '2': {
     name: 'Driveshaft Cable +',
-    basePrice: 395, // $3.95 — $0.50 more per piece than the original
+    basePrice: 350, // $3.50 — $0.50 more per piece than the original
     tiers: [
-      { min: 200, price: 340, label: '200+' },
-      { min: 100, price: 365, label: '100-199' },
-      { min: 50,  price: 385, label: '50-99' },
+      { min: 200, price: 295, label: '200+' },
+      { min: 100, price: 320, label: '100-199' },
+      { min: 50,  price: 340, label: '50-99' },
     ],
   },
 }
