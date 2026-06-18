@@ -115,6 +115,7 @@ function ProductDetailPage() {
   const currentPrice = getPriceForQuantity(product.id, quantity)
   const tierPrice    = getTierPriceForQuantity(product.id, quantity)
   const appliedSale  = getActiveSaleForProduct(product.id)
+  const outOfStock   = !stockLoading && stock === 0
   const productStructuredData = buildStructuredData(product)
   const specsEntries = Object.entries(product.specs || {})
   const features     = Array.isArray(product.features) ? product.features : []
@@ -172,7 +173,7 @@ function ProductDetailPage() {
             {/* Product Image Gallery */}
             <div className="flex flex-col gap-3">
               {/* Main Image */}
-              <div className="relative bg-gray-900 rounded-lg overflow-hidden aspect-[4/3]">
+              <div className={`relative bg-gray-900 rounded-lg overflow-hidden aspect-[4/3] ${outOfStock ? 'grayscale opacity-70' : ''}`}>
                 {productImages.length > 0 ? (
                   <img
                     src={productImages[Math.min(selectedImage, productImages.length - 1)]}
@@ -181,6 +182,13 @@ function ProductDetailPage() {
                   />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center text-gray-600">No image</div>
+                )}
+                {outOfStock && (
+                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                    <div className="bg-red-600/95 text-white font-industrial text-4xl sm:text-5xl tracking-widest px-8 py-3 -rotate-12 shadow-2xl border-y-4 border-white/80">
+                      SOLD OUT
+                    </div>
+                  </div>
                 )}
               </div>
               {/* Thumbnails */}
@@ -211,17 +219,17 @@ function ProductDetailPage() {
               <div className="mb-2">
                 <span className="text-gray-400 text-sm">SKU: {product.sku}</span>
               </div>
-              <h1 className="text-3xl sm:text-4xl font-industrial text-white mb-4">{product.name}</h1>
+              <h1 className={`text-3xl sm:text-4xl font-industrial mb-4 ${outOfStock ? 'text-gray-400 line-through' : 'text-white'}`}>{product.name}</h1>
 
               <div className="flex items-center gap-4 mb-4 flex-wrap">
                 {appliedSale ? (
                   <>
                     <span className="text-gray-500 line-through text-2xl">{formatPrice(tierPrice)}</span>
-                    <span className="text-red-400 text-4xl font-industrial">{formatPrice(currentPrice)}</span>
+                    <span className={`text-4xl font-industrial ${outOfStock ? 'text-gray-500 line-through' : 'text-red-400'}`}>{formatPrice(currentPrice)}</span>
                     <span className="text-red-400 text-xs font-bold bg-red-500/20 px-2 py-0.5 rounded">−{appliedSale.discount_percent}%</span>
                   </>
                 ) : (
-                  <span className="text-yellow-500 text-4xl font-industrial">{formatPrice(currentPrice)}</span>
+                  <span className={`text-4xl font-industrial ${outOfStock ? 'text-gray-500 line-through' : 'text-yellow-500'}`}>{formatPrice(currentPrice)}</span>
                 )}
                 <span className="text-gray-400 text-sm">per unit</span>
                 {stockLoading ? (
