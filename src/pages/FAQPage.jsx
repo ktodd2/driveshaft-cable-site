@@ -27,7 +27,7 @@ const faqStructuredData = {
       name: 'What are the specifications?',
       acceptedAnswer: {
         '@type': 'Answer',
-        text: 'Cable Diameter: 5/32" steel wire cable. Total Length: 1000mm (39"). Working Load Limit: 2400 lb. End Construction: Crimped loops with aluminum couplers. The cable is galvanized for corrosion resistance.'
+        text: 'Cable Diameter: 5/32" steel wire cable. Total Length: 1000mm (39"). Working Load Limit: 3000 lb. End Construction: Crimped loops with aluminum couplers. The cable is galvanized for corrosion resistance.'
       }
     },
     {
@@ -143,7 +143,7 @@ const faqs = [
       },
       {
         question: 'What are the specifications?',
-        answer: 'Cable Diameter: 5/32" steel wire cable. Total Length: 1000mm (39"). Working Load Limit: 2400 lb. End Construction: Crimped loops with aluminum couplers. The cable is galvanized for corrosion resistance.'
+        answer: 'Cable Diameter: 5/32" steel wire cable. Total Length: 1000mm (39"). Working Load Limit: 3000 lb. End Construction: Crimped loops with aluminum couplers. The cable is galvanized for corrosion resistance.'
       },
       {
         question: 'Is it reusable?',
