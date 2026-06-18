@@ -70,7 +70,9 @@ function ProductCard({ product }) {
   const chips = topSpecChips(product.specs)
 
   return (
-    <div className="bg-gray-800/50 border border-gray-700 hover:border-yellow-500 transition-all duration-300 group">
+    <div className={`bg-gray-800/50 border border-gray-700 transition-all duration-300 group ${
+      outOfStock ? 'opacity-60 grayscale' : 'hover:border-yellow-500'
+    }`}>
       {/* Product Image */}
       <Link to={`/products/${product.slug}`} className="block">
         <div className="aspect-square bg-gray-900 relative overflow-hidden">
@@ -88,13 +90,25 @@ function ProductCard({ product }) {
               {stock === 0 ? 'OUT OF STOCK' : `${stock} in stock`}
             </div>
           )}
+          {/* Big diagonal "SOLD OUT" overlay so the eye actively skips this card */}
+          {outOfStock && (
+            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+              <div className="bg-red-600/95 text-white font-industrial text-2xl tracking-widest px-6 py-2 -rotate-12 shadow-xl border-y-2 border-white/80">
+                SOLD OUT
+              </div>
+            </div>
+          )}
         </div>
       </Link>
 
       {/* Product Info */}
       <div className="p-6">
         <Link to={`/products/${product.slug}`}>
-          <h3 className="text-xl font-industrial text-white mb-2 group-hover:text-yellow-500 transition-colors">
+          <h3 className={`text-xl font-industrial mb-2 transition-colors ${
+            outOfStock
+              ? 'text-gray-400 line-through'
+              : 'text-white group-hover:text-yellow-500'
+          }`}>
             {product.name}
           </h3>
         </Link>
