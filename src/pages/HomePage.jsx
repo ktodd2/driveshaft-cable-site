@@ -1,7 +1,7 @@
 import React from 'react'
 import Hero from '../components/landing/Hero'
 import Problem from '../components/landing/Problem'
-import ProductShowcase from '../components/landing/ProductShowcase'
+import StorefrontProducts from '../components/landing/StorefrontProducts'
 import Specs from '../components/landing/Specs'
 import HowItWorks from '../components/landing/HowItWorks'
 import Customers from '../components/landing/Customers'
@@ -45,9 +45,12 @@ function HomePage() {
         canonical="/"
         structuredData={homeStructuredData}
       />
+      {/* Products grid renders first — customers see the catalogue the
+          moment they land on the homepage. Hero and the rest of the
+          marketing content sit below. */}
+      <StorefrontProducts />
       <Hero />
       <Problem />
-      <ProductShowcase />
       <Specs />
       <HowItWorks />
       <Customers />
