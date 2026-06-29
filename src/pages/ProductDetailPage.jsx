@@ -282,16 +282,20 @@ function ProductDetailPage() {
                 <p className="text-gray-300 mb-6 whitespace-pre-line">{product.description}</p>
               )}
 
-              {/* Single-Use Notice */}
-              <div className="bg-yellow-500/10 border border-yellow-500/40 px-4 py-3 mb-8 flex items-start gap-3">
-                <svg className="w-5 h-5 text-yellow-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                <div>
-                  <span className="text-yellow-500 font-bold text-sm uppercase tracking-wider">Single-Use Product</span>
-                  <p className="text-gray-300 text-sm mt-1">This cable is designed to be cut off after each job. One cable per use — no reuse, no risk.</p>
+              {/* Single-Use Notice — only for products that have a "single-use" feature
+                  in their features JSONB (e.g. Driveshaft Cable). Hidden for products
+                  like the brake caging bolt that aren't cut-off-after-use. */}
+              {features.some(f => (f?.title || '').toLowerCase().includes('single-use')) && (
+                <div className="bg-yellow-500/10 border border-yellow-500/40 px-4 py-3 mb-8 flex items-start gap-3">
+                  <svg className="w-5 h-5 text-yellow-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <div>
+                    <span className="text-yellow-500 font-bold text-sm uppercase tracking-wider">Single-Use Product</span>
+                    <p className="text-gray-300 text-sm mt-1">This cable is designed to be cut off after each job. One cable per use — no reuse, no risk.</p>
+                  </div>
                 </div>
-              </div>
+              )}
 
               {/* Quantity Selector */}
               <div className="mb-6">
