@@ -67,6 +67,7 @@ export function useProducts() {
     const {
       id, name, sku, basePriceCents, tiers,
       isStorefront = false, sortOrder = 0,
+      minOrderQuantity = 10, orderQuantityStep = 10,
       // Phase 2 storefront-content fields. All optional on add; the
       // admin form may save them empty and fill in later.
       slug, shortDescription, description, specs, applications, features,
@@ -80,6 +81,8 @@ export function useProducts() {
         sku,
         base_price_cents: basePriceCents,
         tiers,
+        min_order_quantity: minOrderQuantity,
+        order_quantity_step: orderQuantityStep,
         is_active: true,
         is_storefront: isStorefront,
         sort_order: sortOrder,
@@ -117,6 +120,8 @@ export function useProducts() {
       ...(patch.isActive !== undefined        && { is_active: patch.isActive }),
       ...(patch.isStorefront !== undefined    && { is_storefront: patch.isStorefront }),
       ...(patch.sortOrder !== undefined       && { sort_order: patch.sortOrder }),
+      ...(patch.minOrderQuantity !== undefined  && { min_order_quantity: patch.minOrderQuantity }),
+      ...(patch.orderQuantityStep !== undefined && { order_quantity_step: patch.orderQuantityStep }),
       // Phase 2 fields — only included if the caller explicitly sets them.
       ...(patch.slug !== undefined             && { slug: patch.slug }),
       ...(patch.shortDescription !== undefined && { short_description: patch.shortDescription }),

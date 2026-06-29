@@ -24,6 +24,8 @@ function emptyForm() {
     tier50: '',
     tier100: '',
     tier200: '',
+    minOrderQuantity: '10',
+    orderQuantityStep: '10',
     isStorefront: false,
     sortOrder: 0,
     // Phase 2: storefront content
@@ -56,6 +58,8 @@ function rowToForm(p) {
     tier50:  byMin[50]  != null ? (byMin[50]  / 100).toFixed(2) : '',
     tier100: byMin[100] != null ? (byMin[100] / 100).toFixed(2) : '',
     tier200: byMin[200] != null ? (byMin[200] / 100).toFixed(2) : '',
+    minOrderQuantity: String(p.min_order_quantity ?? 10),
+    orderQuantityStep: String(p.order_quantity_step ?? 10),
     isStorefront: !!p.is_storefront,
     sortOrder: p.sort_order ?? 0,
     slug: p.slug || '',
@@ -210,11 +214,18 @@ function AdminProductsPage() {
       .filter(f => f.title && f.description)
     const bullets = form.showcaseBullets.map(s => (s || '').trim()).filter(Boolean)
 
+    // Order-rule fields. Both default to 10 when blank/invalid so the form
+    // never persists a 0 (which would break the cart math).
+    const minOrderQuantity = Math.max(1, parseInt(form.minOrderQuantity, 10) || 10)
+    const orderQuantityStep = Math.max(1, parseInt(form.orderQuantityStep, 10) || 10)
+
     const payload = {
       name: form.name.trim(),
       sku: form.sku.trim(),
       basePriceCents: baseCents,
       tiers,
+      minOrderQuantity,
+      orderQuantityStep,
       isStorefront: form.isStorefront,
       sortOrder: parseInt(form.sortOrder, 10) || 0,
       slug: form.slug.trim() || null,
@@ -505,6 +516,36 @@ function AdminProductsPage() {
                         onChange={e => setField({ sortOrder: e.target.value })}
                         className="w-full bg-gray-800 border border-gray-600 text-white px-3 py-2 text-sm rounded focus:border-yellow-500 focus:outline-none"
                       />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-gray-400 text-sm mb-1">
+                        Minimum order quantity <span className="text-gray-500">(units)</span>
+                      </label>
+                      <input
+                        type="number"
+                        min="1"
+                        value={form.minOrderQuantity}
+                        onChange={e => setField({ minOrderQuantity: e.target.value })}
+                        placeholder="10"
+                        className="w-full bg-gray-800 border border-gray-600 text-white px-3 py-2 text-sm rounded focus:border-yellow-500 focus:outline-none"
+                      />
+                      <p className="text-gray-500 text-xs mt-1">Cables: 10. Items sold singly (e.g. caging bolt): 1.</p>
+                    </div>
+                    <div>
+                      <label className="block text-gray-400 text-sm mb-1">
+                        Order step <span className="text-gray-500">(±/− increment)</span>
+                      </label>
+                      <input
+                        type="number"
+                        min="1"
+                        value={form.orderQuantityStep}
+                        onChange={e => setField({ orderQuantityStep: e.target.value })}
+                        placeholder="10"
+                        className="w-full bg-gray-800 border border-gray-600 text-white px-3 py-2 text-sm rounded focus:border-yellow-500 focus:outline-none"
+                      />
+                      <p className="text-gray-500 text-xs mt-1">Match the pack size. 10 for cables, 1 for caging bolt.</p>
                     </div>
                   </div>
                 </div>
