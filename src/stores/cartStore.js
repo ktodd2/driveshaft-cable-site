@@ -13,12 +13,15 @@ export const ORDER_QUANTITY_STEP = 10
 // Normalize a typed/passed quantity to the order-step rule. The reducedMinimum
 // exception lets a customer buy the final partial pack of stock (e.g. 5
 // remaining when the shelf is otherwise empty) without being forced to a
-// multiple of 10 they can't actually receive.
+// multiple of step they can't actually receive. `opts.step` lets callers
+// override the step for products that aren't pack-sized (e.g. the brake
+// caging bolt has step=1); falls back to the global ORDER_QUANTITY_STEP.
 export function normalizeOrderQuantity(qty, opts = {}) {
   const n = Math.max(0, Math.floor(qty || 0))
   if (opts.reducedMinimum) return n
-  if (n < ORDER_QUANTITY_STEP) return ORDER_QUANTITY_STEP
-  return Math.round(n / ORDER_QUANTITY_STEP) * ORDER_QUANTITY_STEP
+  const step = opts.step ?? ORDER_QUANTITY_STEP
+  if (n < step) return step
+  return Math.round(n / step) * step
 }
 
 // Shipping constants
@@ -42,6 +45,8 @@ export const PRODUCT_PRICING = {
   '1': {
     name: 'Driveshaft Cable',
     basePrice: 300, // $3.00
+    minOrderQuantity: 10,
+    orderQuantityStep: 10,
     tiers: [
       { min: 200, price: 245, label: '200+' },
       { min: 100, price: 270, label: '100-199' },
@@ -51,6 +56,8 @@ export const PRODUCT_PRICING = {
   '2': {
     name: 'Driveshaft Cable +',
     basePrice: 350, // $3.50 — $0.50 more per piece than the original
+    minOrderQuantity: 10,
+    orderQuantityStep: 10,
     tiers: [
       { min: 200, price: 295, label: '200+' },
       { min: 100, price: 320, label: '100-199' },
@@ -85,8 +92,24 @@ function normalizeDbProduct(row) {
   return {
     name: row.name,
     basePrice: row.base_price_cents,
+    minOrderQuantity: row.min_order_quantity ?? MIN_ORDER_QUANTITY,
+    orderQuantityStep: row.order_quantity_step ?? ORDER_QUANTITY_STEP,
     tiers,
   }
+}
+
+// Per-product min order quantity. Falls back to the global MIN_ORDER_QUANTITY
+// for products that haven't been loaded yet or don't have a per-product
+// override. Used by the cart-minimum check and by storefront +/- controls.
+export function getMinForProduct(productId) {
+  return livePricing[productId]?.minOrderQuantity ?? MIN_ORDER_QUANTITY
+}
+
+// Per-product order step (the +/- button increment). Falls back to the global
+// ORDER_QUANTITY_STEP. The brake caging bolt has step=1; the cables have
+// step=10 because they pack in 10-counts.
+export function getStepForProduct(productId) {
+  return livePricing[productId]?.orderQuantityStep ?? ORDER_QUANTITY_STEP
 }
 
 // Back-compat aliases — existing pages still display tier tables using these
@@ -193,7 +216,7 @@ export const useCartStore = create(
         try {
           const { data, error } = await supabase
             .from('products')
-            .select('id, name, base_price_cents, tiers, is_active')
+            .select('id, name, base_price_cents, tiers, is_active, min_order_quantity, order_quantity_step')
             .eq('is_active', true)
           if (error) {
             console.warn('cartStore.loadProducts: falling back to hardcoded pricing', error)
@@ -233,11 +256,14 @@ export const useCartStore = create(
         const existingItem = existingIndex >= 0 ? items[existingIndex] : null
 
         // If the existing line is reducedMinimum (partial pack), preserve the
-        // exception. Otherwise round the incoming quantity to a multiple of 10.
+        // exception. Otherwise round the incoming quantity to a multiple of
+        // the product-specific step.
         const effectiveReducedMin =
           options.reducedMinimum || existingItem?.reducedMinimum
+        const step = getStepForProduct(product.id)
         const safeQty = normalizeOrderQuantity(quantity, {
           reducedMinimum: effectiveReducedMin,
+          step,
         })
 
         if (existingIndex >= 0) {
@@ -245,6 +271,7 @@ export const useCartStore = create(
           const combined = (newItems[existingIndex].quantity || 0) + safeQty
           newItems[existingIndex].quantity = normalizeOrderQuantity(combined, {
             reducedMinimum: effectiveReducedMin,
+            step,
           })
           if (options.reducedMinimum) newItems[existingIndex].reducedMinimum = true
           set({ items: newItems })
@@ -282,6 +309,7 @@ export const useCartStore = create(
             if (item.productId !== productId) return item
             const safeQty = normalizeOrderQuantity(quantity, {
               reducedMinimum: item.reducedMinimum,
+              step: getStepForProduct(productId),
             })
             return { ...item, quantity: safeQty }
           })
@@ -333,12 +361,25 @@ export const selectVolumeSavings = (state) =>
     return sum + (basePrice - tierPrice) * item.quantity
   }, 0)
 
-// Check if order meets minimum (reduced-minimum items bypass the threshold).
-// Minimum is TOTAL cart quantity — so 5 + 5 across two products still qualifies.
+// The cart-level minimum is the MAX of every line item's product min. So a
+// cart with only the brake caging bolt (min=1) needs >=1 total, a cart with
+// any cable line (min=10) needs >=10 total, and a mixed cart with both
+// inherits the higher 10-unit floor. Reduced-minimum (low-stock) items bypass
+// the check entirely. Used both by the gate and by the "Add N more units"
+// messaging on the cart page.
+export const selectRequiredMinimum = (state) => {
+  if (!state.items.length) return MIN_ORDER_QUANTITY
+  return state.items.reduce(
+    (max, item) => Math.max(max, getMinForProduct(item.productId)),
+    0
+  )
+}
+
 export const selectMeetsMinimum = (state) => {
+  if (!state.items.length) return false
+  if (state.items.some(item => item.reducedMinimum)) return true
   const totalQty = state.items.reduce((sum, item) => sum + item.quantity, 0)
-  const hasReducedMinimum = state.items.some(item => item.reducedMinimum)
-  return totalQty >= MIN_ORDER_QUANTITY || hasReducedMinimum
+  return totalQty >= selectRequiredMinimum(state)
 }
 
 // True if ANY line item has hit a volume tier (i.e. is paying below its base

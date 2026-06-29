@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
-import { useCartStore, formatPrice, getPriceForQuantity, getTierPriceForQuantity, getActiveSaleForProduct, PRODUCT_PRICING, MIN_ORDER_QUANTITY, ORDER_QUANTITY_STEP } from '../stores/cartStore'
+import { useCartStore, formatPrice, getPriceForQuantity, getTierPriceForQuantity, getActiveSaleForProduct, PRODUCT_PRICING, MIN_ORDER_QUANTITY, ORDER_QUANTITY_STEP, getMinForProduct, getStepForProduct } from '../stores/cartStore'
 import SaleCountdown from '../components/common/SaleCountdown'
 import { useInventory } from '../hooks/useInventory'
 import { useStorefrontProduct } from '../hooks/useStorefrontProduct'
@@ -74,9 +74,19 @@ function ProductDetailPage() {
   const productImages = (product?.images && product.images.length > 0) ? product.images : []
   const { stock, totalStock, loading: stockLoading } = useInventory(product?.id)
 
-  const isLowStock = !stockLoading && stock !== null && stock > 0 && stock < MIN_ORDER_QUANTITY
-  const effectiveMin = isLowStock ? stock : MIN_ORDER_QUANTITY
+  const productMin = product?.min_order_quantity ?? MIN_ORDER_QUANTITY
+  const productStep = product?.order_quantity_step ?? ORDER_QUANTITY_STEP
+
+  const isLowStock = !stockLoading && stock !== null && stock > 0 && stock < productMin
+  const effectiveMin = isLowStock ? stock : productMin
   const maxQty = stock !== null && stock > 0 ? stock : Infinity
+
+  // When the product loads (or changes), reset the quantity input to the
+  // product's own minimum so the cage bolt (min=1) doesn't start at 10.
+  useEffect(() => {
+    if (!product) return
+    setQuantity(product.min_order_quantity ?? MIN_ORDER_QUANTITY)
+  }, [product?.id])
 
   useEffect(() => {
     if (isLowStock) setQuantity(stock)
@@ -299,27 +309,29 @@ function ProductDetailPage() {
 
               {/* Quantity Selector */}
               <div className="mb-6">
-                <label className="block text-gray-400 text-sm mb-2">Quantity (min. {effectiveMin}, in increments of {ORDER_QUANTITY_STEP})</label>
+                <label className="block text-gray-400 text-sm mb-2">
+                  Quantity (min. {effectiveMin}{productStep > 1 ? `, in increments of ${productStep}` : ''})
+                </label>
                 <div className="flex items-center gap-4">
                   <div className="flex items-center border border-gray-700">
                     <button
-                      onClick={() => handleQuantityChange(-ORDER_QUANTITY_STEP)}
+                      onClick={() => handleQuantityChange(-productStep)}
                       className="px-3 py-2 text-white hover:bg-gray-700 transition-colors text-sm font-bold"
                     >
-                      -{ORDER_QUANTITY_STEP}
+                      -{productStep}
                     </button>
                     <input
                       type="number"
                       value={quantityDraft}
                       min={effectiveMin}
                       max={stock ?? undefined}
-                      step={ORDER_QUANTITY_STEP}
+                      step={productStep}
                       onChange={(e) => setQuantityDraft(e.target.value)}
                       onBlur={() => {
                         const raw = parseInt(quantityDraft, 10)
                         const rounded = isLowStock
                           ? (isNaN(raw) ? effectiveMin : raw)
-                          : Math.round((isNaN(raw) ? effectiveMin : raw) / ORDER_QUANTITY_STEP) * ORDER_QUANTITY_STEP
+                          : Math.round((isNaN(raw) ? effectiveMin : raw) / productStep) * productStep
                         const clamped = Math.min(maxQty, Math.max(effectiveMin, rounded))
                         setQuantity(clamped)
                         setQuantityDraft(String(clamped))
@@ -327,10 +339,10 @@ function ProductDetailPage() {
                       className="w-20 text-center bg-transparent text-white border-x border-gray-700 py-2"
                     />
                     <button
-                      onClick={() => handleQuantityChange(ORDER_QUANTITY_STEP)}
+                      onClick={() => handleQuantityChange(productStep)}
                       className="px-3 py-2 text-white hover:bg-gray-700 transition-colors text-sm font-bold"
                     >
-                      +{ORDER_QUANTITY_STEP}
+                      +{productStep}
                     </button>
                   </div>
                   <span className="text-gray-400">
@@ -338,7 +350,7 @@ function ProductDetailPage() {
                   </span>
                 </div>
                 {isLowStock && (
-                  <p className="text-yellow-500 text-sm mt-2">Only {stock} available — min order reduced from {MIN_ORDER_QUANTITY}</p>
+                  <p className="text-yellow-500 text-sm mt-2">Only {stock} available — min order reduced from {productMin}</p>
                 )}
                 {!isLowStock && stock !== null && quantity >= stock && stock > 0 && (
                   <p className="text-yellow-500 text-sm mt-2">Maximum available: {stock} units</p>

@@ -19,7 +19,9 @@ import {
   getActiveSaleForProduct,
   MIN_ORDER_QUANTITY,
   FREE_SHIPPING_THRESHOLD,
-  SHIPPING_FEE
+  SHIPPING_FEE,
+  selectRequiredMinimum,
+  getStepForProduct,
 } from '../stores/cartStore'
 import SaleCountdown from '../components/common/SaleCountdown'
 import SEOHead from '../components/common/SEOHead'
@@ -31,6 +33,7 @@ function CartPage() {
   const subtotal = useCartStore(selectSubtotal)
   const pricePerUnit = useCartStore(selectPricePerUnit)
   const meetsMinimum = useCartStore(selectMeetsMinimum)
+  const requiredMinimum = useCartStore(selectRequiredMinimum)
   const hasBulkDiscount = useCartStore(selectHasBulkDiscount)
   const shipping = useCartStore(selectShipping)
   const orderTotal = useCartStore(selectOrderTotal)
@@ -127,7 +130,7 @@ function CartPage() {
                     <div>
                       <p className="text-white font-bold">Minimum Order Not Met</p>
                       <p className="text-gray-300 text-sm">
-                        Add {MIN_ORDER_QUANTITY - totalItems} more unit{MIN_ORDER_QUANTITY - totalItems !== 1 ? 's' : ''} to meet the minimum order of {MIN_ORDER_QUANTITY} units.
+                        Add {requiredMinimum - totalItems} more unit{requiredMinimum - totalItems !== 1 ? 's' : ''} to meet the minimum order of {requiredMinimum} units.
                       </p>
                     </div>
                   </div>
@@ -220,24 +223,30 @@ function CartPage() {
                         {!appliedSale && <div className="mb-4" />}
 
                         <div className="flex flex-wrap items-center gap-4">
-                          {/* Quantity — orders move in multiples of 10 */}
-                          <div className="flex items-center border border-gray-700">
-                            <button
-                              onClick={() => handleQuantityChange(item.productId, -10)}
-                              className="px-3 py-1 text-white hover:bg-gray-700 transition-colors text-sm font-bold"
-                            >
-                              -10
-                            </button>
-                            <span className="px-4 py-1 text-white border-x border-gray-700 min-w-[60px] text-center">
-                              {item.quantity}
-                            </span>
-                            <button
-                              onClick={() => handleQuantityChange(item.productId, 10)}
-                              className="px-3 py-1 text-white hover:bg-gray-700 transition-colors text-sm font-bold"
-                            >
-                              +10
-                            </button>
-                          </div>
+                          {/* Quantity — increment matches each product's
+                              order-step (10 for cables, 1 for the bolt). */}
+                          {(() => {
+                            const itemStep = getStepForProduct(item.productId)
+                            return (
+                              <div className="flex items-center border border-gray-700">
+                                <button
+                                  onClick={() => handleQuantityChange(item.productId, -itemStep)}
+                                  className="px-3 py-1 text-white hover:bg-gray-700 transition-colors text-sm font-bold"
+                                >
+                                  -{itemStep}
+                                </button>
+                                <span className="px-4 py-1 text-white border-x border-gray-700 min-w-[60px] text-center">
+                                  {item.quantity}
+                                </span>
+                                <button
+                                  onClick={() => handleQuantityChange(item.productId, itemStep)}
+                                  className="px-3 py-1 text-white hover:bg-gray-700 transition-colors text-sm font-bold"
+                                >
+                                  +{itemStep}
+                                </button>
+                              </div>
+                            )
+                          })()}
 
                           {/* Price */}
                           <div className="text-yellow-500 font-bold">
@@ -325,7 +334,7 @@ function CartPage() {
                   disabled={!meetsMinimum}
                   className="btn-primary w-full mb-4 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {meetsMinimum ? 'Proceed to Checkout' : `Add ${MIN_ORDER_QUANTITY - totalItems} More Units`}
+                  {meetsMinimum ? 'Proceed to Checkout' : `Add ${requiredMinimum - totalItems} More Units`}
                 </button>
 
                 {/* Per-product pricing tiers */}

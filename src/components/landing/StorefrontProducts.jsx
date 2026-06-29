@@ -4,6 +4,7 @@ import {
   useCartStore, formatPrice, PRODUCT_PRICING,
   getPriceForQuantity, getTierPriceForQuantity, getActiveSaleForProduct,
   MIN_ORDER_QUANTITY, ORDER_QUANTITY_STEP,
+  getMinForProduct, getStepForProduct,
 } from '../../stores/cartStore'
 import SaleCountdown from '../common/SaleCountdown'
 import { useInventory } from '../../hooks/useInventory'
@@ -45,15 +46,17 @@ function topSpecChips(specs) {
 
 function ProductCard({ product }) {
   const addItem = useCartStore((state) => state.addItem)
-  const [quantity, setQuantity] = useState(MIN_ORDER_QUANTITY)
+  const productMin = product.min_order_quantity ?? MIN_ORDER_QUANTITY
+  const productStep = product.order_quantity_step ?? ORDER_QUANTITY_STEP
+  const [quantity, setQuantity] = useState(productMin)
   // Draft string for the input so the user can clear it and type freely
   // without snapping to the minimum on every keystroke.
-  const [quantityDraft, setQuantityDraft] = useState(String(MIN_ORDER_QUANTITY))
+  const [quantityDraft, setQuantityDraft] = useState(String(productMin))
   const { stock, totalStock, loading: stockLoading } = useInventory(product.id)
   const outOfStock = !stockLoading && stock === 0
 
-  const isLowStock = !stockLoading && stock !== null && stock > 0 && stock < MIN_ORDER_QUANTITY
-  const effectiveMin = isLowStock ? stock : MIN_ORDER_QUANTITY
+  const isLowStock = !stockLoading && stock !== null && stock > 0 && stock < productMin
+  const effectiveMin = isLowStock ? stock : productMin
   const maxQty = stock !== null && stock > 0 ? stock : Infinity
 
   useEffect(() => {
@@ -192,14 +195,16 @@ function ProductCard({ product }) {
 
         {/* Quantity Selector */}
         <div className="mb-4 mt-4">
-          <label className="block text-gray-400 text-xs mb-2">Quantity (min. {effectiveMin}, in {ORDER_QUANTITY_STEP}s)</label>
+          <label className="block text-gray-400 text-xs mb-2">
+            Quantity (min. {effectiveMin}{productStep > 1 ? `, in ${productStep}s` : ''})
+          </label>
           <div className="flex items-center gap-3">
             <div className="flex items-center border border-gray-700">
               <button
-                onClick={() => handleQuantityChange(-10)}
+                onClick={() => handleQuantityChange(-productStep)}
                 className="px-3 py-2 text-white hover:bg-gray-700 transition-colors text-sm"
               >
-                -10
+                -{productStep}
               </button>
               <input
                 type="number"
@@ -209,20 +214,20 @@ function ProductCard({ product }) {
                   const raw = parseInt(quantityDraft, 10)
                   const rounded = isLowStock
                     ? (isNaN(raw) ? effectiveMin : raw)
-                    : Math.round((isNaN(raw) ? effectiveMin : raw) / ORDER_QUANTITY_STEP) * ORDER_QUANTITY_STEP
+                    : Math.round((isNaN(raw) ? effectiveMin : raw) / productStep) * productStep
                   const clamped = Math.min(maxQty, Math.max(effectiveMin, rounded))
                   setQuantity(clamped)
                   setQuantityDraft(String(clamped))
                 }}
                 className="w-20 text-center bg-transparent text-white border-x border-gray-700 py-2 text-sm"
-                min={MIN_ORDER_QUANTITY}
-                step={ORDER_QUANTITY_STEP}
+                min={productMin}
+                step={productStep}
               />
               <button
-                onClick={() => handleQuantityChange(10)}
+                onClick={() => handleQuantityChange(productStep)}
                 className="px-3 py-2 text-white hover:bg-gray-700 transition-colors text-sm"
               >
-                +10
+                +{productStep}
               </button>
             </div>
             <span className="text-gray-400 text-sm">
@@ -233,7 +238,7 @@ function ProductCard({ product }) {
 
         {/* Stock warnings */}
         {isLowStock && (
-          <p className="text-yellow-500 text-xs mb-2">Only {stock} available — min order reduced from {MIN_ORDER_QUANTITY}</p>
+          <p className="text-yellow-500 text-xs mb-2">Only {stock} available — min order reduced from {productMin}</p>
         )}
         {!isLowStock && !outOfStock && stock !== null && quantity >= stock && (
           <p className="text-yellow-500 text-xs mb-2">Max available: {stock} units</p>
@@ -319,15 +324,9 @@ function StorefrontProducts() {
             </div>
           </div>
 
-          {/* Minimum Order Notice */}
-          <div className="bg-gray-800/50 border border-gray-700 p-4 mb-8 flex items-center gap-3">
-            <svg className="w-5 h-5 text-yellow-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-            <span className="text-gray-300">
-              Minimum order: <span className="text-white font-bold">{MIN_ORDER_QUANTITY} units</span>
-            </span>
-          </div>
+          {/* Minimum-order notice removed — each product card now shows its
+              own min/step in the quantity selector, since the brake caging
+              bolt sells in 1s while the cables ship in 10-packs. */}
 
           {/* Products */}
           {loading && products.length === 0 ? (
