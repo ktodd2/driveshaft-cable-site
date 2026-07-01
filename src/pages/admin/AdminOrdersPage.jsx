@@ -912,6 +912,12 @@ ${addr.country}`
                         {selectedOrder.phone && (
                           <p className="text-gray-300">{selectedOrder.phone}</p>
                         )}
+                        {selectedOrder.how_heard && (
+                          <p className="text-gray-400 text-sm mt-2">
+                            <span className="text-gray-500">Heard about us: </span>
+                            {selectedOrder.how_heard}
+                          </p>
+                        )}
                       </div>
 
                       {/* Shipping Address */}

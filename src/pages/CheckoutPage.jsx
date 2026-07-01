@@ -105,7 +105,9 @@ function CheckoutPage() {
     city: '',
     state: '',
     zip: '',
-    country: 'US'
+    country: 'US',
+    hearAboutUs: '',      // "How did you hear about us?" dropdown selection
+    hearAboutUsOther: ''  // free text, only used when hearAboutUs === 'Other'
   })
   const [clientSecret, setClientSecret] = useState(null)
   const [orderId, setOrderId] = useState(null)
@@ -383,6 +385,9 @@ function CheckoutPage() {
           tax_cents: taxCents,
           stripe_tax_calculation_id: taxCalculationId,
           total_cents: totalCents,
+          how_heard: formData.hearAboutUs === 'Other'
+            ? (formData.hearAboutUsOther.trim() || 'Other')
+            : (formData.hearAboutUs || null),
           status: 'pending',
           payment_status: 'pending',
           payment_method: 'stripe'
@@ -561,6 +566,36 @@ function CheckoutPage() {
                           placeholder="Company name"
                           className="w-full bg-gray-800 border border-gray-600 text-white px-4 py-3 focus:border-yellow-500 focus:outline-none"
                         />
+                      </div>
+                      <div>
+                        <label htmlFor="hearAboutUs" className="block text-gray-400 text-sm mb-1">How did you hear about us? (optional)</label>
+                        <select
+                          id="hearAboutUs"
+                          name="hearAboutUs"
+                          value={formData.hearAboutUs}
+                          onChange={handleChange}
+                          className="w-full bg-gray-800 border border-gray-600 text-white px-4 py-3 focus:border-yellow-500 focus:outline-none"
+                        >
+                          <option value="">Select an option</option>
+                          <option value="Google / search engine">Google / search engine</option>
+                          <option value="Social media (Facebook / Instagram)">Social media (Facebook / Instagram)</option>
+                          <option value="Friend / referral">Friend / referral</option>
+                          <option value="YouTube">YouTube</option>
+                          <option value="Online forum / community">Online forum / community</option>
+                          <option value="Repeat customer">Repeat customer</option>
+                          <option value="Other">Other</option>
+                        </select>
+                        {formData.hearAboutUs === 'Other' && (
+                          <input
+                            type="text"
+                            id="hearAboutUsOther"
+                            name="hearAboutUsOther"
+                            value={formData.hearAboutUsOther}
+                            onChange={handleChange}
+                            placeholder="Please tell us"
+                            className="w-full bg-gray-800 border border-gray-600 text-white px-4 py-3 mt-3 focus:border-yellow-500 focus:outline-none"
+                          />
+                        )}
                       </div>
                     </div>
                   </div>
