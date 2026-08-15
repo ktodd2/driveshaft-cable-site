@@ -1,7 +1,7 @@
 // One-time setup function. Idempotent and safe to re-run.
 //
 // Reads CRON_TRIGGER_KEY from edge function env (set via `supabase secrets set`)
-// and schedules the four email-automation cron jobs via the schedule_email_cron
+// and schedules the email-automation cron jobs via the schedule_email_cron
 // SQL helper. After running once, the cron jobs persist independently — this
 // function can be re-invoked to re-schedule them (e.g., if you rotate the key).
 
@@ -42,6 +42,12 @@ const CRON_JOBS: CronJob[] = [
     schedule: '0 14 * * 1',
     functionSlug: 'send-winback',
     description: 'Mondays at 14:00 UTC — 6-9 month win-back campaign',
+  },
+  {
+    name: 'send-dispatch-campaigns-hourly',
+    schedule: '20 * * * *',
+    functionSlug: 'dispatch-campaigns',
+    description: 'Hourly at :20 — fire scheduled/recurring marketing campaigns that are due',
   },
   {
     name: 'check-tracking-twice-daily',

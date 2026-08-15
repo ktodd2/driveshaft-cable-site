@@ -890,7 +890,9 @@ function AdminEmailPage() {
         status: 'scheduled',
         scheduled_at: new Date(scheduledDate).toISOString(),
         next_send_at: new Date(scheduledDate).toISOString(),
-        is_active: false,
+        // Must be true for the dispatcher to pick it up when it comes due.
+        // Pausing it before then flips this back off.
+        is_active: true,
       })
       if (error) throw error
       setSendResult({ scheduled: true })
@@ -1348,7 +1350,11 @@ function AdminEmailPage() {
                       ? editingCampaignId
                         ? 'Recurring campaign updated.'
                         : 'Recurring campaign started.'
-                      : `Blast sent. ${sendResult.sentCount ?? 0} delivered, ${sendResult.failedCount ?? 0} failed (${sendResult.total ?? 0} total).`}
+                      : sendResult.skipped
+                        ? 'Already sending — this campaign is being delivered by another run.'
+                        : sendResult.remaining > 0
+                          ? `Sending in progress. ${sendResult.sentCount ?? 0} delivered so far, ${sendResult.remaining} remaining (${sendResult.total ?? 0} total). The rest go out automatically — nobody is emailed twice.`
+                          : `Blast sent. ${sendResult.sentCount ?? 0} delivered, ${sendResult.failedCount ?? 0} failed (${sendResult.total ?? 0} total).`}
                 </div>
               )}
               {sendError && (
