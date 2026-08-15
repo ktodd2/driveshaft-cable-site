@@ -47,6 +47,17 @@ The migration also defensively pauses any campaign left mid-flight by the old co
 
 Requires credentials this repository does not contain.
 
+### The whole thing, scripted
+
+`scripts/fix-email-flood.sh` runs every step below in order, showing what it's
+about to change and asking before each destructive action:
+
+```bash
+./scripts/fix-email-flood.sh
+```
+
+Safe to re-run. The manual sequence follows, if you'd rather do it step by step.
+
 ```bash
 supabase login                                   # or export SUPABASE_ACCESS_TOKEN=...
 supabase link --project-ref twrihhyfvomqiqbxkitc
