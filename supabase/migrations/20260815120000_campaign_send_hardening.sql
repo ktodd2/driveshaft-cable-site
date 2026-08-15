@@ -46,7 +46,11 @@ EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 
 ALTER TABLE email_campaigns
   ADD COLUMN IF NOT EXISTS claimed_at TIMESTAMPTZ,
-  ADD COLUMN IF NOT EXISTS send_cycle INTEGER NOT NULL DEFAULT 1;
+  ADD COLUMN IF NOT EXISTS send_cycle INTEGER NOT NULL DEFAULT 1,
+  -- release_campaign_claim writes updated_at on every cycle advance /
+  -- completion, and the backfill below touches it too. The rest of the
+  -- schema uses updated_at; this table was missing it.
+  ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW();
 
 -- ---------------------------------------------------------------------------
 -- claim_campaign_for_send
