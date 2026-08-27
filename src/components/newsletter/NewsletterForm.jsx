@@ -3,6 +3,7 @@ import { supabase } from '../../lib/supabase'
 
 function NewsletterForm({ source = 'homepage', onSuccess, compact = false }) {
   const [email, setEmail] = useState('')
+  const [website, setWebsite] = useState('') // honeypot — humans never fill this
   const [status, setStatus] = useState('idle') // idle | submitting | success | error
   const [errorMsg, setErrorMsg] = useState('')
 
@@ -13,20 +14,14 @@ function NewsletterForm({ source = 'homepage', onSuccess, compact = false }) {
     setStatus('submitting')
     setErrorMsg('')
 
-    const { error } = await supabase
-      .from('newsletter_subscribers')
-      .insert([{ email: email.trim().toLowerCase(), source }])
+    const { data, error } = await supabase.functions.invoke('newsletter-subscribe', {
+      body: { email: email.trim().toLowerCase(), source, website },
+    })
 
-    if (error) {
-      if (error.code === '23505') {
-        // Duplicate email — treat as success
-        setStatus('success')
-        onSuccess?.()
-      } else {
-        setStatus('error')
-        setErrorMsg('Something went wrong. Please try again.')
-        console.error('Newsletter signup error:', error)
-      }
+    if (error || data?.error) {
+      setStatus('error')
+      setErrorMsg(data?.error || 'Something went wrong. Please try again.')
+      console.error('Newsletter signup error:', error || data?.error)
       return
     }
 
@@ -38,14 +33,24 @@ function NewsletterForm({ source = 'homepage', onSuccess, compact = false }) {
   if (status === 'success') {
     return (
       <div className={`text-center ${compact ? 'py-2' : 'py-4'}`}>
-        <p className="text-green-400 font-semibold">You're in! Thanks for subscribing.</p>
-        <p className="text-gray-400 text-sm mt-1">We'll keep you posted on deals and updates.</p>
+        <p className="text-green-400 font-semibold">Almost there — check your email!</p>
+        <p className="text-gray-400 text-sm mt-1">Click the confirmation link we just sent to finish subscribing.</p>
       </div>
     )
   }
 
   return (
     <form onSubmit={handleSubmit} className={compact ? 'flex gap-2' : 'flex flex-col sm:flex-row gap-3'}>
+      <input
+        type="text"
+        name="website"
+        value={website}
+        onChange={(e) => setWebsite(e.target.value)}
+        tabIndex="-1"
+        autoComplete="off"
+        aria-hidden="true"
+        className="hidden"
+      />
       <input
         type="email"
         value={email}

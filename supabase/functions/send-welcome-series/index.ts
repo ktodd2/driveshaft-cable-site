@@ -6,7 +6,8 @@
 //   Day 7  — Customer testimonial + soft CTA
 //
 // Progress is tracked via newsletter_subscribers.welcome_stage (0 -> 1 -> 2 -> 3).
-// Stage 3 = done. Unsubscribed customers are excluded.
+// Stage 3 = done. Unsubscribed customers are excluded. Only double-opt-in
+// confirmed subscribers (confirmed = true) ever enter the series.
 
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
@@ -265,17 +266,20 @@ serve(async (req) => {
     supabase.from('newsletter_subscribers')
       .select('id, email, welcome_stage, subscribed_at')
       .eq('status', 'active')
+      .eq('confirmed', true)
       .eq('welcome_stage', 0)
       .limit(MAX_PER_RUN),
     supabase.from('newsletter_subscribers')
       .select('id, email, welcome_stage, subscribed_at')
       .eq('status', 'active')
+      .eq('confirmed', true)
       .eq('welcome_stage', 1)
       .lt('subscribed_at', threeDaysAgo)
       .limit(MAX_PER_RUN),
     supabase.from('newsletter_subscribers')
       .select('id, email, welcome_stage, subscribed_at')
       .eq('status', 'active')
+      .eq('confirmed', true)
       .eq('welcome_stage', 2)
       .lt('subscribed_at', sevenDaysAgo)
       .limit(MAX_PER_RUN),
