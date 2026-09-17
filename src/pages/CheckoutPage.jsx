@@ -356,7 +356,9 @@ function CheckoutPage() {
       const { data: order, error: orderError } = await supabase
         .from('orders')
         .insert([{
-          email: formData.email,
+          // Lowercased so it matches the cart_abandonments row and the
+          // repeat-customer lookup, which both normalise the email.
+          email: formData.email.toLowerCase().trim(),
           name: formData.name,
           company: formData.company,
           phone: formData.phone,

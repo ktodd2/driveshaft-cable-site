@@ -3,8 +3,12 @@
 //
 // Skips customers who:
 //   - already received the email (email_sent_at set)
-//   - placed a paid order after their abandonment (organic recovery)
-// Both cases stamp email_sent_at so they're not reconsidered next run.
+//   - placed a paid order after their abandonment (organic recovery). The
+//     orders_mark_cart_recovered trigger stamps recovered_order_id the moment
+//     an order is paid, so those rows never reach this function; the paid-order
+//     check below is a belt-and-braces fallback (case-insensitive, since the
+//     cart email is lowercased and older orders were not) and records the
+//     recovery on the row instead of pretending an email went out.
 //
 // Single email per abandonment — multi-touch sequences feel spammy at this
 // scale and yield diminishing returns.
@@ -163,6 +167,7 @@ serve(async (req) => {
     .from('cart_abandonments')
     .select('id, email, items, subtotal_cents, recovery_token, created_at')
     .is('email_sent_at', null)
+    .is('recovered_order_id', null)
     .lt('created_at', cutoff)
     .limit(MAX_PER_RUN)
 
@@ -179,19 +184,23 @@ serve(async (req) => {
   let failed = 0
 
   for (const ab of abandonments || []) {
-    // Skip customers who paid after abandonment (organic recovery). Stamp
-    // email_sent_at so we don't reconsider them.
-    const { count: paidCount } = await supabase
+    // Skip customers who paid after abandonment (organic recovery) and
+    // attribute the cart to that order. Case-insensitive match: `_` and `%`
+    // are LIKE wildcards, so escape them before using ilike as an equality.
+    const emailPattern = String(ab.email || '').replace(/[\\%_]/g, '\\$&')
+    const { data: paidOrders } = await supabase
       .from('orders')
-      .select('id', { count: 'exact', head: true })
-      .eq('email', ab.email)
+      .select('id')
+      .ilike('email', emailPattern)
       .eq('payment_status', 'paid')
       .gte('created_at', ab.created_at)
+      .order('created_at', { ascending: true })
+      .limit(1)
 
-    if ((paidCount || 0) > 0) {
+    if (paidOrders && paidOrders.length > 0) {
       await supabase
         .from('cart_abandonments')
-        .update({ email_sent_at: new Date().toISOString() })
+        .update({ recovered_order_id: paidOrders[0].id })
         .eq('id', ab.id)
       skippedRecovered++
       continue
