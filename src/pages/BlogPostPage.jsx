@@ -122,10 +122,10 @@ function BlogPostPage() {
   return (
     <div className="pt-24 md:pt-32">
       <SEOHead
-        title={`${post.title} | Driveshaft Cable`}
+        title={post.title}
         description={post.meta_description || post.excerpt}
         keywords={post.tags ? post.tags.join(', ') : 'heavy duty towing, towing tips'}
-        canonical={`/blog/${post.slug}`}
+        canonical={`/blog/${slug}`}
         ogImage="https://driveshaftcable.com/og-blog.jpg"
         structuredData={structuredData}
       />

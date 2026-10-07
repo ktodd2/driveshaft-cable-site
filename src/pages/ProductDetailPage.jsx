@@ -160,7 +160,7 @@ function ProductDetailPage() {
         title={`${product.name} — 3000lb WLL`}
         description={`${product.name} safety cable. ${product.short_description || ''} Starting at ${formatPrice(basePrice)}/unit with volume discounts.`}
         keywords="driveshaft cable, driveshaftcable, 3000lb WLL cable, towing safety cable, driveshaft guard"
-        canonical={`/products/${product.slug}`}
+        canonical={`/products/${slug}`}
         structuredData={productStructuredData}
       />
       {/* Breadcrumb */}

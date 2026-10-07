@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import { Link } from 'react-router-dom'
+import SEOHead from '../components/common/SEOHead'
 
 function OrderTrackingPage() {
   const [formData, setFormData] = useState({
@@ -28,6 +29,11 @@ function OrderTrackingPage() {
 
   return (
     <div className="pt-24 md:pt-32">
+      <SEOHead
+        title="Order Tracking"
+        description="Track your Driveshaft Cable order. Enter your order number and email to check your order status."
+        canonical="/order-tracking"
+      />
       {/* Hero Section */}
       <section className="py-16 bg-gradient-to-b from-ktodd-dark to-ktodd-charcoal">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
