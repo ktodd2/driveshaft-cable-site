@@ -109,6 +109,7 @@ function ProductDetailPage() {
   if (notFound || !product) {
     return (
       <div className="pt-24 md:pt-32 min-h-screen flex items-center justify-center bg-ktodd-dark">
+        <SEOHead title="Product Not Found" noindex />
         <div className="text-center">
           <h1 className="text-3xl font-industrial text-white mb-4">Product Not Found</h1>
           <Link to="/products" className="text-yellow-500 hover:text-yellow-400">

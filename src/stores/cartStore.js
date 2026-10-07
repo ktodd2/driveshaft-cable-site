@@ -112,6 +112,12 @@ export function getStepForProduct(productId) {
   return livePricing[productId]?.orderQuantityStep ?? ORDER_QUANTITY_STEP
 }
 
+// True when the product is in the currently loaded active catalog. Before
+// loadProducts() resolves this checks the hardcoded fallback.
+export function isActiveProduct(productId) {
+  return productId in livePricing
+}
+
 // Back-compat aliases — existing pages still display tier tables using these
 // constants. They mirror product '1' (the original Driveshaft Cable) so the
 // existing "starting at $3.45" copy stays accurate.
@@ -228,7 +234,12 @@ export const useCartStore = create(
             next[row.id] = normalizeDbProduct(row)
           }
           livePricing = next
-          set({ productsLoadedAt: Date.now() })
+          // Drop saved-cart lines for products that have since been
+          // deactivated (e.g. a retired product still in localStorage).
+          set({
+            productsLoadedAt: Date.now(),
+            items: get().items.filter(item => isActiveProduct(item.productId)),
+          })
         } catch (err) {
           console.warn('cartStore.loadProducts: unexpected error', err)
         }

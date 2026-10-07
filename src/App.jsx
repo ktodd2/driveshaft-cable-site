@@ -1,5 +1,5 @@
 import React, { Suspense, useEffect } from 'react'
-import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { HelmetProvider } from 'react-helmet-async'
 import Layout from './components/layout/Layout'
 import { useCartStore } from './stores/cartStore'
@@ -59,6 +59,8 @@ function App() {
           <Route path="faq" element={<FAQPage />} />
           <Route path="instructions" element={<InstructionsPage />} />
           <Route path="products" element={<ProductListPage />} />
+          {/* Driveshaft Cable + was retired; send old links to the main cable */}
+          <Route path="products/driveshaft-cable-plus" element={<Navigate to="/products/driveshaft-cable" replace />} />
           <Route path="products/:slug" element={<ProductDetailPage />} />
           <Route path="cart" element={<CartPage />} />
           <Route path="checkout" element={<CheckoutPage />} />

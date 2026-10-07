@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
-import { useCartStore } from '../stores/cartStore'
+import { useCartStore, isActiveProduct } from '../stores/cartStore'
 
 // Landing page hit from abandoned-cart recovery emails. Looks up the
 // abandonment row via the security-definer RPC (anon can't SELECT cart_abandonments
@@ -29,7 +29,8 @@ function CartRecoverPage() {
       }
 
       const row = data[0]
-      const items = Array.isArray(row.items) ? row.items : []
+      const items = (Array.isArray(row.items) ? row.items : [])
+        .filter(item => isActiveProduct(item.productId))
 
       // Reset the cart, load the abandoned items back, and carry the recovery
       // discount through so checkout auto-applies it. Code must match the one
