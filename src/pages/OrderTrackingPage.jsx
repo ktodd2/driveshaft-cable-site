@@ -1,14 +1,58 @@
 import React, { useState } from 'react'
 import { Link } from 'react-router-dom'
+import { supabase } from '../lib/supabase'
 import SEOHead from '../components/common/SEOHead'
+
+const formatDate = (iso) =>
+  new Date(iso).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })
+
+const STATUS_LABELS = {
+  pending: 'Processing',
+  processing: 'Processing',
+  shipped: 'Shipped',
+  delivered: 'Delivered',
+  cancelled: 'Cancelled',
+}
+
+function OrderTimeline({ order }) {
+  const shipped = order.status === 'shipped' || order.status === 'delivered'
+  const delivered = order.status === 'delivered'
+  const steps = [
+    { label: 'Order Placed', detail: formatDate(order.placedAt), done: true },
+    { label: 'Shipped', detail: shipped ? (order.carrier ? `Via ${order.carrier}` : 'In transit') : 'Preparing your order', done: shipped },
+    { label: 'Delivered', detail: delivered ? (order.deliveredAt ? formatDate(order.deliveredAt) : 'Delivered') : 'Pending', done: delivered },
+  ]
+
+  return (
+    <div className="space-y-4">
+      {steps.map((step, i) => (
+        <div key={step.label} className={`flex items-start gap-4 ${step.done ? '' : 'opacity-50'}`}>
+          <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${step.done ? 'bg-green-500' : 'bg-gray-700'}`}>
+            {step.done ? (
+              <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
+            ) : (
+              <span className="text-gray-400 text-sm">{i + 1}</span>
+            )}
+          </div>
+          <div>
+            <h3 className="text-white font-bold">{step.label}</h3>
+            <p className="text-gray-400 text-sm">{step.detail}</p>
+          </div>
+        </div>
+      ))}
+    </div>
+  )
+}
 
 function OrderTrackingPage() {
   const [formData, setFormData] = useState({
-    orderNumber: '',
+    reference: '',
     email: ''
   })
-  const [status, setStatus] = useState('idle') // idle, loading, found, not_found
-  const [order, setOrder] = useState(null)
+  const [status, setStatus] = useState('idle') // idle, loading, found, not_found, error
+  const [orders, setOrders] = useState([])
 
   const handleChange = (e) => {
     const { name, value } = e.target
@@ -19,20 +63,27 @@ function OrderTrackingPage() {
     e.preventDefault()
     setStatus('loading')
 
-    // TODO: Implement actual order lookup from Supabase
-    // For now, simulate a response
-    setTimeout(() => {
-      // Simulate not found for demo
-      setStatus('not_found')
-    }, 1500)
+    const { data, error } = await supabase.functions.invoke('track-order', {
+      body: { email: formData.email, reference: formData.reference },
+    })
+
+    if (error) {
+      console.error('Order lookup failed:', error)
+      setStatus('error')
+      return
+    }
+
+    const found = data?.orders || []
+    setOrders(found)
+    setStatus(found.length > 0 ? 'found' : 'not_found')
   }
 
   return (
     <div className="pt-24 md:pt-32">
       <SEOHead
         title="Order Tracking"
-        description="Track your Driveshaft Cable order. Enter your order number and email to check your order status."
-        canonical="/order-tracking"
+        description="Track your Driveshaft Cable order. Enter your email and order number or shipping ZIP code to check your order status."
+        noindex
       />
       {/* Hero Section */}
       <section className="py-16 bg-gradient-to-b from-ktodd-dark to-ktodd-charcoal">
@@ -43,7 +94,7 @@ function OrderTrackingPage() {
             </h1>
             <div className="w-24 h-1 bg-yellow-500 mx-auto mb-6"></div>
             <p className="text-xl text-gray-400 max-w-2xl mx-auto">
-              Enter your order number and email to check your order status.
+              Enter your email and your order number or shipping ZIP code.
             </p>
           </div>
         </div>
@@ -55,20 +106,6 @@ function OrderTrackingPage() {
           <div className="bg-gray-800/50 border border-gray-700 p-6 md:p-8">
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label htmlFor="orderNumber" className="block text-gray-400 text-sm mb-1">Order Number *</label>
-                <input
-                  type="text"
-                  id="orderNumber"
-                  name="orderNumber"
-                  value={formData.orderNumber}
-                  onChange={handleChange}
-                  required
-                  placeholder="ORD-XXXXXX"
-                  className="w-full bg-gray-800 border border-gray-600 text-white px-4 py-3 focus:border-yellow-500 focus:outline-none"
-                />
-              </div>
-
-              <div>
                 <label htmlFor="email" className="block text-gray-400 text-sm mb-1">Email Address *</label>
                 <input
                   type="email"
@@ -78,6 +115,20 @@ function OrderTrackingPage() {
                   onChange={handleChange}
                   required
                   placeholder="your@email.com"
+                  className="w-full bg-gray-800 border border-gray-600 text-white px-4 py-3 focus:border-yellow-500 focus:outline-none"
+                />
+              </div>
+
+              <div>
+                <label htmlFor="reference" className="block text-gray-400 text-sm mb-1">Order Number or Shipping ZIP *</label>
+                <input
+                  type="text"
+                  id="reference"
+                  name="reference"
+                  value={formData.reference}
+                  onChange={handleChange}
+                  required
+                  placeholder="e.g. 3F2A9C1B or 77001"
                   className="w-full bg-gray-800 border border-gray-600 text-white px-4 py-3 focus:border-yellow-500 focus:outline-none"
                 />
               </div>
@@ -110,81 +161,60 @@ function OrderTrackingPage() {
                   </svg>
                   <div>
                     <p className="text-white font-bold">Order Not Found</p>
-                    <p className="text-gray-300 text-sm">We couldn't find an order matching that information. Please check your order number and email address.</p>
+                    <p className="text-gray-300 text-sm">We couldn't find an order matching that information. Please check your email address and order number or ZIP code. Orders appear here once payment is confirmed.</p>
                   </div>
                 </div>
               </div>
             )}
 
+            {status === 'error' && (
+              <div className="mt-6 bg-red-500/10 border border-red-500 p-4">
+                <p className="text-white font-bold">Something Went Wrong</p>
+                <p className="text-gray-300 text-sm">We couldn't look up your order right now. Please try again in a moment.</p>
+              </div>
+            )}
+
             {/* Order Found - Status Display */}
-            {status === 'found' && order && (
-              <div className="mt-6 space-y-6">
-                <div className="border-t border-gray-700 pt-6">
+            {status === 'found' && orders.map((order) => (
+              <div key={order.orderNumber} className="mt-6 space-y-6 border-t border-gray-700 pt-6">
+                <div>
                   <div className="flex justify-between items-center mb-4">
                     <span className="text-gray-400">Order Number</span>
                     <span className="text-yellow-500 font-industrial">{order.orderNumber}</span>
                   </div>
                   <div className="flex justify-between items-center mb-4">
                     <span className="text-gray-400">Status</span>
-                    <span className="bg-green-500/20 text-green-400 px-3 py-1 text-sm">{order.status}</span>
+                    <span className={`px-3 py-1 text-sm ${order.status === 'cancelled' ? 'bg-red-500/20 text-red-400' : 'bg-green-500/20 text-green-400'}`}>
+                      {STATUS_LABELS[order.status] || order.status}
+                    </span>
                   </div>
-                  {order.tracking && (
+                  {order.items.length > 0 && (
+                    <div className="flex justify-between items-start mb-4 gap-4">
+                      <span className="text-gray-400">Items</span>
+                      <span className="text-white text-right text-sm">
+                        {order.items.map((item, i) => (
+                          <span key={i} className="block">{item.quantity} × {item.name}</span>
+                        ))}
+                      </span>
+                    </div>
+                  )}
+                  {order.trackingNumber && (
                     <div className="flex justify-between items-center">
-                      <span className="text-gray-400">Tracking</span>
-                      <a href={`https://tracking.example.com/${order.tracking}`} className="text-yellow-500 hover:text-yellow-400" target="_blank" rel="noopener noreferrer">
-                        {order.tracking}
-                      </a>
+                      <span className="text-gray-400">Tracking{order.carrier ? ` (${order.carrier})` : ''}</span>
+                      {order.trackingUrl ? (
+                        <a href={order.trackingUrl} className="text-yellow-500 hover:text-yellow-400 font-mono" target="_blank" rel="noopener noreferrer">
+                          {order.trackingNumber}
+                        </a>
+                      ) : (
+                        <span className="text-white font-mono">{order.trackingNumber}</span>
+                      )}
                     </div>
                   )}
                 </div>
 
-                {/* Status Timeline */}
-                <div className="space-y-4">
-                  <div className="flex items-start gap-4">
-                    <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center flex-shrink-0">
-                      <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                      </svg>
-                    </div>
-                    <div>
-                      <h3 className="text-white font-bold">Order Placed</h3>
-                      <p className="text-gray-400 text-sm">Jan 15, 2024 at 2:30 PM</p>
-                    </div>
-                  </div>
-                  <div className="flex items-start gap-4">
-                    <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center flex-shrink-0">
-                      <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                      </svg>
-                    </div>
-                    <div>
-                      <h3 className="text-white font-bold">Processing</h3>
-                      <p className="text-gray-400 text-sm">Jan 15, 2024 at 3:45 PM</p>
-                    </div>
-                  </div>
-                  <div className="flex items-start gap-4">
-                    <div className="w-8 h-8 bg-yellow-500 rounded-full flex items-center justify-center flex-shrink-0">
-                      <svg className="w-4 h-4 text-black animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-                      </svg>
-                    </div>
-                    <div>
-                      <h3 className="text-white font-bold">Shipped</h3>
-                      <p className="text-gray-400 text-sm">In transit</p>
-                    </div>
-                  </div>
-                  <div className="flex items-start gap-4 opacity-50">
-                    <div className="w-8 h-8 bg-gray-700 rounded-full flex items-center justify-center flex-shrink-0">
-                      <span className="text-gray-400 text-sm">4</span>
-                    </div>
-                    <div>
-                      <h3 className="text-white font-bold">Delivered</h3>
-                      <p className="text-gray-400 text-sm">Pending</p>
-                    </div>
-                  </div>
-                </div>
+                {order.status !== 'cancelled' && <OrderTimeline order={order} />}
               </div>
-            )}
+            ))}
           </div>
 
           {/* Help */}
