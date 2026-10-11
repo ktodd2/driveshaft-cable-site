@@ -761,7 +761,7 @@ ${addr.country}`
                     <button
                       onClick={handleStockSave}
                       disabled={savingStock || stockInput === String(stock)}
-                      className="bg-yellow-500 hover:bg-yellow-400 text-black px-6 py-2 text-sm font-bold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="bg-yellow-500 hover:bg-yellow-400 text-black px-6 py-2 text-sm font-bold transition-colors disabled:cursor-not-allowed disabled:bg-gray-700 disabled:[background-image:none] disabled:text-gray-200"
                     >
                       {savingStock ? 'Saving...' : 'Save Stock'}
                     </button>

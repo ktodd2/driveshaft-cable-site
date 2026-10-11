@@ -93,7 +93,7 @@ function SuggestionsPage() {
                   >
                     Send another suggestion
                   </button>
-                  <span className="text-gray-600 hidden sm:inline">·</span>
+                  <span className="text-gray-500 hidden sm:inline">·</span>
                   <Link to="/" className="text-gray-400 hover:text-white">
                     Back to home
                   </Link>

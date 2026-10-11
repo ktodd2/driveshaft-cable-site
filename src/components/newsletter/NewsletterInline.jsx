@@ -14,7 +14,7 @@ function NewsletterInline({ source = 'homepage' }) {
         <div className="max-w-md mx-auto">
           <NewsletterForm source={source} />
         </div>
-        <p className="text-gray-600 text-xs mt-4">No spam, ever. Unsubscribe anytime.</p>
+        <p className="text-gray-400 text-xs mt-4">No spam, ever. Unsubscribe anytime.</p>
       </div>
     </section>
   )

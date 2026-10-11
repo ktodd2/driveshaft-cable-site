@@ -72,7 +72,7 @@ function NewsletterModal() {
 
         <NewsletterForm source="exit_intent" onSuccess={handleSuccess} />
 
-        <p className="text-gray-600 text-xs mt-4 text-center">No spam. Unsubscribe anytime.</p>
+        <p className="text-gray-400 text-xs mt-4 text-center">No spam. Unsubscribe anytime.</p>
       </div>
     </div>
   )

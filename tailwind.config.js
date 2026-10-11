@@ -37,14 +37,14 @@ export default {
           950: '#2E1F00',
         },
         // Warm neutral ramp tuned for dark surfaces. Text steps keep AA
-        // contrast on #0A0A0A–#171717: 400 ≈ 7.4:1, 500 ≈ 5.3:1.
+        // contrast on #0A0A0A–#171717: 400 ≈ 7.4:1, 500 ≈ 6.4:1 (≥4.8:1 on gray-700).
         gray: {
           50: '#FAFAF8',
           100: '#F5F5F2',
           200: '#E6E5E0',
           300: '#D6D5CF',
           400: '#A3A29C',
-          500: '#8A8983',
+          500: '#97968F',
           600: '#4E4D48',
           700: '#2A2A28',
           800: '#171717',

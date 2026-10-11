@@ -169,9 +169,9 @@ function ProductDetailPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <nav className="flex items-center gap-2 text-sm">
             <Link to="/" className="text-gray-400 hover:text-yellow-500">Home</Link>
-            <span className="text-gray-600">/</span>
+            <span className="text-gray-500" aria-hidden="true">/</span>
             <Link to="/products" className="text-gray-400 hover:text-yellow-500">Products</Link>
-            <span className="text-gray-600">/</span>
+            <span className="text-gray-500" aria-hidden="true">/</span>
             <span className="text-yellow-500">{product.name}</span>
           </nav>
         </div>
@@ -192,7 +192,7 @@ function ProductDetailPage() {
                     className="w-full h-full object-cover"
                   />
                 ) : (
-                  <div className="w-full h-full flex items-center justify-center text-gray-600">No image</div>
+                  <div className="w-full h-full flex items-center justify-center text-gray-400">No image</div>
                 )}
                 {outOfStock && (
                   <div className="absolute inset-0 flex items-center justify-center pointer-events-none">

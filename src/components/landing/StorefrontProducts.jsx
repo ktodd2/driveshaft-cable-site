@@ -102,7 +102,7 @@ function ProductCard({ product }) {
 
   return (
     <article className={`flex flex-col bg-gray-900 rounded-2xl overflow-hidden ring-1 ring-gray-700 shadow-[0_24px_48px_-32px_#000] transition-shadow duration-200 group ${
-      outOfStock ? 'opacity-70' : 'hover:ring-yellow-500/60'
+      outOfStock ? '' : 'hover:ring-yellow-500/60'
     }`}>
       {/* Product Image */}
       <Link to={`/products/${product.slug}`} className="block">
@@ -138,7 +138,7 @@ function ProductCard({ product }) {
         <Link to={`/products/${product.slug}`} className="rounded">
           <h3 className={`text-2xl font-industrial mb-2 transition-colors ${
             outOfStock
-              ? 'text-gray-400 line-through'
+              ? 'text-gray-200'
               : 'text-white group-hover:text-yellow-500'
           }`}>
             {product.name}
@@ -204,8 +204,9 @@ function ProductCard({ product }) {
               <button
                 type="button"
                 onClick={() => handleQuantityChange(-productStep)}
+                disabled={outOfStock}
                 aria-label={`Decrease quantity by ${productStep}`}
-                className="min-w-[44px] min-h-[44px] px-3 text-white hover:bg-gray-700 transition-colors text-sm tabular-nums"
+                className="min-w-[44px] min-h-[44px] px-3 text-white hover:bg-gray-700 transition-colors text-sm tabular-nums disabled:cursor-not-allowed disabled:text-gray-500 disabled:hover:bg-transparent"
               >
                 -{productStep}
               </button>
@@ -214,6 +215,7 @@ function ProductCard({ product }) {
                 type="number"
                 value={quantityDraft}
                 onChange={(e) => setQuantityDraft(e.target.value)}
+                disabled={outOfStock}
                 onBlur={() => {
                   const raw = parseInt(quantityDraft, 10)
                   const rounded = isLowStock
@@ -223,15 +225,16 @@ function ProductCard({ product }) {
                   setQuantity(clamped)
                   setQuantityDraft(String(clamped))
                 }}
-                className="w-20 text-center bg-transparent text-white border-0 border-x border-gray-600 rounded-none py-2 text-sm tabular-nums focus:ring-inset"
+                className="w-20 text-center bg-transparent text-white border-0 border-x border-gray-600 rounded-none py-2 text-sm tabular-nums focus:ring-inset disabled:cursor-not-allowed disabled:text-gray-400"
                 min={productMin}
                 step={productStep}
               />
               <button
                 type="button"
                 onClick={() => handleQuantityChange(productStep)}
+                disabled={outOfStock}
                 aria-label={`Increase quantity by ${productStep}`}
-                className="min-w-[44px] min-h-[44px] px-3 text-white hover:bg-gray-700 transition-colors text-sm tabular-nums"
+                className="min-w-[44px] min-h-[44px] px-3 text-white hover:bg-gray-700 transition-colors text-sm tabular-nums disabled:cursor-not-allowed disabled:text-gray-500 disabled:hover:bg-transparent"
               >
                 +{productStep}
               </button>

@@ -197,7 +197,7 @@ function AdminSalesPage() {
                 <img src="/logos/icon.png" alt="Driveshaft Cable" className="w-8 h-8 rounded" />
                 <span className="text-yellow-500 font-industrial">ADMIN</span>
               </Link>
-              <span className="text-gray-600">/</span>
+              <span className="text-gray-500" aria-hidden="true">/</span>
               <span className="text-white font-industrial">SALES</span>
             </div>
             <button onClick={handleSignOut} className="text-gray-400 hover:text-red-500 transition-colors text-sm">

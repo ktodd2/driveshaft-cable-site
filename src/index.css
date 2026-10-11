@@ -107,7 +107,7 @@
   }
 
   input::placeholder, textarea::placeholder {
-    color: #8A8983;
+    color: #97968F;
   }
 }
 
@@ -169,7 +169,7 @@
   .btn-secondary:disabled,
   .btn-primary[aria-disabled='true'] {
     cursor: not-allowed;
-    color: #8A8983;
+    color: #97968F;
     background-image: none;
     background-color: transparent;
     box-shadow: inset 0 0 0 1px #4E4D48;
