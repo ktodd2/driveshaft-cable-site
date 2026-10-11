@@ -121,7 +121,7 @@ serve(async (req) => {
       },
       body: JSON.stringify({
         from: 'Driveshaft Cable <orders@k-todd.com>',
-        to: ['ktoddizzle@icloud.com'],
+        to: ['kurtis@k-todd.com'],
         subject: `New Quote Request from ${name}${quantity ? ` - ${quantity} units` : ''}`,
         html: htmlEmail,
         reply_to: email,
