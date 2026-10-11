@@ -18,7 +18,7 @@ const homeStructuredData = [
     description: 'Driveshaft Cable manufactures heavy-duty driveshaft safety cables (driveshaftcable) for professional towing and recovery operations. Made by a heavy duty operator for the heavy duty operator.',
     contactPoint: {
       '@type': 'ContactPoint',
-      email: 'houstontruckwreck@gmail.com',
+      email: 'kurtis@k-todd.com',
       contactType: 'customer service'
     }
   },

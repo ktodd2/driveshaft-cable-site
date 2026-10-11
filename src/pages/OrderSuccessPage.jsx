@@ -91,7 +91,7 @@ function OrderSuccessPage() {
             <Link to="/cart" className="flex-1 btn-primary text-center">
               Return to Cart
             </Link>
-            <a href="mailto:houstontruckwreck@gmail.com" className="flex-1 border-2 border-yellow-500 text-yellow-500 hover:bg-yellow-500 hover:text-black font-bold py-3 px-8 uppercase tracking-wider transition-all duration-300 font-industrial text-center">
+            <a href="mailto:kurtis@k-todd.com" className="flex-1 border-2 border-yellow-500 text-yellow-500 hover:bg-yellow-500 hover:text-black font-bold py-3 px-8 uppercase tracking-wider transition-all duration-300 font-industrial text-center">
               Contact Support
             </a>
           </div>
@@ -222,7 +222,7 @@ function OrderSuccessPage() {
           <Link to="/products" className="flex-1 btn-primary text-center">
             Continue Shopping
           </Link>
-          <a href="mailto:houstontruckwreck@gmail.com" className="flex-1 border-2 border-yellow-500 text-yellow-500 hover:bg-yellow-500 hover:text-black font-bold py-3 px-8 uppercase tracking-wider transition-all duration-300 font-industrial text-center">
+          <a href="mailto:kurtis@k-todd.com" className="flex-1 border-2 border-yellow-500 text-yellow-500 hover:bg-yellow-500 hover:text-black font-bold py-3 px-8 uppercase tracking-wider transition-all duration-300 font-industrial text-center">
             Contact Us
           </a>
         </div>
@@ -230,8 +230,8 @@ function OrderSuccessPage() {
         {/* Support */}
         <div className="mt-12 text-center">
           <p className="text-gray-400 mb-2">Questions about your order?</p>
-          <a href="mailto:houstontruckwreck@gmail.com" className="text-yellow-500 hover:text-yellow-400 transition-colors">
-            houstontruckwreck@gmail.com
+          <a href="mailto:kurtis@k-todd.com" className="text-yellow-500 hover:text-yellow-400 transition-colors">
+            kurtis@k-todd.com
           </a>
         </div>
       </div>

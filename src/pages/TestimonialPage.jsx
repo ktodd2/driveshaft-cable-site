@@ -139,8 +139,8 @@ function TestimonialPage() {
                 <p className="text-gray-400 mb-6">
                   This testimonial link has expired. If you'd still like to share your experience, please reply to the email or contact us directly.
                 </p>
-                <a href="mailto:houstontruckwreck@gmail.com" className="text-yellow-500 hover:text-yellow-400 underline">
-                  houstontruckwreck@gmail.com
+                <a href="mailto:kurtis@k-todd.com" className="text-yellow-500 hover:text-yellow-400 underline">
+                  kurtis@k-todd.com
                 </a>
               </div>
             )}

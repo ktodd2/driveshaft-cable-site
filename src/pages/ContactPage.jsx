@@ -81,8 +81,8 @@ function ContactPage() {
                   </div>
                   <div>
                     <h3 className="text-lg font-bold text-white mb-1">Email</h3>
-                    <a href="mailto:houstontruckwreck@gmail.com" className="text-yellow-500 hover:text-yellow-400 transition-colors">
-                      houstontruckwreck@gmail.com
+                    <a href="mailto:kurtis@k-todd.com" className="text-yellow-500 hover:text-yellow-400 transition-colors">
+                      kurtis@k-todd.com
                     </a>
                   </div>
                 </div>
