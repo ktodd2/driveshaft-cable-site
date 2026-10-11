@@ -1,0 +1,563 @@
+{
+  "sales?select=id%2Cname%2Cdiscount_percent%2Cscope%2Cproduct_id%2Cstarts_at%2Cends_at%2Cis_active": [
+    {
+      "id": "c210f046-32de-42d3-ba5f-2c4884cb8391",
+      "name": "Memorial Day Weekend Flash Sale!",
+      "discount_percent": 15,
+      "scope": "sitewide",
+      "product_id": null,
+      "starts_at": "2026-05-22T23:53:00+00:00",
+      "ends_at": "2026-05-25T04:59:00+00:00",
+      "is_active": true
+    },
+    {
+      "id": "43a90fa5-4053-4c84-b491-43d84d16021c",
+      "name": "Flash Sale",
+      "discount_percent": 5,
+      "scope": "sitewide",
+      "product_id": null,
+      "starts_at": "2026-05-27T20:33:00+00:00",
+      "ends_at": "2026-05-28T20:33:00+00:00",
+      "is_active": true
+    },
+    {
+      "id": "3100d496-bcd4-4b42-95fd-eb8750bc680a",
+      "name": "Weekend Sale!!",
+      "discount_percent": 10,
+      "scope": "sitewide",
+      "product_id": null,
+      "starts_at": "2026-05-29T22:00:00+00:00",
+      "ends_at": "2026-06-01T04:00:00+00:00",
+      "is_active": true
+    },
+    {
+      "id": "2615efa8-ba07-4c71-a980-e17bba4bb695",
+      "name": "Driveshaft Cable + Price Match",
+      "discount_percent": 15,
+      "scope": "product",
+      "product_id": "2",
+      "starts_at": "2026-06-16T03:59:00+00:00",
+      "ends_at": "2026-06-23T03:59:00+00:00",
+      "is_active": true
+    }
+  ],
+  "products?select=id%2Cname%2Cbase_price_cents%2Ctiers%2Cis_active%2Cmin_order_quantity%2Corder_quantity_step&is_active=eq.true": [
+    {
+      "id": "123",
+      "name": "123",
+      "base_price_cents": 12300,
+      "tiers": [
+        {
+          "min": 50,
+          "price": 12300
+        },
+        {
+          "min": 100,
+          "price": 12300
+        },
+        {
+          "min": 200,
+          "price": 12300
+        }
+      ],
+      "is_active": true,
+      "min_order_quantity": 10,
+      "order_quantity_step": 10
+    },
+    {
+      "id": "1",
+      "name": "Driveshaft Cable",
+      "base_price_cents": 300,
+      "tiers": [
+        {
+          "min": 50,
+          "price": 290
+        },
+        {
+          "min": 100,
+          "price": 270
+        },
+        {
+          "min": 200,
+          "price": 245
+        }
+      ],
+      "is_active": true,
+      "min_order_quantity": 10,
+      "order_quantity_step": 10
+    },
+    {
+      "id": "3",
+      "name": "Value Brake Caging Bolt (10-Pack)",
+      "base_price_cents": 2199,
+      "tiers": [
+        {
+          "min": 20,
+          "price": 1899
+        },
+        {
+          "min": 10,
+          "price": 1999
+        },
+        {
+          "min": 5,
+          "price": 2099
+        }
+      ],
+      "is_active": true,
+      "min_order_quantity": 1,
+      "order_quantity_step": 1
+    }
+  ],
+  "products?select=*&is_active=eq.true&is_storefront=eq.true&order=sort_order.asc%2Cid.asc": [
+    {
+      "id": "1",
+      "name": "Driveshaft Cable",
+      "sku": "KTDC-001",
+      "base_price_cents": 300,
+      "tiers": [
+        {
+          "min": 50,
+          "price": 290
+        },
+        {
+          "min": 100,
+          "price": 270
+        },
+        {
+          "min": 200,
+          "price": 245
+        }
+      ],
+      "is_active": true,
+      "is_storefront": true,
+      "sort_order": 1,
+      "created_at": "2026-05-21T02:52:56.425878+00:00",
+      "updated_at": "2026-05-25T13:30:31.776048+00:00",
+      "slug": "driveshaft-cable",
+      "short_description": "Heavy-duty driveshaft safety cable for professional towing and recovery operations.",
+      "description": "The Driveshaft Cable is a purpose-built safety device designed to securely suspend disconnected driveshafts during towing and recovery operations.\n\nBuilt with 5/32\" galvanized steel cable and heavy-duty aluminum couplers, it provides a professional, single-use solution for keeping drivelines safely secured during transport. The cable is cut off after the job — no reuse, no guessing if it's still safe.\n\nNo more makeshift solutions with bungee cords, zip ties, or chains. The Driveshaft Cable installs in seconds and keeps that shaft exactly where it needs to be.",
+      "specs": {
+        "Weight": "1.2 lb",
+        "Total Length": "1000mm (39\")",
+        "Cable Diameter": "5/32\" (4mm)",
+        "Cable Material": "Galvanized Steel Wire",
+        "Coupler Material": "Yellow Anodized Aluminum",
+        "End Construction": "Crimped Loops",
+        "Working Load Limit": "3000 lbs"
+      },
+      "applications": [
+        "Class 7-8 Trucks",
+        "Semi-Tractors",
+        "Vocational Trucks",
+        "Transit Buses",
+        "Construction Equipment",
+        "Agricultural Equipment",
+        "Emergency Vehicles",
+        "Military Vehicles"
+      ],
+      "features": [
+        {
+          "title": "Prevents Driveshaft Drop",
+          "description": "Secure suspension keeps the shaft in place during entire transport."
+        },
+        {
+          "title": "Protects Drivetrain Components",
+          "description": "Eliminates seal damage and secondary transmission failures."
+        },
+        {
+          "title": "Faster Than Makeshift Solutions",
+          "description": "No more chains, bungees, or zip ties. Install in seconds."
+        },
+        {
+          "title": "Compact & Field-Ready",
+          "description": "Fits in glove box or tool tray. Always ready when you need it."
+        },
+        {
+          "title": "Single-Use by Design",
+          "description": "Cut off after each job — no reuse, no guessing if it's still safe."
+        }
+      ],
+      "images": [
+        "/inuse.jpeg",
+        "/IMG_5491.jpeg",
+        "/IMG_5492.jpeg",
+        "/IMG_5493.jpeg",
+        "/IMG_5490.jpeg",
+        "/IMG_5489.jpeg"
+      ],
+      "tagline": "The original. Coupler positioned for angled pull paths.",
+      "showcase_bullets": [
+        "Crimped aluminum coupler in standard orientation",
+        "Designed for the typical driveline geometry",
+        "5/32\" galvanized steel · 40\" · 3000 lb WLL"
+      ],
+      "cta_label": "Shop Driveshaft Cable",
+      "min_order_quantity": 10,
+      "order_quantity_step": 10
+    },
+    {
+      "id": "3",
+      "name": "Value Brake Caging Bolt (10-Pack)",
+      "sku": "KTDC-VBC-18",
+      "base_price_cents": 2199,
+      "tiers": [
+        {
+          "min": 20,
+          "price": 1899
+        },
+        {
+          "min": 10,
+          "price": 1999
+        },
+        {
+          "min": 5,
+          "price": 2099
+        }
+      ],
+      "is_active": true,
+      "is_storefront": true,
+      "sort_order": 3,
+      "created_at": "2026-06-29T03:41:27.326273+00:00",
+      "updated_at": "2026-06-29T04:21:28.388+00:00",
+      "slug": "value-brake-caging-bolt",
+      "short_description": "Pack of 10 heavy-duty spring brake release bolts with an 18mm hex (NOT the standard 3/4\" / 19mm). Bring the right socket.",
+      "description": "Sold in packs of 10. The Value Brake Caging Bolt is a purpose-built spring brake release tool for heavy-duty trucks, trailers, and transit buses that run air-actuated parking brakes. When the system loses air pressure — broken truck, dead trailer, towing a wreck — the spring in the brake chamber extends and locks the wheels. The caging bolt threads into the back of the chamber and mechanically pulls that spring back so the brake releases and the vehicle can be moved.\r\n\r\nThe single thing every operator needs to know about this bolt: the hex is 18mm. The standard brake caging bolt across most rigs is 3/4\" (19mm). This is the value variant — same function, lower price, but a 19mm socket will not turn it. Bring an 18mm socket on the truck and you'll be fine; bring the standard one and you'll be stuck.\r\n\r\nBuilt from heat-treated steel to handle the spring load without shearing. Sized for the common T-series spring brake chambers found on Class 7-8 tractors, semi-trailers, transit buses, and vocational trucks. Always confirm your chamber's specs before use.",
+      "specs": {
+        "Function": "Manually cages spring brake to release parking brake",
+        "Hex Size": "18mm (NOT 3/4\"/19mm)",
+        "Material": "Heat-treated steel",
+        "Use Case": "Required when towing or moving vehicles with no air pressure",
+        "Pack Size": "10 bolts per pack",
+        "Standard Variant": "Most caging bolts use 3/4\" (19mm) hex — confirm your socket before use"
+      },
+      "applications": [
+        "Tow truck and recovery operators",
+        "Fleet maintenance shops",
+        "Roadside service",
+        "Air brake system service",
+        "Class 7-8 trucks, trailers, transit buses"
+      ],
+      "features": [
+        {
+          "title": "18mm Hex — NOT 3/4\"/19mm",
+          "description": "The single most important thing to know. The standard caging bolt is 3/4\" (19mm). This value variant is 18mm. Bring the right socket or you won't be releasing anything."
+        },
+        {
+          "title": "Releases Spring Brakes Without Air",
+          "description": "Threads into the back of a spring brake chamber and mechanically pulls the spring back, releasing the parking/emergency brake so the vehicle can be towed or moved."
+        },
+        {
+          "title": "Heat-Treated Steel",
+          "description": "Built to handle the load of a fully-charged brake spring. Cheap bolts shear under load — these don't."
+        },
+        {
+          "title": "Fits Common Chambers",
+          "description": "Works with most T-series spring brake chambers found on heavy-duty trucks, trailers, and transit buses. Always verify your chamber spec before use."
+        }
+      ],
+      "images": [
+        "/cage/IMG_7336.JPG",
+        "/cage/IMG_7335.JPG",
+        "/cage/IMG_7337.JPG",
+        "/cage/IMG_7338.JPG",
+        "/cage/IMG_7339.JPG",
+        "/cage/IMG_7340.JPG"
+      ],
+      "tagline": "18mm value variant — bring an 18mm socket, not the standard 3/4\"",
+      "showcase_bullets": [
+        "18mm hex (not 3/4\"/19mm)",
+        "Releases air-spring parking brakes",
+        "Built for tow ops and roadside recovery"
+      ],
+      "cta_label": "Shop Brake Caging Bolts",
+      "min_order_quantity": 1,
+      "order_quantity_step": 1
+    }
+  ],
+  "product_inventory?select=stock_quantity%2Ctotal_quantity&product_id=eq.3": {
+    "stock_quantity": 95,
+    "total_quantity": 1000
+  },
+  "product_inventory?select=stock_quantity%2Ctotal_quantity&product_id=eq.1": {
+    "stock_quantity": 0,
+    "total_quantity": 7000
+  },
+  "products?select=*&slug=eq.driveshaft-cable&is_active=eq.true&is_storefront=eq.true": [
+    {
+      "id": "1",
+      "name": "Driveshaft Cable",
+      "sku": "KTDC-001",
+      "base_price_cents": 300,
+      "tiers": [
+        {
+          "min": 50,
+          "price": 290
+        },
+        {
+          "min": 100,
+          "price": 270
+        },
+        {
+          "min": 200,
+          "price": 245
+        }
+      ],
+      "is_active": true,
+      "is_storefront": true,
+      "sort_order": 1,
+      "created_at": "2026-05-21T02:52:56.425878+00:00",
+      "updated_at": "2026-05-25T13:30:31.776048+00:00",
+      "slug": "driveshaft-cable",
+      "short_description": "Heavy-duty driveshaft safety cable for professional towing and recovery operations.",
+      "description": "The Driveshaft Cable is a purpose-built safety device designed to securely suspend disconnected driveshafts during towing and recovery operations.\n\nBuilt with 5/32\" galvanized steel cable and heavy-duty aluminum couplers, it provides a professional, single-use solution for keeping drivelines safely secured during transport. The cable is cut off after the job — no reuse, no guessing if it's still safe.\n\nNo more makeshift solutions with bungee cords, zip ties, or chains. The Driveshaft Cable installs in seconds and keeps that shaft exactly where it needs to be.",
+      "specs": {
+        "Weight": "1.2 lb",
+        "Total Length": "1000mm (39\")",
+        "Cable Diameter": "5/32\" (4mm)",
+        "Cable Material": "Galvanized Steel Wire",
+        "Coupler Material": "Yellow Anodized Aluminum",
+        "End Construction": "Crimped Loops",
+        "Working Load Limit": "3000 lbs"
+      },
+      "applications": [
+        "Class 7-8 Trucks",
+        "Semi-Tractors",
+        "Vocational Trucks",
+        "Transit Buses",
+        "Construction Equipment",
+        "Agricultural Equipment",
+        "Emergency Vehicles",
+        "Military Vehicles"
+      ],
+      "features": [
+        {
+          "title": "Prevents Driveshaft Drop",
+          "description": "Secure suspension keeps the shaft in place during entire transport."
+        },
+        {
+          "title": "Protects Drivetrain Components",
+          "description": "Eliminates seal damage and secondary transmission failures."
+        },
+        {
+          "title": "Faster Than Makeshift Solutions",
+          "description": "No more chains, bungees, or zip ties. Install in seconds."
+        },
+        {
+          "title": "Compact & Field-Ready",
+          "description": "Fits in glove box or tool tray. Always ready when you need it."
+        },
+        {
+          "title": "Single-Use by Design",
+          "description": "Cut off after each job — no reuse, no guessing if it's still safe."
+        }
+      ],
+      "images": [
+        "/inuse.jpeg",
+        "/IMG_5491.jpeg",
+        "/IMG_5492.jpeg",
+        "/IMG_5493.jpeg",
+        "/IMG_5490.jpeg",
+        "/IMG_5489.jpeg"
+      ],
+      "tagline": "The original. Coupler positioned for angled pull paths.",
+      "showcase_bullets": [
+        "Crimped aluminum coupler in standard orientation",
+        "Designed for the typical driveline geometry",
+        "5/32\" galvanized steel · 40\" · 3000 lb WLL"
+      ],
+      "cta_label": "Shop Driveshaft Cable",
+      "min_order_quantity": 10,
+      "order_quantity_step": 10
+    }
+  ],
+  "blog_posts?select=id%2Ctitle%2Cslug%2Cexcerpt%2Ccategory%2Ctags%2Cpublished_at%2Creading_time_minutes&status=eq.published&order=published_at.desc&offset=0&limit=13": [
+    {
+      "id": 100,
+      "title": "Building a Maintenance Schedule for Your Tow Truck Fleet",
+      "slug": "building-a-maintenance-schedule-for-your-tow-truck-fleet",
+      "excerpt": "Learn how to create an effective maintenance schedule for your tow truck fleet to enhance safety, reliability, and longevity of your equipment.",
+      "category": "equipment",
+      "tags": [
+        "tow truck maintenance",
+        "fleet management",
+        "heavy duty towing"
+      ],
+      "published_at": "2026-10-09T09:00:12.6235+00:00",
+      "reading_time_minutes": 4
+    },
+    {
+      "id": 99,
+      "title": "Fuel Efficiency Tips for Tow Truck Operators",
+      "slug": "fuel-efficiency-tips-for-tow-truck-operators",
+      "excerpt": "Learn practical fuel efficiency tips for tow truck operators to save on costs and improve operations.",
+      "category": "tips",
+      "tags": [
+        "fuel efficiency",
+        "tow truck operators",
+        "cost savings"
+      ],
+      "published_at": "2026-10-07T09:00:15.90965+00:00",
+      "reading_time_minutes": 4
+    },
+    {
+      "id": 98,
+      "title": "The Impact of Technology on Modern Towing Operations",
+      "slug": "the-impact-of-technology-on-modern-towing-operations",
+      "excerpt": "Explore how technology is transforming towing operations, improving efficiency and safety for operators.",
+      "category": "industry-news",
+      "tags": [
+        "towing",
+        "technology",
+        "industry-news"
+      ],
+      "published_at": "2026-10-05T09:00:12.554008+00:00",
+      "reading_time_minutes": 4
+    },
+    {
+      "id": 97,
+      "title": "Essential Tips for Rollback Bed Maintenance and Operation",
+      "slug": "essential-tips-for-rollback-bed-maintenance-and-operation",
+      "excerpt": "Mastering rollback bed maintenance ensures safety and efficiency in towing operations. Discover practical tips to keep your equipment in top shape.",
+      "category": "industry-news",
+      "tags": [
+        "rollback bed",
+        "towing",
+        "maintenance",
+        "heavy-duty towing",
+        "safety"
+      ],
+      "published_at": "2026-10-02T09:00:15.156576+00:00",
+      "reading_time_minutes": 4
+    },
+    {
+      "id": 96,
+      "title": "Enhancing Efficiency with GPS Fleet Tracking Systems",
+      "slug": "enhancing-efficiency-with-gps-fleet-tracking-systems",
+      "excerpt": "Explore the benefits of GPS fleet tracking systems for tow companies and how they can improve efficiency, safety, and communication in your operations.",
+      "category": "equipment",
+      "tags": [
+        "GPS",
+        "fleet tracking",
+        "towing industry",
+        "tow trucks"
+      ],
+      "published_at": "2026-09-30T09:00:14.703616+00:00",
+      "reading_time_minutes": 4
+    },
+    {
+      "id": 95,
+      "title": "Understanding Towing Auction and Impound Lot Regulations",
+      "slug": "understanding-towing-auction-and-impound-lot-regulations",
+      "excerpt": "Learn key regulations surrounding towing auctions and impound lots to ensure compliance and smooth operations.",
+      "category": "regulations",
+      "tags": [
+        "towing regulations",
+        "impound lots",
+        "towing auctions"
+      ],
+      "published_at": "2026-09-28T09:00:12.255282+00:00",
+      "reading_time_minutes": 4
+    },
+    {
+      "id": 94,
+      "title": "CV Joint Protection During Flatbed Towing",
+      "slug": "cv-joint-protection-during-flatbed-towing",
+      "excerpt": "Learn how to protect CV joints during flatbed towing, ensuring safety and efficiency while adhering to industry standards.",
+      "category": "driveline",
+      "tags": [
+        "towing",
+        "CV joints",
+        "flatbed towing",
+        "driveline safety"
+      ],
+      "published_at": "2026-09-25T09:00:09.781603+00:00",
+      "reading_time_minutes": 4
+    },
+    {
+      "id": 93,
+      "title": "5 Essential Safety Checks Before Every Heavy Duty Tow",
+      "slug": "5-essential-safety-checks-before-every-heavy-duty-tow",
+      "excerpt": "Ensure a successful tow by following these 5 crucial safety checks before hitting the road. Stay safe and compliant with industry standards.",
+      "category": "safety",
+      "tags": [
+        "safety",
+        "towing",
+        "heavy-duty"
+      ],
+      "published_at": "2026-09-23T09:00:14.633893+00:00",
+      "reading_time_minutes": 4
+    },
+    {
+      "id": 92,
+      "title": "Tow Truck Operator Fatigue: Recognizing Signs and Staying Safe",
+      "slug": "tow-truck-operator-fatigue-recognizing-signs-and-staying-safe",
+      "excerpt": "Fatigue can impair your performance on the road. Learn how to recognize signs of fatigue and implement strategies to stay safe while towing.",
+      "category": "safety",
+      "tags": [
+        "fatigue",
+        "safety",
+        "tow truck operator"
+      ],
+      "published_at": "2026-09-21T09:00:12.238397+00:00",
+      "reading_time_minutes": 4
+    },
+    {
+      "id": 91,
+      "title": "Wheel Lift vs Flatbed: Choosing the Right Towing Method",
+      "slug": "wheel-lift-vs-flatbed-choosing-the-right-towing-method",
+      "excerpt": "Understanding when to use a wheel lift versus a flatbed can enhance efficiency and safety in towing operations.",
+      "category": "equipment",
+      "tags": [
+        "towing",
+        "heavy-duty",
+        "equipment"
+      ],
+      "published_at": "2026-09-18T09:00:13.771344+00:00",
+      "reading_time_minutes": 4
+    },
+    {
+      "id": 90,
+      "title": "Mastering Cash Flow Management in Your Towing Company",
+      "slug": "mastering-cash-flow-management-in-your-towing-company",
+      "excerpt": "Effective cash flow management is key for towing companies. Learn strategies to ensure your business remains profitable and sustainable.",
+      "category": "tips",
+      "tags": [
+        "cash flow",
+        "towing business",
+        "financial management"
+      ],
+      "published_at": "2026-09-16T09:00:11.605573+00:00",
+      "reading_time_minutes": 4
+    },
+    {
+      "id": 89,
+      "title": "Mastering Transfer Case Disconnect Procedures for Towing",
+      "slug": "mastering-transfer-case-disconnect-procedures-for-towing",
+      "excerpt": "Learn essential transfer case disconnect procedures for safe towing. Follow these guidelines to ensure your operations are efficient and compliant.",
+      "category": "driveline",
+      "tags": [
+        "towing",
+        "driveline",
+        "transfer case"
+      ],
+      "published_at": "2026-09-14T09:00:11.357591+00:00",
+      "reading_time_minutes": 4
+    },
+    {
+      "id": 88,
+      "title": "Mastering Snatch Blocks for Effective Recovery Operations",
+      "slug": "mastering-snatch-blocks-for-effective-recovery-operations",
+      "excerpt": "Learn how to properly use a snatch block in recovery scenarios to enhance safety and efficiency in heavy-duty towing operations.",
+      "category": "equipment",
+      "tags": [
+        "towing",
+        "recovery",
+        "snatch block",
+        "equipment"
+      ],
+      "published_at": "2026-09-11T09:00:12.620802+00:00",
+      "reading_time_minutes": 5
+    }
+  ]
+}

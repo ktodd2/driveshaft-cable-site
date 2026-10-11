@@ -2,93 +2,358 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ==========================================================================
+   Driveshaft Cable design system: dark industrial, orange → gold.
+   Tokens live here; the Tailwind palette (tailwind.config.js) mirrors them so
+   utility classes across every page resolve to the same values.
+   ========================================================================== */
 :root {
-  --ktodd-yellow: #FFD700;
-  --ktodd-gold: #D4A017;
+  --ktodd-yellow: #F2A900;
+  --ktodd-gold: #D99400;
   --ktodd-steel: #4A5568;
-  --ktodd-dark: #1A1A1A;
-  --ktodd-charcoal: #2D2D2D;
+  --ktodd-dark: #0A0A0A;
+  --ktodd-charcoal: #111111;
+
+  --gold: #F2A900;
+  --orange: #FF7A00;
+  --grad: linear-gradient(100deg, var(--orange), var(--gold));
+  --surface-1: #111111;
+  --surface-2: #171717;
+  --line: #2A2A28;
+  --line-gold: rgba(242, 169, 0, 0.38);
+  --ink: #F5F5F2;
+  --ink-2: #D6D5CF;
+  --muted: #A3A29C;
+  --ease: cubic-bezier(0.2, 0, 0, 1);
+  --r-sm: 0.5rem;
+  --r-md: 0.75rem;
+  --r-lg: 1.25rem;
+  /* Height reserved at the bottom of the page while the mobile action bar is eligible. */
+  --mobile-bar-h: 0px;
 }
 
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
+@layer base {
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  html {
+    scroll-behavior: smooth;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    font-family: 'Roboto', 'Avenir Next', 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+    background-color: var(--ktodd-dark);
+    color: var(--ink);
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    overflow-x: clip;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Oswald', 'Saira Condensed', 'Avenir Next Condensed', Impact, sans-serif;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+    line-height: 1.08;
+    text-wrap: balance;
+  }
+
+  p, li {
+    text-wrap: pretty;
+  }
+
+  table, .tabular-nums {
+    font-variant-numeric: tabular-nums;
+  }
+
+  img {
+    max-width: 100%;
+  }
+
+  ::selection {
+    background: var(--gold);
+    color: #000;
+  }
+
+  :focus-visible {
+    outline: 3px solid var(--gold);
+    outline-offset: 3px;
+  }
+
+  /* Form styles: one input treatment site-wide. */
+  input, textarea, select {
+    @apply bg-gray-950 border border-gray-600 text-white px-4 py-3 w-full focus:border-yellow-500 focus:outline-none focus:ring-2 focus:ring-yellow-500/40;
+    transition: border-color 0.15s var(--ease), box-shadow 0.15s var(--ease);
+  }
+
+  input:not([type='checkbox']):not([type='radio']):not(.border-x),
+  textarea,
+  select {
+    border-radius: var(--r-md);
+  }
+
+  input:hover:not(:focus):not(:disabled),
+  textarea:hover:not(:focus):not(:disabled),
+  select:hover:not(:focus):not(:disabled) {
+    border-color: #6B6A64;
+  }
+
+  input[type='checkbox'], input[type='radio'] {
+    accent-color: var(--gold);
+  }
+
+  input::placeholder, textarea::placeholder {
+    color: #8A8983;
+  }
 }
 
-html {
-  scroll-behavior: smooth;
+@layer components {
+  /* Buttons ---------------------------------------------------------------- */
+  .btn-primary,
+  .btn-secondary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.625rem;
+    min-height: 3rem;
+    padding: 0.75rem 1.75rem;
+    border-radius: var(--r-md);
+    font-family: 'Oswald', 'Saira Condensed', Impact, sans-serif;
+    font-weight: 600;
+    font-size: 1rem;
+    line-height: 1;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    text-decoration: none;
+    white-space: nowrap;
+    cursor: pointer;
+    transition-property: transform, box-shadow, background-color, color, filter;
+    transition-duration: 0.15s;
+    transition-timing-function: var(--ease);
+  }
+
+  .btn-primary {
+    color: #0A0A0A;
+    background-color: var(--gold);
+    background-image: var(--grad);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35), 0 10px 28px -14px rgba(255, 122, 0, 0.7);
+  }
+
+  .btn-primary:hover {
+    filter: brightness(1.05);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35), 0 14px 34px -14px rgba(255, 122, 0, 0.9);
+  }
+
+  .btn-secondary {
+    color: var(--ink);
+    background-color: transparent;
+    box-shadow: inset 0 0 0 1px var(--line-gold);
+  }
+
+  .btn-secondary:hover {
+    color: var(--gold);
+    background-color: rgba(242, 169, 0, 0.06);
+    box-shadow: inset 0 0 0 1px var(--gold);
+  }
+
+  .btn-primary:active,
+  .btn-secondary:active {
+    transform: scale(0.96);
+  }
+
+  .btn-primary:disabled,
+  .btn-secondary:disabled,
+  .btn-primary[aria-disabled='true'] {
+    cursor: not-allowed;
+    color: #8A8983;
+    background-image: none;
+    background-color: transparent;
+    box-shadow: inset 0 0 0 1px #4E4D48;
+    filter: none;
+    transform: none;
+  }
+
+  .btn-sm {
+    min-height: 2.75rem;
+    padding: 0.5rem 1.125rem;
+    font-size: 0.875rem;
+  }
+
+  /* Type helpers ----------------------------------------------------------- */
+  .eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-family: 'Oswald', 'Saira Condensed', Impact, sans-serif;
+    font-weight: 600;
+    font-size: 0.8125rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--gold);
+  }
+
+  .eyebrow::before {
+    content: '';
+    width: 1.75rem;
+    height: 2px;
+    background: var(--grad);
+    flex: none;
+  }
+
+  .text-gradient {
+    background: var(--grad);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  /* Surfaces --------------------------------------------------------------- */
+  .surface {
+    background-color: var(--surface-1);
+    border-radius: var(--r-lg);
+    box-shadow: 0 0 0 1px var(--line);
+  }
+
+  .surface-gold {
+    background: linear-gradient(135deg, rgba(255, 122, 0, 0.1), rgba(242, 169, 0, 0.03)), var(--surface-1);
+    border-radius: var(--r-lg);
+    box-shadow: 0 0 0 1px var(--line-gold);
+  }
+
+  .photo-frame {
+    position: relative;
+    overflow: hidden;
+    border-radius: var(--r-lg);
+    background: #000;
+    box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.08), 0 30px 60px -30px #000;
+  }
+
+  .photo-frame img {
+    outline: 1px solid rgba(255, 255, 255, 0.1);
+    outline-offset: -1px;
+  }
+
+  .section-glow {
+    background:
+      radial-gradient(900px 520px at 88% -8%, rgba(255, 122, 0, 0.12), transparent 62%),
+      radial-gradient(700px 420px at 0% 0%, rgba(242, 169, 0, 0.05), transparent 60%),
+      var(--ktodd-dark);
+  }
 }
 
-body {
-  font-family: 'Roboto', Arial, sans-serif;
-  background-color: var(--ktodd-dark);
-  color: #ffffff;
-  line-height: 1.6;
-}
+/* ==========================================================================
+   Theme layer for existing utility markup.
+   Pages built before the refresh compose Tailwind utilities directly. These
+   rules (deliberately outside @layer so they follow utilities) give those
+   recurring patterns the refreshed shape without editing page logic.
+   ========================================================================== */
 
-h1, h2, h3, h4, h5, h6 {
-  font-family: 'Oswald', Impact, sans-serif;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
-
-/* Industrial styling */
+/* Legacy accents, redrawn in the new system. */
 .industrial-border {
-  border: 3px solid var(--ktodd-yellow);
-  box-shadow: 0 0 20px rgba(255, 215, 0, 0.3);
+  border-radius: var(--r-lg);
+  box-shadow: 0 0 0 1px var(--line-gold), 0 30px 60px -30px #000;
 }
 
 .caution-stripe {
-  background: repeating-linear-gradient(
-    45deg,
-    var(--ktodd-yellow),
-    var(--ktodd-yellow) 10px,
-    var(--ktodd-dark) 10px,
-    var(--ktodd-dark) 20px
-  );
+  background: var(--grad);
+  height: 3px;
 }
 
 .steel-gradient {
-  background: linear-gradient(180deg, #6B7280 0%, #374151 50%, #1F2937 100%);
+  background: linear-gradient(180deg, #2A2A28 0%, #171717 55%, #0A0A0A 100%);
 }
 
 .glow-yellow {
-  text-shadow: 0 0 10px var(--ktodd-yellow), 0 0 20px var(--ktodd-yellow);
+  background: var(--grad);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  text-shadow: none;
 }
 
-/* Button styles */
-.btn-primary {
-  @apply bg-yellow-500 hover:bg-yellow-400 text-black font-bold py-3 px-8 uppercase tracking-wider transition-all duration-300;
-  font-family: 'Oswald', Impact, sans-serif;
+/* Section divider bar under headings. */
+.h-1.bg-yellow-500,
+.h-1.bg-red-500 {
+  height: 3px;
+  border-radius: 2px;
+  background-image: var(--grad);
 }
 
-.btn-primary:hover {
-  box-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
-  transform: translateY(-2px);
+/* Solid gold action buttons become the gradient primary. */
+a.bg-yellow-500,
+button.bg-yellow-500 {
+  background-image: var(--grad);
+  border-radius: var(--r-md);
+  transition-property: transform, box-shadow, filter, background-color, color;
+  transition-duration: 0.15s;
+  transition-timing-function: var(--ease);
 }
 
-/* Form styles */
-input, textarea, select {
-  @apply bg-gray-800 border border-gray-600 text-white px-4 py-3 w-full focus:border-yellow-500 focus:outline-none focus:ring-2 focus:ring-yellow-500/50;
+a.bg-yellow-500:hover,
+button.bg-yellow-500:hover:not(:disabled) {
+  filter: brightness(1.05);
 }
 
-input::placeholder, textarea::placeholder {
-  color: #9CA3AF;
+a.bg-yellow-500:active,
+button.bg-yellow-500:active:not(:disabled) {
+  transform: scale(0.96);
 }
 
-/* Cart notification animation */
+button.bg-gray-600:disabled,
+button.bg-gray-700:disabled {
+  border-radius: var(--r-md);
+}
+
+/* Outlined gold buttons (e.g. "Learn more", secondary actions). */
+a.border-2.border-yellow-500,
+button.border-2.border-yellow-500,
+a.border.border-gray-600,
+button.border.border-gray-600 {
+  border-radius: var(--r-md);
+}
+
+/* Cards and panels: concentric, soft-cornered surfaces. */
+.border.border-gray-700:is([class*='bg-gray-8'], [class*='bg-gray-9'], [class*='bg-ktodd'], [class*='bg-black']),
+.border-2:is([class*='bg-yellow-500/'], [class*='bg-red-'], [class*='bg-green-'], [class*='bg-gray-8']),
+.border:is([class*='bg-yellow-500/'], [class*='bg-red-500/'], [class*='bg-green-500/'], [class*='bg-blue-500/']) {
+  border-radius: var(--r-md);
+}
+
+/* Cart notification: short, soft entrance (no full-width slide). */
 @keyframes slide-in {
   from {
-    transform: translateX(100%);
+    transform: translateY(-8px);
     opacity: 0;
   }
   to {
-    transform: translateX(0);
+    transform: none;
     opacity: 1;
   }
 }
 
 .animate-slide-in {
-  animation: slide-in 0.3s ease-out;
+  animation: slide-in 0.2s var(--ease);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+
+  .btn-primary:active,
+  .btn-secondary:active,
+  a.bg-yellow-500:active,
+  button.bg-yellow-500:active {
+    transform: none;
+  }
 }

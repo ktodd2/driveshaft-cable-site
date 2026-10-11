@@ -101,30 +101,31 @@ function ProductCard({ product }) {
   const chips = topSpecChips(product.specs)
 
   return (
-    <div className={`bg-gray-800/50 border border-gray-700 transition-all duration-300 group ${
-      outOfStock ? 'opacity-60 grayscale' : 'hover:border-yellow-500'
+    <article className={`flex flex-col bg-gray-900 rounded-2xl overflow-hidden ring-1 ring-gray-700 shadow-[0_24px_48px_-32px_#000] transition-shadow duration-200 group ${
+      outOfStock ? 'opacity-70' : 'hover:ring-yellow-500/60'
     }`}>
       {/* Product Image */}
       <Link to={`/products/${product.slug}`} className="block">
-        <div className="aspect-square bg-gray-900 relative overflow-hidden">
+        <div className="aspect-[4/3] bg-black relative overflow-hidden">
           <img
             src={thumbnail}
             alt={product.name}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+            className={`w-full h-full object-cover outline outline-1 -outline-offset-1 outline-white/10 ${outOfStock ? 'grayscale' : ''}`}
             loading="lazy"
           />
           {/* Stock Badge */}
           {!stockLoading && stock !== null && (
-            <div className={`absolute top-3 right-3 px-3 py-1 text-xs font-bold ${
-              stock === 0 ? 'bg-red-500 text-white' : stock <= 20 ? 'bg-yellow-500 text-black' : 'bg-green-500 text-white'
+            <div className={`absolute top-3 right-3 inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold font-industrial tracking-[0.1em] uppercase tabular-nums bg-black/75 backdrop-blur-sm ring-1 ring-inset ${
+              stock === 0 ? 'text-red-300 ring-red-400/60' : stock <= 20 ? 'text-yellow-400 ring-yellow-500/60' : 'text-green-400 ring-green-400/60'
             }`}>
+              <span className="w-2 h-2 rounded-full bg-current" aria-hidden="true" />
               {stock === 0 ? 'OUT OF STOCK' : `${stock} in stock`}
             </div>
           )}
           {/* Big diagonal "SOLD OUT" overlay so the eye actively skips this card */}
           {outOfStock && (
             <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-              <div className="bg-red-600/95 text-white font-industrial text-2xl tracking-widest px-6 py-2 -rotate-12 shadow-xl border-y-2 border-white/80">
+              <div className="bg-black/80 text-red-300 font-industrial text-2xl tracking-[0.2em] px-6 py-2 rounded-lg ring-1 ring-inset ring-red-400/60">
                 SOLD OUT
               </div>
             </div>
@@ -133,9 +134,9 @@ function ProductCard({ product }) {
       </Link>
 
       {/* Product Info */}
-      <div className="p-6">
-        <Link to={`/products/${product.slug}`}>
-          <h3 className={`text-xl font-industrial mb-2 transition-colors ${
+      <div className="p-6 flex flex-col flex-1">
+        <Link to={`/products/${product.slug}`} className="rounded">
+          <h3 className={`text-2xl font-industrial mb-2 transition-colors ${
             outOfStock
               ? 'text-gray-400 line-through'
               : 'text-white group-hover:text-yellow-500'
@@ -149,7 +150,7 @@ function ProductCard({ product }) {
         {chips.length > 0 && (
           <div className="flex flex-wrap gap-2 mb-4">
             {chips.map(c => (
-              <span key={c.key} className="text-xs bg-gray-700 text-gray-300 px-2 py-1">
+              <span key={c.key} className="text-xs bg-gray-800 ring-1 ring-inset ring-gray-700 text-gray-200 px-2.5 py-1 rounded-md tabular-nums">
                 {c.label}{c.value}
               </span>
             ))}
@@ -180,7 +181,7 @@ function ProductCard({ product }) {
           ) : (
             <>
               <div className="flex items-baseline gap-2">
-                <span className="text-yellow-500 text-2xl font-industrial">{formatPrice(currentPrice)}</span>
+                <span className="text-white text-3xl font-industrial font-bold tabular-nums">{formatPrice(currentPrice)}</span>
                 <span className="text-gray-400 text-sm">per unit</span>
               </div>
               {currentPrice < basePrice && (
@@ -195,18 +196,21 @@ function ProductCard({ product }) {
 
         {/* Quantity Selector */}
         <div className="mb-4 mt-4">
-          <label className="block text-gray-400 text-xs mb-2">
+          <label htmlFor={`qty-${product.id}`} className="block text-gray-400 text-xs uppercase tracking-[0.1em] mb-2">
             Quantity (min. {effectiveMin}{productStep > 1 ? `, in ${productStep}s` : ''})
           </label>
           <div className="flex items-center gap-3">
-            <div className="flex items-center border border-gray-700">
+            <div className="flex items-center rounded-xl ring-1 ring-inset ring-gray-600 overflow-hidden">
               <button
+                type="button"
                 onClick={() => handleQuantityChange(-productStep)}
-                className="px-3 py-2 text-white hover:bg-gray-700 transition-colors text-sm"
+                aria-label={`Decrease quantity by ${productStep}`}
+                className="min-w-[44px] min-h-[44px] px-3 text-white hover:bg-gray-700 transition-colors text-sm tabular-nums"
               >
                 -{productStep}
               </button>
               <input
+                id={`qty-${product.id}`}
                 type="number"
                 value={quantityDraft}
                 onChange={(e) => setQuantityDraft(e.target.value)}
@@ -219,19 +223,21 @@ function ProductCard({ product }) {
                   setQuantity(clamped)
                   setQuantityDraft(String(clamped))
                 }}
-                className="w-20 text-center bg-transparent text-white border-x border-gray-700 py-2 text-sm"
+                className="w-20 text-center bg-transparent text-white border-0 border-x border-gray-600 rounded-none py-2 text-sm tabular-nums focus:ring-inset"
                 min={productMin}
                 step={productStep}
               />
               <button
+                type="button"
                 onClick={() => handleQuantityChange(productStep)}
-                className="px-3 py-2 text-white hover:bg-gray-700 transition-colors text-sm"
+                aria-label={`Increase quantity by ${productStep}`}
+                className="min-w-[44px] min-h-[44px] px-3 text-white hover:bg-gray-700 transition-colors text-sm tabular-nums"
               >
                 +{productStep}
               </button>
             </div>
             <span className="text-gray-400 text-sm">
-              Total: <span className="text-yellow-500 font-bold">{formatPrice(totalPrice)}</span>
+              Total: <span className="text-yellow-500 font-bold tabular-nums">{formatPrice(totalPrice)}</span>
             </span>
           </div>
         </div>
@@ -248,16 +254,12 @@ function ProductCard({ product }) {
         <button
           onClick={handleAddToCart}
           disabled={outOfStock || (!stockLoading && stock !== null && quantity > stock)}
-          className={`w-full font-bold py-3 px-4 uppercase text-sm tracking-wider transition-colors ${
-            outOfStock || (!stockLoading && stock !== null && quantity > stock)
-              ? 'bg-gray-600 text-gray-400 cursor-not-allowed'
-              : 'bg-yellow-500 hover:bg-yellow-400 text-black'
-          }`}
+          className="btn-primary w-full mt-auto"
         >
           {outOfStock ? 'Out of Stock' : `Add ${quantity} to Cart`}
         </button>
       </div>
-    </div>
+    </article>
   )
 }
 
@@ -271,14 +273,14 @@ function StorefrontProducts() {
   return (
     <>
       {/* Hero Section */}
-      <section className="py-16 bg-gradient-to-b from-ktodd-dark to-ktodd-charcoal">
+      <section className="pt-12 pb-10 md:pt-16 md:pb-12 section-glow">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center">
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-industrial text-white mb-4">
-              SHOP <span className="text-yellow-500">DRIVESHAFT CABLES</span>
+          <div>
+            <p className="eyebrow mb-4">Heavy-Duty Towing Safety</p>
+            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-industrial font-bold text-white mb-4 leading-[0.98]">
+              SHOP <span className="text-gradient">DRIVESHAFT CABLES</span>
             </h1>
-            <div className="w-24 h-1 bg-yellow-500 mx-auto mb-6"></div>
-            <p className="text-xl text-gray-400 max-w-2xl mx-auto">
+            <p className="text-lg sm:text-xl text-gray-300 max-w-2xl">
               Professional-grade equipment for heavy-duty towing and recovery operations.
             </p>
           </div>
@@ -286,13 +288,13 @@ function StorefrontProducts() {
       </section>
 
       {/* Products Grid */}
-      <section className="py-16 bg-ktodd-charcoal">
+      <section className="pb-20 md:pb-24 bg-ktodd-dark">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Pricing Info Banner */}
-          <div className="bg-yellow-500/10 border border-yellow-500 p-4 mb-8">
+          <div className="surface-gold p-5 sm:p-6 mb-8">
             <div className="flex flex-col gap-4">
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                <h3 className="text-white font-bold">Volume Pricing (per product)</h3>
+                <h2 className="text-white font-industrial text-lg tracking-[0.06em]">Volume Pricing (per product)</h2>
                 <div className="text-sm text-gray-300 space-y-1">
                   <div><span className="text-yellow-500">FREE SHIPPING</span> on orders over $400 · $15 flat rate under $400</div>
                   <div><span className="text-green-400">LOYALTY DISCOUNT</span> — returning customers get an extra 10% off!</div>
@@ -303,9 +305,9 @@ function StorefrontProducts() {
                   const pricing = PRODUCT_PRICING[p.id]
                   if (!pricing) return null
                   return (
-                    <div key={p.id} className="bg-black/20 border border-yellow-500/30 p-3">
+                    <div key={p.id} className="bg-black/30 rounded-xl ring-1 ring-inset ring-yellow-500/25 p-4">
                       <div className="text-xs uppercase tracking-wider text-yellow-500 font-bold mb-2">{p.name}</div>
-                      <div className="flex flex-wrap gap-3 text-sm">
+                      <div className="flex flex-wrap gap-x-4 gap-y-1.5 text-sm tabular-nums">
                         <div className="flex items-center gap-1.5">
                           <span className="text-gray-400">10-49:</span>
                           <span className="text-yellow-500 font-bold">{formatPrice(pricing.basePrice)}/ea</span>
@@ -330,13 +332,25 @@ function StorefrontProducts() {
 
           {/* Products */}
           {loading && products.length === 0 ? (
-            <div className="text-gray-500 py-12 text-center">Loading products…</div>
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6" role="status" aria-busy="true" aria-label="Loading products">
+              {[0, 1].map((i) => (
+                <div key={i} className="rounded-2xl ring-1 ring-gray-700 bg-gray-900 overflow-hidden">
+                  <div className="aspect-[4/3] bg-gray-800 animate-pulse" />
+                  <div className="p-6 space-y-3">
+                    <div className="h-6 w-2/3 rounded bg-gray-800 animate-pulse" />
+                    <div className="h-4 w-full rounded bg-gray-800 animate-pulse" />
+                    <div className="h-12 w-full rounded-xl bg-gray-800 animate-pulse" />
+                  </div>
+                </div>
+              ))}
+              <span className="sr-only">Loading products…</span>
+            </div>
           ) : products.length === 0 ? (
-            <div className="text-gray-500 py-12 text-center border border-dashed border-gray-700 rounded">
+            <div role="status" className="text-gray-400 py-12 text-center border border-dashed border-gray-600 rounded-2xl">
               No products available right now. Check back soon.
             </div>
           ) : (
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <div className={`grid md:grid-cols-2 gap-6 ${products.length >= 3 ? 'lg:grid-cols-3' : 'max-w-5xl'}`}>
               {products.map((product) => (
                 <ProductCard key={product.id} product={product} />
               ))}
@@ -345,7 +359,7 @@ function StorefrontProducts() {
 
           {/* More products coming */}
           <div className="mt-16 text-center">
-            <div className="inline-block bg-gray-800/50 border border-gray-700 px-8 py-6">
+            <div className="inline-block surface px-8 py-6">
               <p className="text-gray-400 mb-2">More products coming soon</p>
               <p className="text-white font-industrial">DRIVELINE ACCESSORIES & SAFETY EQUIPMENT</p>
             </div>

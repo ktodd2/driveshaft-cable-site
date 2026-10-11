@@ -1,0 +1,2081 @@
+{
+  "generatedFrom": "src/App.jsx",
+  "note": "Regenerate with `node scripts/route-inventory.mjs`; smoke results are written by the browser smoke runner. No legal (privacy/terms) routes exist in the app.",
+  "routes": [
+    {
+      "path": "/",
+      "element": "HomePage",
+      "module": "./pages/HomePage",
+      "redirectTo": null,
+      "lazy": false,
+      "category": "public",
+      "samples": [
+        {
+          "url": "/",
+          "state": "default"
+        }
+      ],
+      "work": {
+        "status": "restyled",
+        "notes": "Homepage: storefront header-overlap fix, restyled storefront cards/pricing, hero, problem, specs, how-it-works; shared header/footer/mobile bar"
+      },
+      "test": {
+        "status": "pass",
+        "method": "headless Chrome smoke (desktop 1440×900 + mobile 390×844), mocked Supabase, Stripe/ads/analytics blocked",
+        "authenticated": "n/a",
+        "ranAt": "2026-10-11T03:02:00.181Z",
+        "results": [
+          {
+            "url": "/",
+            "state": "default",
+            "viewport": "desktop",
+            "pass": true,
+            "finalPath": "/",
+            "httpStatus": 200,
+            "overflowX": false,
+            "headingClearsHeader": true,
+            "h1Count": 1,
+            "errors": [],
+            "screenshot": "screenshots/desktop_.png"
+          },
+          {
+            "url": "/",
+            "state": "default",
+            "viewport": "mobile",
+            "pass": true,
+            "finalPath": "/",
+            "httpStatus": 200,
+            "overflowX": false,
+            "headingClearsHeader": true,
+            "h1Count": 1,
+            "errors": [],
+            "screenshot": "screenshots/mobile_.png"
+          }
+        ]
+      }
+    },
+    {
+      "path": "/about",
+      "element": "AboutPage",
+      "module": "./pages/AboutPage",
+      "redirectTo": null,
+      "lazy": false,
+      "category": "public",
+      "samples": [
+        {
+          "url": "/about",
+          "state": "default"
+        }
+      ],
+      "work": {
+        "status": "themed",
+        "notes": "Shared header/footer/announcement bar/mobile action bar + refreshed palette, type, buttons, inputs, card radii via theme layer; page markup/logic unchanged"
+      },
+      "test": {
+        "status": "pass",
+        "method": "headless Chrome smoke (desktop 1440×900 + mobile 390×844), mocked Supabase, Stripe/ads/analytics blocked",
+        "authenticated": "n/a",
+        "ranAt": "2026-10-11T03:02:00.181Z",
+        "results": [
+          {
+            "url": "/about",
+            "state": "default",
+            "viewport": "desktop",
+            "pass": true,
+            "finalPath": "/about",
+            "httpStatus": 200,
+            "overflowX": false,
+            "headingClearsHeader": true,
+            "h1Count": 1,
+            "errors": [],
+            "screenshot": "screenshots/desktop_about.png"
+          },
+          {
+            "url": "/about",
+            "state": "default",
+            "viewport": "mobile",
+            "pass": true,
+            "finalPath": "/about",
+            "httpStatus": 200,
+            "overflowX": false,
+            "headingClearsHeader": true,
+            "h1Count": 1,
+            "errors": [],
+            "screenshot": "screenshots/mobile_about.png"
+          }
+        ]
+      }
+    },
+    {
+      "path": "/contact",
+      "element": "ContactPage",
+      "module": "./pages/ContactPage",
+      "redirectTo": null,
+      "lazy": false,
+      "category": "public",
+      "samples": [
+        {
+          "url": "/contact",
+          "state": "form idle"
+        }
+      ],
+      "work": {
+        "status": "themed",
+        "notes": "Shared header/footer/announcement bar/mobile action bar + refreshed palette, type, buttons, inputs, card radii via theme layer; page markup/logic unchanged"
+      },
+      "test": {
+        "status": "pass",
+        "method": "headless Chrome smoke (desktop 1440×900 + mobile 390×844), mocked Supabase, Stripe/ads/analytics blocked",
+        "authenticated": "n/a",
+        "ranAt": "2026-10-11T03:02:00.181Z",
+        "results": [
+          {
+            "url": "/contact",
+            "state": "form idle",
+            "viewport": "desktop",
+            "pass": true,
+            "finalPath": "/contact",
+            "httpStatus": 200,
+            "overflowX": false,
+            "headingClearsHeader": true,
+            "h1Count": 1,
+            "errors": [],
+            "screenshot": "screenshots/desktop_contact.png"
+          },
+          {
+            "url": "/contact",
+            "state": "form idle",
+            "viewport": "mobile",
+            "pass": true,
+            "finalPath": "/contact",
+            "httpStatus": 200,
+            "overflowX": false,
+            "headingClearsHeader": true,
+            "h1Count": 1,
+            "errors": [],
+            "screenshot": "screenshots/mobile_contact.png"
+          }
+        ]
+      }
+    },
+    {
+      "path": "/faq",
+      "element": "FAQPage",
+      "module": "./pages/FAQPage",
+      "redirectTo": null,
+      "lazy": false,
+      "category": "public",
+      "samples": [
+        {
+          "url": "/faq",
+          "state": "default"
+        }
+      ],
+      "work": {
+        "status": "themed",
+        "notes": "Shared header/footer/announcement bar/mobile action bar + refreshed palette, type, buttons, inputs, card radii via theme layer; page markup/logic unchanged"
+      },
+      "test": {
+        "status": "pass",
+        "method": "headless Chrome smoke (desktop 1440×900 + mobile 390×844), mocked Supabase, Stripe/ads/analytics blocked",
+        "authenticated": "n/a",
+        "ranAt": "2026-10-11T03:02:00.181Z",
+        "results": [
+          {
+            "url": "/faq",
+            "state": "default",
+            "viewport": "desktop",
+            "pass": true,
+            "finalPath": "/faq",
+            "httpStatus": 200,
+            "overflowX": false,
+            "headingClearsHeader": true,
+            "h1Count": 1,
+            "errors": [],
+            "screenshot": "screenshots/desktop_faq.png"
+          },
+          {
+            "url": "/faq",
+            "state": "default",
+            "viewport": "mobile",
+            "pass": true,
+            "finalPath": "/faq",
+            "httpStatus": 200,
+            "overflowX": false,
+            "headingClearsHeader": true,
+            "h1Count": 1,
+            "errors": [],
+            "screenshot": "screenshots/mobile_faq.png"
+          }
+        ]
+      }
+    },
+    {
+      "path": "/instructions",
+      "element": "InstructionsPage",
+      "module": "./pages/InstructionsPage",
+      "redirectTo": null,
+      "lazy": false,
+      "category": "instructions",
+      "samples": [
+        {
+          "url": "/instructions",
+          "state": "instructions/legal-style content"
+        }
+      ],
+      "work": {
+        "status": "themed",
+        "notes": "Shared header/footer/announcement bar/mobile action bar + refreshed palette, type, buttons, inputs, card radii via theme layer; page markup/logic unchanged"
+      },
+      "test": {
+        "status": "pass",
+        "method": "headless Chrome smoke (desktop 1440×900 + mobile 390×844), mocked Supabase, Stripe/ads/analytics blocked",
+        "authenticated": "n/a",
+        "ranAt": "2026-10-11T03:02:00.181Z",
+        "results": [
+          {
+            "url": "/instructions",
+            "state": "instructions/legal-style content",
+            "viewport": "desktop",
+            "pass": true,
+            "finalPath": "/instructions",
+            "httpStatus": 200,
+            "overflowX": false,
+            "headingClearsHeader": true,
+            "h1Count": 1,
+            "errors": [],
+            "screenshot": "screenshots/desktop_instructions.png"
+          },
+          {
+            "url": "/instructions",
+            "state": "instructions/legal-style content",
+            "viewport": "mobile",
+            "pass": true,
+            "finalPath": "/instructions",
+            "httpStatus": 200,
+            "overflowX": false,
+            "headingClearsHeader": true,
+            "h1Count": 1,
+            "errors": [],
+            "screenshot": "screenshots/mobile_instructions.png"
+          }
+        ]
+      }
+    },
+    {
+      "path": "/products",
+      "element": "ProductListPage",
+      "module": "./pages/ProductListPage",
+      "redirectTo": null,
+      "lazy": false,
+      "category": "public",
+      "samples": [
+        {
+          "url": "/products",
+          "state": "catalogue (mock products + inventory)"
+        }
+      ],
+      "work": {
+        "status": "restyled",
+        "notes": "Restyled storefront grid/cards (shared component) + theme layer"
+      },
+      "test": {
+        "status": "pass",
+        "method": "headless Chrome smoke (desktop 1440×900 + mobile 390×844), mocked Supabase, Stripe/ads/analytics blocked",
+        "authenticated": "n/a",
+        "ranAt": "2026-10-11T03:02:00.181Z",
+        "results": [
+          {
+            "url": "/products",
+            "state": "catalogue (mock products + inventory)",
+            "viewport": "desktop",
+            "pass": true,
+            "finalPath": "/products",
+            "httpStatus": 200,
+            "overflowX": false,
+            "headingClearsHeader": true,
+            "h1Count": 1,
+            "errors": [],
+            "screenshot": "screenshots/desktop_products.png"
+          },
+          {
+            "url": "/products",
+            "state": "catalogue (mock products + inventory)",
+            "viewport": "mobile",
+            "pass": true,
+            "finalPath": "/products",
+            "httpStatus": 200,
+            "overflowX": false,
+            "headingClearsHeader": true,
+            "h1Count": 1,
+            "errors": [],
+            "screenshot": "screenshots/mobile_products.png"
+          }
+        ]
+      }
+    },
+    {
+      "path": "/products/driveshaft-cable-plus",
+      "element": "Navigate",
+      "module": null,
+      "redirectTo": "/products/driveshaft-cable",
+      "lazy": false,
+      "category": "public",
+      "samples": [
+        {
+          "url": "/products/driveshaft-cable-plus",
+          "state": "redirect to /products/driveshaft-cable"
+        }
+      ],
+      "work": {
+        "status": "themed",
+        "notes": "Shared header/footer/announcement bar/mobile action bar + refreshed palette, type, buttons, inputs, card radii via theme layer; page markup/logic unchanged"
+      },
+      "test": {
+        "status": "pass",
+        "method": "headless Chrome smoke (desktop 1440×900 + mobile 390×844), mocked Supabase, Stripe/ads/analytics blocked",
+        "authenticated": "n/a",
+        "ranAt": "2026-10-11T03:02:00.181Z",
+        "results": [
+          {
+            "url": "/products/driveshaft-cable-plus",
+            "state": "redirect to /products/driveshaft-cable",
+            "viewport": "desktop",
+            "pass": true,
+            "finalPath": "/products/driveshaft-cable",
+            "httpStatus": 200,
+            "overflowX": false,
+            "headingClearsHeader": true,
+            "h1Count": 1,
+            "errors": [],
+            "screenshot": null
+          },
+          {
+            "url": "/products/driveshaft-cable-plus",
+            "state": "redirect to /products/driveshaft-cable",
+            "viewport": "mobile",
+            "pass": true,
+            "finalPath": "/products/driveshaft-cable",
+            "httpStatus": 200,
+            "overflowX": false,
+            "headingClearsHeader": true,
+            "h1Count": 1,
+            "errors": [],
+            "screenshot": null
+          }
+        ]
+      }
+    },
+    {
+      "path": "/products/:slug",
+      "element": "ProductDetailPage",
+      "module": "./pages/ProductDetailPage",
+      "redirectTo": null,
+      "lazy": false,
+      "category": "dynamic",
+      "samples": [
+        {
+          "url": "/products/driveshaft-cable",
+          "state": "out of stock product"
+        },
+        {
+          "url": "/products/value-brake-caging-bolt",
+          "state": "in stock product"
+        },
+        {
+          "url": "/products/not-a-real-product",
+          "state": "not found"
+        }
+      ],
+      "work": {
+        "status": "themed",
+        "notes": "Shared header/footer/announcement bar/mobile action bar + refreshed palette, type, buttons, inputs, card radii via theme layer; page markup/logic unchanged"
+      },
+      "test": {
+        "status": "pass",
+        "method": "headless Chrome smoke (desktop 1440×900 + mobile 390×844), mocked Supabase, Stripe/ads/analytics blocked",
+        "authenticated": "n/a",
+        "ranAt": "2026-10-11T03:02:00.181Z",
+        "results": [
+          {
+            "url": "/products/driveshaft-cable",
+            "state": "out of stock product",
+            "viewport": "desktop",
+            "pass": true,
+            "finalPath": "/products/driveshaft-cable",
+            "httpStatus": 200,
+            "overflowX": false,
+            "headingClearsHeader": true,
+            "h1Count": 1,
+            "errors": [],
+            "screenshot": "screenshots/desktop_products_driveshaft_cable.png"
+          },
+          {
+            "url": "/products/driveshaft-cable",
+            "state": "out of stock product",
+            "viewport": "mobile",
+            "pass": true,
+            "finalPath": "/products/driveshaft-cable",
+            "httpStatus": 200,
+            "overflowX": false,
+            "headingClearsHeader": true,
+            "h1Count": 1,
+            "errors": [],
+            "screenshot": "screenshots/mobile_products_driveshaft_cable.png"
+          },
+          {
+            "url": "/products/value-brake-caging-bolt",
+            "state": "in stock product",
+            "viewport": "desktop",
+            "pass": true,
+            "finalPath": "/products/value-brake-caging-bolt",
+            "httpStatus": 200,
+            "overflowX": false,
+            "headingClearsHeader": true,
+            "h1Count": 1,
+            "errors": [],
+            "screenshot": "screenshots/desktop_products_value_brake_caging_bolt.png"
+          },
+          {
+            "url": "/products/value-brake-caging-bolt",
+            "state": "in stock product",
+            "viewport": "mobile",
+            "pass": true,
+            "finalPath": "/products/value-brake-caging-bolt",
+            "httpStatus": 200,
+            "overflowX": false,
+            "headingClearsHeader": true,
+            "h1Count": 1,
+            "errors": [],
+            "screenshot": "screenshots/mobile_products_value_brake_caging_bolt.png"
+          },
+          {
+            "url": "/products/not-a-real-product",
+            "state": "not found",
+            "viewport": "desktop",
+            "pass": true,
+            "finalPath": "/products/not-a-real-product",
+            "httpStatus": 200,
+            "overflowX": false,
+            "headingClearsHeader": true,
+            "h1Count": 1,
+            "errors": [],
+            "screenshot": null
+          },
+          {
+            "url": "/products/not-a-real-product",
+            "state": "not found",
+            "viewport": "mobile",
+            "pass": true,
+            "finalPath": "/products/not-a-real-product",
+            "httpStatus": 200,
+            "overflowX": false,
+            "headingClearsHeader": true,
+            "h1Count": 1,
+            "errors": [],
+            "screenshot": null
+          }
+        ]
+      }
+    },
+    {
+      "path": "/cart",
+      "element": "CartPage",
+      "module": "./pages/CartPage",
+      "redirectTo": null,
+      "lazy": false,
+      "category": "commerce",
+      "samples": [
+        {
+          "url": "/cart",
+          "state": "empty"
+        },
+        {
+          "url": "/cart",
+          "state": "with items",
+          "seedCart": true
+        }
+      ],
+      "work": {
+        "status": "themed",
+        "notes": "Shared header/footer/announcement bar/mobile action bar + refreshed palette, type, buttons, inputs, card radii via theme layer; page markup/logic unchanged"
+      },
+      "test": {
+        "status": "pass",
+        "method": "headless Chrome smoke (desktop 1440×900 + mobile 390×844), mocked Supabase, Stripe/ads/analytics blocked",
+        "authenticated": "n/a",
+        "ranAt": "2026-10-11T03:02:00.181Z",
+        "results": [
+          {
+            "url": "/cart",
+            "state": "empty",
+            "viewport": "desktop",
+            "pass": true,
+            "finalPath": "/cart",
+            "httpStatus": 200,
+            "overflowX": false,
+            "headingClearsHeader": true,
+            "h1Count": 1,
+            "errors": [],
+            "screenshot": "screenshots/desktop_cart.png"
+          },
+          {
+            "url": "/cart",
+            "state": "empty",
+            "viewport": "mobile",
+            "pass": true,
+            "finalPath": "/cart",
+            "httpStatus": 200,
+            "overflowX": false,
+            "headingClearsHeader": true,
+            "h1Count": 1,
+            "errors": [],
+            "screenshot": "screenshots/mobile_cart.png"
+          },
+          {
+            "url": "/cart",
+            "state": "with items",
+            "viewport": "desktop",
+            "pass": true,
+            "finalPath": "/cart",
+            "httpStatus": 200,
+            "overflowX": false,
+            "headingClearsHeader": true,
+            "h1Count": 1,
+            "errors": [],
+            "screenshot": "screenshots/desktop_cart_items.png"
+          },
+          {
+            "url": "/cart",
+            "state": "with items",
+            "viewport": "mobile",
+            "pass": true,
+            "finalPath": "/cart",
+            "httpStatus": 200,
+            "overflowX": false,
+            "headingClearsHeader": true,
+            "h1Count": 1,
+            "errors": [],
+            "screenshot": "screenshots/mobile_cart_items.png"
+          }
+        ]
+      }
+    },
+    {
+      "path": "/checkout",
+      "element": "CheckoutPage",
+      "module": "./pages/CheckoutPage",
+      "redirectTo": null,
+      "lazy": false,
+      "category": "commerce",
+      "samples": [
+        {
+          "url": "/checkout",
+          "state": "with items (Stripe blocked, tax mocked)",
+          "seedCart": true
+        }
+      ],
+      "work": {
+        "status": "themed",
+        "notes": "Shared header/footer/announcement bar/mobile action bar + refreshed palette, type, buttons, inputs, card radii via theme layer; page markup/logic unchanged"
+      },
+      "test": {
+        "status": "pass",
+        "method": "headless Chrome smoke (desktop 1440×900 + mobile 390×844), mocked Supabase, Stripe/ads/analytics blocked",
+        "authenticated": "n/a",
+        "ranAt": "2026-10-11T03:02:00.181Z",
+        "results": [
+          {
+            "url": "/checkout",
+            "state": "with items (Stripe blocked, tax mocked)",
+            "viewport": "desktop",
+            "pass": true,
+            "finalPath": "/checkout",
+            "httpStatus": 200,
+            "overflowX": false,
+            "headingClearsHeader": true,
+            "h1Count": 1,
+            "errors": [],
+            "screenshot": "screenshots/desktop_checkout_items.png"
+          },
+          {
+            "url": "/checkout",
+            "state": "with items (Stripe blocked, tax mocked)",
+            "viewport": "mobile",
+            "pass": true,
+            "finalPath": "/checkout",
+            "httpStatus": 200,
+            "overflowX": false,
+            "headingClearsHeader": true,
+            "h1Count": 1,
+            "errors": [],
+            "screenshot": "screenshots/mobile_checkout_items.png"
+          }
+        ]
+      }
+    },
+    {
+      "path": "/checkout/success",
+      "element": "OrderSuccessPage",
+      "module": "./pages/OrderSuccessPage",
+      "redirectTo": null,
+      "lazy": false,
+      "category": "commerce",
+      "samples": [
+        {
+          "url": "/checkout/success",
+          "state": "no order param"
+        }
+      ],
+      "work": {
+        "status": "themed",
+        "notes": "Shared header/footer/announcement bar/mobile action bar + refreshed palette, type, buttons, inputs, card radii via theme layer; page markup/logic unchanged"
+      },
+      "test": {
+        "status": "pass",
+        "method": "headless Chrome smoke (desktop 1440×900 + mobile 390×844), mocked Supabase, Stripe/ads/analytics blocked",
+        "authenticated": "n/a",
+        "ranAt": "2026-10-11T03:02:00.181Z",
+        "results": [
+          {
+            "url": "/checkout/success",
+            "state": "no order param",
+            "viewport": "desktop",
+            "pass": true,
+            "finalPath": "/checkout/success",
+            "httpStatus": 200,
+            "overflowX": false,
+            "headingClearsHeader": true,
+            "h1Count": 1,
+            "errors": [],
+            "screenshot": null
+          },
+          {
+            "url": "/checkout/success",
+            "state": "no order param",
+            "viewport": "mobile",
+            "pass": true,
+            "finalPath": "/checkout/success",
+            "httpStatus": 200,
+            "overflowX": false,
+            "headingClearsHeader": true,
+            "h1Count": 1,
+            "errors": [],
+            "screenshot": null
+          }
+        ]
+      }
+    },
+    {
+      "path": "/quote",
+      "element": "QuotePage",
+      "module": "./pages/QuotePage",
+      "redirectTo": null,
+      "lazy": false,
+      "category": "commerce",
+      "samples": [
+        {
+          "url": "/quote",
+          "state": "form idle"
+        }
+      ],
+      "work": {
+        "status": "themed",
+        "notes": "Shared header/footer/announcement bar/mobile action bar + refreshed palette, type, buttons, inputs, card radii via theme layer; page markup/logic unchanged"
+      },
+      "test": {
+        "status": "pass",
+        "method": "headless Chrome smoke (desktop 1440×900 + mobile 390×844), mocked Supabase, Stripe/ads/analytics blocked",
+        "authenticated": "n/a",
+        "ranAt": "2026-10-11T03:02:00.181Z",
+        "results": [
+          {
+            "url": "/quote",
+            "state": "form idle",
+            "viewport": "desktop",
+            "pass": true,
+            "finalPath": "/quote",
+            "httpStatus": 200,
+            "overflowX": false,
+            "headingClearsHeader": true,
+            "h1Count": 1,
+            "errors": [],
+            "screenshot": "screenshots/desktop_quote.png"
+          },
+          {
+            "url": "/quote",
+            "state": "form idle",
+            "viewport": "mobile",
+            "pass": true,
+            "finalPath": "/quote",
+            "httpStatus": 200,
+            "overflowX": false,
+            "headingClearsHeader": true,
+            "h1Count": 1,
+            "errors": [],
+            "screenshot": "screenshots/mobile_quote.png"
+          }
+        ]
+      }
+    },
+    {
+      "path": "/order-tracking",
+      "element": "OrderTrackingPage",
+      "module": "./pages/OrderTrackingPage",
+      "redirectTo": null,
+      "lazy": false,
+      "category": "commerce",
+      "samples": [
+        {
+          "url": "/order-tracking",
+          "state": "form idle"
+        }
+      ],
+      "work": {
+        "status": "themed",
+        "notes": "Shared header/footer/announcement bar/mobile action bar + refreshed palette, type, buttons, inputs, card radii via theme layer; page markup/logic unchanged"
+      },
+      "test": {
+        "status": "pass",
+        "method": "headless Chrome smoke (desktop 1440×900 + mobile 390×844), mocked Supabase, Stripe/ads/analytics blocked",
+        "authenticated": "n/a",
+        "ranAt": "2026-10-11T03:02:00.181Z",
+        "results": [
+          {
+            "url": "/order-tracking",
+            "state": "form idle",
+            "viewport": "desktop",
+            "pass": true,
+            "finalPath": "/order-tracking",
+            "httpStatus": 200,
+            "overflowX": false,
+            "headingClearsHeader": true,
+            "h1Count": 1,
+            "errors": [],
+            "screenshot": "screenshots/desktop_order_tracking.png"
+          },
+          {
+            "url": "/order-tracking",
+            "state": "form idle",
+            "viewport": "mobile",
+            "pass": true,
+            "finalPath": "/order-tracking",
+            "httpStatus": 200,
+            "overflowX": false,
+            "headingClearsHeader": true,
+            "h1Count": 1,
+            "errors": [],
+            "screenshot": "screenshots/mobile_order_tracking.png"
+          }
+        ]
+      }
+    },
+    {
+      "path": "/blog",
+      "element": "BlogListPage",
+      "module": "./pages/BlogListPage",
+      "redirectTo": null,
+      "lazy": false,
+      "category": "public",
+      "samples": [
+        {
+          "url": "/blog",
+          "state": "list (mock posts)"
+        }
+      ],
+      "work": {
+        "status": "themed",
+        "notes": "Shared header/footer/announcement bar/mobile action bar + refreshed palette, type, buttons, inputs, card radii via theme layer; page markup/logic unchanged"
+      },
+      "test": {
+        "status": "pass",
+        "method": "headless Chrome smoke (desktop 1440×900 + mobile 390×844), mocked Supabase, Stripe/ads/analytics blocked",
+        "authenticated": "n/a",
+        "ranAt": "2026-10-11T03:02:00.181Z",
+        "results": [
+          {
+            "url": "/blog",
+            "state": "list (mock posts)",
+            "viewport": "desktop",
+            "pass": true,
+            "finalPath": "/blog",
+            "httpStatus": 200,
+            "overflowX": false,
+            "headingClearsHeader": true,
+            "h1Count": 1,
+            "errors": [],
+            "screenshot": "screenshots/desktop_blog.png"
+          },
+          {
+            "url": "/blog",
+            "state": "list (mock posts)",
+            "viewport": "mobile",
+            "pass": true,
+            "finalPath": "/blog",
+            "httpStatus": 200,
+            "overflowX": false,
+            "headingClearsHeader": true,
+            "h1Count": 1,
+            "errors": [],
+            "screenshot": "screenshots/mobile_blog.png"
+          }
+        ]
+      }
+    },
+    {
+      "path": "/blog/:slug",
+      "element": "BlogPostPage",
+      "module": "./pages/BlogPostPage",
+      "redirectTo": null,
+      "lazy": false,
+      "category": "dynamic",
+      "samples": [
+        {
+          "url": "/blog/building-a-maintenance-schedule-for-your-tow-truck-fleet",
+          "state": "post (mock body)"
+        },
+        {
+          "url": "/blog/not-a-real-post",
+          "state": "not found"
+        }
+      ],
+      "work": {
+        "status": "themed",
+        "notes": "Shared header/footer/announcement bar/mobile action bar + refreshed palette, type, buttons, inputs, card radii via theme layer; page markup/logic unchanged"
+      },
+      "test": {
+        "status": "pass",
+        "method": "headless Chrome smoke (desktop 1440×900 + mobile 390×844), mocked Supabase, Stripe/ads/analytics blocked",
+        "authenticated": "n/a",
+        "ranAt": "2026-10-11T03:02:00.181Z",
+        "results": [
+          {
+            "url": "/blog/building-a-maintenance-schedule-for-your-tow-truck-fleet",
+            "state": "post (mock body)",
+            "viewport": "desktop",
+            "pass": true,
+            "finalPath": "/blog/building-a-maintenance-schedule-for-your-tow-truck-fleet",
+            "httpStatus": 200,
+            "overflowX": false,
+            "headingClearsHeader": true,
+            "h1Count": 1,
+            "errors": [],
+            "screenshot": null
+          },
+          {
+            "url": "/blog/building-a-maintenance-schedule-for-your-tow-truck-fleet",
+            "state": "post (mock body)",
+            "viewport": "mobile",
+            "pass": true,
+            "finalPath": "/blog/building-a-maintenance-schedule-for-your-tow-truck-fleet",
+            "httpStatus": 200,
+            "overflowX": false,
+            "headingClearsHeader": true,
+            "h1Count": 1,
+            "errors": [],
+            "screenshot": null
+          },
+          {
+            "url": "/blog/not-a-real-post",
+            "state": "not found",
+            "viewport": "desktop",
+            "pass": true,
+            "finalPath": "/blog/not-a-real-post",
+            "httpStatus": 200,
+            "overflowX": false,
+            "headingClearsHeader": true,
+            "h1Count": 1,
+            "errors": [],
+            "screenshot": null
+          },
+          {
+            "url": "/blog/not-a-real-post",
+            "state": "not found",
+            "viewport": "mobile",
+            "pass": true,
+            "finalPath": "/blog/not-a-real-post",
+            "httpStatus": 200,
+            "overflowX": false,
+            "headingClearsHeader": true,
+            "h1Count": 1,
+            "errors": [],
+            "screenshot": null
+          }
+        ]
+      }
+    },
+    {
+      "path": "/suggestions",
+      "element": "SuggestionsPage",
+      "module": "./pages/SuggestionsPage",
+      "redirectTo": null,
+      "lazy": false,
+      "category": "public",
+      "samples": [
+        {
+          "url": "/suggestions",
+          "state": "form idle"
+        }
+      ],
+      "work": {
+        "status": "themed",
+        "notes": "Shared header/footer/announcement bar/mobile action bar + refreshed palette, type, buttons, inputs, card radii via theme layer; page markup/logic unchanged"
+      },
+      "test": {
+        "status": "pass",
+        "method": "headless Chrome smoke (desktop 1440×900 + mobile 390×844), mocked Supabase, Stripe/ads/analytics blocked",
+        "authenticated": "n/a",
+        "ranAt": "2026-10-11T03:02:00.181Z",
+        "results": [
+          {
+            "url": "/suggestions",
+            "state": "form idle",
+            "viewport": "desktop",
+            "pass": true,
+            "finalPath": "/suggestions",
+            "httpStatus": 200,
+            "overflowX": false,
+            "headingClearsHeader": true,
+            "h1Count": 1,
+            "errors": [],
+            "screenshot": null
+          },
+          {
+            "url": "/suggestions",
+            "state": "form idle",
+            "viewport": "mobile",
+            "pass": true,
+            "finalPath": "/suggestions",
+            "httpStatus": 200,
+            "overflowX": false,
+            "headingClearsHeader": true,
+            "h1Count": 1,
+            "errors": [],
+            "screenshot": null
+          }
+        ]
+      }
+    },
+    {
+      "path": "/testimonial",
+      "element": "TestimonialPage",
+      "module": "./pages/TestimonialPage",
+      "redirectTo": null,
+      "lazy": false,
+      "category": "public",
+      "samples": [
+        {
+          "url": "/testimonial",
+          "state": "form idle"
+        }
+      ],
+      "work": {
+        "status": "themed",
+        "notes": "Shared header/footer/announcement bar/mobile action bar + refreshed palette, type, buttons, inputs, card radii via theme layer; page markup/logic unchanged"
+      },
+      "test": {
+        "status": "pass",
+        "method": "headless Chrome smoke (desktop 1440×900 + mobile 390×844), mocked Supabase, Stripe/ads/analytics blocked",
+        "authenticated": "n/a",
+        "ranAt": "2026-10-11T03:02:00.181Z",
+        "results": [
+          {
+            "url": "/testimonial",
+            "state": "form idle",
+            "viewport": "desktop",
+            "pass": true,
+            "finalPath": "/testimonial",
+            "httpStatus": 200,
+            "overflowX": false,
+            "headingClearsHeader": true,
+            "h1Count": 1,
+            "errors": [],
+            "screenshot": null
+          },
+          {
+            "url": "/testimonial",
+            "state": "form idle",
+            "viewport": "mobile",
+            "pass": true,
+            "finalPath": "/testimonial",
+            "httpStatus": 200,
+            "overflowX": false,
+            "headingClearsHeader": true,
+            "h1Count": 1,
+            "errors": [],
+            "screenshot": null
+          }
+        ]
+      }
+    },
+    {
+      "path": "/cart/recover/:token",
+      "element": "CartRecoverPage",
+      "module": "./pages/CartRecoverPage",
+      "redirectTo": null,
+      "lazy": false,
+      "category": "commerce",
+      "samples": [
+        {
+          "url": "/cart/recover/mock-token",
+          "state": "recovery (mock RPC, empty result)"
+        }
+      ],
+      "work": {
+        "status": "themed",
+        "notes": "Shared header/footer/announcement bar/mobile action bar + refreshed palette, type, buttons, inputs, card radii via theme layer; page markup/logic unchanged"
+      },
+      "test": {
+        "status": "pass",
+        "method": "headless Chrome smoke (desktop 1440×900 + mobile 390×844), mocked Supabase, Stripe/ads/analytics blocked",
+        "authenticated": "n/a",
+        "ranAt": "2026-10-11T03:02:00.181Z",
+        "results": [
+          {
+            "url": "/cart/recover/mock-token",
+            "state": "recovery (mock RPC, empty result)",
+            "viewport": "desktop",
+            "pass": true,
+            "finalPath": "/cart/recover/mock-token",
+            "httpStatus": 200,
+            "overflowX": false,
+            "headingClearsHeader": true,
+            "h1Count": 1,
+            "errors": [],
+            "screenshot": null
+          },
+          {
+            "url": "/cart/recover/mock-token",
+            "state": "recovery (mock RPC, empty result)",
+            "viewport": "mobile",
+            "pass": true,
+            "finalPath": "/cart/recover/mock-token",
+            "httpStatus": 200,
+            "overflowX": false,
+            "headingClearsHeader": true,
+            "h1Count": 1,
+            "errors": [],
+            "screenshot": null
+          }
+        ]
+      }
+    },
+    {
+      "path": "/*",
+      "element": "NotFoundPage",
+      "module": "./pages/NotFoundPage",
+      "redirectTo": null,
+      "lazy": false,
+      "category": "error",
+      "samples": [
+        {
+          "url": "/this-page-does-not-exist",
+          "state": "404"
+        }
+      ],
+      "work": {
+        "status": "themed",
+        "notes": "Shared header/footer/announcement bar/mobile action bar + refreshed palette, type, buttons, inputs, card radii via theme layer; page markup/logic unchanged"
+      },
+      "test": {
+        "status": "pass",
+        "method": "headless Chrome smoke (desktop 1440×900 + mobile 390×844), mocked Supabase, Stripe/ads/analytics blocked",
+        "authenticated": "n/a",
+        "ranAt": "2026-10-11T03:02:00.181Z",
+        "results": [
+          {
+            "url": "/this-page-does-not-exist",
+            "state": "404",
+            "viewport": "desktop",
+            "pass": true,
+            "finalPath": "/this-page-does-not-exist",
+            "httpStatus": 200,
+            "overflowX": false,
+            "headingClearsHeader": true,
+            "h1Count": 1,
+            "errors": [],
+            "screenshot": "screenshots/desktop_this_page_does_not_exist.png"
+          },
+          {
+            "url": "/this-page-does-not-exist",
+            "state": "404",
+            "viewport": "mobile",
+            "pass": true,
+            "finalPath": "/this-page-does-not-exist",
+            "httpStatus": 200,
+            "overflowX": false,
+            "headingClearsHeader": true,
+            "h1Count": 1,
+            "errors": [],
+            "screenshot": "screenshots/mobile_this_page_does_not_exist.png"
+          }
+        ]
+      }
+    },
+    {
+      "path": "/admin/login",
+      "element": "AdminLoginPage",
+      "module": "./pages/admin/AdminLoginPage",
+      "redirectTo": null,
+      "lazy": true,
+      "category": "auth",
+      "samples": [
+        {
+          "url": "/admin/login",
+          "state": "login form (no submit)"
+        }
+      ],
+      "work": {
+        "status": "themed",
+        "notes": "Inherits refreshed palette/radius/button/input theme layer (no admin markup edits; email templates untouched)"
+      },
+      "test": {
+        "status": "pass",
+        "method": "headless Chrome smoke (desktop 1440×900 + mobile 390×844), mocked Supabase, Stripe/ads/analytics blocked",
+        "authenticated": "n/a",
+        "ranAt": "2026-10-11T03:02:00.181Z",
+        "results": [
+          {
+            "url": "/admin/login",
+            "state": "login form (no submit)",
+            "viewport": "desktop",
+            "pass": true,
+            "finalPath": "/admin/login",
+            "httpStatus": 200,
+            "overflowX": false,
+            "headingClearsHeader": true,
+            "h1Count": 1,
+            "errors": [],
+            "screenshot": "screenshots/desktop_admin_login.png"
+          },
+          {
+            "url": "/admin/login",
+            "state": "login form (no submit)",
+            "viewport": "mobile",
+            "pass": true,
+            "finalPath": "/admin/login",
+            "httpStatus": 200,
+            "overflowX": false,
+            "headingClearsHeader": true,
+            "h1Count": 1,
+            "errors": [],
+            "screenshot": "screenshots/mobile_admin_login.png"
+          }
+        ]
+      }
+    },
+    {
+      "path": "/admin",
+      "element": "AdminDashboardPage",
+      "module": "./pages/admin/AdminDashboardPage",
+      "redirectTo": null,
+      "lazy": true,
+      "category": "admin",
+      "samples": [
+        {
+          "url": "/admin",
+          "state": "unauthenticated → redirect to /admin/login"
+        },
+        {
+          "url": "/admin",
+          "state": "mocked session + mocked/empty data (real auth/RLS untested)",
+          "mockAdminSession": true
+        }
+      ],
+      "work": {
+        "status": "themed",
+        "notes": "Inherits refreshed palette/radius/button/input theme layer (no admin markup edits; email templates untouched)"
+      },
+      "test": {
+        "status": "pass",
+        "method": "headless Chrome smoke (desktop 1440×900 + mobile 390×844), mocked Supabase, Stripe/ads/analytics blocked",
+        "authenticated": "mocked session only — real auth/RLS untested",
+        "ranAt": "2026-10-11T03:02:00.181Z",
+        "results": [
+          {
+            "url": "/admin",
+            "state": "unauthenticated → redirect to /admin/login",
+            "viewport": "desktop",
+            "pass": true,
+            "finalPath": "/admin/login",
+            "httpStatus": 200,
+            "overflowX": false,
+            "headingClearsHeader": true,
+            "h1Count": 1,
+            "errors": [],
+            "screenshot": null
+          },
+          {
+            "url": "/admin",
+            "state": "unauthenticated → redirect to /admin/login",
+            "viewport": "mobile",
+            "pass": true,
+            "finalPath": "/admin/login",
+            "httpStatus": 200,
+            "overflowX": false,
+            "headingClearsHeader": true,
+            "h1Count": 1,
+            "errors": [],
+            "screenshot": null
+          },
+          {
+            "url": "/admin",
+            "state": "mocked session + mocked/empty data (real auth/RLS untested)",
+            "viewport": "desktop",
+            "pass": true,
+            "finalPath": "/admin",
+            "httpStatus": 200,
+            "overflowX": false,
+            "headingClearsHeader": true,
+            "h1Count": 1,
+            "errors": [],
+            "screenshot": "screenshots/desktop_admin_mocksession.png"
+          },
+          {
+            "url": "/admin",
+            "state": "mocked session + mocked/empty data (real auth/RLS untested)",
+            "viewport": "mobile",
+            "pass": true,
+            "finalPath": "/admin",
+            "httpStatus": 200,
+            "overflowX": false,
+            "headingClearsHeader": true,
+            "h1Count": 1,
+            "errors": [],
+            "screenshot": "screenshots/mobile_admin_mocksession.png"
+          }
+        ]
+      }
+    },
+    {
+      "path": "/admin/orders",
+      "element": "AdminOrdersPage",
+      "module": "./pages/admin/AdminOrdersPage",
+      "redirectTo": null,
+      "lazy": true,
+      "category": "admin",
+      "samples": [
+        {
+          "url": "/admin/orders",
+          "state": "unauthenticated → redirect to /admin/login"
+        },
+        {
+          "url": "/admin/orders",
+          "state": "mocked session + mocked/empty data (real auth/RLS untested)",
+          "mockAdminSession": true
+        }
+      ],
+      "work": {
+        "status": "themed",
+        "notes": "Inherits refreshed palette/radius/button/input theme layer (no admin markup edits; email templates untouched)"
+      },
+      "test": {
+        "status": "pass",
+        "method": "headless Chrome smoke (desktop 1440×900 + mobile 390×844), mocked Supabase, Stripe/ads/analytics blocked",
+        "authenticated": "mocked session only — real auth/RLS untested",
+        "ranAt": "2026-10-11T03:02:00.181Z",
+        "results": [
+          {
+            "url": "/admin/orders",
+            "state": "unauthenticated → redirect to /admin/login",
+            "viewport": "desktop",
+            "pass": true,
+            "finalPath": "/admin/login",
+            "httpStatus": 200,
+            "overflowX": false,
+            "headingClearsHeader": true,
+            "h1Count": 1,
+            "errors": [],
+            "screenshot": null
+          },
+          {
+            "url": "/admin/orders",
+            "state": "unauthenticated → redirect to /admin/login",
+            "viewport": "mobile",
+            "pass": true,
+            "finalPath": "/admin/login",
+            "httpStatus": 200,
+            "overflowX": false,
+            "headingClearsHeader": true,
+            "h1Count": 1,
+            "errors": [],
+            "screenshot": null
+          },
+          {
+            "url": "/admin/orders",
+            "state": "mocked session + mocked/empty data (real auth/RLS untested)",
+            "viewport": "desktop",
+            "pass": true,
+            "finalPath": "/admin/orders",
+            "httpStatus": 200,
+            "overflowX": false,
+            "headingClearsHeader": true,
+            "h1Count": 1,
+            "errors": [],
+            "screenshot": "screenshots/desktop_admin_orders_mocksession.png"
+          },
+          {
+            "url": "/admin/orders",
+            "state": "mocked session + mocked/empty data (real auth/RLS untested)",
+            "viewport": "mobile",
+            "pass": true,
+            "finalPath": "/admin/orders",
+            "httpStatus": 200,
+            "overflowX": false,
+            "headingClearsHeader": true,
+            "h1Count": 1,
+            "errors": [],
+            "screenshot": "screenshots/mobile_admin_orders_mocksession.png"
+          }
+        ]
+      }
+    },
+    {
+      "path": "/admin/quotes",
+      "element": "AdminQuotesPage",
+      "module": "./pages/admin/AdminQuotesPage",
+      "redirectTo": null,
+      "lazy": true,
+      "category": "admin",
+      "samples": [
+        {
+          "url": "/admin/quotes",
+          "state": "unauthenticated → redirect to /admin/login"
+        },
+        {
+          "url": "/admin/quotes",
+          "state": "mocked session + mocked/empty data (real auth/RLS untested)",
+          "mockAdminSession": true
+        }
+      ],
+      "work": {
+        "status": "themed",
+        "notes": "Inherits refreshed palette/radius/button/input theme layer (no admin markup edits; email templates untouched)"
+      },
+      "test": {
+        "status": "pass",
+        "method": "headless Chrome smoke (desktop 1440×900 + mobile 390×844), mocked Supabase, Stripe/ads/analytics blocked",
+        "authenticated": "mocked session only — real auth/RLS untested",
+        "ranAt": "2026-10-11T03:02:00.181Z",
+        "results": [
+          {
+            "url": "/admin/quotes",
+            "state": "unauthenticated → redirect to /admin/login",
+            "viewport": "desktop",
+            "pass": true,
+            "finalPath": "/admin/login",
+            "httpStatus": 200,
+            "overflowX": false,
+            "headingClearsHeader": true,
+            "h1Count": 1,
+            "errors": [],
+            "screenshot": null
+          },
+          {
+            "url": "/admin/quotes",
+            "state": "unauthenticated → redirect to /admin/login",
+            "viewport": "mobile",
+            "pass": true,
+            "finalPath": "/admin/login",
+            "httpStatus": 200,
+            "overflowX": false,
+            "headingClearsHeader": true,
+            "h1Count": 1,
+            "errors": [],
+            "screenshot": null
+          },
+          {
+            "url": "/admin/quotes",
+            "state": "mocked session + mocked/empty data (real auth/RLS untested)",
+            "viewport": "desktop",
+            "pass": true,
+            "finalPath": "/admin/quotes",
+            "httpStatus": 200,
+            "overflowX": false,
+            "headingClearsHeader": true,
+            "h1Count": 1,
+            "errors": [],
+            "screenshot": "screenshots/desktop_admin_quotes_mocksession.png"
+          },
+          {
+            "url": "/admin/quotes",
+            "state": "mocked session + mocked/empty data (real auth/RLS untested)",
+            "viewport": "mobile",
+            "pass": true,
+            "finalPath": "/admin/quotes",
+            "httpStatus": 200,
+            "overflowX": false,
+            "headingClearsHeader": true,
+            "h1Count": 1,
+            "errors": [],
+            "screenshot": "screenshots/mobile_admin_quotes_mocksession.png"
+          }
+        ]
+      }
+    },
+    {
+      "path": "/admin/email",
+      "element": "AdminEmailPage",
+      "module": "./pages/admin/AdminEmailPage",
+      "redirectTo": null,
+      "lazy": true,
+      "category": "admin",
+      "samples": [
+        {
+          "url": "/admin/email",
+          "state": "unauthenticated → redirect to /admin/login"
+        },
+        {
+          "url": "/admin/email",
+          "state": "mocked session + mocked/empty data (real auth/RLS untested)",
+          "mockAdminSession": true
+        }
+      ],
+      "work": {
+        "status": "themed",
+        "notes": "Inherits refreshed palette/radius/button/input theme layer (no admin markup edits; email templates untouched)"
+      },
+      "test": {
+        "status": "pass",
+        "method": "headless Chrome smoke (desktop 1440×900 + mobile 390×844), mocked Supabase, Stripe/ads/analytics blocked",
+        "authenticated": "mocked session only — real auth/RLS untested",
+        "ranAt": "2026-10-11T03:02:00.181Z",
+        "results": [
+          {
+            "url": "/admin/email",
+            "state": "unauthenticated → redirect to /admin/login",
+            "viewport": "desktop",
+            "pass": true,
+            "finalPath": "/admin/login",
+            "httpStatus": 200,
+            "overflowX": false,
+            "headingClearsHeader": true,
+            "h1Count": 1,
+            "errors": [],
+            "screenshot": null
+          },
+          {
+            "url": "/admin/email",
+            "state": "unauthenticated → redirect to /admin/login",
+            "viewport": "mobile",
+            "pass": true,
+            "finalPath": "/admin/login",
+            "httpStatus": 200,
+            "overflowX": false,
+            "headingClearsHeader": true,
+            "h1Count": 1,
+            "errors": [],
+            "screenshot": null
+          },
+          {
+            "url": "/admin/email",
+            "state": "mocked session + mocked/empty data (real auth/RLS untested)",
+            "viewport": "desktop",
+            "pass": true,
+            "finalPath": "/admin/email",
+            "httpStatus": 200,
+            "overflowX": false,
+            "headingClearsHeader": true,
+            "h1Count": 1,
+            "errors": [],
+            "screenshot": "screenshots/desktop_admin_email_mocksession.png"
+          },
+          {
+            "url": "/admin/email",
+            "state": "mocked session + mocked/empty data (real auth/RLS untested)",
+            "viewport": "mobile",
+            "pass": true,
+            "finalPath": "/admin/email",
+            "httpStatus": 200,
+            "overflowX": false,
+            "headingClearsHeader": true,
+            "h1Count": 1,
+            "errors": [],
+            "screenshot": "screenshots/mobile_admin_email_mocksession.png"
+          }
+        ]
+      }
+    },
+    {
+      "path": "/admin/analytics",
+      "element": "AdminAnalyticsPage",
+      "module": "./pages/admin/AdminAnalyticsPage",
+      "redirectTo": null,
+      "lazy": true,
+      "category": "admin",
+      "samples": [
+        {
+          "url": "/admin/analytics",
+          "state": "unauthenticated → redirect to /admin/login"
+        },
+        {
+          "url": "/admin/analytics",
+          "state": "mocked session + mocked/empty data (real auth/RLS untested)",
+          "mockAdminSession": true
+        }
+      ],
+      "work": {
+        "status": "themed",
+        "notes": "Inherits refreshed palette/radius/button/input theme layer (no admin markup edits; email templates untouched)"
+      },
+      "test": {
+        "status": "pass",
+        "method": "headless Chrome smoke (desktop 1440×900 + mobile 390×844), mocked Supabase, Stripe/ads/analytics blocked",
+        "authenticated": "mocked session only — real auth/RLS untested",
+        "ranAt": "2026-10-11T03:02:00.181Z",
+        "results": [
+          {
+            "url": "/admin/analytics",
+            "state": "unauthenticated → redirect to /admin/login",
+            "viewport": "desktop",
+            "pass": true,
+            "finalPath": "/admin/login",
+            "httpStatus": 200,
+            "overflowX": false,
+            "headingClearsHeader": true,
+            "h1Count": 1,
+            "errors": [],
+            "screenshot": null
+          },
+          {
+            "url": "/admin/analytics",
+            "state": "unauthenticated → redirect to /admin/login",
+            "viewport": "mobile",
+            "pass": true,
+            "finalPath": "/admin/login",
+            "httpStatus": 200,
+            "overflowX": false,
+            "headingClearsHeader": true,
+            "h1Count": 1,
+            "errors": [],
+            "screenshot": null
+          },
+          {
+            "url": "/admin/analytics",
+            "state": "mocked session + mocked/empty data (real auth/RLS untested)",
+            "viewport": "desktop",
+            "pass": true,
+            "finalPath": "/admin/analytics",
+            "httpStatus": 200,
+            "overflowX": false,
+            "headingClearsHeader": true,
+            "h1Count": 1,
+            "errors": [],
+            "screenshot": "screenshots/desktop_admin_analytics_mocksession.png"
+          },
+          {
+            "url": "/admin/analytics",
+            "state": "mocked session + mocked/empty data (real auth/RLS untested)",
+            "viewport": "mobile",
+            "pass": true,
+            "finalPath": "/admin/analytics",
+            "httpStatus": 200,
+            "overflowX": false,
+            "headingClearsHeader": true,
+            "h1Count": 1,
+            "errors": [],
+            "screenshot": "screenshots/mobile_admin_analytics_mocksession.png"
+          }
+        ]
+      }
+    },
+    {
+      "path": "/admin/newsletter",
+      "element": "AdminNewsletterPage",
+      "module": "./pages/admin/AdminNewsletterPage",
+      "redirectTo": null,
+      "lazy": true,
+      "category": "admin",
+      "samples": [
+        {
+          "url": "/admin/newsletter",
+          "state": "unauthenticated → redirect to /admin/login"
+        },
+        {
+          "url": "/admin/newsletter",
+          "state": "mocked session + mocked/empty data (real auth/RLS untested)",
+          "mockAdminSession": true
+        }
+      ],
+      "work": {
+        "status": "themed",
+        "notes": "Inherits refreshed palette/radius/button/input theme layer (no admin markup edits; email templates untouched)"
+      },
+      "test": {
+        "status": "pass",
+        "method": "headless Chrome smoke (desktop 1440×900 + mobile 390×844), mocked Supabase, Stripe/ads/analytics blocked",
+        "authenticated": "mocked session only — real auth/RLS untested",
+        "ranAt": "2026-10-11T03:02:00.181Z",
+        "results": [
+          {
+            "url": "/admin/newsletter",
+            "state": "unauthenticated → redirect to /admin/login",
+            "viewport": "desktop",
+            "pass": true,
+            "finalPath": "/admin/login",
+            "httpStatus": 200,
+            "overflowX": false,
+            "headingClearsHeader": true,
+            "h1Count": 1,
+            "errors": [],
+            "screenshot": null
+          },
+          {
+            "url": "/admin/newsletter",
+            "state": "unauthenticated → redirect to /admin/login",
+            "viewport": "mobile",
+            "pass": true,
+            "finalPath": "/admin/login",
+            "httpStatus": 200,
+            "overflowX": false,
+            "headingClearsHeader": true,
+            "h1Count": 1,
+            "errors": [],
+            "screenshot": null
+          },
+          {
+            "url": "/admin/newsletter",
+            "state": "mocked session + mocked/empty data (real auth/RLS untested)",
+            "viewport": "desktop",
+            "pass": true,
+            "finalPath": "/admin/newsletter",
+            "httpStatus": 200,
+            "overflowX": false,
+            "headingClearsHeader": true,
+            "h1Count": 1,
+            "errors": [],
+            "screenshot": "screenshots/desktop_admin_newsletter_mocksession.png"
+          },
+          {
+            "url": "/admin/newsletter",
+            "state": "mocked session + mocked/empty data (real auth/RLS untested)",
+            "viewport": "mobile",
+            "pass": true,
+            "finalPath": "/admin/newsletter",
+            "httpStatus": 200,
+            "overflowX": false,
+            "headingClearsHeader": true,
+            "h1Count": 1,
+            "errors": [],
+            "screenshot": "screenshots/mobile_admin_newsletter_mocksession.png"
+          }
+        ]
+      }
+    },
+    {
+      "path": "/admin/blog",
+      "element": "AdminBlogPage",
+      "module": "./pages/admin/AdminBlogPage",
+      "redirectTo": null,
+      "lazy": true,
+      "category": "admin",
+      "samples": [
+        {
+          "url": "/admin/blog",
+          "state": "unauthenticated → redirect to /admin/login"
+        },
+        {
+          "url": "/admin/blog",
+          "state": "mocked session + mocked/empty data (real auth/RLS untested)",
+          "mockAdminSession": true
+        }
+      ],
+      "work": {
+        "status": "themed",
+        "notes": "Inherits refreshed palette/radius/button/input theme layer (no admin markup edits; email templates untouched)"
+      },
+      "test": {
+        "status": "pass",
+        "method": "headless Chrome smoke (desktop 1440×900 + mobile 390×844), mocked Supabase, Stripe/ads/analytics blocked",
+        "authenticated": "mocked session only — real auth/RLS untested",
+        "ranAt": "2026-10-11T03:02:00.181Z",
+        "results": [
+          {
+            "url": "/admin/blog",
+            "state": "unauthenticated → redirect to /admin/login",
+            "viewport": "desktop",
+            "pass": true,
+            "finalPath": "/admin/login",
+            "httpStatus": 200,
+            "overflowX": false,
+            "headingClearsHeader": true,
+            "h1Count": 1,
+            "errors": [],
+            "screenshot": null
+          },
+          {
+            "url": "/admin/blog",
+            "state": "unauthenticated → redirect to /admin/login",
+            "viewport": "mobile",
+            "pass": true,
+            "finalPath": "/admin/login",
+            "httpStatus": 200,
+            "overflowX": false,
+            "headingClearsHeader": true,
+            "h1Count": 1,
+            "errors": [],
+            "screenshot": null
+          },
+          {
+            "url": "/admin/blog",
+            "state": "mocked session + mocked/empty data (real auth/RLS untested)",
+            "viewport": "desktop",
+            "pass": true,
+            "finalPath": "/admin/blog",
+            "httpStatus": 200,
+            "overflowX": false,
+            "headingClearsHeader": true,
+            "h1Count": 1,
+            "errors": [],
+            "screenshot": "screenshots/desktop_admin_blog_mocksession.png"
+          },
+          {
+            "url": "/admin/blog",
+            "state": "mocked session + mocked/empty data (real auth/RLS untested)",
+            "viewport": "mobile",
+            "pass": true,
+            "finalPath": "/admin/blog",
+            "httpStatus": 200,
+            "overflowX": false,
+            "headingClearsHeader": true,
+            "h1Count": 1,
+            "errors": [],
+            "screenshot": "screenshots/mobile_admin_blog_mocksession.png"
+          }
+        ]
+      }
+    },
+    {
+      "path": "/admin/suggestions",
+      "element": "AdminSuggestionsPage",
+      "module": "./pages/admin/AdminSuggestionsPage",
+      "redirectTo": null,
+      "lazy": true,
+      "category": "admin",
+      "samples": [
+        {
+          "url": "/admin/suggestions",
+          "state": "unauthenticated → redirect to /admin/login"
+        },
+        {
+          "url": "/admin/suggestions",
+          "state": "mocked session + mocked/empty data (real auth/RLS untested)",
+          "mockAdminSession": true
+        }
+      ],
+      "work": {
+        "status": "themed",
+        "notes": "Inherits refreshed palette/radius/button/input theme layer (no admin markup edits; email templates untouched)"
+      },
+      "test": {
+        "status": "pass",
+        "method": "headless Chrome smoke (desktop 1440×900 + mobile 390×844), mocked Supabase, Stripe/ads/analytics blocked",
+        "authenticated": "mocked session only — real auth/RLS untested",
+        "ranAt": "2026-10-11T03:02:00.181Z",
+        "results": [
+          {
+            "url": "/admin/suggestions",
+            "state": "unauthenticated → redirect to /admin/login",
+            "viewport": "desktop",
+            "pass": true,
+            "finalPath": "/admin/login",
+            "httpStatus": 200,
+            "overflowX": false,
+            "headingClearsHeader": true,
+            "h1Count": 1,
+            "errors": [],
+            "screenshot": null
+          },
+          {
+            "url": "/admin/suggestions",
+            "state": "unauthenticated → redirect to /admin/login",
+            "viewport": "mobile",
+            "pass": true,
+            "finalPath": "/admin/login",
+            "httpStatus": 200,
+            "overflowX": false,
+            "headingClearsHeader": true,
+            "h1Count": 1,
+            "errors": [],
+            "screenshot": null
+          },
+          {
+            "url": "/admin/suggestions",
+            "state": "mocked session + mocked/empty data (real auth/RLS untested)",
+            "viewport": "desktop",
+            "pass": true,
+            "finalPath": "/admin/suggestions",
+            "httpStatus": 200,
+            "overflowX": false,
+            "headingClearsHeader": true,
+            "h1Count": 1,
+            "errors": [],
+            "screenshot": "screenshots/desktop_admin_suggestions_mocksession.png"
+          },
+          {
+            "url": "/admin/suggestions",
+            "state": "mocked session + mocked/empty data (real auth/RLS untested)",
+            "viewport": "mobile",
+            "pass": true,
+            "finalPath": "/admin/suggestions",
+            "httpStatus": 200,
+            "overflowX": false,
+            "headingClearsHeader": true,
+            "h1Count": 1,
+            "errors": [],
+            "screenshot": "screenshots/mobile_admin_suggestions_mocksession.png"
+          }
+        ]
+      }
+    },
+    {
+      "path": "/admin/testimonials",
+      "element": "AdminTestimonialsPage",
+      "module": "./pages/admin/AdminTestimonialsPage",
+      "redirectTo": null,
+      "lazy": true,
+      "category": "admin",
+      "samples": [
+        {
+          "url": "/admin/testimonials",
+          "state": "unauthenticated → redirect to /admin/login"
+        },
+        {
+          "url": "/admin/testimonials",
+          "state": "mocked session + mocked/empty data (real auth/RLS untested)",
+          "mockAdminSession": true
+        }
+      ],
+      "work": {
+        "status": "themed",
+        "notes": "Inherits refreshed palette/radius/button/input theme layer (no admin markup edits; email templates untouched)"
+      },
+      "test": {
+        "status": "pass",
+        "method": "headless Chrome smoke (desktop 1440×900 + mobile 390×844), mocked Supabase, Stripe/ads/analytics blocked",
+        "authenticated": "mocked session only — real auth/RLS untested",
+        "ranAt": "2026-10-11T03:02:00.181Z",
+        "results": [
+          {
+            "url": "/admin/testimonials",
+            "state": "unauthenticated → redirect to /admin/login",
+            "viewport": "desktop",
+            "pass": true,
+            "finalPath": "/admin/login",
+            "httpStatus": 200,
+            "overflowX": false,
+            "headingClearsHeader": true,
+            "h1Count": 1,
+            "errors": [],
+            "screenshot": null
+          },
+          {
+            "url": "/admin/testimonials",
+            "state": "unauthenticated → redirect to /admin/login",
+            "viewport": "mobile",
+            "pass": true,
+            "finalPath": "/admin/login",
+            "httpStatus": 200,
+            "overflowX": false,
+            "headingClearsHeader": true,
+            "h1Count": 1,
+            "errors": [],
+            "screenshot": null
+          },
+          {
+            "url": "/admin/testimonials",
+            "state": "mocked session + mocked/empty data (real auth/RLS untested)",
+            "viewport": "desktop",
+            "pass": true,
+            "finalPath": "/admin/testimonials",
+            "httpStatus": 200,
+            "overflowX": false,
+            "headingClearsHeader": true,
+            "h1Count": 1,
+            "errors": [],
+            "screenshot": "screenshots/desktop_admin_testimonials_mocksession.png"
+          },
+          {
+            "url": "/admin/testimonials",
+            "state": "mocked session + mocked/empty data (real auth/RLS untested)",
+            "viewport": "mobile",
+            "pass": true,
+            "finalPath": "/admin/testimonials",
+            "httpStatus": 200,
+            "overflowX": false,
+            "headingClearsHeader": true,
+            "h1Count": 1,
+            "errors": [],
+            "screenshot": "screenshots/mobile_admin_testimonials_mocksession.png"
+          }
+        ]
+      }
+    },
+    {
+      "path": "/admin/products",
+      "element": "AdminProductsPage",
+      "module": "./pages/admin/AdminProductsPage",
+      "redirectTo": null,
+      "lazy": true,
+      "category": "admin",
+      "samples": [
+        {
+          "url": "/admin/products",
+          "state": "unauthenticated → redirect to /admin/login"
+        },
+        {
+          "url": "/admin/products",
+          "state": "mocked session + mocked/empty data (real auth/RLS untested)",
+          "mockAdminSession": true
+        }
+      ],
+      "work": {
+        "status": "themed",
+        "notes": "Inherits refreshed palette/radius/button/input theme layer (no admin markup edits; email templates untouched)"
+      },
+      "test": {
+        "status": "pass",
+        "method": "headless Chrome smoke (desktop 1440×900 + mobile 390×844), mocked Supabase, Stripe/ads/analytics blocked",
+        "authenticated": "mocked session only — real auth/RLS untested",
+        "ranAt": "2026-10-11T03:02:00.181Z",
+        "results": [
+          {
+            "url": "/admin/products",
+            "state": "unauthenticated → redirect to /admin/login",
+            "viewport": "desktop",
+            "pass": true,
+            "finalPath": "/admin/login",
+            "httpStatus": 200,
+            "overflowX": false,
+            "headingClearsHeader": true,
+            "h1Count": 1,
+            "errors": [],
+            "screenshot": null
+          },
+          {
+            "url": "/admin/products",
+            "state": "unauthenticated → redirect to /admin/login",
+            "viewport": "mobile",
+            "pass": true,
+            "finalPath": "/admin/login",
+            "httpStatus": 200,
+            "overflowX": false,
+            "headingClearsHeader": true,
+            "h1Count": 1,
+            "errors": [],
+            "screenshot": null
+          },
+          {
+            "url": "/admin/products",
+            "state": "mocked session + mocked/empty data (real auth/RLS untested)",
+            "viewport": "desktop",
+            "pass": true,
+            "finalPath": "/admin/products",
+            "httpStatus": 200,
+            "overflowX": false,
+            "headingClearsHeader": true,
+            "h1Count": 1,
+            "errors": [],
+            "screenshot": "screenshots/desktop_admin_products_mocksession.png"
+          },
+          {
+            "url": "/admin/products",
+            "state": "mocked session + mocked/empty data (real auth/RLS untested)",
+            "viewport": "mobile",
+            "pass": true,
+            "finalPath": "/admin/products",
+            "httpStatus": 200,
+            "overflowX": false,
+            "headingClearsHeader": true,
+            "h1Count": 1,
+            "errors": [],
+            "screenshot": "screenshots/mobile_admin_products_mocksession.png"
+          }
+        ]
+      }
+    },
+    {
+      "path": "/admin/sales",
+      "element": "AdminSalesPage",
+      "module": "./pages/admin/AdminSalesPage",
+      "redirectTo": null,
+      "lazy": true,
+      "category": "admin",
+      "samples": [
+        {
+          "url": "/admin/sales",
+          "state": "unauthenticated → redirect to /admin/login"
+        },
+        {
+          "url": "/admin/sales",
+          "state": "mocked session + mocked/empty data (real auth/RLS untested)",
+          "mockAdminSession": true
+        }
+      ],
+      "work": {
+        "status": "themed",
+        "notes": "Inherits refreshed palette/radius/button/input theme layer (no admin markup edits; email templates untouched)"
+      },
+      "test": {
+        "status": "pass",
+        "method": "headless Chrome smoke (desktop 1440×900 + mobile 390×844), mocked Supabase, Stripe/ads/analytics blocked",
+        "authenticated": "mocked session only — real auth/RLS untested",
+        "ranAt": "2026-10-11T03:02:00.181Z",
+        "results": [
+          {
+            "url": "/admin/sales",
+            "state": "unauthenticated → redirect to /admin/login",
+            "viewport": "desktop",
+            "pass": true,
+            "finalPath": "/admin/login",
+            "httpStatus": 200,
+            "overflowX": false,
+            "headingClearsHeader": true,
+            "h1Count": 1,
+            "errors": [],
+            "screenshot": null
+          },
+          {
+            "url": "/admin/sales",
+            "state": "unauthenticated → redirect to /admin/login",
+            "viewport": "mobile",
+            "pass": true,
+            "finalPath": "/admin/login",
+            "httpStatus": 200,
+            "overflowX": false,
+            "headingClearsHeader": true,
+            "h1Count": 1,
+            "errors": [],
+            "screenshot": null
+          },
+          {
+            "url": "/admin/sales",
+            "state": "mocked session + mocked/empty data (real auth/RLS untested)",
+            "viewport": "desktop",
+            "pass": true,
+            "finalPath": "/admin/sales",
+            "httpStatus": 200,
+            "overflowX": false,
+            "headingClearsHeader": true,
+            "h1Count": 1,
+            "errors": [],
+            "screenshot": "screenshots/desktop_admin_sales_mocksession.png"
+          },
+          {
+            "url": "/admin/sales",
+            "state": "mocked session + mocked/empty data (real auth/RLS untested)",
+            "viewport": "mobile",
+            "pass": true,
+            "finalPath": "/admin/sales",
+            "httpStatus": 200,
+            "overflowX": false,
+            "headingClearsHeader": true,
+            "h1Count": 1,
+            "errors": [],
+            "screenshot": "screenshots/mobile_admin_sales_mocksession.png"
+          }
+        ]
+      }
+    }
+  ]
+}

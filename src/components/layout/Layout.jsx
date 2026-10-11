@@ -1,9 +1,11 @@
 import React, { useEffect, useRef, useState } from 'react'
-import { Outlet } from 'react-router-dom'
+import { Outlet, useLocation } from 'react-router-dom'
 import Header from './Header'
 import Footer from './Footer'
+import MobileActionBar from './MobileActionBar'
 import NewsletterModal from '../newsletter/NewsletterModal'
 import SaleBanner from '../common/SaleBanner'
+import { isMobileBarRoute } from '../../lib/mobileActionBar'
 
 function Layout() {
   // We measure ONLY the announcement-bar area (sale banner + free-shipping
@@ -12,6 +14,10 @@ function Layout() {
   // and it varies (sale banner toggles, text can wrap on narrow viewports).
   const bannerRef = useRef(null)
   const [bannerH, setBannerH] = useState(0)
+  const { pathname } = useLocation()
+  // Reserve room for the mobile quick-action bar up front on routes where it
+  // can appear, so revealing it later never shifts layout or hides the footer.
+  const reserveMobileBar = isMobileBarRoute(pathname)
 
   useEffect(() => {
     const el = bannerRef.current
@@ -26,6 +32,12 @@ function Layout() {
 
   return (
     <div className="min-h-screen bg-ktodd-dark flex flex-col">
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-3 focus:z-[200] focus:rounded-lg focus:bg-yellow-500 focus:px-4 focus:py-3 focus:font-bold focus:text-black"
+      >
+        Skip to content
+      </a>
       {/* Single fixed top stack: sale banner (when active) + free-shipping
           announcement + the actual nav header. The Header itself no longer
           self-fixes — this wrapper does it for the whole group, so the
@@ -33,18 +45,21 @@ function Layout() {
       <div className="fixed top-0 left-0 right-0 z-50">
         <div ref={bannerRef}>
           <SaleBanner />
-          <div className="bg-yellow-500 text-black text-center py-2 px-4 text-sm font-bold tracking-wide">
-            FREE SHIPPING on orders over $400 &nbsp;&middot;&nbsp; $15 flat rate on orders under $400
+          <div className="bg-[#120d04] text-yellow-400 text-center py-2 px-4 text-xs sm:text-sm font-semibold tracking-wide border-b border-yellow-500/25">
+            <span className="text-gray-100">FREE SHIPPING</span> on orders over $400 &nbsp;&middot;&nbsp; $15 flat rate on orders under $400
           </div>
         </div>
         <Header />
       </div>
       {/* Push page content down by exactly the banner height — header
           padding stays the responsibility of each page (pt-24 md:pt-32). */}
-      <main className="flex-grow" style={{ paddingTop: bannerH }}>
+      <main id="main-content" tabIndex={-1} className="flex-grow focus:outline-none" style={{ paddingTop: bannerH }}>
         <Outlet />
       </main>
-      <Footer />
+      <div className={reserveMobileBar ? 'pb-[calc(4.25rem+env(safe-area-inset-bottom))] md:pb-0' : undefined}>
+        <Footer />
+      </div>
+      <MobileActionBar />
       <NewsletterModal />
     </div>
   )

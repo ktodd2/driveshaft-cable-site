@@ -48,7 +48,11 @@ function HomePage() {
       {/* Products grid renders first — customers see the catalogue the
           moment they land on the homepage. Hero and the rest of the
           marketing content sit below. */}
-      <StorefrontProducts />
+      {/* pt clears the fixed header (same offset every page uses), so the
+          storefront heading is never tucked under the nav. */}
+      <div className="pt-24 md:pt-32">
+        <StorefrontProducts />
+      </div>
       <Hero />
       <Problem />
       <Specs />

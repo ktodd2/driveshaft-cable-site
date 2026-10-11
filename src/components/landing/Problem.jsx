@@ -1,109 +1,92 @@
 import React from 'react'
 
+const risks = [
+  {
+    title: 'Unexpected Driveshaft Drop',
+    body: 'Unsecured shafts can drop during transport, causing road hazards and equipment damage.',
+  },
+  {
+    title: 'Transmission & Seal Damage',
+    body: 'Dragging driveshafts can destroy seals and damage transmission components.',
+  },
+  {
+    title: 'Costly Secondary Failures',
+    body: 'What starts as a simple tow can become a $10,000+ repair bill.',
+  },
+  {
+    title: 'Safety Hazards',
+    body: 'Personnel injuries from falling driveshafts during recovery operations.',
+  },
+]
+
+const outcomes = [
+  'Equipment damage exceeding $15,000',
+  'Extended vehicle downtime',
+  'Liability claims from road incidents',
+  'Worker injury risks',
+]
+
 function Problem() {
   return (
-    <section className="py-20 bg-gradient-to-b from-ktodd-dark to-red-950/20">
+    <section aria-labelledby="problem-heading" className="py-20 md:py-28 bg-ktodd-dark border-t border-gray-800">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-12">
-          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-industrial text-white mb-4">
-            THE <span className="text-red-500">PROBLEM</span>
-          </h2>
-          <div className="w-24 h-1 bg-red-500 mx-auto"></div>
+        <div className="grid lg:grid-cols-[1.1fr_1fr] gap-4 lg:gap-12 items-end mb-12">
+          <div>
+            <p className="eyebrow mb-4">Why It Matters</p>
+            <h2 id="problem-heading" className="text-4xl sm:text-5xl font-industrial text-white">
+              THE <span className="text-gradient">PROBLEM</span>
+            </h2>
+          </div>
+          <p className="text-lg sm:text-xl text-gray-300 leading-relaxed max-w-xl">
+            Loose or unsupported driveshafts during towing and recovery operations create serious hazards and costly damage.
+          </p>
         </div>
 
-        <div className="grid md:grid-cols-2 gap-12 items-center">
+        <div className="grid lg:grid-cols-2 gap-5 lg:gap-6 items-stretch">
           {/* Problem description */}
           <div>
-            <p className="text-xl text-gray-300 mb-8 leading-relaxed">
-              Loose or unsupported driveshafts during towing and recovery operations create serious hazards and costly damage.
-            </p>
-
-            <div className="space-y-6">
-              <div className="flex items-start gap-4">
-                <div className="flex-shrink-0 w-12 h-12 bg-red-500/20 border border-red-500 rounded flex items-center justify-center">
-                  <svg className="w-6 h-6 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                  </svg>
-                </div>
-                <div>
-                  <h3 className="text-lg font-bold text-white mb-1">Unexpected Driveshaft Drop</h3>
-                  <p className="text-gray-400">Unsecured shafts can drop during transport, causing road hazards and equipment damage.</p>
-                </div>
-              </div>
-
-              <div className="flex items-start gap-4">
-                <div className="flex-shrink-0 w-12 h-12 bg-red-500/20 border border-red-500 rounded flex items-center justify-center">
-                  <svg className="w-6 h-6 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                  </svg>
-                </div>
-                <div>
-                  <h3 className="text-lg font-bold text-white mb-1">Transmission & Seal Damage</h3>
-                  <p className="text-gray-400">Dragging driveshafts can destroy seals and damage transmission components.</p>
-                </div>
-              </div>
-
-              <div className="flex items-start gap-4">
-                <div className="flex-shrink-0 w-12 h-12 bg-red-500/20 border border-red-500 rounded flex items-center justify-center">
-                  <svg className="w-6 h-6 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                </div>
-                <div>
-                  <h3 className="text-lg font-bold text-white mb-1">Costly Secondary Failures</h3>
-                  <p className="text-gray-400">What starts as a simple tow can become a $10,000+ repair bill.</p>
-                </div>
-              </div>
-
-              <div className="flex items-start gap-4">
-                <div className="flex-shrink-0 w-12 h-12 bg-red-500/20 border border-red-500 rounded flex items-center justify-center">
-                  <svg className="w-6 h-6 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
-                  </svg>
-                </div>
-                <div>
-                  <h3 className="text-lg font-bold text-white mb-1">Safety Hazards</h3>
-                  <p className="text-gray-400">Personnel injuries from falling driveshafts during recovery operations.</p>
-                </div>
-              </div>
-            </div>
+            <ol className="surface overflow-hidden divide-y divide-gray-700">
+              {risks.map((risk, i) => (
+                <li key={risk.title} className="grid grid-cols-[2.75rem_1fr] gap-4 p-5 sm:p-6">
+                  <span className="font-industrial font-bold text-lg text-ember-400 tabular-nums leading-7" aria-hidden="true">
+                    {String(i + 1).padStart(2, '0')}
+                  </span>
+                  <div>
+                    <h3 className="text-lg font-industrial tracking-[0.04em] text-white mb-1">{risk.title}</h3>
+                    <p className="text-gray-400">{risk.body}</p>
+                  </div>
+                </li>
+              ))}
+            </ol>
           </div>
 
           {/* Warning box */}
-          <div className="bg-red-950/50 border-2 border-red-500 p-8 relative">
-            <div className="absolute -top-4 left-8 bg-red-500 text-white px-4 py-1 font-industrial">
+          <div className="relative rounded-2xl bg-gradient-to-br from-ember-500/[0.12] to-transparent ring-1 ring-inset ring-ember-500/40 p-6 sm:p-8">
+            <p className="inline-flex items-center gap-2 rounded-full bg-ember-500 text-black px-3 py-1 text-xs font-bold font-industrial tracking-[0.14em]">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.25} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
               WARNING
-            </div>
-            <div className="mt-4">
-              <p className="text-xl text-white font-industrial mb-4">
-                UNSECURED DRIVESHAFTS DURING TOWING CAN RESULT IN:
-              </p>
-              <ul className="space-y-3 text-gray-300">
-                <li className="flex items-center gap-3">
-                  <span className="text-red-500 font-bold">&#10007;</span>
-                  Equipment damage exceeding $15,000
+            </p>
+            <p className="mt-5 text-xl text-white font-industrial mb-5">
+              UNSECURED DRIVESHAFTS DURING TOWING CAN RESULT IN:
+            </p>
+            <ul className="space-y-3 text-gray-200">
+              {outcomes.map((item) => (
+                <li key={item} className="flex items-start gap-3">
+                  <svg className="mt-1 w-4 h-4 flex-shrink-0 text-ember-400" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24" aria-hidden="true">
+                    <path strokeLinecap="round" d="M6 6l12 12M18 6L6 18" />
+                  </svg>
+                  {item}
                 </li>
-                <li className="flex items-center gap-3">
-                  <span className="text-red-500 font-bold">&#10007;</span>
-                  Extended vehicle downtime
-                </li>
-                <li className="flex items-center gap-3">
-                  <span className="text-red-500 font-bold">&#10007;</span>
-                  Liability claims from road incidents
-                </li>
-                <li className="flex items-center gap-3">
-                  <span className="text-red-500 font-bold">&#10007;</span>
-                  Worker injury risks
-                </li>
-              </ul>
+              ))}
+            </ul>
 
-              <div className="mt-8 pt-6 border-t border-red-500/30">
-                <p className="text-gray-400 italic">
-                  "Makeshift solutions like bungee cords and zip ties aren't built for heavy-duty applications."
-                </p>
-              </div>
-            </div>
+            <blockquote className="mt-8 pt-6 border-t border-ember-500/25">
+              <p className="text-gray-100 text-lg italic leading-relaxed">
+                &ldquo;Makeshift solutions like bungee cords and zip ties aren&apos;t built for heavy-duty applications.&rdquo;
+              </p>
+            </blockquote>
           </div>
         </div>
       </div>
