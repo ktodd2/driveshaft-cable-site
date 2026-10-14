@@ -11,9 +11,7 @@ import {
   selectOrderTotal,
   selectVolumeSavings,
   formatPrice,
-  PRICE_PER_UNIT,
-  PRICING_TIERS,
-  PRODUCT_PRICING,
+  getLivePricing,
   getPriceForQuantity,
   getTierPriceForQuantity,
   getActiveSaleForProduct,
@@ -25,6 +23,7 @@ import {
 } from '../stores/cartStore'
 import SaleCountdown from '../components/common/SaleCountdown'
 import SEOHead from '../components/common/SEOHead'
+import { volumePricingRows } from '../lib/productPresentation'
 
 function CartPage() {
   const navigate = useNavigate()
@@ -38,6 +37,10 @@ function CartPage() {
   const shipping = useCartStore(selectShipping)
   const orderTotal = useCartStore(selectOrderTotal)
   const volumeSavings = useCartStore(selectVolumeSavings)
+  const livePricing = getLivePricing()
+  const volumeProducts = items.map(item => ({
+    item, rows: volumePricingRows(livePricing[item.productId]),
+  })).filter(({ rows }) => rows.length > 0)
 
   const handleQuantityChange = (productId, delta) => {
     const item = items.find(i => i.productId === productId)
@@ -61,7 +64,7 @@ function CartPage() {
   const getNextTier = () => {
     let best = null
     for (const item of items) {
-      const pricing = PRODUCT_PRICING[item.productId]
+      const pricing = livePricing[item.productId]
       if (!pricing) continue
       const sortedTiers = [...pricing.tiers].sort((a, b) => a.min - b.min)
       for (const tier of sortedTiers) {
@@ -175,7 +178,7 @@ function CartPage() {
                 {items.map((item) => {
                   const linePrice = getPriceForQuantity(item.productId, item.quantity)
                   const tierPrice = getTierPriceForQuantity(item.productId, item.quantity)
-                  const basePrice = PRODUCT_PRICING[item.productId]?.basePrice ?? PRICE_PER_UNIT
+                  const basePrice = livePricing[item.productId]?.basePrice ?? item.price
                   const appliedSale = getActiveSaleForProduct(item.productId)
                   const lineHasDiscount = linePrice < basePrice
                   // When a sale is active, the strike-through shows the tier price the
@@ -338,32 +341,27 @@ function CartPage() {
                 </button>
 
                 {/* Per-product pricing tiers */}
-                <div className="mt-6 pt-6 border-t border-gray-700">
-                  <p className="text-gray-400 text-sm mb-3">Volume Pricing (per product):</p>
-                  {Object.entries(PRODUCT_PRICING).map(([pid, pricing]) => {
-                    const cartItem = items.find(i => i.productId === pid)
-                    const activePrice = cartItem
-                      ? getPriceForQuantity(pid, cartItem.quantity)
-                      : null
-                    return (
-                      <div key={pid} className="mb-3 last:mb-0">
-                        <div className="text-gray-400 text-xs uppercase tracking-wider mb-1">{pricing.name}</div>
-                        <div className="space-y-1 text-sm">
-                          <div className={`flex justify-between ${activePrice === pricing.basePrice ? 'text-yellow-500' : 'text-gray-500'}`}>
-                            <span>10-49 units</span>
-                            <span>{formatPrice(pricing.basePrice)}/ea</span>
+                {volumeProducts.length > 0 && (
+                  <div aria-label="Volume pricing" className="mt-6 pt-6 border-t border-gray-700">
+                    <p className="text-gray-400 text-sm mb-3">Volume Pricing (per product):</p>
+                    {volumeProducts.map(({ item, rows }) => {
+                      const activePrice = getTierPriceForQuantity(item.productId, item.quantity)
+                      return (
+                        <div key={item.productId} className="mb-3 last:mb-0">
+                          <div className="text-gray-400 text-xs uppercase tracking-wider mb-1">{item.name}</div>
+                          <div className="space-y-1 text-sm">
+                            {rows.map((row, i) => (
+                              <div key={row.min} className={`flex justify-between ${activePrice === row.price ? (i === 0 ? 'text-yellow-500' : 'text-green-400') : 'text-gray-500'}`}>
+                                <span>{row.label} units</span>
+                                <span>{formatPrice(row.price)}/ea</span>
+                              </div>
+                            ))}
                           </div>
-                          {pricing.tiers.slice().reverse().map((tier, i) => (
-                            <div key={i} className={`flex justify-between ${activePrice === tier.price ? 'text-green-400' : 'text-gray-500'}`}>
-                              <span>{tier.label} units</span>
-                              <span>{formatPrice(tier.price)}/ea</span>
-                            </div>
-                          ))}
                         </div>
-                      </div>
-                    )
-                  })}
-                </div>
+                      )
+                    })}
+                  </div>
+                )}
 
                 {/* Loyalty Discount Note */}
                 <div className="mt-6 pt-6 border-t border-gray-700">

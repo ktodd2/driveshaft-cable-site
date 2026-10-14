@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
-import { useCartStore, formatPrice, getPriceForQuantity, getTierPriceForQuantity, getActiveSaleForProduct, PRODUCT_PRICING, MIN_ORDER_QUANTITY, ORDER_QUANTITY_STEP, getMinForProduct, getStepForProduct } from '../stores/cartStore'
+import { useCartStore, formatPrice, getPriceForQuantity, getTierPriceForQuantity, getActiveSaleForProduct, MIN_ORDER_QUANTITY, ORDER_QUANTITY_STEP } from '../stores/cartStore'
 import SaleCountdown from '../components/common/SaleCountdown'
 import { useInventory } from '../hooks/useInventory'
 import { useStorefrontProduct } from '../hooks/useStorefrontProduct'
 import InventoryProgressBar from '../components/common/InventoryProgressBar'
 import SEOHead from '../components/common/SEOHead'
+import { volumePricingRows, productMetadata } from '../lib/productPresentation'
 
 const SITE_ORIGIN = 'https://driveshaftcable.com'
 
@@ -96,6 +97,7 @@ function ProductDetailPage() {
 
   // Re-render when sales reload / countdown expires.
   useCartStore(s => s.salesLoadedAt)
+  useCartStore(s => s.productsLoadedAt)
   const [, forceTick] = useState(0)
 
   if (loading) {
@@ -120,9 +122,12 @@ function ProductDetailPage() {
     )
   }
 
-  const productPricing = PRODUCT_PRICING[product.id] || PRODUCT_PRICING['1']
-  const basePrice = productPricing.basePrice
-  const productTiers = productPricing.tiers
+  const pricingRows = volumePricingRows({
+    basePrice: product.base_price_cents,
+    minOrderQuantity: productMin,
+    tiers: product.tiers,
+  })
+  const metadata = productMetadata(product)
   const currentPrice = getPriceForQuantity(product.id, quantity)
   const tierPrice    = getTierPriceForQuantity(product.id, quantity)
   const appliedSale  = getActiveSaleForProduct(product.id)
@@ -158,9 +163,9 @@ function ProductDetailPage() {
   return (
     <div className="pt-24 md:pt-32">
       <SEOHead
-        title={`${product.name} — 3000lb WLL`}
-        description={`${product.name} safety cable. ${product.short_description || ''} Starting at ${formatPrice(basePrice)}/unit with volume discounts.`}
-        keywords="driveshaft cable, driveshaftcable, 3000lb WLL cable, towing safety cable, driveshaft guard"
+        title={metadata.title}
+        description={metadata.description}
+        keywords={metadata.keywords}
         canonical={`/products/${slug}`}
         structuredData={productStructuredData}
       />
@@ -189,7 +194,7 @@ function ProductDetailPage() {
                   <img
                     src={productImages[Math.min(selectedImage, productImages.length - 1)]}
                     alt={`${product.name} - view ${selectedImage + 1}`}
-                    className="w-full h-full object-cover"
+                    className={`w-full h-full ${product.id === 'driveshaft-cable-cutters' ? 'object-contain' : 'object-cover'}`}
                   />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center text-gray-400">No image</div>
@@ -273,16 +278,15 @@ function ProductDetailPage() {
               <InventoryProgressBar stock={stock} totalStock={totalStock} loading={stockLoading} />
 
               {/* Volume Pricing Tiers */}
-              <div className="flex flex-wrap gap-3 mb-6 mt-6">
-                <span className={`text-xs px-3 py-1 border ${currentPrice === basePrice ? 'border-yellow-500 text-yellow-500' : 'border-gray-700 text-gray-500'}`}>
-                  10-49: {formatPrice(basePrice)}/ea
-                </span>
-                {productTiers.slice().reverse().map((tier, i) => (
-                  <span key={i} className={`text-xs px-3 py-1 border ${currentPrice === tier.price ? 'border-green-500 text-green-400' : 'border-gray-700 text-gray-500'}`}>
-                    {tier.label}: {formatPrice(tier.price)}/ea
-                  </span>
-                ))}
-              </div>
+              {pricingRows.length > 0 && (
+                <div aria-label="Volume pricing" className="flex flex-wrap gap-3 mb-6 mt-6">
+                  {pricingRows.map((row, i) => (
+                    <span key={row.min} className={`text-xs px-3 py-1 border ${tierPrice === row.price ? (i === 0 ? 'border-yellow-500 text-yellow-500' : 'border-green-500 text-green-400') : 'border-gray-700 text-gray-500'}`}>
+                      {row.label}: {formatPrice(row.price)}/ea
+                    </span>
+                  ))}
+                </div>
+              )}
 
               {/* Loyalty Discount Note */}
               <div className="bg-green-500/10 border border-green-500/30 px-4 py-2 mb-6 text-sm text-green-400">
