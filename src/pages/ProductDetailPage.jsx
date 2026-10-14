@@ -6,7 +6,7 @@ import { useInventory } from '../hooks/useInventory'
 import { useStorefrontProduct } from '../hooks/useStorefrontProduct'
 import InventoryProgressBar from '../components/common/InventoryProgressBar'
 import SEOHead from '../components/common/SEOHead'
-import { volumePricingRows, productMetadata } from '../lib/productPresentation'
+import { volumePricingRows, productMetadata, productImageClasses } from '../lib/productPresentation'
 
 const SITE_ORIGIN = 'https://driveshaftcable.com'
 
@@ -194,7 +194,7 @@ function ProductDetailPage() {
                   <img
                     src={productImages[Math.min(selectedImage, productImages.length - 1)]}
                     alt={`${product.name} - view ${selectedImage + 1}`}
-                    className={`w-full h-full ${product.id === 'driveshaft-cable-cutters' ? 'object-contain' : 'object-cover'}`}
+                    className={`w-full h-full ${productImageClasses(product)}`}
                   />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center text-gray-400">No image</div>
@@ -221,7 +221,7 @@ function ProductDetailPage() {
                       <img
                         src={img}
                         alt={`${product.name} thumbnail ${idx + 1}`}
-                        className="w-full h-full object-cover"
+                        className={`w-full h-full ${productImageClasses(product)}`}
                         loading="lazy"
                       />
                     </button>

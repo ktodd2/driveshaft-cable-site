@@ -63,7 +63,7 @@ test('page wiring keeps presentation data live and cutter-only image containment
   assert.match(detail, /basePrice: product.base_price_cents/)
   assert.match(detail, /tiers: product.tiers/)
   assert.match(detail, /productMetadata\(product\)/)
-  assert.match(detail, /product.id === 'driveshaft-cable-cutters' \? 'object-contain' : 'object-cover'/)
+  assert.match(detail, /productImageClasses\(product\)/)
   assert.match(detail, /pricingRows.length > 0/)
   assert.match(cart, /getLivePricing\(\)/)
   assert.match(cart, /volumeProducts.length > 0/)

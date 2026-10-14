@@ -1,3 +1,12 @@
+// Cutter photos need their full head and handles visible in every storefront frame.
+// Other products keep their existing cover/optional hover-zoom behavior.
+export function productImageClasses(product, { hoverZoom = false } = {}) {
+  if (product?.id === 'driveshaft-cable-cutters' || product?.slug === 'driveshaft-cable-cutters') {
+    return 'object-contain'
+  }
+  return hoverZoom ? 'object-cover hover:scale-105' : 'object-cover'
+}
+
 // Display-only helpers: never substitute another product's prices or claims.
 // Accept the existing cart pricing shape so cart labels use its live snapshot.
 export function volumePricingRows(pricing) {

@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { PRODUCT_PRICING, formatPrice, getActiveSaleForProduct, useCartStore } from '../../stores/cartStore'
 import { useStorefrontProducts } from '../../hooks/useStorefrontProducts'
 import SaleCountdown from '../common/SaleCountdown'
+import { productImageClasses } from '../../lib/productPresentation'
 
 function ProductShowcase() {
   // Re-render when sales reload / countdown expires.
@@ -50,7 +51,7 @@ function ProductShowcase() {
                     <img
                       src={image}
                       alt={`${product.name} — driveshaft safety cable`}
-                      className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+                      className={`w-full h-full ${productImageClasses(product, { hoverZoom: true })} transition-transform duration-300`}
                       loading="lazy"
                     />
                   </div>
