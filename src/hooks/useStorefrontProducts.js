@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '../lib/supabase'
+import { useCartStore } from '../stores/cartStore'
 
 // Storefront-facing product list. Returns only products that are both
 // is_active AND is_storefront, ordered by sort_order. Used by
@@ -29,6 +30,7 @@ async function fetchAll() {
         return []
       }
       cached = data || []
+      useCartStore.getState().hydrateStorefrontProducts(cached)
       return cached
     })
   return inFlight

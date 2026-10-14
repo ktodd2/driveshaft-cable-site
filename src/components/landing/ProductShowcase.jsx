@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { PRODUCT_PRICING, formatPrice, getActiveSaleForProduct, useCartStore } from '../../stores/cartStore'
+import { normalizeDbProduct, formatPrice, getActiveSaleForProduct, useCartStore } from '../../stores/cartStore'
 import { useStorefrontProducts } from '../../hooks/useStorefrontProducts'
 import SaleCountdown from '../common/SaleCountdown'
 import { productImageClasses } from '../../lib/productPresentation'
@@ -39,7 +39,8 @@ function ProductShowcase() {
 
         <div className={`grid gap-8 mb-12 ${products.length === 1 ? 'md:grid-cols-1 max-w-md mx-auto' : products.length === 2 ? 'md:grid-cols-2' : 'md:grid-cols-2 lg:grid-cols-3'}`}>
           {products.map(product => {
-            const pricing = PRODUCT_PRICING[product.id]
+            const pricing = normalizeDbProduct(product)
+            const bulkPrice = Math.min(pricing.basePrice, ...pricing.tiers.map(t => t.price))
             const image = (product.images && product.images[0]) || '/IMG_5493.jpeg'
             const tagline = product.tagline || ''
             const bullets = Array.isArray(product.showcase_bullets) ? product.showcase_bullets : []
@@ -98,10 +99,12 @@ function ProductShowcase() {
                               <div className="text-yellow-500 text-2xl font-industrial">{formatPrice(pricing.basePrice)}<span className="text-gray-500 text-sm">/ea</span></div>
                             )}
                           </div>
-                          <div className="text-xs text-gray-500 text-right">
-                            Bulk: as low as<br/>
-                            <span className="text-green-400 font-bold">{formatPrice(pricing.tiers[0].price)}/ea</span>
-                          </div>
+                          {bulkPrice < pricing.basePrice && (
+                            <div className="text-xs text-gray-500 text-right">
+                              Bulk: as low as<br/>
+                              <span className="text-green-400 font-bold">{formatPrice(bulkPrice)}/ea</span>
+                            </div>
+                          )}
                         </div>
                         {appliedSale && (
                           <div className="text-red-400/90 text-xs mb-4 flex items-center gap-1.5">

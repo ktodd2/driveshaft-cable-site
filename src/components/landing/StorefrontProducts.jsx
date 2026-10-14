@@ -1,13 +1,12 @@
 import React, { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import {
-  useCartStore, formatPrice, PRODUCT_PRICING,
+  useCartStore, formatPrice, normalizeDbProduct,
   getPriceForQuantity, getTierPriceForQuantity, getActiveSaleForProduct,
   MIN_ORDER_QUANTITY, ORDER_QUANTITY_STEP,
-  getMinForProduct, getStepForProduct,
 } from '../../stores/cartStore'
 import SaleCountdown from '../common/SaleCountdown'
-import { productImageClasses } from '../../lib/productPresentation'
+import { productImageClasses, volumePricingRows } from '../../lib/productPresentation'
 import { useInventory } from '../../hooks/useInventory'
 import { useStorefrontProducts } from '../../hooks/useStorefrontProducts'
 import InventoryProgressBar from '../common/InventoryProgressBar'
@@ -92,10 +91,10 @@ function ProductCard({ product }) {
   useCartStore(s => s.salesLoadedAt)
   const [, forceTick] = useState(0)
 
-  const currentPrice = getPriceForQuantity(product.id, quantity)
-  const tierPrice    = getTierPriceForQuantity(product.id, quantity)
+  const currentPrice = getPriceForQuantity(product.id, quantity, product)
+  const tierPrice    = getTierPriceForQuantity(product.id, quantity, product)
   const totalPrice   = currentPrice * quantity
-  const basePrice    = PRODUCT_PRICING[product.id]?.basePrice ?? product.base_price_cents
+  const basePrice    = product.base_price_cents
   const appliedSale  = getActiveSaleForProduct(product.id)
 
   const thumbnail = (product.images && product.images[0]) || '/IMG_5493.jpeg'
@@ -185,7 +184,7 @@ function ProductCard({ product }) {
                 <span className="text-white text-3xl font-industrial font-bold tabular-nums">{formatPrice(currentPrice)}</span>
                 <span className="text-gray-400 text-sm">per unit</span>
               </div>
-              {currentPrice < basePrice && (
+              {tierPrice < basePrice && (
                 <div className="text-green-400 text-sm mt-1">Volume discount applied!</div>
               )}
             </>
@@ -306,20 +305,21 @@ function StorefrontProducts() {
               </div>
               <div className={`grid gap-4 ${products.length >= 3 ? 'sm:grid-cols-3' : 'sm:grid-cols-2'}`}>
                 {products.map(p => {
-                  const pricing = PRODUCT_PRICING[p.id]
-                  if (!pricing) return null
+                  const pricing = normalizeDbProduct(p)
+                  const rows = volumePricingRows(pricing)
                   return (
                     <div key={p.id} className="bg-black/30 rounded-xl ring-1 ring-inset ring-yellow-500/25 p-4">
                       <div className="text-xs uppercase tracking-wider text-yellow-500 font-bold mb-2">{p.name}</div>
                       <div className="flex flex-wrap gap-x-4 gap-y-1.5 text-sm tabular-nums">
-                        <div className="flex items-center gap-1.5">
-                          <span className="text-gray-400">10-49:</span>
-                          <span className="text-yellow-500 font-bold">{formatPrice(pricing.basePrice)}/ea</span>
-                        </div>
-                        {pricing.tiers.slice().reverse().map((tier, i) => (
-                          <div key={i} className="flex items-center gap-1.5">
-                            <span className="text-gray-400">{tier.label}:</span>
-                            <span className="text-green-400 font-bold">{formatPrice(tier.price)}/ea</span>
+                        {rows.length === 0 ? (
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-gray-400">Per unit:</span>
+                            <span className="text-yellow-500 font-bold">{formatPrice(pricing.basePrice)}/ea</span>
+                          </div>
+                        ) : rows.map(row => (
+                          <div key={row.min} className="flex items-center gap-1.5">
+                            <span className="text-gray-400">{row.label}:</span>
+                            <span className={`${row.price < pricing.basePrice ? 'text-green-400' : 'text-yellow-500'} font-bold`}>{formatPrice(row.price)}/ea</span>
                           </div>
                         ))}
                       </div>

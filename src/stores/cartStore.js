@@ -78,7 +78,7 @@ function makeTierLabel(min, allMins) {
   return `${min}-${sorted[idx + 1] - 1}`
 }
 
-function normalizeDbProduct(row) {
+export function normalizeDbProduct(row) {
   const rawTiers = Array.isArray(row.tiers) ? row.tiers : []
   // Sort descending so getPriceForQuantity's first-match scan picks the
   // highest applicable tier.
@@ -160,8 +160,10 @@ export function getActiveSaleForProduct(productId, sales = liveSales, now = Date
 
 // Returns the tier-or-base price WITHOUT applying a sale. Used by the UI to
 // render the strike-through "was" price next to the sale price.
-export function getTierPriceForQuantity(productId, qty) {
-  const pricing = livePricing[productId] || livePricing['1'] || PRODUCT_PRICING['1']
+export function getTierPriceForQuantity(productId, qty, product = null) {
+  // A fetched product row is authoritative even before loadProducts resolves.
+  // Never let a storefront card borrow another product's fallback schedule.
+  const pricing = product ? normalizeDbProduct(product) : (livePricing[productId] || livePricing['1'] || PRODUCT_PRICING['1'])
   for (const tier of pricing.tiers) {
     if (qty >= tier.min) return tier.price
   }
@@ -172,12 +174,11 @@ function applySalePercent(basePrice, percent) {
   return Math.round((basePrice * (100 - percent)) / 100)
 }
 
-// Get price per unit for a given (productId, qty). Falls back to product '1'
-// pricing if the productId is unknown — defensive default so a stale cart from
-// a previous deploy still renders sensibly. Applies the best active sale, if
-// any, on top of the tier/base price.
-export function getPriceForQuantity(productId, qty) {
-  const tierPrice = getTierPriceForQuantity(productId, qty)
+// A storefront row takes precedence over the cart snapshot, so direct entry
+// never depends on which catalog request finishes first. Legacy ID-only callers
+// retain their fallback behavior. Apply the best active sale after tier pricing.
+export function getPriceForQuantity(productId, qty, product = null) {
+  const tierPrice = getTierPriceForQuantity(productId, qty, product)
   const sale = getActiveSaleForProduct(productId)
   if (!sale) return tierPrice
   return applySalePercent(tierPrice, sale.discount_percent)
@@ -217,6 +218,16 @@ export const useCartStore = create(
       productsLoadedAt: 0,
       // Same pattern for sales — bumped when loadSales() refreshes liveSales.
       salesLoadedAt: 0,
+
+      // Seed only these rows before storefront cards become interactive. This
+      // also gives addItem the right min/step if the separate cart query fails.
+      // Do not prune the cart: the storefront is only a subset of active products.
+      hydrateStorefrontProducts: (products) => {
+        const next = { ...livePricing }
+        for (const product of products) next[product.id] = normalizeDbProduct(product)
+        livePricing = next
+        set(state => ({ productsLoadedAt: Math.max(Date.now(), state.productsLoadedAt + 1) }))
+      },
 
       loadProducts: async () => {
         try {
