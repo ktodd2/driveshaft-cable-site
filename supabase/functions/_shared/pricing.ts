@@ -14,8 +14,8 @@
 import { createClient, SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 export const MIN_ORDER_QUANTITY = 10
-export const SHIPPING_FEE = 1500 // $15.00 in cents
-export const FREE_SHIPPING_THRESHOLD = 40000 // $400.00 in cents
+export const SHIPPING_FEE = 2000 // $20.00 in cents
+export const FREE_SHIPPING_THRESHOLD = 60000 // $600.00 in cents
 
 interface ProductPricing {
   name: string

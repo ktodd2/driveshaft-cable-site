@@ -109,7 +109,7 @@ function buildDay3Html(firstName: string): string {
           </table>
 
           <p style="color:#d1d5db;font-size:16px;margin:0 0 24px;">
-            Plus free shipping on orders over $400.
+            Plus free shipping on orders over $600.
           </p>
 
           <table width="100%" cellpadding="0" cellspacing="0"><tr><td align="center">

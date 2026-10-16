@@ -25,8 +25,8 @@ export function normalizeOrderQuantity(qty, opts = {}) {
 }
 
 // Shipping constants
-export const SHIPPING_FEE = 1500 // $15.00 in cents
-export const FREE_SHIPPING_THRESHOLD = 40000 // $400.00 in cents - free shipping at or above this
+export const SHIPPING_FEE = 2000 // $20.00 in cents
+export const FREE_SHIPPING_THRESHOLD = 60000 // $600.00 in cents - free shipping at or above this
 
 // Loyalty discount for repeat customers (stacks with volume pricing)
 export const REPEAT_CUSTOMER_DISCOUNT = 0.10 // 10% off subtotal

@@ -299,7 +299,7 @@ function StorefrontProducts() {
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                 <h2 className="text-white font-industrial text-lg tracking-[0.06em]">Volume Pricing (per product)</h2>
                 <div className="text-sm text-gray-300 space-y-1">
-                  <div><span className="text-yellow-500">FREE SHIPPING</span> on orders over $400 · $15 flat rate under $400</div>
+                  <div><span className="text-yellow-500">FREE SHIPPING</span> on orders over $600 · $20 flat rate under $600</div>
                   <div><span className="text-green-400">LOYALTY DISCOUNT</span> — returning customers get an extra 10% off!</div>
                 </div>
               </div>

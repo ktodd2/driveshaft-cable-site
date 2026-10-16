@@ -46,7 +46,7 @@ function Layout() {
         <div ref={bannerRef}>
           <SaleBanner />
           <div className="bg-[#120d04] text-yellow-400 text-center py-2 px-4 text-xs sm:text-sm font-semibold tracking-wide border-b border-yellow-500/25">
-            <span className="text-gray-100">FREE SHIPPING</span> on orders over $400 &nbsp;&middot;&nbsp; $15 flat rate on orders under $400
+            <span className="text-gray-100">FREE SHIPPING</span> on orders over $600 &nbsp;&middot;&nbsp; $20 flat rate on orders under $600
           </div>
         </div>
         <Header />
