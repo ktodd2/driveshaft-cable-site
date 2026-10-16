@@ -410,15 +410,12 @@ function CheckoutPage() {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`
           },
+          // The server recomputes the total from the order row and refuses
+          // if it doesn't match `amount` (what the customer is shown).
           body: JSON.stringify({
             amount: totalCents,
             orderId: order.id,
-            customerEmail: formData.email,
-            items: items.map(item => ({
-              productId: item.productId,
-              quantity: item.quantity
-            })),
-            taxCalculationId,
+            discountCode: discountSource === 'code' ? appliedCode : null,
           })
         }
       )
