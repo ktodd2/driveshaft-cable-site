@@ -57,17 +57,20 @@ function HowItWorks() {
           </p>
         </div>
 
-        {/* Video placeholder */}
-        <div className="mt-6 surface aspect-video md:aspect-[21/8] flex items-center justify-center">
-          <div className="text-center px-6">
-            <div className="w-16 h-16 bg-yellow-500/10 ring-1 ring-inset ring-yellow-500/50 rounded-full flex items-center justify-center mx-auto mb-4">
-              <svg className="w-7 h-7 text-yellow-500 ml-1" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
-                <path d="M6.5 4.6v10.8a.6.6 0 00.92.5l8.4-5.4a.6.6 0 000-1l-8.4-5.4a.6.6 0 00-.92.5z" />
-              </svg>
-            </div>
-            <p className="text-gray-400 font-industrial tracking-[0.1em]">INSTALLATION VIDEO COMING SOON</p>
-          </div>
-        </div>
+        {/* Installation video (portrait, filmed on a phone) */}
+        <figure className="mt-6 surface p-4 sm:p-6 flex flex-col items-center">
+          <figcaption className="eyebrow mb-4">Installation Video</figcaption>
+          <video
+            className="w-full max-w-sm max-h-[80vh] aspect-[9/16] rounded-xl bg-black object-contain"
+            src="/videos/installation.mp4"
+            poster="/videos/installation-poster.jpg"
+            controls
+            playsInline
+            preload="metadata"
+          >
+            Your browser does not support embedded video.
+          </video>
+        </figure>
       </div>
     </section>
   )
