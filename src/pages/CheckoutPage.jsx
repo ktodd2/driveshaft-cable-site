@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { loadStripe } from '@stripe/stripe-js'
 import { Elements, PaymentElement, useStripe, useElements } from '@stripe/react-stripe-js'
 import { useCartStore, selectTotalItems, selectSubtotal, selectPricePerUnit, selectShipping, selectOrderTotal, formatPrice, SHIPPING_FEE, FREE_SHIPPING_THRESHOLD, REPEAT_CUSTOMER_DISCOUNT } from '../stores/cartStore'
+import { getShippingAddressProblem, SHIPPING_ADDRESS_MESSAGES } from '../lib/shippingAddress'
 import { supabase } from '../lib/supabase'
 import SEOHead from '../components/common/SEOHead'
 
@@ -348,8 +349,15 @@ function CheckoutPage() {
 
   const handleShippingSubmit = async (e) => {
     e.preventDefault()
-    setIsCreatingOrder(true)
     setOrderError(null)
+
+    const addressProblem = getShippingAddressProblem(formData)
+    if (addressProblem) {
+      setOrderError(SHIPPING_ADDRESS_MESSAGES[addressProblem])
+      return
+    }
+
+    setIsCreatingOrder(true)
 
     try {
       // 1. Create order in Supabase
