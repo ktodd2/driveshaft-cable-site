@@ -605,8 +605,8 @@ function CheckoutPage() {
                     <div className="bg-blue-500/10 border border-blue-500/40 px-4 py-3 mb-4 rounded text-sm text-blue-300">
                       <p>
                         <span aria-hidden="true">🇨🇦 </span>
-                        <span className="font-bold">Shipping to Canada?</span>{' '}
-                        Please <Link to="/contact" className="underline hover:text-blue-200">contact us</Link> first to discuss shipping costs before placing this order — international rates aren't auto-calculated, so the shipping line below only reflects US delivery.
+                        <span className="font-bold">Ordering from Canada?</span>{' '}
+                        Please contact our Canadian partner, Royal Rigging, at <a href="tel:+16043292214" className="underline hover:text-blue-200">604-329-2214</a> or <a href="mailto:orders@royalrigging.ca" className="underline hover:text-blue-200">orders@royalrigging.ca</a> instead of ordering here. <Link to="/contact#canada" className="underline hover:text-blue-200">More info</Link>
                       </p>
                     </div>
                     <div className="space-y-4">

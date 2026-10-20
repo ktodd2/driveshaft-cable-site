@@ -1,4 +1,5 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
+import { useLocation } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import SEOHead from '../components/common/SEOHead'
 
@@ -10,6 +11,12 @@ function ContactPage() {
     message: ''
   })
   const [status, setStatus] = useState('idle')
+  const { hash } = useLocation()
+
+  // Router doesn't scroll to anchors itself — needed for /contact#canada links
+  useEffect(() => {
+    if (hash) document.getElementById(hash.slice(1))?.scrollIntoView({ block: 'start' })
+  }, [hash])
 
   const handleChange = (e) => {
     const { name, value } = e.target
@@ -123,13 +130,25 @@ function ContactPage() {
                 </a>
               </div>
 
-              <div className="bg-gray-800/50 border border-gray-700 p-6">
+              <div id="canada" className="bg-gray-800/50 border border-yellow-500/50 p-6 scroll-mt-40">
                 <h3 className="text-lg font-industrial text-white mb-4">
-                  <span aria-hidden="true">🇨🇦 </span>SHIPPING TO CANADA?
+                  <span aria-hidden="true">🇨🇦 </span>ORDERING FROM CANADA?
                 </h3>
-                <p className="text-gray-400">
-                  Yes — we ship to Canada. Send us your shipping address (or just a postal code if you'd rather not share full details yet) and we'll quote the cross-border shipping cost so you know the total before you order. International rates aren't auto-calculated at checkout, so always contact us first for Canadian orders.
+                <p className="text-gray-400 mb-4">
+                  Please contact our Canadian partner, <span className="text-white font-bold">Royal Rigging</span>, for all Canadian orders.
                 </p>
+                <address className="not-italic text-gray-300 space-y-1">
+                  <div>26550 Gloucester Way, B100<br />Langley Twp, BC V4W 0E1</div>
+                  <div>
+                    <a href="tel:+16043292214" className="text-yellow-500 hover:text-yellow-400 font-bold transition-colors">604-329-2214</a>
+                  </div>
+                  <div>
+                    <a href="mailto:orders@royalrigging.ca" className="text-yellow-500 hover:text-yellow-400 font-bold transition-colors">orders@royalrigging.ca</a>
+                  </div>
+                  <div>
+                    <a href="https://www.royalrigging.ca" target="_blank" rel="noopener noreferrer" className="text-yellow-500 hover:text-yellow-400 font-bold transition-colors">royalrigging.ca →</a>
+                  </div>
+                </address>
               </div>
             </div>
 

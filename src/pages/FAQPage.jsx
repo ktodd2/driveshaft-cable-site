@@ -83,7 +83,7 @@ const faqStructuredData = {
       name: 'Where do you ship?',
       acceptedAnswer: {
         '@type': 'Answer',
-        text: 'We ship throughout the United States from our Houston, Texas location. We also ship to Canada — please contact us first so we can quote actual cross-border shipping costs before you order, since international rates are not calculated automatically at checkout.'
+        text: 'We ship throughout the United States from our Houston, Texas location. For Canadian orders, please contact our Canadian partner Royal Rigging (Langley, BC) at 604-329-2214 or orders@royalrigging.ca.'
       }
     },
     {
@@ -185,7 +185,7 @@ const faqs = [
       },
       {
         question: 'Where do you ship?',
-        answer: 'We ship throughout the United States from our Houston, Texas location. We also ship to Canada — please contact us first so we can quote the actual cross-border shipping cost before you order. International shipping is not calculated automatically at checkout.'
+        answer: 'We ship throughout the United States from our Houston, Texas location. For Canadian orders, please contact our Canadian partner Royal Rigging (Langley, BC) at 604-329-2214 or orders@royalrigging.ca.'
       },
       {
         question: 'What payment methods do you accept?',
