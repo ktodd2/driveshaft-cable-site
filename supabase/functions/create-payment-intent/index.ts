@@ -8,6 +8,7 @@
 // total it displayed; if that disagrees with the server total we refuse
 // rather than charge an amount the customer never saw.
 
+import { createPurchaseSnapshot } from '../_shared/purchaseAnalytics.js'
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import Stripe from 'https://esm.sh/stripe@13.10.0?target=deno'
 import {
@@ -189,11 +190,17 @@ serve(async (req) => {
       return json({ error: 'Could not prepare your order. Please try again.' }, 500)
     }
 
+    // Immutable server-priced snapshot for purchase analytics. This contains
+    // only product IDs, quantities and amounts—not customer-supplied names/PII.
+    const purchaseSnapshot = createPurchaseSnapshot(
+      lines, subtotalCents, discountCents, shippingCents, taxCents,
+    )
     const paymentIntent = await stripe.paymentIntents.create({
       amount: totalCents,
       currency: 'usd',
       metadata: {
         order_id: orderId,
+        ...(purchaseSnapshot ? { ga4_purchase: purchaseSnapshot } : {}),
         items: JSON.stringify(items.map(i => ({ productId: i.productId, quantity: i.quantity }))),
         // Stored so the webhook can call stripe.tax.transactions.createFromCalculation
         // after payment succeeds. Without this metadata, the calculation never
