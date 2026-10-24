@@ -5,6 +5,7 @@ import { Elements, PaymentElement, useStripe, useElements } from '@stripe/react-
 import { useCartStore, selectTotalItems, selectSubtotal, selectPricePerUnit, selectShipping, selectOrderTotal, formatPrice, SHIPPING_FEE, FREE_SHIPPING_THRESHOLD, REPEAT_CUSTOMER_DISCOUNT } from '../stores/cartStore'
 import { getShippingAddressProblem, SHIPPING_ADDRESS_MESSAGES } from '../lib/shippingAddress'
 import { supabase } from '../lib/supabase'
+import { rememberCheckoutPayment, clearPurchasedCart } from '../lib/checkoutPayment'
 import SEOHead from '../components/common/SEOHead'
 
 // Initialize Stripe
@@ -40,20 +41,21 @@ function PaymentForm({ clientSecret, orderId, totalCents, onSuccess, items }) {
       return
     }
 
-    // Payment succeeded without redirect — update order in Supabase
-    if (paymentIntent && paymentIntent.status === 'succeeded') {
-      await supabase
-        .from('orders')
-        .update({
-          payment_status: 'paid',
-          status: 'confirmed',
+    // Preserve the existing checkout fulfillment fallback, but only after
+    // Stripe itself confirms success. Analytics is independently server-verified.
+    if (paymentIntent && ['succeeded', 'processing'].includes(paymentIntent.status)) {
+      if (paymentIntent.status === 'succeeded') {
+        await supabase.from('orders').update({
+          payment_status: 'paid', status: 'confirmed',
           stripe_payment_intent_id: paymentIntent.id,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', orderId)
-
-      clearCart()
-      navigate(`/checkout/success?order=${orderId}&redirect_status=succeeded`)
+          updated_at: new Date().toISOString(),
+        }).neq('payment_status', 'paid').eq('id', orderId)
+        clearPurchasedCart(orderId, useCartStore.getState().items, clearCart)
+      }
+      navigate(`/checkout/success?order=${orderId}`)
+    } else {
+      setError('Your payment needs further action. Please check your payment details.')
+      setIsProcessing(false)
     }
   }
 
@@ -432,6 +434,7 @@ function CheckoutPage() {
 
       if (intentError) throw new Error(intentError)
 
+      rememberCheckoutPayment(order.id, secret, window, items)
       setClientSecret(secret)
       setStep(2)
     } catch (err) {

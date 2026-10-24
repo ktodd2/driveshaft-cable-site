@@ -1,78 +1,103 @@
 import React, { useEffect, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
+import { getCheckoutPayment, verifyCheckoutPayment, clearPurchasedCart } from '../lib/checkoutPayment'
 import { supabase } from '../lib/supabase'
-import { formatPrice } from '../stores/cartStore'
+import { reportPurchase } from '../lib/purchaseAnalytics'
+import { formatPrice, useCartStore } from '../stores/cartStore'
 import SEOHead from '../components/common/SEOHead'
 
 function OrderSuccessPage() {
   const [searchParams] = useSearchParams()
   const orderId = searchParams.get('order')
-  const redirectStatus = searchParams.get('redirect_status')
-  const [paymentStatus, setPaymentStatus] = useState(null)
+  const [paymentStatus, setPaymentStatus] = useState('checking')
   const [order, setOrder] = useState(null)
+  const [purchase, setPurchase] = useState(null)
+  const [retry, setRetry] = useState(0)
+  const clearCart = useCartStore(state => state.clearCart)
 
   useEffect(() => {
-    if (!orderId) return
-
-    const handleOrderSuccess = async () => {
-      if (redirectStatus === 'succeeded') {
-        // Update order payment status to paid
-        const { error } = await supabase
-          .from('orders')
-          .update({
-            payment_status: 'paid',
-            status: 'confirmed',
-            updated_at: new Date().toISOString()
-          })
-          .eq('id', orderId)
-
-        if (!error) {
+    const payment = getCheckoutPayment(orderId)
+    setOrder(null)
+    setPurchase(null)
+    setPaymentStatus(payment ? 'checking' : 'unverified')
+    if (!payment) return
+    const controller = new AbortController()
+    let timer
+    const deadline = Date.now() + 60000
+    const check = async () => {
+      try {
+        const result = await verifyCheckoutPayment(orderId, payment.clientSecret, controller.signal)
+        if (controller.signal.aborted) return
+        if (result.status === 'paid') {
           setPaymentStatus('paid')
-
-          // Fetch order for display (stock is decremented by the orders_decrement_stock_trigger DB trigger)
-          const { data: orderData } = await supabase
-            .from('orders')
-            .select('email, name, subtotal_cents, discount_cents, shipping_cents, tax_cents, total_cents')
-            .eq('id', orderId)
-            .single()
-
-          if (orderData) {
-            setOrder(orderData)
-          }
-        } else {
-          console.error('Error updating payment status:', error)
-          setPaymentStatus('error')
+          setOrder(result.order)
+          setPurchase(result.purchase)
+          clearPurchasedCart(orderId, useCartStore.getState().items, clearCart)
+          // Keep the existing confirmation fallback for fulfillment, but gate
+          // it on server verification—not the forgeable redirect_status flag.
+          // Its outcome is not payment proof and never controls GA reporting.
+          try {
+            await supabase.from('orders').update({
+              payment_status: 'paid', status: 'confirmed',
+              stripe_payment_intent_id: payment.clientSecret.split('_secret_')[0],
+              updated_at: new Date().toISOString(),
+            }).neq('payment_status', 'paid').eq('id', orderId)
+          } catch { /* A fulfillment update must not turn a verified payment into an apparent failure. */ }
+          return
         }
-      } else if (redirectStatus === 'failed') {
-        await supabase
-          .from('orders')
-          .update({
-            payment_status: 'failed',
-            updated_at: new Date().toISOString()
-          })
-          .eq('id', orderId)
-        setPaymentStatus('failed')
-
-        // Still fetch order for display
-        const { data: orderData } = await supabase
-          .from('orders')
-          .select('email, name')
-          .eq('id', orderId)
-          .single()
-        if (orderData) setOrder(orderData)
-      } else {
-        setPaymentStatus('pending')
+        setPaymentStatus(result.status === 'failed' ? 'failed' : 'pending')
+        if (result.status === 'failed') return
+      } catch {
+        if (controller.signal.aborted) return
+        setPaymentStatus('error')
       }
+      // Short return-page reconciliation, not fulfillment. Slow payment methods
+      // can settle later via the webhook; the buyer may explicitly check again.
+      if (Date.now() < deadline) timer = setTimeout(check, 3000)
     }
+    check()
+    return () => { controller.abort(); clearTimeout(timer) }
+  }, [orderId, retry, clearCart])
 
-    handleOrderSuccess()
-  }, [orderId, redirectStatus])
+  useEffect(() => {
+    if (paymentStatus !== 'paid' || !purchase) return
+    let stopped = false
+    let timer
+    const report = async () => {
+      const result = await reportPurchase(purchase)
+      // A late tag load or consent update can still report while this page is
+      // open. Denial never writes the analytics dedup marker.
+      if (!stopped && ['denied', 'unavailable', 'error'].includes(result)) timer = setTimeout(report, 1000)
+    }
+    report()
+    return () => { stopped = true; clearTimeout(timer) }
+  }, [paymentStatus, purchase])
 
-  const email = order?.email || 'your email'
+  if (paymentStatus !== 'paid' && paymentStatus !== 'failed') {
+    const checking = paymentStatus === 'checking'
+    return (
+      <div className="pt-24 md:pt-32 min-h-screen bg-ktodd-dark">
+        <SEOHead title="Payment Confirmation" noindex />
+        <div className="max-w-2xl mx-auto px-4 py-20 text-center">
+          <h1 className="text-3xl font-industrial text-white mb-4">
+            {checking ? 'CHECKING PAYMENT' : paymentStatus === 'pending' ? 'PAYMENT PROCESSING' : 'PAYMENT NOT YET VERIFIED'}
+          </h1>
+          <p className="text-gray-400 mb-8">
+            {paymentStatus === 'pending'
+              ? 'Your payment is still processing. Please wait for confirmation before placing another order.'
+              : 'We have not confirmed payment on this page yet. This does not mean your payment failed. Please check again or contact us before paying again.'}
+          </p>
+          {paymentStatus !== 'unverified' && <button className="btn-primary mb-4" onClick={() => setRetry(value => value + 1)}>Check Again</button>}
+          <div><a href="mailto:kurtis@k-todd.com" className="text-yellow-500">Contact Support</a></div>
+        </div>
+      </div>
+    )
+  }
 
   if (paymentStatus === 'failed') {
     return (
       <div className="pt-24 md:pt-32 min-h-screen bg-ktodd-dark">
+        <SEOHead title="Payment Not Completed" noindex />
         <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
           <div className="text-center mb-8">
             <div className="w-24 h-24 bg-red-500/20 border-2 border-red-500 rounded-full flex items-center justify-center mx-auto mb-6">
@@ -115,7 +140,7 @@ function OrderSuccessPage() {
             ORDER <span className="text-yellow-500">CONFIRMED!</span>
           </h1>
           <p className="text-gray-400">
-            Thank you for your order. We've sent a confirmation to <span className="text-white">{email}</span>
+            Thank you for your order. Your payment has been received. Please check your email for confirmation.
           </p>
         </div>
 
