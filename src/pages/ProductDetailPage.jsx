@@ -7,6 +7,8 @@ import { useStorefrontProduct } from '../hooks/useStorefrontProduct'
 import InventoryProgressBar from '../components/common/InventoryProgressBar'
 import SEOHead from '../components/common/SEOHead'
 import { volumePricingRows, productMetadata, productImageClasses } from '../lib/productPresentation'
+import { isCableSlug, cableSelectionPricing } from '../lib/cablePurchase'
+import { CablePositioning, CableOrderSummary, CableReturningNote, CableComparisonSection } from '../components/product/CablePurchase'
 
 const SITE_ORIGIN = 'https://driveshaftcable.com'
 
@@ -128,8 +130,13 @@ function ProductDetailPage() {
     tiers: product.tiers,
   })
   const metadata = productMetadata(product)
-  const currentPrice = getPriceForQuantity(product.id, quantity)
-  const tierPrice    = getTierPriceForQuantity(product.id, quantity)
+  // Standard and XL cable pages only: price from the fetched row (never the
+  // legacy product-1/2 fallback) and show the clarity blocks. All other
+  // products keep the original id-based lookup and rendering.
+  const isCable      = isCableSlug(product.slug)
+  const pricingRow   = isCable ? product : null
+  const currentPrice = getPriceForQuantity(product.id, quantity, pricingRow)
+  const tierPrice    = getTierPriceForQuantity(product.id, quantity, pricingRow)
   const appliedSale  = getActiveSaleForProduct(product.id)
   const outOfStock   = !stockLoading && stock === 0
   const productStructuredData = buildStructuredData(product)
@@ -237,6 +244,8 @@ function ProductDetailPage() {
               </div>
               <h1 className={`text-3xl sm:text-4xl font-industrial mb-4 ${outOfStock ? 'text-gray-400 line-through' : 'text-white'}`}>{product.name}</h1>
 
+              {isCable && <CablePositioning currentSlug={product.slug} />}
+
               <div className="flex items-center gap-4 mb-4 flex-wrap">
                 {appliedSale ? (
                   <>
@@ -289,9 +298,11 @@ function ProductDetailPage() {
               )}
 
               {/* Loyalty Discount Note */}
-              <div className="bg-green-500/10 border border-green-500/30 px-4 py-2 mb-6 text-sm text-green-400">
-                Returning customers save an extra <span className="font-bold">10%</span> — applied automatically at checkout!
-              </div>
+              {isCable ? <CableReturningNote /> : (
+                <div className="bg-green-500/10 border border-green-500/30 px-4 py-2 mb-6 text-sm text-green-400">
+                  Returning customers save an extra <span className="font-bold">10%</span> — applied automatically at checkout!
+                </div>
+              )}
 
               {product.description && (
                 <p className="text-gray-300 mb-6 whitespace-pre-line">{product.description}</p>
@@ -350,9 +361,11 @@ function ProductDetailPage() {
                       +{productStep}
                     </button>
                   </div>
-                  <span className="text-gray-400">
-                    Total: <span className="text-yellow-500 font-bold">{formatPrice(currentPrice * quantity)}</span>
-                  </span>
+                  {!isCable && (
+                    <span className="text-gray-400">
+                      Total: <span className="text-yellow-500 font-bold">{formatPrice(currentPrice * quantity)}</span>
+                    </span>
+                  )}
                 </div>
                 {isLowStock && (
                   <p className="text-yellow-500 text-sm mt-2">Only {stock} available — min order reduced from {productMin}</p>
@@ -361,6 +374,15 @@ function ProductDetailPage() {
                   <p className="text-yellow-500 text-sm mt-2">Maximum available: {stock} units</p>
                 )}
               </div>
+
+              {/* Cable pages: selected-quantity merchandise total, shipping and tax */}
+              {isCable && stock !== 0 && (
+                <CableOrderSummary
+                  selection={cableSelectionPricing(product, quantity)}
+                  minQuantity={effectiveMin}
+                  step={productStep}
+                />
+              )}
 
               {/* Action Buttons */}
               <div className="flex flex-col sm:flex-row gap-4 mb-8">
@@ -398,6 +420,8 @@ function ProductDetailPage() {
           </div>
         </div>
       </section>
+
+      {isCable && <CableComparisonSection currentSlug={product.slug} />}
 
       {/* Full Specs Section */}
       {specsEntries.length > 0 && (
