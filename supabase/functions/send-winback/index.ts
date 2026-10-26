@@ -16,7 +16,7 @@ const corsHeaders = {
 }
 
 const SITE_URL = Deno.env.get('SITE_URL') || 'https://driveshaftcable.com'
-const FROM_ADDRESS = 'Driveshaft Cable <orders@k-todd.com>'
+const FROM_ADDRESS = 'Driveshaft Cable <admin@driveshaftcable.com>'
 const WINBACK_MIN_MONTHS = 6
 const WINBACK_MAX_MONTHS = 9
 const EXCLUSION_MONTHS = 6

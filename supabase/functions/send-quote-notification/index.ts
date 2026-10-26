@@ -120,7 +120,7 @@ serve(async (req) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        from: 'Driveshaft Cable <orders@k-todd.com>',
+        from: 'Driveshaft Cable <admin@driveshaftcable.com>',
         to: ['kurtis@k-todd.com'],
         subject: `New Quote Request from ${name}${quantity ? ` - ${quantity} units` : ''}`,
         html: htmlEmail,

@@ -17,7 +17,7 @@ const corsHeaders = {
 }
 
 const SITE_URL = Deno.env.get('SITE_URL') || 'https://driveshaftcable.com'
-const FROM_ADDRESS = 'Driveshaft Cable <orders@k-todd.com>'
+const FROM_ADDRESS = 'Driveshaft Cable <admin@driveshaftcable.com>'
 const MAX_PER_RUN = 50
 
 function emailFooter(): string {

@@ -22,7 +22,7 @@ const corsHeaders = {
 }
 
 const SITE_URL = Deno.env.get('SITE_URL') || 'https://driveshaftcable.com'
-const FROM_ADDRESS = 'Driveshaft Cable <orders@k-todd.com>'
+const FROM_ADDRESS = 'Driveshaft Cable <orders@driveshaftcable.com>'
 const ABANDONMENT_WAIT_HOURS = 1
 const MAX_PER_RUN = 50
 

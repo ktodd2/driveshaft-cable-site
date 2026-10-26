@@ -175,7 +175,7 @@ serve(async (req) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        from: 'Driveshaft Cable <orders@k-todd.com>',
+        from: 'Driveshaft Cable <admin@driveshaftcable.com>',
         to: [order.email],
         subject: `How's your Driveshaft Cable holding up, ${firstName}?`,
         html,

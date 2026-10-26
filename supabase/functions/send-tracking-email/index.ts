@@ -123,7 +123,7 @@ serve(async (req) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        from: 'Driveshaft Cable <orders@k-todd.com>',
+        from: 'Driveshaft Cable <orders@driveshaftcable.com>',
         to: [customerEmail],
         subject: `Your order has shipped via ${carrierName}!`,
         html: htmlEmail,

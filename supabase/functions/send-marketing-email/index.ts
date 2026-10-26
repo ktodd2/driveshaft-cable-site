@@ -22,7 +22,7 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
-const FROM_ADDRESS = 'Driveshaft Cable <orders@k-todd.com>'
+const FROM_ADDRESS = 'Driveshaft Cable <admin@driveshaftcable.com>'
 const BATCH_SIZE = 100          // Resend's per-request cap for /emails/batch
 const LEASE_SECONDS = 900       // how long a claim is held before it's reclaimable
 const MAX_BATCHES_PER_RUN = 20  // 2000 recipients/run; leaves headroom under the
