@@ -115,7 +115,7 @@ const faqStructuredData = {
       name: 'How do I contact customer support?',
       acceptedAnswer: {
         '@type': 'Answer',
-        text: 'Email us at kurtis@k-todd.com. We typically respond within 24 hours during business days.'
+        text: 'Email us at admin@driveshaftcable.com. We typically respond within 24 hours during business days.'
       }
     },
     {
@@ -206,7 +206,7 @@ const faqs = [
       },
       {
         question: 'How do I contact customer support?',
-        answer: 'Email us at kurtis@k-todd.com. We typically respond within 24 hours during business days.'
+        answer: 'Email us at admin@driveshaftcable.com. We typically respond within 24 hours during business days.'
       }
     ]
   }

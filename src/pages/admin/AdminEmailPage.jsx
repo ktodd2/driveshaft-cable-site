@@ -45,7 +45,7 @@ const TEMPLATES = {
           </tr>
           <tr>
             <td style="background-color:#111;padding:20px;text-align:center;border-top:1px solid #333;">
-              <p style="color:#6b7280;font-size:12px;margin:0;">Driveshaft Cable | orders@k-todd.com</p>
+              <p style="color:#6b7280;font-size:12px;margin:0;">Driveshaft Cable | admin@driveshaftcable.com</p>
             </td>
           </tr>
         </table>
@@ -94,7 +94,7 @@ const TEMPLATES = {
           </tr>
           <tr>
             <td style="background-color:#111;padding:20px;text-align:center;border-top:1px solid #333;">
-              <p style="color:#6b7280;font-size:12px;margin:0;">Driveshaft Cable | orders@k-todd.com</p>
+              <p style="color:#6b7280;font-size:12px;margin:0;">Driveshaft Cable | admin@driveshaftcable.com</p>
             </td>
           </tr>
         </table>
@@ -165,7 +165,7 @@ const TEMPLATES = {
           </tr>
           <tr>
             <td style="background-color:#111;padding:20px;text-align:center;border-top:1px solid #333;">
-              <p style="color:#6b7280;font-size:12px;margin:0;">Driveshaft Cable | orders@k-todd.com</p>
+              <p style="color:#6b7280;font-size:12px;margin:0;">Driveshaft Cable | admin@driveshaftcable.com</p>
             </td>
           </tr>
         </table>
@@ -214,7 +214,7 @@ const TEMPLATES = {
           </tr>
           <tr>
             <td style="background-color:#111;padding:20px;text-align:center;border-top:1px solid #333;">
-              <p style="color:#6b7280;font-size:12px;margin:0;">Driveshaft Cable | orders@k-todd.com</p>
+              <p style="color:#6b7280;font-size:12px;margin:0;">Driveshaft Cable | admin@driveshaftcable.com</p>
             </td>
           </tr>
         </table>
@@ -263,7 +263,7 @@ const TEMPLATES = {
           </tr>
           <tr>
             <td style="background-color:#111;padding:20px;text-align:center;border-top:1px solid #333;">
-              <p style="color:#6b7280;font-size:12px;margin:0;">Driveshaft Cable | orders@k-todd.com</p>
+              <p style="color:#6b7280;font-size:12px;margin:0;">Driveshaft Cable | admin@driveshaftcable.com</p>
             </td>
           </tr>
         </table>
@@ -312,7 +312,7 @@ const TEMPLATES = {
           </tr>
           <tr>
             <td style="background-color:#111;padding:20px;text-align:center;border-top:1px solid #333;">
-              <p style="color:#6b7280;font-size:12px;margin:0;">Driveshaft Cable | orders@k-todd.com</p>
+              <p style="color:#6b7280;font-size:12px;margin:0;">Driveshaft Cable | admin@driveshaftcable.com</p>
             </td>
           </tr>
         </table>
@@ -361,7 +361,7 @@ const TEMPLATES = {
           </tr>
           <tr>
             <td style="background-color:#111;padding:20px;text-align:center;border-top:1px solid #333;">
-              <p style="color:#6b7280;font-size:12px;margin:0;">Driveshaft Cable | orders@k-todd.com</p>
+              <p style="color:#6b7280;font-size:12px;margin:0;">Driveshaft Cable | admin@driveshaftcable.com</p>
             </td>
           </tr>
         </table>
@@ -402,7 +402,7 @@ const TEMPLATES = {
           </tr>
           <tr>
             <td style="background-color:#111;padding:20px;text-align:center;border-top:1px solid #333;">
-              <p style="color:#6b7280;font-size:12px;margin:0;">Driveshaft Cable | orders@k-todd.com</p>
+              <p style="color:#6b7280;font-size:12px;margin:0;">Driveshaft Cable | admin@driveshaftcable.com</p>
             </td>
           </tr>
         </table>
@@ -451,7 +451,7 @@ const TEMPLATES = {
           </tr>
           <tr>
             <td style="background-color:#111;padding:20px;text-align:center;border-top:1px solid #333;">
-              <p style="color:#6b7280;font-size:12px;margin:0;">Driveshaft Cable | orders@k-todd.com</p>
+              <p style="color:#6b7280;font-size:12px;margin:0;">Driveshaft Cable | admin@driveshaftcable.com</p>
             </td>
           </tr>
         </table>
@@ -500,7 +500,7 @@ const TEMPLATES = {
           </tr>
           <tr>
             <td style="background-color:#111;padding:20px;text-align:center;border-top:1px solid #333;">
-              <p style="color:#6b7280;font-size:12px;margin:0;">Driveshaft Cable | orders@k-todd.com</p>
+              <p style="color:#6b7280;font-size:12px;margin:0;">Driveshaft Cable | admin@driveshaftcable.com</p>
             </td>
           </tr>
         </table>
@@ -539,7 +539,7 @@ const TEMPLATES = {
           </tr>
           <tr>
             <td style="background-color:#111;padding:20px;text-align:center;border-top:1px solid #333;">
-              <p style="color:#6b7280;font-size:12px;margin:0;">Driveshaft Cable | orders@k-todd.com</p>
+              <p style="color:#6b7280;font-size:12px;margin:0;">Driveshaft Cable | admin@driveshaftcable.com</p>
             </td>
           </tr>
         </table>
@@ -590,7 +590,7 @@ const TEMPLATES = {
           </tr>
           <tr>
             <td style="background-color:#111;padding:20px;text-align:center;border-top:1px solid #333;">
-              <p style="color:#6b7280;font-size:12px;margin:0;">Driveshaft Cable | orders@k-todd.com</p>
+              <p style="color:#6b7280;font-size:12px;margin:0;">Driveshaft Cable | admin@driveshaftcable.com</p>
             </td>
           </tr>
         </table>
