@@ -1,3 +1,5 @@
+import { createApiClient } from './supabaseTransport.js'
+import { getSupabaseSecretKey } from './supabaseKeys.js'
 // Server-side mirror of pricing constants from src/stores/cartStore.js.
 //
 // The `products` table in the database is the source of truth at runtime —
@@ -177,6 +179,6 @@ export async function getPriceForQuantityFromDb(
 // pre-built client.
 export function createAdminClient(): SupabaseClient {
   const url = Deno.env.get('SUPABASE_URL')!
-  const key = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
-  return createClient(url, key)
+  const key = getSupabaseSecretKey()!
+  return createApiClient(createClient, url, key)
 }

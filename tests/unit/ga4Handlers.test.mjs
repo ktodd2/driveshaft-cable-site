@@ -1,3 +1,4 @@
+import { createApiClient } from '../../supabase/functions/_shared/supabaseTransport.js'
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
@@ -8,7 +9,7 @@ import { measurementPayload } from '../../supabase/functions/_shared/ga4Outbox.j
 function load(name, mocks) {
  let handler
  const source = readFileSync(new URL(`../../supabase/functions/${name}/index.ts`, import.meta.url), 'utf8').replace(/^import .*\n/gm, '')
- runInNewContext(stripTypeScriptTypes(source), { serve: fn => { handler = fn }, Request, Response, Date, Error, ...mocks })
+ runInNewContext(stripTypeScriptTypes(source), { serve: fn => { handler = fn }, Request, Response, Date, Error, createApiClient, getSupabaseSecretKey: () => 'runtime-service', ...mocks })
  return handler
 }
 const post = token => new Request('https://offline.test', { method: 'POST', headers: { Authorization: `Bearer ${token}` } })

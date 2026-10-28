@@ -1,3 +1,6 @@
+import { isActiveAdmin } from '../_shared/storeAuthorization.js'
+import { createApiClient } from '../_shared/supabaseTransport.js'
+import { getSupabaseSecretKey, getSupabasePublishableKey, hasBackendApiKey } from '../_shared/supabaseKeys.js'
 // Scheduled weekly. Sends a win-back email to customers whose most-recent
 // paid order is 6-9 months old AND who haven't received a win-back in the
 // last 6 months.
@@ -67,18 +70,18 @@ serve(async (req) => {
   }
 
   const supabaseUrl = Deno.env.get('SUPABASE_URL')!
-  const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+  const serviceRoleKey = getSupabaseSecretKey()!
   const authHeader = req.headers.get('Authorization') || ''
   const token = authHeader.replace(/^Bearer\s+/i, '')
 
   const cronTriggerKey = Deno.env.get('CRON_TRIGGER_KEY') || ''
-  let authorized = token === serviceRoleKey || (cronTriggerKey && token === cronTriggerKey)
+  let authorized = hasBackendApiKey(req, serviceRoleKey) || (cronTriggerKey && token === cronTriggerKey)
   if (!authorized && token) {
-    const userClient = createClient(supabaseUrl, Deno.env.get('SUPABASE_ANON_KEY')!, {
+    const userClient = createApiClient(createClient, supabaseUrl, getSupabasePublishableKey()!, {
       global: { headers: { Authorization: `Bearer ${token}` } },
     })
-    const { data: { user } } = await userClient.auth.getUser(token)
-    if (user) authorized = true
+    const { data: { user }, error: authError } = await userClient.auth.getUser(token)
+    if (!authError && user) authorized = await isActiveAdmin(userClient, user.id)
   }
   if (!authorized) {
     return new Response(
@@ -87,7 +90,7 @@ serve(async (req) => {
     )
   }
 
-  const supabase = createClient(supabaseUrl, serviceRoleKey)
+  const supabase = createApiClient(createClient, supabaseUrl, serviceRoleKey)
   const resendApiKey = Deno.env.get('RESEND_API_KEY')
   if (!resendApiKey) {
     return new Response(

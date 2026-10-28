@@ -1,3 +1,5 @@
+import { createApiClient } from '../_shared/supabaseTransport.js'
+import { getSupabaseSecretKey } from '../_shared/supabaseKeys.js'
 // Public newsletter signup endpoint (double opt-in, step 1 of 2).
 //
 // The site's signup forms call this instead of inserting into
@@ -122,9 +124,9 @@ serve(async (req) => {
     return json({ error: 'Please enter a valid email address.' }, 400)
   }
 
-  const supabase = createClient(
+  const supabase = createApiClient(createClient,
     Deno.env.get('SUPABASE_URL')!,
-    Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+    getSupabaseSecretKey()!
   )
   const resendApiKey = Deno.env.get('RESEND_API_KEY')
   if (!resendApiKey) {
