@@ -76,3 +76,13 @@ Official references:
 ## Additional independent-review hold: live-wall token
 
 The independent reviewer found a hardcoded WALL_TOKEN in the imported live-wall-stats source and inadvertently printed that line during review. The value is not repeated here. It has been replaced with a LIVE_WALL_TOKEN environment lookup in the draft and removed from retained source snapshots and unpublished draft history. Do not deploy live-wall-stats until separately authorized remediation configures and rotates its token plus all callers. No live-wall credential was changed. This is additional exposure; disabling legacy Supabase keys does not invalidate that independent token.
+
+## Live-wall scope update and caller-discovery result
+
+Owner approved identifying live-wall display/client connections and replacing only that token plus its legitimate callers on 2026-10-28 at04:02UTC. This supersedes earlier statements that separate remediation lacked approval. Execution remains held until callers are identified and the browser credential-entry handoff is completed.
+
+A filename/reference-only search across the authorized repository found only the endpoint itself, migration documentation and offline tests—no display/client caller. Metadata-only SQL found no cron jobs or public/private database functions referencing live-wall-stats. No matching source lines, token values, browser credential pages, unrelated repositories or raw request logs were inspected/output.
+
+Precise gap: the external display/client deployment location and credential storage are unknown. Minimum owner question: “Where do you open the live-wall statistics display—a website address, app, or particular screen/device?” A URL or device/app name is enough; do not request a token or screenshot.
+
+Once identified, inspect only that named caller and its credential-field names through safe metadata; preserve the display's existing behavior and fetch timing. Stage LIVE_WALL_TOKEN securely, coordinate the caller and endpoint switch, then prove the previous token rejects without returning statistics and the legitimate display works. Keep unrelated NETMON_* tokens unchanged. Do not deploy or disable the endpoint before callers are ready. Both exposed credentials remain uninvalidated.

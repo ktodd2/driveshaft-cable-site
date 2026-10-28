@@ -11,7 +11,7 @@ Do not execute this worksheet until protected credential setup, independent revi
 | dispatch-campaigns | 7 | true | Configured backend apikey or validated active admin_users membership; existing CRON_TRIGGER_KEY retained |
 | finalize-tax-transaction | 8 | true | Configured backend apikey or validated active admin_users membership |
 | generate-blog-post | 22 | true | Configured backend apikey or validated active admin_users membership |
-| live-wall-stats | 8 | false | HOLD: newly exposed separate token; draft requires nonempty LIVE_WALL_TOKEN; rotation/callers need separate authorization |
+| live-wall-stats | 8 | false | HOLD: newly exposed separate token; draft requires nonempty LIVE_WALL_TOKEN; bounded rotation now approved; caller identification and protected entry pending |
 | netmon-ingest | 6 | false | Existing NETMON_INGEST_TOKEN |
 | netmon-status | 6 | false | Existing netmon status token |
 | newsletter-confirm | 7 | true | Newsletter confirmation token |
