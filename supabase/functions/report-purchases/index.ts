@@ -5,7 +5,8 @@ import { measurementPayload, transmitPurchase } from '../_shared/ga4Outbox.js'
 
 serve(async req => {
   const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
-  if (!serviceKey || req.headers.get('Authorization') !== `Bearer ${serviceKey}`) return new Response('Unauthorized', { status: 401 })
+  const workerToken = Deno.env.get('GA4_WORKER_TOKEN')
+  if (!serviceKey || !workerToken || req.headers.get('Authorization') !== `Bearer ${workerToken}`) return new Response('Unauthorized', { status: 401 })
   if (req.method !== 'POST') return new Response('Method not allowed', { status: 405 })
   const secret = Deno.env.get('GA4_API_SECRET')
   // Pause without claiming rows if not configured. Existing rows remain durable.
