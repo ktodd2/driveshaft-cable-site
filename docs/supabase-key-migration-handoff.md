@@ -86,3 +86,19 @@ A filename/reference-only search across the authorized repository found only the
 Precise gap: the external display/client deployment location and credential storage are unknown. Minimum owner question: “Where do you open the live-wall statistics display—a website address, app, or particular screen/device?” A URL or device/app name is enough; do not request a token or screenshot.
 
 Once identified, inspect only that named caller and its credential-field names through safe metadata; preserve the display's existing behavior and fetch timing. Stage LIVE_WALL_TOKEN securely, coordinate the caller and endpoint switch, then prove the previous token rejects without returning statistics and the legitimate display works. Keep unrelated NETMON_* tokens unchanged. Do not deploy or disable the endpoint before callers are ready. Both exposed credentials remain uninvalidated.
+
+## Verified live-wall caller (supersedes discovery gap)
+
+Owner identified https://houstontruckwreck.onrender.com/live. An unauthenticated GET redirects to /login. Filtered Render metadata confirms service houstontruckwreck, ID srv-d0v6i2a4d50c73e7f9rg, repository ktodd2/houstontruckwreck, branch main, web_service. Active deployment dep-db79llmi0phs738rj8t0 uses commit4fdff4d052d3dbdfb38b94d4e0bc23e66ad51d38; the inspected repository commit matches that deployment.
+
+Only targeted code was processed in memory to produce filename/line/identifier/boolean metadata; no raw source, scripts, headers or credential values were printed or saved. Existing credentials and Render environment values were not read.
+
+Verified dependency chain:
+- templates/live.html fetches the same-origin /api/live route. It contains no direct live-wall endpoint/project reference or live-wall credential identifier.
+- app.py:620 defines /live; app.py:627 defines /api/live. Both have login_required decorators.
+- app.py:582 _fetch_store_stats uses STORE_STATS_URL, STORE_STATS_TOKEN and STORE_STATS_CACHE_SECONDS, sends a server-side bearer header and parses the stats response. It does not return its configuration token.
+- config.py:41 reads STORE_STATS_URL with a default pointing to the scoped Supabase live-wall endpoint; config.py:44 reads STORE_STATS_TOKEN with no nonempty literal default; config.py:45 reads STORE_STATS_CACHE_SECONDS.
+
+The proxy already keeps this credential server-side. No Houston architecture rewrite or unrelated code change is needed. Actual Render STORE_STATS_TOKEN presence/value and owner-authenticated display health were not inspected and remain verification steps.
+
+Bounded remaining work: privately stage the replacement token in Supabase LIVE_WALL_TOKEN and the identified Render service's STORE_STATS_TOKEN; keep STORE_STATS_URL, cache settings, login credentials, NETMON_* and other settings unchanged. Coordinate the reviewed endpoint deployment and a deployment of the existing Houston build with its updated token; do not accidentally deploy newer unrelated repository changes. Cross-provider credential replacement is not atomic, so plan the switchover window explicitly (existing response caching is not a zero-downtime guarantee). Do not switch either endpoint/caller before both sides are prepared. Then confirm valid caller behavior and old-token rejection with non-data-returning checks. Endpoint draft also requires modern Supabase backend-key setup, so coordinate that prerequisite with the broader migration. No production change has occurred.
