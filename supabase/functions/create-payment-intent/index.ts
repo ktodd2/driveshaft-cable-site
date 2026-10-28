@@ -8,6 +8,7 @@
 // total it displayed; if that disagrees with the server total we refuse
 // rather than charge an amount the customer never saw.
 
+import { analyticsMetadata } from '../_shared/ga4Outbox.js'
 import { createPurchaseSnapshot } from '../_shared/purchaseAnalytics.js'
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import Stripe from 'https://esm.sh/stripe@13.10.0?target=deno'
@@ -56,7 +57,7 @@ serve(async (req) => {
   try {
     const adminClient = createAdminClient()
 
-    const { amount: clientAmount, orderId, discountCode } = await req.json()
+    const { amount: clientAmount, orderId, discountCode, analytics } = await req.json()
 
     if (!orderId) return json({ error: 'orderId is required' }, 400)
 
@@ -191,16 +192,18 @@ serve(async (req) => {
     }
 
     // Immutable server-priced snapshot for purchase analytics. This contains
-    // only product IDs, quantities and amounts—not customer-supplied names/PII.
+    // only catalog names, product IDs, quantities and amounts—not customer PII.
+    const { data: catalog } = await adminClient.from('products').select('id, name').in('id', lines.map(line => line.productId))
+    const namedLines = lines.map(line => ({ ...line, analyticsName: catalog?.find(product => product.id === line.productId)?.name }))
     const purchaseSnapshot = createPurchaseSnapshot(
-      lines, subtotalCents, discountCents, shippingCents, taxCents,
+      namedLines, subtotalCents, discountCents, shippingCents, taxCents,
     )
     const paymentIntent = await stripe.paymentIntents.create({
       amount: totalCents,
       currency: 'usd',
       metadata: {
         order_id: orderId,
-        ...(purchaseSnapshot ? { ga4_purchase: purchaseSnapshot } : {}),
+        ...(purchaseSnapshot ? { ga4_purchase: purchaseSnapshot, ...analyticsMetadata(analytics, Deno.env.get('GA4_SERVER_PURCHASES_ENABLED') === 'true') } : {}),
         items: JSON.stringify(items.map(i => ({ productId: i.productId, quantity: i.quantity }))),
         // Stored so the webhook can call stripe.tax.transactions.createFromCalculation
         // after payment succeeds. Without this metadata, the calculation never
@@ -213,6 +216,6 @@ serve(async (req) => {
     return json({ clientSecret: paymentIntent.client_secret }, 200)
   } catch (error) {
     console.error('create-payment-intent error:', error)
-    return json({ error: error.message }, 400)
+    return json({ error: error instanceof Error ? error.message : 'Could not prepare payment' }, 400)
   }
 })

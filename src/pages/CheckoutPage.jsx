@@ -1,3 +1,4 @@
+import { captureAnalyticsContext } from '../lib/purchaseAnalytics'
 import React, { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { loadStripe } from '@stripe/stripe-js'
@@ -424,6 +425,7 @@ function CheckoutPage() {
           // if it doesn't match `amount` (what the customer is shown).
           body: JSON.stringify({
             amount: totalCents,
+            analytics: await captureAnalyticsContext(),
             orderId: order.id,
             discountCode: discountSource === 'code' ? appliedCode : null,
           })

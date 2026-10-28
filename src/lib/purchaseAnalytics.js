@@ -22,12 +22,12 @@ function safePurchase(purchase) {
   for (const item of purchase.items) {
     if (typeof item.item_id !== 'string' || !/^[a-zA-Z0-9_-]{1,100}$/.test(item.item_id) ||
       !Number.isInteger(item.quantity) || item.quantity <= 0 || !Number.isFinite(item.price) || item.price < 0) return null
-    items.push({ item_id: item.item_id, price: item.price, quantity: item.quantity,
+    items.push({ item_id: item.item_id, ...(typeof item.item_name === 'string' && item.item_name.length <= 100 ? { item_name: item.item_name } : {}), price: item.price, quantity: item.quantity,
       ...(Number.isFinite(item.discount) && item.discount >= 0 ? { discount: item.discount } : {}),
     })
   }
   if (Math.abs(items.reduce((sum, item) => sum + item.price * item.quantity, 0) - purchase.value) > 0.000001) return null
-  // Explicit allowlist: never forward names, emails, addresses, client secrets,
+  // Explicit allowlist: never forward customer names, emails, addresses, client secrets,
   // arbitrary server fields, or the current URL's query string to GA.
   return {
     transaction_id: purchase.transaction_id, currency: 'USD', value: purchase.value,
@@ -64,4 +64,19 @@ export async function reportPurchase(purchase, browser = window) {
       ? await browser.navigator.locks.request(keyFor(payload.transaction_id), send)
       : send()
   } catch { return 'error' }
+}
+
+// Read actual tag identifiers; never mint IDs or parse arbitrary cookie values.
+// This preserves the existing site's opt-out policy, not a new consent grant.
+export async function captureAnalyticsContext(browser = window, timeoutMs = 500) {
+  if (!analyticsAllowed(browser) || typeof browser.gtag !== 'function') return null
+  const get = field => new Promise(resolve => {
+    const timer = setTimeout(() => resolve(null), timeoutMs)
+    try { browser.gtag('get', GA_MEASUREMENT_ID, field, value => { clearTimeout(timer); resolve(value) }) }
+    catch { clearTimeout(timer); resolve(null) }
+  })
+  const [clientId, sessionId] = await Promise.all([get('client_id'), get('session_id')])
+  if (!analyticsAllowed(browser) || !/^\d{1,20}\.\d{1,20}$/.test(clientId || '')) return null
+  return { allowed: true, client_id: clientId,
+    ...(Number.isSafeInteger(Number(sessionId)) && Number(sessionId) > 0 ? { session_id: Number(sessionId) } : {}) }
 }
