@@ -27,9 +27,14 @@ serve(async (req) => {
       return json({ error: 'Invalid confirmation request' }, 400)
     }
     const intentId = clientSecret.split('_secret_')[0]
-    const intent = await stripe.paymentIntents.retrieve(intentId)
+    const intent = await stripe.paymentIntents.retrieve(intentId, { expand: ['latest_charge'] })
     const result = verifiedPurchaseResponse(intent, orderId, clientSecret)
     if (!result) return json({ error: 'Unable to verify this payment' }, 403)
+    const charge = intent.latest_charge
+    if (!charge || typeof charge !== 'object' || !charge.paid || charge.amount_refunded !== 0 || charge.disputed) {
+      // Confirmation remains paid, but a refunded/unverified charge is not a new sale.
+      if ('purchase' in result) result.purchase = null
+    }
     return json(result)
   } catch {
     // Never log/echo the request, secret, Stripe object, or upstream error.

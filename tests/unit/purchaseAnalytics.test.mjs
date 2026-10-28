@@ -9,10 +9,11 @@ import { rememberCheckoutPayment, getCheckoutPayment, clearPurchasedCart } from 
 const orderId = '00000000-0000-4000-8000-000000000001'
 const secret = 'pi_offlineFixture_secret_offlineFixture'
 const makeIntent = (patch = {}) => ({
+  latest_charge: { paid: true, amount_refunded: 0, disputed: false },
   client_secret: secret, status: 'succeeded', livemode: true, currency: 'usd', amount: 7859, amount_received: 7859,
   metadata: { order_id: orderId, ga4_purchase: createPurchaseSnapshot([
-    { productId: '1', quantity: 10, unitPrice: 300 },
-    { productId: 'driveshaft-cable-cutters', quantity: 1, unitPrice: 2500 },
+    { productId: '1', quantity: 10, unitPrice: 300, analyticsName: 'Driveshaft Cable' },
+    { productId: 'driveshaft-cable-cutters', quantity: 1, unitPrice: 2500, analyticsName: 'Cable Cutters' },
   ], 5500, 275, 2000, 634) },
   ...patch,
 })
@@ -24,8 +25,8 @@ test('verified purchase uses immutable cents, exact discounted items, separate t
   assert.equal(status, 'paid')
   assert.equal(order.total_cents, 7859)
   assert.deepEqual(purchase, { transaction_id: orderId, currency: 'USD', value: 52.25, shipping: 20, tax: 6.34,
-    items: [{ item_id: '1', price: 2.85, quantity: 10, discount: 0.15 },
-      { item_id: 'driveshaft-cable-cutters', price: 23.75, quantity: 1, discount: 1.25 }] })
+    items: [{ item_id: '1', item_name: 'Driveshaft Cable', price: 2.85, quantity: 10, discount: 0.15 },
+      { item_id: 'driveshaft-cable-cutters', item_name: 'Cable Cutters', price: 23.75, quantity: 1, discount: 1.25 }] })
   assert.ok(!JSON.stringify(response(intent)).includes('Private'))
   assert.ok(!JSON.stringify(response(intent)).includes('secret'))
 })
@@ -73,13 +74,14 @@ async function browserHarness() {
 
 test('event is allowlisted, sent to existing GA ID, deduplicated on rerender and reload', async () => {
   const h = await browserHarness(), purchase = response(makeIntent()).purchase
-  purchase.email = 'never@example.test'; purchase.items[0].item_name = 'Private Name'
+  purchase.email = 'never@example.test'; purchase.items[0].customer_name = 'Private Name'
   assert.equal(await h.reportPurchase(purchase, h.browser), 'queued')
   assert.equal(await h.reportPurchase(purchase, h.browser), 'duplicate')
   const fresh = await browserHarness()
   assert.equal(await fresh.reportPurchase(purchase, h.browser), 'duplicate')
   assert.equal(h.calls.length, 1)
   assert.equal(h.calls[0][1], 'purchase')
+  assert.equal(h.calls[0][2].items[0].item_name, 'Driveshaft Cable')
   assert.equal(h.calls[0][2].send_to, 'G-SDQTZK079P')
   assert.equal(h.calls[0][2].page_location, 'https://example.test/checkout/success')
   assert.ok(!JSON.stringify(h.calls).includes('Private'))
@@ -150,9 +152,9 @@ test('checkout capability is tab-local, bound to order, and expires', () => {
 })
 
 test('actual verification handler is read-only, authorized by secret, sanitized and no-store', async () => {
-  let handler, retrieved = []
+  let handler, retrieved = [], intentPatch = {}
   const source = readFileSync(new URL('../../supabase/functions/verify-purchase/index.ts', import.meta.url), 'utf8').replace(/^import .*\n/gm, '')
-  class Stripe { constructor() { this.paymentIntents = { retrieve: async id => { retrieved.push(id); return makeIntent() } } } }
+  class Stripe { constructor() { this.paymentIntents = { retrieve: async id => { retrieved.push(id); return makeIntent(intentPatch) } } } }
   runInNewContext(stripTypeScriptTypes(source), { serve: fn => { handler = fn }, Stripe, verifiedPurchaseResponse,
     Deno: { env: { get: () => 'offline-fixture-only' } }, Response, JSON })
   const call = body => handler(new Request('https://offline.test', { method: 'POST', body: JSON.stringify(body) }))
@@ -166,6 +168,12 @@ test('actual verification handler is read-only, authorized by secret, sanitized 
   assert.ok(!(await res.text()).includes('wrong'))
   assert.equal((await call({ orderId, redirect_status: 'succeeded' })).status, 400)
   assert.equal((await handler(new Request('https://offline.test'))).status, 405)
+  for (const latest_charge of [null, 'ch_unexpanded', { paid: true, amount_refunded: 100 }, { paid: true, amount_refunded: 0, disputed: true }]) {
+    intentPatch = { latest_charge }
+    const result = await (await call({ orderId, clientSecret: secret })).json()
+    assert.equal(result.status, 'paid')
+    assert.equal(result.purchase, null)
+  }
   assert.ok(!source.includes('.update(') && !source.includes('.from('))
 })
 
