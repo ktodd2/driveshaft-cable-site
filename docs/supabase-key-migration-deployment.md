@@ -1,4 +1,4 @@
-# Deployment worksheet — held, no production actions
+# Deployment worksheet and execution record
 
 Do not execute this worksheet until protected credential setup, independent review and live validation gates are satisfied. Gateway decisions are endpoint-specific; no bulk gateway toggle is authorized by this worksheet.
 
@@ -56,3 +56,16 @@ Job 28 was briefly paused while deploying report-purchases from code commit 8107
 Cron command changed only its Vault reference from ga4_worker_service_role to ga4_worker_token. Protected server-side GET request 21869 returned 405; unauthenticated GET 21870 returned 401. GET exits before DB initialization, claims, or sending. Job 28 was resumed with active=true and unchanged every-minute schedule. No manual POST, fake purchase, backfill, or email test occurred. Current worker rejects the original setting by construction; legacy project API keys and old stored credentials have not been revoked. Broader frontend/backend/job and live-wall migrations remain pending their separate gates.
 
 The first natural resumed run at 04:53 UTC produced response 21871: HTTP 200, no timeout, and the boolean check for No pending purchases was true. This verifies idle worker operation through the modern backend key, not an end-to-end GA receipt from a real purchase.
+
+
+## Broader migration checkpoint — 2026-10-28, approximately 05:11 UTC
+
+Code commit 1259a736c3c343342d4d75a864a1a2a4cccfb4e9 adds reviewed POST-only guards after authentication to nine scheduled/admin handlers. 122 tests pass; frontend build and 31-route check pass. Thirteen protected/admin/cron functions and eight public functions were deployed. The eight public endpoints retain verify_jwt=true. The protected guards verify the backend apikey, active admin membership, and existing independent cron token only where intended.
+
+A second temporary readiness probe confirmed the backend Vault entry matches the runtime key, all six cron tokens match CRON_TRIGGER_KEY, and an actual publishable-key-only checkout request passes the existing gateway and returns the expected missing-orderId guard. Probe deleted and absence verified. Jobs21–26 retain their tokens/commands/schedules. Jobs2/4 were briefly paused, migrated to apikey headers resolving store_backend_api_key from Vault, positively checked with side-effect-free GET, and resumed on their original schedules. All ten expected cron jobs are active.
+
+Safe verification: four authenticated empty POST bodies returned400 before sends/transactions; fifteen authenticated GET checks returned405 before work. Public checks21910–21917 passed their expected 400/405/200 responses; checkout missing-ID guard and discount valid:false checked as booleans. These public checks used the server-held backend apikey, not a browser session; separate publishable-key compatibility was tested above. Homepage, products/driveshaft-cable-plus and admin/login HEAD requests returned200 HTML. No signed-in browser functionality or complete checkout was exercised.
+
+Analytics webhook deployment was initially denied twice. Owner then explicitly approved its credential-only update; deployment succeeded as version10. GET request21920 returned405 with no timeout and no event processing. Payment webhook stripe-webhook deployment was subsequently denied by automatic approval review because of its payment-fulfillment capabilities and lack of target-specific approval. netmon-ingest deployment was denied for its telemetry RPC writes and disputed target scope. No alternate route used; netmon-status was held rather than attempted after the monitoring denial. Fresh metadata shows all three unchanged. live-wall-stats remains unchanged pending coordinated owner credential staging.
+
+Exact function versions and bundle hashes are recorded in supabase-migration-live-state-2026-10-28.json. Frontend has not been pushed/published. Legacy keys remain enabled, and both exposures remain uninvalidated. Remaining deployment approval requested should explicitly cover credential-only stripe-webhook, netmon-ingest, and netmon-status changes, preserving business/signature/token logic and performing no test payments or telemetry. Live-wall staging and end-to-end owner login/storage/checkout verification remain separate gates before retirement.

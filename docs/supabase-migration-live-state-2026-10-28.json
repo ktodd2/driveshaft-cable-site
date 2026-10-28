@@ -1,0 +1,205 @@
+{
+  "project": "twrihhyfvomqiqbxkitc",
+  "code_commit": "1259a736c3c343342d4d75a864a1a2a4cccfb4e9",
+  "legacy_keys_disabled": false,
+  "frontend_published": false,
+  "blocked_deployments": [
+    "stripe-webhook",
+    "netmon-ingest"
+  ],
+  "held_deployments": [
+    "netmon-status",
+    "live-wall-stats"
+  ],
+  "functions": [
+    {
+      "name": "create-payment-intent",
+      "version": 27,
+      "status": "ACTIVE",
+      "verify_jwt": true,
+      "bundle_sha256": "2097e5dc729f84f58728d7d2b12b095f71a9f57330b1ab1bf593837c107392de"
+    },
+    {
+      "name": "stripe-webhook",
+      "version": 26,
+      "status": "ACTIVE",
+      "verify_jwt": false,
+      "bundle_sha256": "3c4183f8e9c9eac4094100ff29c3e589f4f6de8c1a55ac22b3caf2bfc5f11639"
+    },
+    {
+      "name": "send-tracking-email",
+      "version": 24,
+      "status": "ACTIVE",
+      "verify_jwt": false,
+      "bundle_sha256": "c9606c009728820e217bf3a061e0c27e788e998e6ed88836c0307540bb1e0ea6"
+    },
+    {
+      "name": "send-quote-notification",
+      "version": 22,
+      "status": "ACTIVE",
+      "verify_jwt": true,
+      "bundle_sha256": "5b6155f3658d029d44a7f723708c3f865beccafd4b9e0ccd8ea1b26ef29deedb"
+    },
+    {
+      "name": "send-marketing-email",
+      "version": 25,
+      "status": "ACTIVE",
+      "verify_jwt": false,
+      "bundle_sha256": "c770eeca21e5da6002df8fd95aeaa52c4c22f6d70f10c082f440c1c17f6fc579"
+    },
+    {
+      "name": "generate-blog-post",
+      "version": 26,
+      "status": "ACTIVE",
+      "verify_jwt": false,
+      "bundle_sha256": "b19fdb8afc1f7ad1a98a45add29dae2c7defa70e45de5774fd2ab5b73744abb9"
+    },
+    {
+      "name": "process-testimonial-queue",
+      "version": 15,
+      "status": "ACTIVE",
+      "verify_jwt": false,
+      "bundle_sha256": "f27ea27a9ebb6054333bea548cf81746b660b61cf41102b0c94e5d3a50b4cff7"
+    },
+    {
+      "name": "calculate-tax",
+      "version": 17,
+      "status": "ACTIVE",
+      "verify_jwt": true,
+      "bundle_sha256": "5e064ab1c6c753376e377d9ee88090993b173a4540753c99453227770a633f28"
+    },
+    {
+      "name": "finalize-tax-transaction",
+      "version": 12,
+      "status": "ACTIVE",
+      "verify_jwt": false,
+      "bundle_sha256": "014763dcc01464cceeaff01e691d60080419922491ac0d8eb6176ad4793c8210"
+    },
+    {
+      "name": "validate-discount-code",
+      "version": 13,
+      "status": "ACTIVE",
+      "verify_jwt": true,
+      "bundle_sha256": "01bd978317bd20f8cb6d71309680023efa38349f1f8a3e4be20aaaac1c42ef25"
+    },
+    {
+      "name": "send-abandoned-cart",
+      "version": 16,
+      "status": "ACTIVE",
+      "verify_jwt": false,
+      "bundle_sha256": "e7ed2b10b0397c73da821c034afbaaf54902a309a65657ce8f03be04f82bd0f6"
+    },
+    {
+      "name": "send-welcome-series",
+      "version": 16,
+      "status": "ACTIVE",
+      "verify_jwt": false,
+      "bundle_sha256": "31302d92eb5d6a24f2f84faa6d2bc92c76b394ab65413433fedde622c7e6dd92"
+    },
+    {
+      "name": "send-reorder-reminder",
+      "version": 15,
+      "status": "ACTIVE",
+      "verify_jwt": false,
+      "bundle_sha256": "5e4bc4e7d48a7726346acc1f19ed39b81df85768354ffd57c130659096c668ec"
+    },
+    {
+      "name": "send-winback",
+      "version": 15,
+      "status": "ACTIVE",
+      "verify_jwt": false,
+      "bundle_sha256": "1c937f218ede83c56829a1263983fd849b243c55fd878d50b87eea2dde05943c"
+    },
+    {
+      "name": "setup-cron-jobs",
+      "version": 13,
+      "status": "ACTIVE",
+      "verify_jwt": false,
+      "bundle_sha256": "dc5a585dd4dff17dd9bde991b0b95653d84701efcc08c447d6e364c357f019e6"
+    },
+    {
+      "name": "check-tracking-status",
+      "version": 12,
+      "status": "ACTIVE",
+      "verify_jwt": false,
+      "bundle_sha256": "4baf936e7eabcb19c7dc1215b020e39ecb9f1d609645524bbfc8141a31e207ac"
+    },
+    {
+      "name": "send-delivery-email",
+      "version": 12,
+      "status": "ACTIVE",
+      "verify_jwt": false,
+      "bundle_sha256": "4a1b9c154e9f3f29decc5a6898e2582ac3ef172561031e9ed649e998bc2533dc"
+    },
+    {
+      "name": "dispatch-campaigns",
+      "version": 11,
+      "status": "ACTIVE",
+      "verify_jwt": false,
+      "bundle_sha256": "0935b78fcd5b65aaef02f67a71c81a45b3e30236ebf984b78fb5ad4d45e597c0"
+    },
+    {
+      "name": "newsletter-subscribe",
+      "version": 12,
+      "status": "ACTIVE",
+      "verify_jwt": true,
+      "bundle_sha256": "90ffb0772a412cecd98799eb44ee007b6285acf7430cb095ff6caa3c1de7b8fa"
+    },
+    {
+      "name": "newsletter-confirm",
+      "version": 11,
+      "status": "ACTIVE",
+      "verify_jwt": true,
+      "bundle_sha256": "8647d4a40a9aba2f3a1c76bc6066112dd7b054d726ffbde52097c01eb7f9460b"
+    },
+    {
+      "name": "live-wall-stats",
+      "version": 11,
+      "status": "ACTIVE",
+      "verify_jwt": false,
+      "bundle_sha256": "ea0eb9069efc0f6fb5daa76fb8fd2b06b20863412dae49e3d84052ef6287f82b"
+    },
+    {
+      "name": "track-order",
+      "version": 11,
+      "status": "ACTIVE",
+      "verify_jwt": true,
+      "bundle_sha256": "cd5abb40ddfecd246341319bff585accf2aa176e4b6eed76d7e6bafc0d1db68c"
+    },
+    {
+      "name": "netmon-ingest",
+      "version": 9,
+      "status": "ACTIVE",
+      "verify_jwt": false,
+      "bundle_sha256": "26a62868c43ddd64557ce3a22e57205b133674b95256b641deebe278d40099ed"
+    },
+    {
+      "name": "netmon-status",
+      "version": 9,
+      "status": "ACTIVE",
+      "verify_jwt": false,
+      "bundle_sha256": "8c9c9b9e9dbbafb8dcbdb4434dbedcfb5658c2c9700e074cfa959139ec96b6a8"
+    },
+    {
+      "name": "verify-purchase",
+      "version": 11,
+      "status": "ACTIVE",
+      "verify_jwt": true,
+      "bundle_sha256": "834fcc0b9983a2111fb503e8bdddf5541492bd179839004b02090620d6ede8c7"
+    },
+    {
+      "name": "analytics-webhook",
+      "version": 10,
+      "status": "ACTIVE",
+      "verify_jwt": false,
+      "bundle_sha256": "8a8fb3cb32197996e6470399bcacfcb28374baac49806b53d8cd4f9ce6dd6856"
+    },
+    {
+      "name": "report-purchases",
+      "version": 12,
+      "status": "ACTIVE",
+      "verify_jwt": false,
+      "bundle_sha256": "b3df528d3d48c6ce838483adec5be0465701553859d5350b69b9c4ef3b05e83f"
+    }
+  ]
+}
