@@ -44,7 +44,7 @@ CREATE POLICY "Allow authenticated reads" ON quote_requests
   USING (true);
 ```
 
-3. Get your project URL and anon key from Settings > API
+3. Get your project URL and publishable key from the project settings and Settings > API Keys. The production store uses the publishable key named `store_web`. Never use a secret or service-role key in a `VITE_` variable.
 
 ### 2. Local Development
 
@@ -54,7 +54,7 @@ npm install
 
 # Create .env file with your Supabase credentials
 cp .env.example .env
-# Edit .env with your Supabase URL and anon key
+# Edit .env with your Supabase URL and publishable key
 
 # Start dev server
 npm run dev
@@ -68,7 +68,7 @@ npm run dev
 4. Set publish directory: `dist`
 5. Add environment variables:
    - `VITE_SUPABASE_URL`
-   - `VITE_SUPABASE_ANON_KEY`
+   - `VITE_SUPABASE_PUBLISHABLE_KEY`
 
 ## Project Structure
 
