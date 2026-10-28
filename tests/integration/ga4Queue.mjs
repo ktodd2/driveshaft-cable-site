@@ -5,7 +5,7 @@ import { readFileSync } from 'node:fs'
 const { PGlite } = await import(process.env.GA4_PGLITE_MODULE || '@electric-sql/pglite')
 const db = new PGlite()
 await db.exec('create role anon; create role authenticated; create role service_role bypassrls; grant usage on schema public to service_role;')
-await db.exec(readFileSync(new URL('../../supabase/migrations/20261028021709_ga4_purchase_outbox.sql', import.meta.url), 'utf8'))
+await db.exec(readFileSync(new URL('../../supabase/migrations/20261028023731_ga4_purchase_outbox.sql', import.meta.url), 'utf8'))
 const one = '00000000-0000-4000-8000-000000000001', two = '00000000-0000-4000-8000-000000000002'
 for (const role of ['anon', 'authenticated']) {
  await db.exec(`set role ${role}`)

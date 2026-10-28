@@ -1,4 +1,4 @@
-# Durable GA4 purchases — preparation, not deployed
+# Durable GA4 purchases — staged rollout
 
 ## Diagnosis and evidence (2026-10-28)
 
@@ -21,9 +21,9 @@ Historical order IDs supplied in the investigation are not backfilled. The prior
 - Amounts represent discounted merchandise with tax/shipping separate; cent allocation preserves sum(price × quantity). Original payment event time is used. No event older than 71 hours is sent. Recent real session IDs are included only within 24 hours of session start; engagement duration is not fabricated. Attribution/Realtime completeness is not guaranteed.
 - Pre-send Stripe failures back off from 60 seconds to an hour; crashed preflight claims can be reclaimed. Before HTTP, state becomes `sending`. A timeout/crash or lost acknowledgment becomes `uncertain`; a non-2xx becomes `rejected`. Neither is automatically retransmitted. `submitted` means HTTP accepted, **not** confirmed GA processing. Blind retries would conflict with Google's guidance and risk duplicate counts. GA transaction_id is a secondary deduplication safeguard, not the sole safety mechanism.
 
-## Required approval and setup — nothing here has been executed in production
+## Rollout procedure (current completion recorded below)
 
-1. Approve code publication/deployment separately from preparation. This PR is draft; do not merge or enable flags yet.
+1. Code publication/deployment has been approved. Credential creation/storage and workspace selection still require their specific confirmations before activation.
 2. In GA property 526322589 / stream G-SDQTZK079P, Admin → Data streams → select the web stream → Measurement Protocol API secrets → Create. Obtain explicit approval for this credential creation. Store the value only as Supabase Edge secret `GA4_API_SECRET` on project `twrihhyfvomqiqbxkitc`; never in frontend env, Git, tool output, PR or chat. No secret was created, read, or persisted during preparation. The debug validator does not prove a secret is valid.
 3. Apply the new migration after review; run Supabase security advisors. Table/RPC grants are service-role-only, RLS enabled, no public policies and no SECURITY DEFINER. No orders-table changes or historical backfill.
 4. Deploy `analytics-webhook` with JWT verification disabled (Stripe signature verification supplies authorization). Create a **separate** live Stripe snapshot webhook destination for `payment_intent.succeeded`, pointing to `https://twrihhyfvomqiqbxkitc.supabase.co/functions/v1/analytics-webhook`. Prefer the existing account's compatible event API version. This endpoint creation and its new signing credential require approval. Save only its signing secret as `STRIPE_ANALYTICS_WEBHOOK_SECRET`. Leave the existing stripe-webhook endpoint/subscriptions unchanged.
@@ -44,7 +44,7 @@ Monitor service-only queue state counts and oldest pending age; alert operationa
 - Deno 2.5.6 `deno check` on analytics-webhook, report-purchases, create-payment-intent, verify-purchase: passes. A pre-existing unknown catch-variable type error in the touched payment-intent handler was narrowed with `instanceof Error`.
 - `tests/integration/ga4Queue.mjs` executed against isolated PGlite 0.3.14: schema, anon/auth denial, service-role access, exclusive claims, lease recovery, stale-token rejection, crash quarantine, replay and unique intent checks pass. This is not a live Supabase/PostgREST concurrency/load test.
 - `node scripts/validate-ga4-purchase.mjs`: Google **/debug/mp/collect** returned `{"validationMessages":[]}` under ENFORCE_RECOMMENDATIONS. This uses a synthetic fixture and placeholder secret; it does not record events, validate credentials, or prove production delivery.
-- No lint command or frontend typecheck script is defined in this repository. No production migration, deployment, credential change, schedule, charge, order, backfill or email was made.
+- No lint command or frontend typecheck script is defined in this repository. During initial preparation, no production migration, deployment, credential change, schedule, charge, order, backfill or email was made. The subsequent staged rollout is recorded below.
 
 For isolated SQL reproduction: install `@electric-sql/pglite@0.3.14` outside the app, then run `GA4_PGLITE_MODULE=/absolute/path/to/@electric-sql/pglite/dist/index.js node tests/integration/ga4Queue.mjs`.
 
@@ -58,3 +58,34 @@ For isolated SQL reproduction: install `@electric-sql/pglite@0.3.14` outside the
 - [Supabase Stripe signature verification](https://supabase.com/docs/guides/functions/examples/stripe-webhooks)
 - [Supabase RLS](https://supabase.com/docs/guides/database/postgres/row-level-security)
 - [Supabase current TLS deprecation](https://supabase.com/changelog/cbc-tls-ciphers-deprecated) reviewed; no relevant change to this implementation's APIs.
+
+
+## Current deployment checkpoint
+
+Code reviewed: `5d504565afff04178d06b652081d94e23e021819`. PR #6 remains draft/unmerged; no newer user commits or PR comments were found. Original checkout's untracked ADD_PRODUCTS.md is untouched.
+
+After explicit deployment authorization, these components were deployed to `twrihhyfvomqiqbxkitc`:
+
+| Component | Deployed version | Verification |
+| --- | --- | --- |
+| verify-purchase | 2 | Downloaded entrypoint/shared helper exactly match reviewed commit; gateway rejects unauthenticated requests |
+| analytics-webhook | 1 | Downloaded entrypoint/shared helpers exactly match reviewed commit; unsigned POST returns 400 Invalid signature |
+| report-purchases | 1 | Downloaded entrypoint/shared helpers exactly match reviewed commit; unauthenticated POST returns 401 |
+| ga4_purchase_outbox migration | 20261028023731 | RLS true; anon SELECT false; authenticated INSERT false; service INSERT/claim true; anon claim false; queue count 0 |
+
+Supabase assigned the migration version during application; the local filename was reconciled to that exact remote version to prevent future duplicate application. No order data changed. No fake event or authenticated worker invocation was sent.
+
+Still unchanged: create-payment-intent v17, existing stripe-webhook v18, production frontend. Server reporting has not been activated. No GA API secret, Stripe destination/signing secret, Vault credential, or worker schedule was created. Secret-name inspection via the local Supabase CLI was unavailable because that CLI has no access token; the connected Supabase tools successfully handled deployment. Do not authenticate a new CLI or create an access token without the appropriate approval.
+
+Specific pending confirmations:
+
+- GA: create the Measurement Protocol secret for stream G-SDQTZK079P/property 526322589; store only in target Supabase project's GA4_API_SECRET. Scope: submit analytics events to this stream.
+- Stripe: create a separate live payment_intent.succeeded snapshot destination at https://twrihhyfvomqiqbxkitc.supabase.co/functions/v1/analytics-webhook; store its signing secret only as STRIPE_ANALYTICS_WEBHOOK_SECRET.
+- Supabase: store the existing service-role bearer securely in Vault and configure a once-per-minute POST to https://twrihhyfvomqiqbxkitc.supabase.co/functions/v1/report-purchases. No credential value may appear in SQL text, Git, chat or logs.
+- Render: confirm My Workspace (ktoddllc1@gmail.com), ID tea-d0ur0dvdiees73acn7p0, before service inspection/deploy. The Render connector explicitly requires workspace confirmation; no Render service was changed.
+
+All 77 tests, build, route checks, Deno checks, isolated SQL checks, and non-recording Google validation were repeated successfully. No remote GitHub CI statuses or workflow runs are configured for this PR. Repository has no lint script.
+
+Security advisors before/after: only added finding is the expected informational RLS-without-policy for the service-only outbox. No new security warning. Pre-existing advisories remain for campaign function search_path, pg_net in public, public SECURITY DEFINER RPC access, and leaked-password protection; they were not modified. [RLS advisory explanation](https://supabase.com/docs/guides/database/database-linter?lint=0008_rls_enabled_no_policy).
+
+Resume by obtaining the specific confirmations, completing protected setup and verifying it, deploying create-payment-intent and frontend with assignment disabled, then activating delivery followed by assignment. Do not claim full delivery until the next legitimate eligible sale is reconciled. Keep the stated consent snapshot and post-submission refund limitations explicit.
