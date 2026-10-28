@@ -38,7 +38,7 @@ The other repository-backed files match live source, ignoring surrounding whites
 - All 30 Edge TypeScript files pass esbuild syntax transformation; this is not Deno type checking. The repository defines no lint/typecheck scripts.
 - No production test orders, charges, emails, analytics events, secret changes, deployments or legacy-key disablement occurred.
 
-Result: the draft's identified source-regression defects are fixed and offline machine-authorization checks pass. Preparation remains held at credential transport, coordinated gateway/deployment validation and independent-second-reviewer gates, not at a tool denial or uncertain production write.
+Result: the draft's identified source-regression defects are fixed and offline machine-authorization checks pass. Preparation remains held at credential transport, coordinated gateway/deployment validation and separate live-wall token remediation gates, not at a tool denial or uncertain production write.
 
 ## Final credential-transport assessment
 
@@ -53,3 +53,9 @@ Minimum owner involvement, if proceeding through the browser: the credential-ent
 P0: The imported live-wall-stats source contained a literal WALL_TOKEN. The first scan detected known Supabase/Stripe formats but missed an opaque hex token. The reviewer inadvertently printed the credential line, immediately reported the exposure, and stopped displaying source. No value is repeated in reports.
 
 The draft now reads LIVE_WALL_TOKEN from environment; retained live-wall source copies were sanitized and unpublished draft history rebuilt to exclude the literal. A metadata-only credential-assignment scanner/regression test now covers opaque values, known formats, object properties, environment fallbacks and SQL bearer literals. Snapshot hashes in the inventory document the original retrieval; sanitized source is explicitly marked. The additional live-wall credential rotation is outside current approved scope and remains held; do not deploy this endpoint until that remediation and callers are coordinated.
+
+## Independent final disposition
+
+Second reviewer approved offline implementation at 33e31cdfd0c9a8660156cab14cd39db470858c3b. It verified 141 shipped-source files across sanitized unpublished history and 44 retained snapshot files without credential findings, confirmed former credential-bearing commits removed and Git integrity/unreachable-object checks clean, and independently passed the112-test suite plus the added live-wall regression. No further blocking code defect was found. Working tree was clean.
+
+Approval applies only to local deliverables and offline correctness. It does not erase prior tool output or invalidate the exposed live-wall token. Protected credential setup, coordinated gateway/cron rollout, live dependency validation and separate live-wall remediation remain blocked. The scanner currently does not detect YAML-style credential assignments; reviewed YAML contains no credential values, but future YAML changes need expanded coverage.

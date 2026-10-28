@@ -63,7 +63,7 @@ Jobs 21–26 must be identified through safe equality/metadata checks before cha
 
 ## Validation and evidence
 
-Draft unit suite: 113 passing tests, including credential resolution and transport cases. Build and 31-route inventory pass; all 30 Edge TypeScript files pass syntax transformation. No repository lint/typecheck scripts exist; syntax transformation is not full Deno type checking. Build ran without live credentials and skipped dynamic blog sitemap fetching. No production auth/checkout/email/worker checks were run. A separate implementation review pass and offline authorization tests are recorded in supabase-key-migration-review.md. No second-person approval or production validation has occurred.
+Draft unit suite: 113 passing tests, including credential resolution and transport cases. Build and 31-route inventory pass; all 30 Edge TypeScript files pass syntax transformation. No repository lint/typecheck scripts exist; syntax transformation is not full Deno type checking. Build ran without live credentials and skipped dynamic blog sitemap fetching. No production auth/checkout/email/worker checks were run. A separate implementation review pass and offline authorization tests are recorded in supabase-key-migration-review.md. Independent second-reviewer approval covers the offline implementation at33e31cdfd0c9a8660156cab14cd39db470858c3b; production validation remains outstanding.
 
 Official references:
 
