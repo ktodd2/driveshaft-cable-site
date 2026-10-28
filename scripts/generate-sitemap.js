@@ -20,7 +20,7 @@ async function fetchPublishedPosts() {
     `${url}/rest/v1/blog_posts?select=slug,updated_at,published_at&status=eq.published&order=published_at.desc`,
     { headers: { apikey: key } },
   )
-  if (!res.ok) throw new Error(`Supabase responded ${res.status}: ${await res.text()}`)
+  if (!res.ok) throw new Error('Supabase sitemap request failed')
   return res.json()
 }
 
@@ -34,7 +34,7 @@ async function main() {
   try {
     posts = await fetchPublishedPosts()
   } catch (err) {
-    console.warn(`[sitemap] Could not fetch blog posts — skipping: ${err.message}`)
+    console.warn('[sitemap] Could not fetch blog posts — skipping')
     return
   }
 

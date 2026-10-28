@@ -9,7 +9,8 @@
     "preview": "vite preview",
     "start": "vite preview --host 0.0.0.0 --port $PORT",
     "test": "node --test tests/unit/*.test.mjs",
-    "routes:check": "node scripts/route-inventory.mjs --check"
+    "routes:check": "node scripts/route-inventory.mjs --check",
+    "prebuild": "node scripts/verify-storefront-env.mjs"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
