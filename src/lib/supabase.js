@@ -1,11 +1,12 @@
+import { createApiClient } from '../../supabase/functions/_shared/supabaseTransport.js'
 import { createClient } from '@supabase/supabase-js'
 
 // These will be replaced with your actual Supabase credentials
 // Set these as environment variables in Render
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'YOUR_SUPABASE_URL'
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'YOUR_SUPABASE_ANON_KEY'
+const supabasePublishableKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || 'YOUR_SUPABASE_PUBLISHABLE_KEY'
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey)
+export const supabase = createApiClient(createClient, supabaseUrl, supabasePublishableKey)
 
 // Function to submit quote request
 export async function submitQuoteRequest(formData) {

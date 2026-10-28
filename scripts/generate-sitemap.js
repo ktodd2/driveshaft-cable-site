@@ -10,7 +10,7 @@ const SITE_URL = 'https://driveshaftcable.com'
 const SITEMAP_PATH = new URL('../dist/sitemap.xml', import.meta.url)
 
 // loadEnv reads .env files and process.env (Render injects the vars there)
-const { VITE_SUPABASE_URL: url, VITE_SUPABASE_ANON_KEY: key } = loadEnv('production', process.cwd(), 'VITE_')
+const { VITE_SUPABASE_URL: url, VITE_SUPABASE_PUBLISHABLE_KEY: key } = loadEnv('production', process.cwd(), 'VITE_')
 
 const escapeXml = (s) =>
   s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
@@ -18,15 +18,15 @@ const escapeXml = (s) =>
 async function fetchPublishedPosts() {
   const res = await fetch(
     `${url}/rest/v1/blog_posts?select=slug,updated_at,published_at&status=eq.published&order=published_at.desc`,
-    { headers: { apikey: key, Authorization: `Bearer ${key}` } },
+    { headers: { apikey: key } },
   )
-  if (!res.ok) throw new Error(`Supabase responded ${res.status}: ${await res.text()}`)
+  if (!res.ok) throw new Error('Supabase sitemap request failed')
   return res.json()
 }
 
 async function main() {
   if (!url || !key) {
-    console.warn('[sitemap] VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY not set — skipping blog posts')
+    console.warn('[sitemap] VITE_SUPABASE_URL / VITE_SUPABASE_PUBLISHABLE_KEY not set — skipping blog posts')
     return
   }
 
@@ -34,7 +34,7 @@ async function main() {
   try {
     posts = await fetchPublishedPosts()
   } catch (err) {
-    console.warn(`[sitemap] Could not fetch blog posts — skipping: ${err.message}`)
+    console.warn('[sitemap] Could not fetch blog posts — skipping')
     return
   }
 

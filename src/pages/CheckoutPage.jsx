@@ -183,7 +183,7 @@ function CheckoutPage() {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
-              'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+              'apikey': import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
             },
             body: JSON.stringify({
               items: items.map(item => ({
@@ -278,7 +278,7 @@ function CheckoutPage() {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+            'apikey': import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
           },
           body: JSON.stringify({ code, email }),
         }
@@ -419,7 +419,7 @@ function CheckoutPage() {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`
+            'apikey': import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY
           },
           // The server recomputes the total from the order row and refuses
           // if it doesn't match `amount` (what the customer is shown).
