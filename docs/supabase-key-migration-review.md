@@ -32,7 +32,7 @@ The other repository-backed files match live source, ignoring surrounding whites
 
 ## Reproducible offline checks
 
-- 112 unit tests pass. New handler tests exercise all seven existing machine-auth endpoints using absent credentials, public keys, wrong secret keys, legacy bearer fixtures and modern-key bearer fixtures. They reject before privileged DB work. Correct apikey reaches a mocked privileged boundary, which throws before any query, email or network call.
+- 113 unit tests pass. New handler tests exercise all seven existing machine-auth endpoints using absent credentials, public keys, wrong secret keys, legacy bearer fixtures and modern-key bearer fixtures. They reject before privileged DB work. Correct apikey reaches a mocked privileged boundary, which throws before any query, email or network call.
 - Modern key resolution/SDK header tests cover malformed/missing configuration, user JWT preservation, dedicated token preservation and request body/header handling.
 - Production frontend build and 31-route inventory pass. Build uses no live credentials and skips dynamic blog sitemap fetches.
 - All 30 Edge TypeScript files pass esbuild syntax transformation; this is not Deno type checking. The repository defines no lint/typecheck scripts.

@@ -79,7 +79,7 @@ function summarize(orders: any[], costMap: Record<string, number>, since: Date) 
 
 Deno.serve(async (req: Request) => {
   const supplied = (req.headers.get('Authorization') || '').replace(/^Bearer\s+/i, '')
-  if (supplied !== WALL_TOKEN) {
+  if (!WALL_TOKEN || supplied !== WALL_TOKEN) {
     return new Response(JSON.stringify({ error: 'unauthorized' }), {
       status: 401, headers: { 'Content-Type': 'application/json' },
     })
