@@ -22,7 +22,7 @@ Required destinations at cutover:
 |---|---|---|
 | store_web publishable key | Render `VITE_SUPABASE_PUBLISHABLE_KEY`; Edge named dictionary or optional override | Browser/API client, user-scoped Edge clients |
 | store_backend secret key | Edge named dictionary or optional override; Vault `store_backend_api_key` | Privileged DB clients and authenticated backend calls |
-| Dedicated random GA4 token | Edge `GA4_WORKER_TOKEN`; Vault `ga4_worker_token` | Worker authentication only |
+| Dedicated random GA4 token | Edge `GA4_WORKER_TOKEN_V2`; Vault `ga4_worker_token` | Worker authentication only |
 
 ## Credential-free cron configuration to prepare
 
@@ -45,7 +45,7 @@ For job 28 (GA4), retain its dedicated bearer-token mechanism and use:
    where name = 'ga4_worker_token')
 ```
 
-Only during the coordinated cutover, briefly pause job 28, privately replace Edge `GA4_WORKER_TOKEN` with that same token, deploy the reviewed worker with gateway settings compatible with its dedicated token, update job 28's Vault reference, verify authentication without claiming/sending purchases, then restore its existing every-minute schedule. The current live gateway has verify_jwt=true; a random worker token cannot simply replace the JWT under that configuration. The in-code token check must remain active. Do not manually invoke the worker as a test; pending real purchases could be sent.
+Only during the coordinated cutover, briefly pause job 28, confirm the unused Edge `GA4_WORKER_TOKEN_V2` was privately staged earlier with that same token, deploy the reviewed worker with gateway settings compatible with its dedicated token, update job 28's Vault reference, verify authentication without claiming/sending purchases, then restore its existing every-minute schedule. The current live gateway has verify_jwt=true; a random worker token cannot simply replace the JWT under that configuration. The in-code token check must remain active. Do not manually invoke the worker as a test; pending real purchases could be sent.
 
 Jobs 21–26 must be identified through safe equality/metadata checks before changing them. They may use the separate `CRON_TRIGGER_KEY`. Job 27 has no HTTP credential dependency. Do not invoke setup-cron-jobs during migration: it changes schedules. The draft now adds caller authorization and removes raw cron configuration from its response.
 
@@ -102,3 +102,9 @@ Verified dependency chain:
 The proxy already keeps this credential server-side. No Houston architecture rewrite or unrelated code change is needed. Actual Render STORE_STATS_TOKEN presence/value and owner-authenticated display health were not inspected and remain verification steps.
 
 Bounded remaining work: privately stage the replacement token in Supabase LIVE_WALL_TOKEN and the identified Render service's STORE_STATS_TOKEN; keep STORE_STATS_URL, cache settings, login credentials, NETMON_* and other settings unchanged. Coordinate the reviewed endpoint deployment and a deployment of the existing Houston build with its updated token; do not accidentally deploy newer unrelated repository changes. Cross-provider credential replacement is not atomic, so plan the switchover window explicitly (existing response caching is not a zero-downtime guarantee). Do not switch either endpoint/caller before both sides are prepared. Then confirm valid caller behavior and old-token rejection with non-data-returning checks. Endpoint draft also requires modern Supabase backend-key setup, so coordinate that prerequisite with the broader migration. No production change has occurred.
+
+## Current worker staging plan (supersedes active-token replacement instructions)
+
+The replacement Vault ga4_worker_token now exists exactly once. To remove the need for owner credential entry during a paused cron window, the draft worker reads only GA4_WORKER_TOKEN_V2, with no fallback to the exposed GA4_WORKER_TOKEN. The owner can privately add GA4_WORKER_TOKEN_V2 to Edge Secrets now, using the same saved Driveshaft GA4 worker password. Existing live code still reads GA4_WORKER_TOKEN, so staging V2 does not change its authorization. Leave the existing token and current cron/Vault reference untouched at this stage.
+
+After named-key runtime readiness and review gates pass: pause job28 for a bounded cutover; deploy the reviewed worker with the staged V2 setting and appropriate gateway configuration; switch cron to Vault ga4_worker_token; perform no-claim authorization validation; restore the original minute schedule and check health. No private credential entry is needed during this window. On failure, keep the job paused only as necessary for a reviewed modern-credential recovery; never silently reactivate compromised access. Remove the unused legacy custom worker secret only after successful validation, through the protected owner handoff.

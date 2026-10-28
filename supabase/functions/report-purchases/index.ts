@@ -7,7 +7,7 @@ import { measurementPayload, transmitPurchase } from '../_shared/ga4Outbox.js'
 
 serve(async req => {
   const serviceKey = getSupabaseSecretKey()
-  const workerToken = Deno.env.get('GA4_WORKER_TOKEN')
+  const workerToken = Deno.env.get('GA4_WORKER_TOKEN_V2')
   if (!serviceKey || !workerToken || req.headers.get('Authorization') !== `Bearer ${workerToken}`) return new Response('Unauthorized', { status: 401 })
   if (req.method !== 'POST') return new Response('Method not allowed', { status: 405 })
   const secret = Deno.env.get('GA4_API_SECRET')

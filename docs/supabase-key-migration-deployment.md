@@ -17,7 +17,7 @@ Do not execute this worksheet until protected credential setup, independent revi
 | newsletter-confirm | 7 | true | Newsletter confirmation token |
 | newsletter-subscribe | 8 | true | Intended guest/public workflow; preserve existing payload/business validation |
 | process-testimonial-queue | 11 | true | Configured backend apikey or validated active admin_users membership |
-| report-purchases | 8 | true | Dedicated GA4_WORKER_TOKEN; never backend-key substitution |
+| report-purchases | 8 | true | Dedicated GA4_WORKER_TOKEN_V2 in draft; existing worker remains on GA4_WORKER_TOKEN until cutover |
 | send-abandoned-cart | 12 | false | Configured backend apikey or validated active admin_users membership; existing CRON_TRIGGER_KEY retained |
 | send-delivery-email | 8 | true | Configured backend apikey or validated active admin_users membership |
 | send-marketing-email | 21 | true | Configured backend apikey or validated active admin_users membership; existing CRON_TRIGGER_KEY retained |
@@ -39,7 +39,7 @@ Do not execute this worksheet until protected credential setup, independent revi
 3. Confirm complete consumers: browser and cached tabs, sitemap/build, SDK clients, all Edge bundles, nested Edge invocations, auth/storage access, cron/Vault, public DB triggers, and external integrations. Unverified consumers block retirement.
 4. Review each gateway setting against the authority in the table. Modern apikey-only and dedicated-token calls need a compatible gateway configuration; existing signed user JWTs must still be verified in code against active membership. Existing false flags are not a reason to loosen any in-code guard.
 5. Stage backend deployments with required named keys already present. Coordinate changes to jobs 2/4/21–26 with their target handlers; preserve schedule/body/timeout and existing independent cron tokens. Pause affected jobs only for the bounded switch if overlap cannot be authenticated. Never manually invoke sending jobs as a probe.
-6. Coordinate worker job28: pause, owner updates active Edge GA4_WORKER_TOKEN from privately staged dedicated token, deploy reviewed worker with compatible gateway flag, switch Vault reference to ga4_worker_token, verify auth without claiming rows, resume original every-minute schedule. Preserve durable outbox and do not backfill.
+6. Coordinate worker job28: first confirm owner already staged unused Edge GA4_WORKER_TOKEN_V2 from the dedicated token; only then pause and deploy reviewed worker with compatible gateway flag, switch Vault reference to ga4_worker_token, verify auth without claiming rows, resume original every-minute schedule. Preserve durable outbox and do not backfill.
 7. Rebuild the frontend using VITE_SUPABASE_PUBLISHABLE_KEY only after backend callers/gateways are ready. A plain redeploy of old static assets does not substitute new Vite build variables.
 8. Run safe live checks: intended anonymous access, active-admin login, ordinary-user rejection, backend zero-row reads, storage authorization, checkout code paths without order creation, valid/invalid webhook checks without events/charges, and scheduler authentication without sends. Verify normal scheduled health through metadata, not response payloads.
 9. Only after every dependency and validation passes, disable the legacy anon/service_role pair. Do not rotate JWT signing keys. Verify old access is rejected with non-data-returning requests and replacement paths remain healthy.

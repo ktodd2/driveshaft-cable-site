@@ -59,3 +59,8 @@ The draft now reads LIVE_WALL_TOKEN from environment; retained live-wall source 
 Second reviewer approved offline implementation at 33e31cdfd0c9a8660156cab14cd39db470858c3b. It verified 141 shipped-source files across sanitized unpublished history and 44 retained snapshot files without credential findings, confirmed former credential-bearing commits removed and Git integrity/unreachable-object checks clean, and independently passed the112-test suite plus the added live-wall regression. No further blocking code defect was found. Working tree was clean.
 
 Approval applies only to local deliverables and offline correctness. It does not erase prior tool output or invalidate the exposed live-wall token. Protected credential setup, coordinated gateway/cron rollout, live dependency validation and separate live-wall remediation remain blocked. The scanner currently does not detect YAML-style credential assignments; reviewed YAML contains no credential values, but future YAML changes need expanded coverage.
+
+
+## Dedicated worker V2 staging follow-up
+
+Independent reviewer approved the offline V2-only worker change and staging sequence. The full 113-test suite passes, including missing V2, legacy-only configuration, and rejection of the distinct original token while V2 is configured. No production deployment was performed. After coordinated deployment, authenticated GET can validate authorization via 405 without DB initialization or claims; wrong/missing authorization must return 401. This requires protected runtime-side credential transport and verified gateway behavior, and does not establish backend-key validity or cron health.
