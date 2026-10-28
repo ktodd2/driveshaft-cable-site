@@ -1,14 +1,12 @@
 {
   "project": "twrihhyfvomqiqbxkitc",
-  "code_commit": "1259a736c3c343342d4d75a864a1a2a4cccfb4e9",
+  "edge_code_commit": "1259a736c3c343342d4d75a864a1a2a4cccfb4e9",
+  "frontend_merge_commit": "fc8ba1aad480ede81450821356e4026b401992c8",
+  "frontend_deploy_id": "dep-dbgobj942hec739591cg",
   "legacy_keys_disabled": false,
-  "frontend_published": false,
-  "blocked_deployments": [
-    "stripe-webhook",
-    "netmon-ingest"
-  ],
+  "frontend_published": true,
+  "blocked_deployments": [],
   "held_deployments": [
-    "netmon-status",
     "live-wall-stats"
   ],
   "functions": [
@@ -21,10 +19,10 @@
     },
     {
       "name": "stripe-webhook",
-      "version": 26,
+      "version": 27,
       "status": "ACTIVE",
       "verify_jwt": false,
-      "bundle_sha256": "3c4183f8e9c9eac4094100ff29c3e589f4f6de8c1a55ac22b3caf2bfc5f11639"
+      "bundle_sha256": "1787b024d0f8ac66725aba0195b32366eb4ab35715bf382b54a074327d43c118"
     },
     {
       "name": "send-tracking-email",
@@ -168,17 +166,17 @@
     },
     {
       "name": "netmon-ingest",
-      "version": 9,
+      "version": 10,
       "status": "ACTIVE",
       "verify_jwt": false,
-      "bundle_sha256": "26a62868c43ddd64557ce3a22e57205b133674b95256b641deebe278d40099ed"
+      "bundle_sha256": "fa103334dcc28d1cb6006c39b7a2bc9902e36ac74d6e74a356fedc0b1e30093f"
     },
     {
       "name": "netmon-status",
-      "version": 9,
+      "version": 10,
       "status": "ACTIVE",
       "verify_jwt": false,
-      "bundle_sha256": "8c9c9b9e9dbbafb8dcbdb4434dbedcfb5658c2c9700e074cfa959139ec96b6a8"
+      "bundle_sha256": "bcc238aa054c0c767f62f5aa728b54d3ddafd3b1b84bb9816141189545cdac63"
     },
     {
       "name": "verify-purchase",
