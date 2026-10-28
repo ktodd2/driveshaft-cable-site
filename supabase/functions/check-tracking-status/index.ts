@@ -204,6 +204,9 @@ serve(async (req) => {
     return new Response('Unauthorized', { status: 401, headers: corsHeaders })
   }
 
+  // Authentication probes must never run scheduled or sending work.
+  if (req.method !== 'POST') return new Response('Method not allowed', { status: 405 })
+
   const supabaseUrl  = Deno.env.get('SUPABASE_URL')!
   const serviceKey   = getSupabaseSecretKey()!
   const supa = createApiClient(createClient, supabaseUrl, serviceKey)

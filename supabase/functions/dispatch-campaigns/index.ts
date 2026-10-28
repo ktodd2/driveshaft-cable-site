@@ -51,6 +51,9 @@ serve(async (req) => {
     return json({ error: 'Unauthorized' }, 401)
   }
 
+  // Authentication probes must never run scheduled or sending work.
+  if (req.method !== 'POST') return new Response('Method not allowed', { status: 405 })
+
   const supabase = createApiClient(createClient, supabaseUrl, serviceRoleKey)
 
   const { data: due, error } = await supabase

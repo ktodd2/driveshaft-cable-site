@@ -249,6 +249,9 @@ serve(async (req) => {
     )
   }
 
+  // Authentication probes must never run scheduled or sending work.
+  if (req.method !== 'POST') return new Response('Method not allowed', { status: 405 })
+
   const supabase = createApiClient(createClient, supabaseUrl, serviceRoleKey)
   const resendApiKey = Deno.env.get('RESEND_API_KEY')
   if (!resendApiKey) {

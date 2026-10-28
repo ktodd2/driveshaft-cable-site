@@ -65,6 +65,9 @@ serve(async (req) => {
     return new Response('Unauthorized', { status: 401 })
   }
 
+  // Authentication probes must never run scheduled or sending work.
+  if (req.method !== 'POST') return new Response('Method not allowed', { status: 405 })
+
 
   const cronKey = Deno.env.get('CRON_TRIGGER_KEY')
   if (!cronKey) {

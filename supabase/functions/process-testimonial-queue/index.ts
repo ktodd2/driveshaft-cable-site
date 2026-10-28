@@ -114,6 +114,9 @@ serve(async (req) => {
     )
   }
 
+  // Authentication probes must never run scheduled or sending work.
+  if (req.method !== 'POST') return new Response('Method not allowed', { status: 405 })
+
   // From here on use service-role for the actual DB work.
   const supabase = createApiClient(createClient, supabaseUrl, serviceRoleKey)
   const resendApiKey = Deno.env.get('RESEND_API_KEY')

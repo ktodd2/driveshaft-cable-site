@@ -21,6 +21,7 @@ function load(name, { validUser = false, activeAdmin = false } = {}) {
     console: { error() {}, log() {}, warn() {} },
     getSupabaseSecretKey: () => backend, getSupabasePublishableKey: () => publicKey,
     hasBackendApiKey, createApiClient, isActiveAdmin,
+    authorizeStoreRequest: async req => req.headers.get('apikey') === backend,
     Deno: { env: { get: name => ({ SUPABASE_URL: 'https://offline.test', CRON_TRIGGER_KEY: 'offline-cron-fixture' })[name] } },
     createClient: (_url, key) => {
       if (key === backend) { privileged++; throw stop }
@@ -68,5 +69,17 @@ for (const name of functions) {
     const admin = load(name, { validUser: true, activeAdmin: true })
     await assert.rejects(admin.handler(request()), error => error === admin.stop)
     assert.deepEqual(admin.counts(), { privileged: 1, network: 0 })
+  })
+}
+
+for (const name of [...functions.filter(name => name !== 'send-marketing-email'), 'generate-blog-post', 'check-tracking-status', 'setup-cron-jobs']) {
+  test(`${name}: authenticated GET verifies authority without privileged work`, async () => {
+    const fixture = load(name)
+    const response = await fixture.handler(new Request('https://offline.test', { headers: { apikey: backend } }))
+    assert.equal(response.status, 405)
+    assert.deepEqual(fixture.counts(), { privileged: 0, network: 0 })
+    const unauthenticated = load(name)
+    assert.equal((await unauthenticated.handler(new Request('https://offline.test'))).status, 401)
+    assert.deepEqual(unauthenticated.counts(), { privileged: 0, network: 0 })
   })
 }
