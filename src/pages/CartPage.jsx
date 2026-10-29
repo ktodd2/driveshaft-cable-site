@@ -23,6 +23,7 @@ import {
 } from '../stores/cartStore'
 import SaleCountdown from '../components/common/SaleCountdown'
 import SEOHead from '../components/common/SEOHead'
+import CartProductImage from '../components/cart/CartProductImage'
 import { volumePricingRows } from '../lib/productPresentation'
 
 function CartPage() {
@@ -191,13 +192,7 @@ function CartPage() {
                     <div className="flex gap-4 sm:gap-6">
                       {/* Product Image */}
                       <Link to={`/products/${item.slug}`} className="flex-shrink-0">
-                        <div className="w-24 h-24 sm:w-32 sm:h-32 bg-gradient-to-br from-gray-700 to-gray-800 flex items-center justify-center">
-                          <svg viewBox="0 0 100 80" className="w-20 h-16">
-                            <path d="M 15 40 Q 50 20 85 40" stroke="#9CA3AF" strokeWidth="4" fill="none" />
-                            <rect x="5" y="32" width="18" height="16" rx="2" fill="#D4A017" />
-                            <rect x="77" y="32" width="18" height="16" rx="2" fill="#D4A017" />
-                          </svg>
-                        </div>
+                        <CartProductImage item={item} />
                       </Link>
 
                       {/* Product Info */}
