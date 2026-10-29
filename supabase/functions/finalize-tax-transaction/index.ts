@@ -1,3 +1,6 @@
+import { authorizeStoreRequest } from '../_shared/storeAuthorization.js'
+import { createApiClient } from '../_shared/supabaseTransport.js'
+import { getSupabaseSecretKey } from '../_shared/supabaseKeys.js'
 // Finalizes a Stripe Tax calculation into a transaction. This is what makes
 // the sale show up in Stripe Tax's filing reports — a calculation alone never
 // appears in reports.
@@ -15,10 +18,6 @@ import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import Stripe from 'https://esm.sh/stripe@13.10.0?target=deno'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
-const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY') as string, {
-  apiVersion: '2023-10-16',
-})
-
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
@@ -29,10 +28,17 @@ serve(async (req) => {
     return new Response('ok', { headers: corsHeaders })
   }
 
+  if (!await authorizeStoreRequest(req, createClient)) {
+    return new Response('Unauthorized', { status: 401, headers: corsHeaders })
+  }
+
   try {
+    const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY') as string, {
+      apiVersion: '2023-10-16',
+    })
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!
-    const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
-    const adminClient = createClient(supabaseUrl, serviceRoleKey)
+    const serviceRoleKey = getSupabaseSecretKey()!
+    const adminClient = createApiClient(createClient, supabaseUrl, serviceRoleKey)
 
     const { calculationId, orderId } = await req.json()
 

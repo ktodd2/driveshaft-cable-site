@@ -1,3 +1,6 @@
+import { isActiveAdmin } from '../_shared/storeAuthorization.js'
+import { createApiClient } from '../_shared/supabaseTransport.js'
+import { getSupabaseSecretKey, getSupabasePublishableKey, hasBackendApiKey } from '../_shared/supabaseKeys.js'
 // Process the testimonial-request queue.
 //
 // Finds paid orders 14+ days old whose owners haven't been asked yet, creates
@@ -85,23 +88,23 @@ serve(async (req) => {
   }
 
   // Two callers are allowed:
-  //   - pg_cron sends Bearer <service_role_key>
+  //   - pg_cron sends the named backend key on apikey
   //   - The admin "Send pending requests" button sends Bearer <user_jwt>
   // Anything else is rejected.
   const supabaseUrl = Deno.env.get('SUPABASE_URL')!
-  const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+  const serviceRoleKey = getSupabaseSecretKey()!
   const authHeader = req.headers.get('Authorization') || ''
   const token = authHeader.replace(/^Bearer\s+/i, '')
 
   let authorized = false
-  if (token && token === serviceRoleKey) {
+  if (hasBackendApiKey(req, serviceRoleKey)) {
     authorized = true
   } else if (token) {
-    const userClient = createClient(supabaseUrl, Deno.env.get('SUPABASE_ANON_KEY')!, {
+    const userClient = createApiClient(createClient, supabaseUrl, getSupabasePublishableKey()!, {
       global: { headers: { Authorization: `Bearer ${token}` } },
     })
-    const { data: { user } } = await userClient.auth.getUser(token)
-    if (user) authorized = true
+    const { data: { user }, error: authError } = await userClient.auth.getUser(token)
+    if (!authError && user) authorized = await isActiveAdmin(userClient, user.id)
   }
 
   if (!authorized) {
@@ -111,8 +114,11 @@ serve(async (req) => {
     )
   }
 
+  // Authentication probes must never run scheduled or sending work.
+  if (req.method !== 'POST') return new Response('Method not allowed', { status: 405 })
+
   // From here on use service-role for the actual DB work.
-  const supabase = createClient(supabaseUrl, serviceRoleKey)
+  const supabase = createApiClient(createClient, supabaseUrl, serviceRoleKey)
   const resendApiKey = Deno.env.get('RESEND_API_KEY')
   if (!resendApiKey) {
     return new Response(

@@ -1,3 +1,6 @@
+import { authorizeStoreRequest } from '../_shared/storeAuthorization.js'
+import { createApiClient } from '../_shared/supabaseTransport.js'
+import { getSupabaseSecretKey } from '../_shared/supabaseKeys.js'
 // Polls USPS and UPS for every shipped order's tracking status, normalizes
 // the carrier-specific status into a common vocabulary, and when a package
 // is delivered flips order.status to 'delivered', sets delivered_at, and
@@ -197,9 +200,16 @@ serve(async (req) => {
     return new Response('ok', { headers: corsHeaders })
   }
 
+  if (!await authorizeStoreRequest(req, createClient, { allowCron: true })) {
+    return new Response('Unauthorized', { status: 401, headers: corsHeaders })
+  }
+
+  // Authentication probes must never run scheduled or sending work.
+  if (req.method !== 'POST') return new Response('Method not allowed', { status: 405 })
+
   const supabaseUrl  = Deno.env.get('SUPABASE_URL')!
-  const serviceKey   = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
-  const supa = createClient(supabaseUrl, serviceKey)
+  const serviceKey   = getSupabaseSecretKey()!
+  const supa = createApiClient(createClient, supabaseUrl, serviceKey)
 
   // Fetch OAuth tokens once per invocation (instead of per order). null means
   // creds for that carrier aren't set — we still process the OTHER carrier.

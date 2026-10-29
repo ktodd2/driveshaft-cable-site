@@ -1,0 +1,353 @@
+{
+  "create-payment-intent": {
+    "version": 23,
+    "verify_jwt": true,
+    "bundle_sha256": "c9330148b7ec17f5d02e3491fd7e22cbbb17755fade7db001b03867783e63ff8",
+    "files": [
+      {
+        "path": "supabase/functions/create-payment-intent/index.ts",
+        "source_sha256": "d4b40a726e4e4b9216fa6720f3fda650b86413cd08e4ae861dee718a2a50d491"
+      },
+      {
+        "path": "supabase/functions/_shared/ga4Outbox.js",
+        "source_sha256": "aa3be7edbdcd3959e91f94e8a92f313614f38d076e3cb2c42d3d41de21ea2423"
+      },
+      {
+        "path": "supabase/functions/_shared/purchaseAnalytics.js",
+        "source_sha256": "4152a24e353355e3a31bb552881dcf5e06061439d970a5a413358fd21380aec4"
+      },
+      {
+        "path": "supabase/functions/_shared/pricing.ts",
+        "source_sha256": "6f89efbe4caa82ff3f97556b7a78a16a6bb9b0fe2d2c0111b6c51c4447a75810"
+      },
+      {
+        "path": "supabase/functions/_shared/discounts.ts",
+        "source_sha256": "6d4c3b2168d9ef228220469822908dc6f2828fa995257108588302ed673a6a8e"
+      },
+      {
+        "path": "supabase/functions/_shared/tax.ts",
+        "source_sha256": "474fc86a54fdee45103546c134b0b1b37adbb4c757756bd7792a8852bdce5b98"
+      }
+    ]
+  },
+  "stripe-webhook": {
+    "version": 23,
+    "verify_jwt": false,
+    "bundle_sha256": "3c4183f8e9c9eac4094100ff29c3e589f4f6de8c1a55ac22b3caf2bfc5f11639",
+    "files": [
+      {
+        "path": "supabase/functions/stripe-webhook/index.ts",
+        "source_sha256": "34d336ff085fbba7c5b268386e4660ebbb8fa4add2ef72971fa7c08d7e58b597"
+      }
+    ]
+  },
+  "send-tracking-email": {
+    "version": 20,
+    "verify_jwt": true,
+    "bundle_sha256": "fbc37b9d74fb86e90f8a976a8c305419eab185810b0352dcfc1dbd8fe05a585f",
+    "files": [
+      {
+        "path": "supabase/functions/send-tracking-email/index.ts",
+        "source_sha256": "ff79010a24dac3aed4243e4f14f783f8d5ae2d2f58fb82d8a64dc4cee51b5ff4"
+      }
+    ]
+  },
+  "send-quote-notification": {
+    "version": 18,
+    "verify_jwt": true,
+    "bundle_sha256": "516896352b542467373448eacaf1441b8ceabdd4255eab0d772e8bc8b388665e",
+    "files": [
+      {
+        "path": "supabase/functions/send-quote-notification/index.ts",
+        "source_sha256": "7584758323c436611d22a7a0766dd8b12e7da87bb56d007ea208690f67573e97"
+      }
+    ]
+  },
+  "send-marketing-email": {
+    "version": 21,
+    "verify_jwt": true,
+    "bundle_sha256": "8c60b1dfbb2de52e292c5174a1465ce41510d7d0a9dd82b540620f5f744970eb",
+    "files": [
+      {
+        "path": "supabase/functions/send-marketing-email/index.ts",
+        "source_sha256": "ebc6aac74d78f8594f4d5da7b169fddef200d827a9563694a7b72f22821ee089"
+      }
+    ]
+  },
+  "generate-blog-post": {
+    "version": 22,
+    "verify_jwt": true,
+    "bundle_sha256": "df297068faaebd5f99aeee3e11e4c6bea8caf9965c2e931eb3e7b72204af40cd",
+    "files": [
+      {
+        "path": "supabase/functions/generate-blog-post/index.ts",
+        "source_sha256": "b6f3c85aa30142b938fa33f1af8ba824e40b319ee14a323cfd3b73cb8f61666e"
+      }
+    ]
+  },
+  "process-testimonial-queue": {
+    "version": 11,
+    "verify_jwt": true,
+    "bundle_sha256": "719ab5e4233c6b0a37ce5e80af0d5f3bfd2d865a0e0c14224b4d74012387fbad",
+    "files": [
+      {
+        "path": "supabase/functions/process-testimonial-queue/index.ts",
+        "source_sha256": "4ecb719adef61d933b8db17ff3c0feb2d78f2af6293504fcb511abefd587091e"
+      }
+    ]
+  },
+  "calculate-tax": {
+    "version": 13,
+    "verify_jwt": true,
+    "bundle_sha256": "ce21903c7c86aa851a83718bfd064de926ae92f8ba0f8cbeb3b8bbca15de740a",
+    "files": [
+      {
+        "path": "supabase/functions/calculate-tax/index.ts",
+        "source_sha256": "8ecbe516c22cd0462b475824811cfc09145730fcb75f85576e57bdf2f9bab6cc"
+      },
+      {
+        "path": "supabase/functions/_shared/pricing.ts",
+        "source_sha256": "6f89efbe4caa82ff3f97556b7a78a16a6bb9b0fe2d2c0111b6c51c4447a75810"
+      },
+      {
+        "path": "supabase/functions/_shared/tax.ts",
+        "source_sha256": "474fc86a54fdee45103546c134b0b1b37adbb4c757756bd7792a8852bdce5b98"
+      }
+    ]
+  },
+  "finalize-tax-transaction": {
+    "version": 8,
+    "verify_jwt": true,
+    "bundle_sha256": "fec482727f4659824c8d7a531064217985b1ca550aef3ad0a7c118f26e570a51",
+    "files": [
+      {
+        "path": "supabase/functions/finalize-tax-transaction/index.ts",
+        "source_sha256": "552253ea2b5ee3b74a0dd7e8c92be73b506d4ba2ca39216ba2ea9e6e6943224e"
+      }
+    ]
+  },
+  "validate-discount-code": {
+    "version": 9,
+    "verify_jwt": true,
+    "bundle_sha256": "539594dd82e659a2b69d45903ae4335695cc3b81a03507ef892a2a7d8bd8aa9b",
+    "files": [
+      {
+        "path": "supabase/functions/validate-discount-code/index.ts",
+        "source_sha256": "10292bd8316a6df2c57f21cb59b60e9c42d2575780e53a19e8008d2058ec97ac"
+      },
+      {
+        "path": "supabase/functions/_shared/discounts.ts",
+        "source_sha256": "6d4c3b2168d9ef228220469822908dc6f2828fa995257108588302ed673a6a8e"
+      }
+    ]
+  },
+  "send-abandoned-cart": {
+    "version": 12,
+    "verify_jwt": false,
+    "bundle_sha256": "54338af6ce885fe17a928c75a211deb9bfd04cd99a99dd50ec3c197b62c7376e",
+    "files": [
+      {
+        "path": "supabase/functions/send-abandoned-cart/index.ts",
+        "source_sha256": "962094674aedb11b0ec80dc6ffe27f668b6e67b7d5ec8f34d4611e83619eb664"
+      }
+    ]
+  },
+  "send-welcome-series": {
+    "version": 12,
+    "verify_jwt": false,
+    "bundle_sha256": "13d2aeba6d79e03b047a3104b6ba07d790bc526d451ae7a525197f3f4c7f39a9",
+    "files": [
+      {
+        "path": "supabase/functions/send-welcome-series/index.ts",
+        "source_sha256": "15d5dfc7bf98a464be8c197ac95f5136a05129d851100ab9257f99ac01cbdf33"
+      }
+    ]
+  },
+  "send-reorder-reminder": {
+    "version": 11,
+    "verify_jwt": false,
+    "bundle_sha256": "c62ee09b053b8bb8a2a494e5b32eb2029298cea78b2ba4c3a082a47b413cdeb9",
+    "files": [
+      {
+        "path": "supabase/functions/send-reorder-reminder/index.ts",
+        "source_sha256": "04bd5980510ea5d70ee1511a38fa499a30c322821137b093b34b69fdbe02f6c1"
+      }
+    ]
+  },
+  "send-winback": {
+    "version": 11,
+    "verify_jwt": false,
+    "bundle_sha256": "fed10762f96529b7fcc9e59d381743f39d0da0b11fb3647a8b98f56beee5a424",
+    "files": [
+      {
+        "path": "supabase/functions/send-winback/index.ts",
+        "source_sha256": "124cecddb19b23d5f5eb0e842f04d487e7927671757fdf8e348134c76e10b61e"
+      }
+    ]
+  },
+  "setup-cron-jobs": {
+    "version": 9,
+    "verify_jwt": true,
+    "bundle_sha256": "801b98c6d29fd5fdfe51242d9494b859ce21bcd841ad98287d3f56909ebb0465",
+    "files": [
+      {
+        "path": "supabase/functions/setup-cron-jobs/index.ts",
+        "source_sha256": "55f89176f0accd6fae43377f53d42aef80b218e97e5f0d4d1a273604fa5bc4d4"
+      }
+    ]
+  },
+  "check-tracking-status": {
+    "version": 8,
+    "verify_jwt": true,
+    "bundle_sha256": "3b4c15f09ac7379dbebaef4a5d20b8b88d113b77dcef555090d17c3551462fd3",
+    "files": [
+      {
+        "path": "supabase/functions/check-tracking-status/index.ts",
+        "source_sha256": "2dfbb0d68f536f66c34193d9afd0e75043e6c216a1d063873ee68d422053f48c"
+      }
+    ]
+  },
+  "send-delivery-email": {
+    "version": 8,
+    "verify_jwt": true,
+    "bundle_sha256": "e3d4a032a1390c49a52a04347bc23d769d373a6a280eb608e7005cee37c9e464",
+    "files": [
+      {
+        "path": "supabase/functions/send-delivery-email/index.ts",
+        "source_sha256": "c4738d91e8640a5c51819b8db349ce782c2c18bd236fcfa980621b660e4e9f3d"
+      }
+    ]
+  },
+  "dispatch-campaigns": {
+    "version": 7,
+    "verify_jwt": true,
+    "bundle_sha256": "682847f4b02bb2ae4bd1f6a3effe917454b559b377695e06366291b0c2ee4989",
+    "files": [
+      {
+        "path": "supabase/functions/dispatch-campaigns/index.ts",
+        "source_sha256": "0dd1c8e3ef297f4fc92269043ad26c5814682b40742ca26f7f36135ea6a5470f"
+      }
+    ]
+  },
+  "newsletter-subscribe": {
+    "version": 8,
+    "verify_jwt": true,
+    "bundle_sha256": "5f18ae56625b68f2a022c0f06da0891907e28e05d266b3376036468af13823bd",
+    "files": [
+      {
+        "path": "supabase/functions/newsletter-subscribe/index.ts",
+        "source_sha256": "10cf98071784f14e225082ca623f017da16256f100dceb96157067b074cffe82"
+      }
+    ]
+  },
+  "newsletter-confirm": {
+    "version": 7,
+    "verify_jwt": true,
+    "bundle_sha256": "1bbd5af0bdf9f7692b96ddb5d4b5bd1e021d2560eac3976a702759a2c0730add",
+    "files": [
+      {
+        "path": "supabase/functions/newsletter-confirm/index.ts",
+        "source_sha256": "a77b30e2c4931b285bdeff2569da6757c63d7a12b8a695c0b31653e13876be44"
+      }
+    ]
+  },
+  "live-wall-stats": {
+    "version": 8,
+    "verify_jwt": false,
+    "bundle_sha256": "ea0eb9069efc0f6fb5daa76fb8fd2b06b20863412dae49e3d84052ef6287f82b",
+    "files": [
+      {
+        "path": "supabase/functions/live-wall-stats/index.ts",
+        "source_sha256": "364f118b35a5c36befb5f51fc9810c8e59c00b0576d8f61a89e9ec32119d40c5"
+      }
+    ],
+    "snapshot_sanitized": true,
+    "credential_remediation_pending": true
+  },
+  "track-order": {
+    "version": 7,
+    "verify_jwt": true,
+    "bundle_sha256": "623689e044d24d340e30991abd2dab00caad6fe0c25740ef07b54a0c739d3357",
+    "files": [
+      {
+        "path": "supabase/functions/track-order/index.ts",
+        "source_sha256": "a0f86ff5267dff6fbe30b04eac951fac3ef67eab6cf15f77c20d51009639ed27"
+      }
+    ]
+  },
+  "netmon-ingest": {
+    "version": 6,
+    "verify_jwt": false,
+    "bundle_sha256": "26a62868c43ddd64557ce3a22e57205b133674b95256b641deebe278d40099ed",
+    "files": [
+      {
+        "path": "supabase/functions/netmon-ingest/index.ts",
+        "source_sha256": "50400d1189f83d6f6f99e4955ac5a2d27be15ed44c1dd8660ea993b928b9eb02"
+      }
+    ]
+  },
+  "netmon-status": {
+    "version": 6,
+    "verify_jwt": false,
+    "bundle_sha256": "8c9c9b9e9dbbafb8dcbdb4434dbedcfb5658c2c9700e074cfa959139ec96b6a8",
+    "files": [
+      {
+        "path": "supabase/functions/netmon-status/index.ts",
+        "source_sha256": "e150673704b2da752f8e1ad8ac5b8964456c3b9c29f366679c1483643aaeb747"
+      }
+    ]
+  },
+  "verify-purchase": {
+    "version": 7,
+    "verify_jwt": true,
+    "bundle_sha256": "3247f896af9fff4b81ab694b5b813179b6dec2461c6e59c7671aabe2d5326fb3",
+    "files": [
+      {
+        "path": "supabase/functions/verify-purchase/index.ts",
+        "source_sha256": "f30b217bf474d1281f1ba9adc0eb73ca89bd24872fb8f5458442ff058cc807d0"
+      },
+      {
+        "path": "supabase/functions/_shared/purchaseAnalytics.js",
+        "source_sha256": "4152a24e353355e3a31bb552881dcf5e06061439d970a5a413358fd21380aec4"
+      }
+    ]
+  },
+  "analytics-webhook": {
+    "version": 6,
+    "verify_jwt": false,
+    "bundle_sha256": "6f3733dd02c0b31e7edaabb4acc44e48f47efda203fdfd3c33265e41c0f06173",
+    "files": [
+      {
+        "path": "supabase/functions/analytics-webhook/index.ts",
+        "source_sha256": "cafdf416d27bbbae184804f3d4f18b5568a437673f32969224f24118b0a9695b"
+      },
+      {
+        "path": "supabase/functions/_shared/ga4Outbox.js",
+        "source_sha256": "aa3be7edbdcd3959e91f94e8a92f313614f38d076e3cb2c42d3d41de21ea2423"
+      },
+      {
+        "path": "supabase/functions/_shared/purchaseAnalytics.js",
+        "source_sha256": "4152a24e353355e3a31bb552881dcf5e06061439d970a5a413358fd21380aec4"
+      }
+    ]
+  },
+  "report-purchases": {
+    "version": 8,
+    "verify_jwt": true,
+    "bundle_sha256": "35b7db2448e851539f6cccc02f3da37632bc0bf054a66e9d7be724ae390ed0e0",
+    "files": [
+      {
+        "path": "supabase/functions/report-purchases/index.ts",
+        "source_sha256": "3a8e135d610424ba842e94cd5324ba377fc63833fda0e7db7c9c2f2a0fe72598"
+      },
+      {
+        "path": "supabase/functions/_shared/ga4Outbox.js",
+        "source_sha256": "aa3be7edbdcd3959e91f94e8a92f313614f38d076e3cb2c42d3d41de21ea2423"
+      },
+      {
+        "path": "supabase/functions/_shared/purchaseAnalytics.js",
+        "source_sha256": "4152a24e353355e3a31bb552881dcf5e06061439d970a5a413358fd21380aec4"
+      }
+    ]
+  }
+}

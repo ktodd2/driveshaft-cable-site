@@ -1,3 +1,6 @@
+import { isActiveAdmin } from '../_shared/storeAuthorization.js'
+import { createApiClient } from '../_shared/supabaseTransport.js'
+import { getSupabaseSecretKey, getSupabasePublishableKey, hasBackendApiKey } from '../_shared/supabaseKeys.js'
 // Scheduled every 15 minutes. Sends a 3-email welcome sequence to new
 // newsletter subscribers:
 //
@@ -6,7 +9,8 @@
 //   Day 7  — Customer testimonial + soft CTA
 //
 // Progress is tracked via newsletter_subscribers.welcome_stage (0 -> 1 -> 2 -> 3).
-// Stage 3 = done. Unsubscribed customers are excluded.
+// Stage 3 = done. Unsubscribed customers are excluded. Only double-opt-in
+// confirmed subscribers (confirmed = true) ever enter the series.
 
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
@@ -109,7 +113,7 @@ function buildDay3Html(firstName: string): string {
           </table>
 
           <p style="color:#d1d5db;font-size:16px;margin:0 0 24px;">
-            Plus free shipping on orders over $600.
+            Plus free shipping on orders over $400.
           </p>
 
           <table width="100%" cellpadding="0" cellspacing="0"><tr><td align="center">
@@ -225,18 +229,18 @@ serve(async (req) => {
   }
 
   const supabaseUrl = Deno.env.get('SUPABASE_URL')!
-  const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+  const serviceRoleKey = getSupabaseSecretKey()!
   const authHeader = req.headers.get('Authorization') || ''
   const token = authHeader.replace(/^Bearer\s+/i, '')
 
   const cronTriggerKey = Deno.env.get('CRON_TRIGGER_KEY') || ''
-  let authorized = token === serviceRoleKey || (cronTriggerKey && token === cronTriggerKey)
+  let authorized = hasBackendApiKey(req, serviceRoleKey) || (cronTriggerKey && token === cronTriggerKey)
   if (!authorized && token) {
-    const userClient = createClient(supabaseUrl, Deno.env.get('SUPABASE_ANON_KEY')!, {
+    const userClient = createApiClient(createClient, supabaseUrl, getSupabasePublishableKey()!, {
       global: { headers: { Authorization: `Bearer ${token}` } },
     })
-    const { data: { user } } = await userClient.auth.getUser(token)
-    if (user) authorized = true
+    const { data: { user }, error: authError } = await userClient.auth.getUser(token)
+    if (!authError && user) authorized = await isActiveAdmin(userClient, user.id)
   }
   if (!authorized) {
     return new Response(
@@ -245,7 +249,10 @@ serve(async (req) => {
     )
   }
 
-  const supabase = createClient(supabaseUrl, serviceRoleKey)
+  // Authentication probes must never run scheduled or sending work.
+  if (req.method !== 'POST') return new Response('Method not allowed', { status: 405 })
+
+  const supabase = createApiClient(createClient, supabaseUrl, serviceRoleKey)
   const resendApiKey = Deno.env.get('RESEND_API_KEY')
   if (!resendApiKey) {
     return new Response(
@@ -265,17 +272,20 @@ serve(async (req) => {
     supabase.from('newsletter_subscribers')
       .select('id, email, welcome_stage, subscribed_at')
       .eq('status', 'active')
+      .eq('confirmed', true)
       .eq('welcome_stage', 0)
       .limit(MAX_PER_RUN),
     supabase.from('newsletter_subscribers')
       .select('id, email, welcome_stage, subscribed_at')
       .eq('status', 'active')
+      .eq('confirmed', true)
       .eq('welcome_stage', 1)
       .lt('subscribed_at', threeDaysAgo)
       .limit(MAX_PER_RUN),
     supabase.from('newsletter_subscribers')
       .select('id, email, welcome_stage, subscribed_at')
       .eq('status', 'active')
+      .eq('confirmed', true)
       .eq('welcome_stage', 2)
       .lt('subscribed_at', sevenDaysAgo)
       .limit(MAX_PER_RUN),

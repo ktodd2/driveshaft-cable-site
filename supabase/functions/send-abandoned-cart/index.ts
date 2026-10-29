@@ -1,3 +1,6 @@
+import { isActiveAdmin } from '../_shared/storeAuthorization.js'
+import { createApiClient } from '../_shared/supabaseTransport.js'
+import { getSupabaseSecretKey, getSupabasePublishableKey, hasBackendApiKey } from '../_shared/supabaseKeys.js'
 // Scheduled hourly. Sends an abandoned-cart recovery email to customers who
 // entered their email at checkout step 1 but never reached payment.
 //
@@ -132,18 +135,18 @@ serve(async (req) => {
 
   // Cron sends the service role key; admin manual trigger sends a user JWT.
   const supabaseUrl = Deno.env.get('SUPABASE_URL')!
-  const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+  const serviceRoleKey = getSupabaseSecretKey()!
   const authHeader = req.headers.get('Authorization') || ''
   const token = authHeader.replace(/^Bearer\s+/i, '')
 
   const cronTriggerKey = Deno.env.get('CRON_TRIGGER_KEY') || ''
-  let authorized = token === serviceRoleKey || (cronTriggerKey && token === cronTriggerKey)
+  let authorized = hasBackendApiKey(req, serviceRoleKey) || (cronTriggerKey && token === cronTriggerKey)
   if (!authorized && token) {
-    const userClient = createClient(supabaseUrl, Deno.env.get('SUPABASE_ANON_KEY')!, {
+    const userClient = createApiClient(createClient, supabaseUrl, getSupabasePublishableKey()!, {
       global: { headers: { Authorization: `Bearer ${token}` } },
     })
-    const { data: { user } } = await userClient.auth.getUser(token)
-    if (user) authorized = true
+    const { data: { user }, error: authError } = await userClient.auth.getUser(token)
+    if (!authError && user) authorized = await isActiveAdmin(userClient, user.id)
   }
   if (!authorized) {
     return new Response(
@@ -152,7 +155,10 @@ serve(async (req) => {
     )
   }
 
-  const supabase = createClient(supabaseUrl, serviceRoleKey)
+  // Authentication probes must never run scheduled or sending work.
+  if (req.method !== 'POST') return new Response('Method not allowed', { status: 405 })
+
+  const supabase = createApiClient(createClient, supabaseUrl, serviceRoleKey)
   const resendApiKey = Deno.env.get('RESEND_API_KEY')
   if (!resendApiKey) {
     return new Response(

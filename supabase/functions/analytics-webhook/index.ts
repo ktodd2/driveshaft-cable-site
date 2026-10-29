@@ -1,3 +1,5 @@
+import { createApiClient } from '../_shared/supabaseTransport.js'
+import { getSupabaseSecretKey } from '../_shared/supabaseKeys.js'
 // Separate destination: an analytics outage must never delay fulfillment, tax,
 // payment state, stock, discount redemption, or customer notifications.
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
@@ -7,7 +9,7 @@ import { enqueuePurchase } from '../_shared/ga4Outbox.js'
 
 const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY')!, { apiVersion: '2023-10-16' })
 const cryptoProvider = Stripe.createSubtleCryptoProvider()
-const db = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!)
+const db = createApiClient(createClient, Deno.env.get('SUPABASE_URL')!, getSupabaseSecretKey()!)
 serve(async req => {
   if (req.method !== 'POST') return new Response('Method not allowed', { status: 405 })
   let event

@@ -1,3 +1,5 @@
+import { createApiClient } from '../_shared/supabaseTransport.js'
+import { getSupabaseSecretKey } from '../_shared/supabaseKeys.js'
 // Public order lookup for /order-tracking.
 //
 // The customer supplies their email plus either an order number (the order
@@ -67,9 +69,9 @@ serve(async (req) => {
       return json({ orders: [] })
     }
 
-    const supabase = createClient(
+    const supabase = createApiClient(createClient,
       Deno.env.get('SUPABASE_URL')!,
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+      getSupabaseSecretKey()!
     )
 
     // ilike for case-insensitive email match; escape its wildcards so an

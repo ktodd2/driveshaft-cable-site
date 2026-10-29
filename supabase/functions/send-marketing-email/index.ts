@@ -1,3 +1,6 @@
+import { isActiveAdmin } from '../_shared/storeAuthorization.js'
+import { createApiClient } from '../_shared/supabaseTransport.js'
+import { getSupabaseSecretKey, getSupabasePublishableKey, hasBackendApiKey } from '../_shared/supabaseKeys.js'
 // Marketing campaign sender.
 //
 // Previously this function would re-blast the entire customer list on every
@@ -82,25 +85,25 @@ serve(async (req) => {
   }
 
   const supabaseUrl = Deno.env.get('SUPABASE_URL')!
-  const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+  const serviceRoleKey = getSupabaseSecretKey()!
   const cronTriggerKey = Deno.env.get('CRON_TRIGGER_KEY') || ''
   const token = (req.headers.get('Authorization') || '').replace(/^Bearer\s+/i, '')
 
   // Auth guard. This function can mail every customer on file — it must never
   // be callable by anyone who simply knows the URL.
-  let authorized = token === serviceRoleKey || (!!cronTriggerKey && token === cronTriggerKey)
+  let authorized = hasBackendApiKey(req, serviceRoleKey) || (!!cronTriggerKey && token === cronTriggerKey)
   if (!authorized && token) {
-    const userClient = createClient(supabaseUrl, Deno.env.get('SUPABASE_ANON_KEY')!, {
+    const userClient = createApiClient(createClient, supabaseUrl, getSupabasePublishableKey()!, {
       global: { headers: { Authorization: `Bearer ${token}` } },
     })
-    const { data: { user } } = await userClient.auth.getUser(token)
-    if (user) authorized = true
+    const { data: { user }, error: authError } = await userClient.auth.getUser(token)
+    if (!authError && user) authorized = await isActiveAdmin(userClient, user.id)
   }
   if (!authorized) {
     return json({ error: 'Unauthorized' }, 401)
   }
 
-  const adminClient = createClient(supabaseUrl, serviceRoleKey)
+  const adminClient = createApiClient(createClient, supabaseUrl, serviceRoleKey)
 
   // Tracked outside the try so the error path can drop a lease we already took.
   let claimedCampaignId: number | null = null
@@ -178,7 +181,7 @@ serve(async (req) => {
     const [orderEmails, quoteEmails, subscriberEmails] = await Promise.all([
       fetchAllEmails(adminClient, 'orders', q => q.eq('payment_status', 'paid')),
       fetchAllEmails(adminClient, 'quote_requests'),
-      fetchAllEmails(adminClient, 'newsletter_subscribers', q => q.eq('status', 'active')),
+      fetchAllEmails(adminClient, 'newsletter_subscribers', q => q.eq('status', 'active').eq('confirmed', true)),
     ])
 
     const audience = new Set<string>()

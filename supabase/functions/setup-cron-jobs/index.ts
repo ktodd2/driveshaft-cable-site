@@ -1,3 +1,6 @@
+import { authorizeStoreRequest } from '../_shared/storeAuthorization.js'
+import { createApiClient } from '../_shared/supabaseTransport.js'
+import { getSupabaseSecretKey } from '../_shared/supabaseKeys.js'
 // One-time setup function. Idempotent and safe to re-run.
 //
 // Reads CRON_TRIGGER_KEY from edge function env (set via `supabase secrets set`)
@@ -57,7 +60,15 @@ const CRON_JOBS: CronJob[] = [
   },
 ]
 
-serve(async (_req) => {
+serve(async (req) => {
+  if (!await authorizeStoreRequest(req, createClient)) {
+    return new Response('Unauthorized', { status: 401 })
+  }
+
+  // Authentication probes must never run scheduled or sending work.
+  if (req.method !== 'POST') return new Response('Method not allowed', { status: 405 })
+
+
   const cronKey = Deno.env.get('CRON_TRIGGER_KEY')
   if (!cronKey) {
     return new Response(
@@ -66,9 +77,9 @@ serve(async (_req) => {
     )
   }
 
-  const supabase = createClient(
+  const supabase = createApiClient(createClient,
     Deno.env.get('SUPABASE_URL')!,
-    Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+    getSupabaseSecretKey()!
   )
 
   const results: Record<string, string> = {}
@@ -80,15 +91,11 @@ serve(async (_req) => {
       function_url: `${FUNCTIONS_BASE}/${job.functionSlug}`,
       trigger_key: cronKey,
     })
-    results[job.name] = error ? `failed: ${error.message}` : `scheduled: ${job.description}`
+    results[job.name] = error ? 'failed' : `scheduled: ${job.description}`
   }
 
-  // List what's actually in cron.job now for the response so the caller
-  // can verify everything took.
-  const { data: liveJobs } = await supabase.rpc('list_email_cron_jobs')
-
   return new Response(
-    JSON.stringify({ results, liveJobs: liveJobs || [] }, null, 2),
+    JSON.stringify({ results }, null, 2),
     { status: 200, headers: { 'Content-Type': 'application/json' } }
   )
 })

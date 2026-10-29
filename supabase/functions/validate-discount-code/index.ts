@@ -1,3 +1,5 @@
+import { createApiClient } from '../_shared/supabaseTransport.js'
+import { getSupabaseSecretKey } from '../_shared/supabaseKeys.js'
 // Validates a discount code at checkout.
 //
 // Valid codes live in _shared/discounts.ts (DISCOUNT_CODES), which
@@ -24,9 +26,9 @@ serve(async (req) => {
   try {
     const { code, email } = await req.json()
 
-    const supabase = createClient(
+    const supabase = createApiClient(createClient,
       Deno.env.get('SUPABASE_URL')!,
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+      getSupabaseSecretKey()!
     )
 
     const result = await checkDiscountCode(code, email, supabase)

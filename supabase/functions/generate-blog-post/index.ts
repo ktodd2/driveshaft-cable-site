@@ -1,3 +1,6 @@
+import { authorizeStoreRequest } from '../_shared/storeAuthorization.js'
+import { createApiClient } from '../_shared/supabaseTransport.js'
+import { getSupabaseSecretKey } from '../_shared/supabaseKeys.js'
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
@@ -134,12 +137,19 @@ serve(async (req) => {
     return new Response('ok', { headers: corsHeaders })
   }
 
+  if (!await authorizeStoreRequest(req, createClient)) {
+    return new Response('Unauthorized', { status: 401, headers: corsHeaders })
+  }
+
+  // Authentication probes must never run scheduled or sending work.
+  if (req.method !== 'POST') return new Response('Method not allowed', { status: 405 })
+
   try {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!
-    const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+    const serviceRoleKey = getSupabaseSecretKey()!
     const openaiKey = Deno.env.get('OPENAI_API_KEY')!
 
-    const supabase = createClient(supabaseUrl, serviceRoleKey)
+    const supabase = createApiClient(createClient, supabaseUrl, serviceRoleKey)
 
     // Get already-used topic seeds
     const { data: existingPosts } = await supabase

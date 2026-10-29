@@ -1,3 +1,6 @@
+import { isActiveAdmin } from '../_shared/storeAuthorization.js'
+import { createApiClient } from '../_shared/supabaseTransport.js'
+import { getSupabaseSecretKey, getSupabasePublishableKey, hasBackendApiKey } from '../_shared/supabaseKeys.js'
 // Scheduled campaign dispatcher.
 //
 // This is the piece that was missing from version control. The admin panel
@@ -32,23 +35,26 @@ serve(async (req) => {
   }
 
   const supabaseUrl = Deno.env.get('SUPABASE_URL')!
-  const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+  const serviceRoleKey = getSupabaseSecretKey()!
   const cronTriggerKey = Deno.env.get('CRON_TRIGGER_KEY') || ''
   const token = (req.headers.get('Authorization') || '').replace(/^Bearer\s+/i, '')
 
-  let authorized = token === serviceRoleKey || (!!cronTriggerKey && token === cronTriggerKey)
+  let authorized = hasBackendApiKey(req, serviceRoleKey) || (!!cronTriggerKey && token === cronTriggerKey)
   if (!authorized && token) {
-    const userClient = createClient(supabaseUrl, Deno.env.get('SUPABASE_ANON_KEY')!, {
+    const userClient = createApiClient(createClient, supabaseUrl, getSupabasePublishableKey()!, {
       global: { headers: { Authorization: `Bearer ${token}` } },
     })
-    const { data: { user } } = await userClient.auth.getUser(token)
-    if (user) authorized = true
+    const { data: { user }, error: authError } = await userClient.auth.getUser(token)
+    if (!authError && user) authorized = await isActiveAdmin(userClient, user.id)
   }
   if (!authorized) {
     return json({ error: 'Unauthorized' }, 401)
   }
 
-  const supabase = createClient(supabaseUrl, serviceRoleKey)
+  // Authentication probes must never run scheduled or sending work.
+  if (req.method !== 'POST') return new Response('Method not allowed', { status: 405 })
+
+  const supabase = createApiClient(createClient, supabaseUrl, serviceRoleKey)
 
   const { data: due, error } = await supabase
     .from('email_campaigns')
@@ -72,7 +78,7 @@ serve(async (req) => {
       const res = await fetch(`${supabaseUrl}/functions/v1/send-marketing-email`, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${serviceRoleKey}`,
+          'apikey': serviceRoleKey,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ campaignId: campaign.id }),

@@ -1,3 +1,5 @@
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.118.0'
+import { authorizeStoreRequest } from '../_shared/storeAuthorization.js'
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 
 const corsHeaders = {
@@ -27,6 +29,10 @@ const getCarrierName = (carrier: string) => {
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
+  }
+
+  if (!await authorizeStoreRequest(req, createClient)) {
+    return new Response('Unauthorized', { status: 401, headers: corsHeaders })
   }
 
   try {
