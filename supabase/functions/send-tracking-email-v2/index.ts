@@ -48,10 +48,11 @@ serve(async (req) => {
     }
 
     // Retain the original notification identity on every retry, including lost responses.
-    // Leave an hour of margin inside Resend's documented 24-hour retention.
+    // Allow up to five minutes of browser clock skew. A 23-hour retry window
+    // plus this allowance remains below Resend's documented 24-hour retention.
     if (templateVersion !== 'tracking-v1' || typeof notificationId !== 'string' ||
         !/^[0-9a-f-]{36}$/i.test(notificationId) || !Number.isFinite(notificationCreatedAt) ||
-        Date.now() < notificationCreatedAt || Date.now() - notificationCreatedAt >= 23 * 60 * 60 * 1000) {
+        notificationCreatedAt - Date.now() > 5 * 60 * 1000 || Date.now() - notificationCreatedAt >= 23 * 60 * 60 * 1000) {
       return new Response(JSON.stringify({ error: 'Notification identity expired or invalid; review required' }),
         { status: 409, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
     }

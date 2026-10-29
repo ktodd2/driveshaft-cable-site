@@ -114,3 +114,18 @@ test('concurrent function requests retain identical provider key and payload', a
   assert.equal(f.calls[0].headers['Idempotency-Key'], f.calls[1].headers['Idempotency-Key'])
   assert.equal(f.calls[0].body, f.calls[1].body)
 })
+
+// Initial browser timestamps can lead the server slightly; the allowance must
+// remain comfortably inside the hour reserved below provider key retention.
+test('function tolerates bounded browser clock skew without extending retries to 24 hours', async () => {
+  for (const offset of [2 * 60 * 1000, 5 * 60 * 1000]) {
+    const f = endpoint(); f.body.notificationCreatedAt = Date.now() + offset
+    assert.equal((await f.invoke()).status, 200)
+    assert.equal(f.calls.length, 1)
+  }
+  for (const offset of [6 * 60 * 1000, -23 * 60 * 60 * 1000, -24 * 60 * 60 * 1000]) {
+    const f = endpoint(); f.body.notificationCreatedAt = Date.now() + offset
+    assert.equal((await f.invoke()).status, 409)
+    assert.equal(f.calls.length, 0)
+  }
+})
