@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
+import { createTrackingWorkflow } from '../../lib/trackingNotification'
 import { formatPrice, getPriceForQuantity, MIN_ORDER_QUANTITY, ORDER_QUANTITY_STEP, PRODUCT_PRICING } from '../../stores/cartStore'
 import { useInventory, updateStock } from '../../hooks/useInventory'
 import { useProducts } from '../../hooks/useProducts'
@@ -44,8 +45,27 @@ function AdminOrdersPage() {
   const [paymentFilter, setPaymentFilter] = useState('all')
   const [trackingNumber, setTrackingNumber] = useState('')
   const [trackingCarrier, setTrackingCarrier] = useState('ups')
-  const [savingTracking, setSavingTracking] = useState(false)
-  const [trackingEmailStatus, setTrackingEmailStatus] = useState(null) // 'sent', 'failed', null
+  const [trackingStates, setTrackingStates] = useState({})
+  const [editingTracking, setEditingTracking] = useState(false)
+  const workflow = useRef(null)
+  if (!workflow.current) workflow.current = createTrackingWorkflow(supabase, {
+    onState: (id, state) => setTrackingStates(prev => ({ ...prev, [id]: state })),
+    onSaved: row => {
+      setOrders(prev => prev.map(order => order.id === row.id ? row : order))
+      setSelectedOrder(prev => prev?.id === row.id ? row : prev)
+    },
+  })
+  useEffect(() => {
+    setEditingTracking(false)
+    setTrackingNumber('')
+  }, [selectedOrder?.id, selectedOrder?.tracking_number, selectedOrder?.tracking_carrier])
+  const trackingState = trackingStates[selectedOrder?.id]
+  const savingTracking = !!trackingState?.busy
+  useEffect(() => {
+    setTrackingNumber('')
+    setTrackingCarrier('ups')
+    setEditingTracking(false)
+  }, [selectedOrder?.id])
 
   // Inventory state — admin picks which product to manage stock for.
   const { activeProducts, productsMap } = useProducts()
@@ -411,43 +431,7 @@ function AdminOrdersPage() {
   }
 
   const saveTracking = async (orderId) => {
-    if (!trackingNumber.trim()) return
-    setSavingTracking(true)
-    setTrackingEmailStatus(null)
-    const { error } = await supabase
-      .from('orders')
-      .update({
-        tracking_number: trackingNumber.trim(),
-        tracking_carrier: trackingCarrier,
-        status: 'shipped',
-        updated_at: new Date().toISOString()
-      })
-      .eq('id', orderId)
-
-    if (!error) {
-      const updated = { ...selectedOrder, tracking_number: trackingNumber.trim(), tracking_carrier: trackingCarrier, status: 'shipped' }
-      setSelectedOrder(updated)
-      setOrders(orders.map(o => o.id === orderId ? { ...o, tracking_number: trackingNumber.trim(), tracking_carrier: trackingCarrier, status: 'shipped' } : o))
-
-      // Send tracking email to customer
-      try {
-        const { error: emailError } = await supabase.functions.invoke('send-tracking-email', {
-          body: {
-            customerEmail: selectedOrder.email,
-            customerName: selectedOrder.name,
-            trackingNumber: trackingNumber.trim(),
-            trackingCarrier: trackingCarrier,
-            orderId: orderId,
-          }
-        })
-        setTrackingEmailStatus(emailError ? 'failed' : 'sent')
-      } catch {
-        setTrackingEmailStatus('failed')
-      }
-
-      setTrackingNumber('')
-    }
-    setSavingTracking(false)
+    await workflow.current.save(orderId, trackingNumber, trackingCarrier)
   }
 
   const copyAddress = (order) => {
@@ -816,7 +800,12 @@ ${addr.country}`
                   {filteredOrders.map((order) => (
                     <div
                       key={order.id}
-                      onClick={() => setSelectedOrder(order)}
+                      onClick={() => {
+                        setTrackingNumber('')
+                        setTrackingCarrier('ups')
+                        setEditingTracking(false)
+                        setSelectedOrder(order)
+                      }}
                       className={`bg-gray-800/50 border p-4 cursor-pointer transition-all ${
                         selectedOrder?.id === order.id
                           ? 'border-yellow-500'
@@ -1005,7 +994,7 @@ ${addr.country}`
                       {/* Tracking */}
                       <div className="mb-6 pb-6 border-b border-gray-700">
                         <h3 className="text-sm font-bold text-gray-400 mb-3">TRACKING</h3>
-                        {selectedOrder.tracking_number ? (
+                        {selectedOrder.tracking_number && !editingTracking ? (
                           <div className="space-y-3">
                             <div className="bg-gray-900 p-3 flex items-center justify-between">
                               <div>
@@ -1047,7 +1036,7 @@ ${addr.country}`
                               onClick={() => {
                                 setTrackingNumber(selectedOrder.tracking_number)
                                 setTrackingCarrier(selectedOrder.tracking_carrier || 'ups')
-                                setSelectedOrder({ ...selectedOrder, tracking_number: null })
+                                setEditingTracking(true)
                               }}
                               className="text-gray-500 hover:text-yellow-500 text-xs transition-colors"
                             >
@@ -1078,24 +1067,23 @@ ${addr.country}`
                             >
                               {savingTracking ? 'Saving & Emailing Customer...' : 'Save & Email Customer'}
                             </button>
-                            {trackingEmailStatus === 'sent' && (
-                              <div className="flex items-center gap-2 text-green-400 text-sm">
-                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                                </svg>
-                                Tracking email sent to customer
-                              </div>
-                            )}
-                            {trackingEmailStatus === 'failed' && (
-                              <div className="flex items-center gap-2 text-red-400 text-sm">
-                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                                </svg>
-                                Tracking saved but email failed to send
-                              </div>
-                            )}
+                            {editingTracking && <button disabled={savingTracking} onClick={() => {
+                              setEditingTracking(false)
+                              setTrackingNumber('')
+                              setTrackingCarrier('ups')
+                            }} className="text-gray-300 text-sm">Cancel tracking edit</button>}
+
                           </div>
                         )}
+                        {trackingState && <div role="status" className="mt-3 text-sm text-gray-200">
+                          {trackingState.message}
+                          {trackingState.retry && <button disabled={savingTracking}
+                            onClick={() => workflow.current.retry(selectedOrder.id)}
+                            className="block mt-2 px-3 py-2 border border-yellow-500 text-yellow-500 disabled:opacity-50">
+                            Retry same tracking email
+                          </button>}
+                        </div>}
+                        <p className="mt-2 text-xs text-gray-500">Email status is for this page session only. Provider acceptance does not confirm delivery. Uncertain or expired notifications require review.</p>
                       </div>
 
                       {/* Shipping Cost */}
