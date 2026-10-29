@@ -6,9 +6,7 @@
   "legacy_keys_disabled": false,
   "frontend_published": true,
   "blocked_deployments": [],
-  "held_deployments": [
-    "live-wall-stats"
-  ],
+  "held_deployments": [],
   "functions": [
     {
       "name": "create-payment-intent",
@@ -152,10 +150,10 @@
     },
     {
       "name": "live-wall-stats",
-      "version": 11,
+      "version": 13,
       "status": "ACTIVE",
       "verify_jwt": false,
-      "bundle_sha256": "ea0eb9069efc0f6fb5daa76fb8fd2b06b20863412dae49e3d84052ef6287f82b"
+      "bundle_sha256": "8a13269c98a8e208bc0b104e6f69263c08319f51cefa1dd8001dfb378a562fbd"
     },
     {
       "name": "track-order",
@@ -199,5 +197,10 @@
       "verify_jwt": false,
       "bundle_sha256": "b3df528d3d48c6ce838483adec5be0465701553859d5350b69b9c4ef3b05e83f"
     }
-  ]
+  ],
+  "live_wall_caller_deploy_id": "dep-dbhbrmo8v5cc738218eg",
+  "live_wall_caller_commit": "4fdff4d052d3dbdfb38b94d4e0bc23e66ad51d38",
+  "live_wall_caller_deploy_status": "live",
+  "live_wall_owner_display_verified": false,
+  "exact_retired_wall_token_http_test": "not_performed_secret_boundary"
 }
