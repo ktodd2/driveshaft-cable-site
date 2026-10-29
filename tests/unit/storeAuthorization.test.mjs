@@ -44,7 +44,7 @@ test('protected endpoints require validated active admins, backend identity or e
   assert.equal(await authorizer({cron:'cron-fixture'})(req('cron-fixture'),()=>{},{allowCron:true}),true)
 })
 
-for (const name of ['generate-blog-post','check-tracking-status','setup-cron-jobs','send-tracking-email','send-delivery-email','finalize-tax-transaction']) {
+for (const name of ['generate-blog-post','check-tracking-status','setup-cron-jobs','send-tracking-email','send-tracking-email-v2','send-delivery-email','finalize-tax-transaction']) {
   test(`${name}: denied authorization exits before parsing payload or initializing services`, async () => {
     let handler, touched = 0
     const source = readFileSync(new URL(`../../supabase/functions/${name}/index.ts`, import.meta.url),'utf8').replace(/^import .*\n/gm,'')
