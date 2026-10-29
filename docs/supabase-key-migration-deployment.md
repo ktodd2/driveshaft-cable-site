@@ -90,3 +90,10 @@ Supabase live-wall-stats version13 deployed with LIVE_WALL_TOKEN-only authentica
 Protected temporary probe23407 returned HTTP200 with new_token_accepted=true and missing_token_rejected=true. The probe internally called the fixed read-only wall feed; bodies were discarded and only booleans returned. Probe deleted; absence and27-function count verified. Exact retired-token HTTP rejection was NOT tested because its value was not retrieved under the secret-handling boundary. Deployed code removes the old hardcoded-token path, but this is distinct from an actual request with that retired token.
 
 The normal Houston/live browser page required private admin login; no credentials were entered or read. Owner confirmation of fresh visible store statistics remains pending. All legacy API keys remain enabled. No PR was approved, no payment/event/telemetry/email test occurred, and no unrelated token changed.
+
+
+## Owner workflow confirmation and source preservation — 2026-10-29
+
+Owner reports the real Houston live-wall display works, and separately confirms store admin login, product images and opening checkout without submitting an order. These are owner-reported workflow checks, distinct from automated endpoint tests. All27 live bundle hashes and gateway flags match the reviewed manifest; all10 cron jobs remain active. Exact retired-wall-token HTTP rejection remains untested under the no-retrieval boundary.
+
+Owner explicitly authorized publishing this reviewed backend migration as a draft PR only. Main e90c6a75eb07ce54bcc7edcd20e7dc60cfb92dee was merged locally to retain its environment-example/README correction.127 tests pass. No merge, PR approval or new deployment is authorized by the draft-publication step. Database cleanup preparation is held separately and is not an executable part of this source-preservation PR. Legacy key disablement has owner authorization after prerequisites, but has not occurred.

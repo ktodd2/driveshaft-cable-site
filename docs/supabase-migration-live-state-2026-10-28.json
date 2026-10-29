@@ -201,6 +201,12 @@
   "live_wall_caller_deploy_id": "dep-dbhbrmo8v5cc738218eg",
   "live_wall_caller_commit": "4fdff4d052d3dbdfb38b94d4e0bc23e66ad51d38",
   "live_wall_caller_deploy_status": "live",
-  "live_wall_owner_display_verified": false,
-  "exact_retired_wall_token_http_test": "not_performed_secret_boundary"
+  "live_wall_owner_display_verified": true,
+  "exact_retired_wall_token_http_test": "not_performed_secret_boundary",
+  "store_owner_reported_checks": {
+    "admin_login": true,
+    "product_images": true,
+    "checkout_opens_without_order": true
+  },
+  "legacy_disable_authorized_after_prerequisites": true
 }
