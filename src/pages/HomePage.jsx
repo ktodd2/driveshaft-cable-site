@@ -40,7 +40,7 @@ function HomePage() {
     <>
       <SEOHead
         title="Heavy-Duty Driveshaft Safety Cable for Towing"
-        description="Driveshaft Cable — 3,000 lb breaking strength galvanized steel safety cable for heavy-duty towing. Made by a heavy duty operator for the heavy duty operator. Starting at $3.45/unit."
+        description="Shop Standard and XL driveshaft cables for heavy-duty towing and recovery. Compare lengths, view current volume pricing, and order online."
         keywords="driveshaft cable, driveshaftcable, driveshaft safety cable, towing safety cable, heavy duty towing cable, driveshaft guard cable"
         canonical="/"
         structuredData={homeStructuredData}

@@ -36,14 +36,16 @@ test('single-unit products derive their own ranges, independent of tier order or
 test('XL breaking strength and dimensions are retained in factual metadata', () => {
   const meta = productMetadata(xl)
   assert.equal(meta.title, 'Driveshaft Cable XL — 3000 lb breaking strength')
-  for (const fact of ['3000 lb', '60 inches', '5/32 inch', '$5.00/unit', 'volume discounts']) assert.ok(meta.description.includes(fact))
+  assert.doesNotMatch(meta.description, /\$|Starting at/)
+  assert.equal(productMetadata({ ...xl, base_price_cents: 750 }).description, meta.description)
+  for (const fact of ['3000 lb', '60 inches', '5/32 inch', 'volume discounts']) assert.ok(meta.description.includes(fact))
 })
 
 test('standard cable verified rating is retained, but unrated accessories get no strength or cable claim', () => {
   assert.match(productMetadata({ ...xl, name: 'Driveshaft Cable', specs: { 'Breaking Strength': '3000 lbs' } }).title, /3000 lbs breaking strength/)
   const meta = productMetadata({ name: 'Driveshaft Cable Cutters', base_price_cents: 2500, tiers: [], specs: { 'Sold as': 'One cutter' } })
   assert.equal(meta.title, 'Driveshaft Cable Cutters')
-  assert.match(meta.description, /\$25\.00\/unit/)
+  assert.match(meta.description, /View current pricing and order online/)
   assert.doesNotMatch(JSON.stringify(meta), /3000|WLL|breaking strength|safety cable|volume discounts/i)
   assert.doesNotMatch(JSON.stringify(productMetadata({ name: 'New accessory', base_price_cents: 100 })), /WLL|breaking strength|3000|volume discounts/i)
 })

@@ -30,10 +30,9 @@ export function productMetadata(product) {
   const facts = specs.filter(([key]) => /^(breaking strength|length|total length|cable diameter)$/i.test(key))
     .map(([key, value]) => `${key}: ${value}`)
   const hasTiers = Array.isArray(product.tiers) && product.tiers.length > 0
-  const price = (product.base_price_cents / 100).toFixed(2)
   return {
     title: `${product.name}${breakingStrength ? ` — ${breakingStrength} breaking strength` : ''}`,
-    description: [product.name + '.', product.short_description, ...facts.map(fact => fact + '.'), `Starting at $${price}/unit${hasTiers ? ' with volume discounts' : ''}.`].filter(Boolean).join(' '),
+    description: [product.name + '.', product.short_description, ...facts.map(fact => fact + '.'), hasTiers ? 'View current volume discounts and order online.' : 'View current pricing and order online.'].filter(Boolean).join(' '),
     keywords: [product.name, product.sku, breakingStrength ? `${breakingStrength} breaking strength` : null].filter(Boolean).join(', '),
   }
 }
