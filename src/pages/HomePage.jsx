@@ -1,11 +1,11 @@
 import React from 'react'
+import { Link } from 'react-router-dom'
 import Hero from '../components/landing/Hero'
 import Problem from '../components/landing/Problem'
 import StorefrontProducts from '../components/landing/StorefrontProducts'
 import Specs from '../components/landing/Specs'
 import HowItWorks from '../components/landing/HowItWorks'
 import Customers from '../components/landing/Customers'
-import QuoteForm from '../components/landing/QuoteForm'
 import NewsletterInline from '../components/newsletter/NewsletterInline'
 import SEOHead from '../components/common/SEOHead'
 
@@ -71,7 +71,16 @@ function HomePage() {
       <HowItWorks />
       <Customers />
       <NewsletterInline source="homepage" />
-      <QuoteForm />
+      <section id="quote" aria-labelledby="home-order-heading" className="py-12 md:py-16 bg-ktodd-charcoal border-t border-gray-800">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <h2 id="home-order-heading" className="text-3xl sm:text-4xl font-industrial text-white mb-4">READY TO <span className="text-yellow-500">ORDER?</span></h2>
+          <p className="text-gray-300 max-w-2xl mb-6">Order online with automatic volume pricing. For dealer, fleet or special-order requests, visit our quote page.</p>
+          <div className="flex flex-col sm:flex-row gap-3 sm:items-center">
+            <Link to="/products" className="btn-primary">Shop Cables</Link>
+            <Link to="/quote" className="btn-secondary">Bulk / Dealer Quote</Link>
+          </div>
+        </div>
+      </section>
     </>
   )
 }

@@ -149,26 +149,27 @@ function Header() {
               <img
                 src="/logos/main-logo.png"
                 alt="Driveshaft Cable"
-                className="h-20 md:h-28 w-auto"
+                className="h-16 sm:h-20 md:h-28 w-auto"
               />
             </Link>
 
             {/* Desktop Navigation */}
-            <nav aria-label="Primary" className="hidden md:flex items-center gap-1 lg:gap-2">
-              <NavLink to="/products" active={isActive('/products')} onNavigate={closeMenu}>Shop</NavLink>
+            <nav aria-label="Primary" className="hidden xl:flex items-center gap-1 lg:gap-2">
               {specsLink(false)}
               {links.map(([to, label]) => (
                 <NavLink key={to} to={to} active={isActive(to)} onNavigate={closeMenu}>{label}</NavLink>
               ))}
 
+              <NavLink to="/quote" active={isActive('/quote')} onNavigate={closeMenu}>Bulk / Dealer Quote</NavLink>
+
               <span className="mx-1 lg:mx-2 h-6 w-px bg-gray-700" aria-hidden="true" />
               <CartLink totalItems={totalItems} />
 
-              <Link to="/quote" className="btn-primary btn-sm ml-2">Get Quote</Link>
+              <Link to="/products" className="btn-primary btn-sm ml-2" aria-current={isActive('/products') ? 'page' : undefined}>Shop Cables</Link>
             </nav>
 
             {/* Mobile: Cart + Menu button */}
-            <div className="md:hidden flex items-center gap-1">
+            <div className="xl:hidden flex items-center gap-1">
               <CartLink totalItems={totalItems} onNavigate={closeMenu} />
 
               <button
@@ -193,15 +194,15 @@ function Header() {
 
           {/* Mobile Navigation */}
           {isMenuOpen && (
-            <div id="mobile-nav" className="md:hidden pb-5 border-t border-gray-800 max-h-[calc(100vh-8rem)] overflow-y-auto">
+            <div id="mobile-nav" className="xl:hidden pb-5 border-t border-gray-800 max-h-[calc(100vh-8rem)] overflow-y-auto">
               <nav aria-label="Mobile" className="flex flex-col pt-2">
-                <NavLink to="/products" active={isActive('/products')} onNavigate={closeMenu} mobile>Shop</NavLink>
+                <Link to="/products" className="btn-primary my-3" onClick={closeMenu} aria-current={isActive('/products') ? 'page' : undefined}>Shop Cables</Link>
                 {specsLink(true)}
                 {links.map(([to, label]) => (
                   <NavLink key={to} to={to} active={isActive(to)} onNavigate={closeMenu} mobile>{label}</NavLink>
                 ))}
                 <NavLink to="/contact" active={isActive('/contact')} onNavigate={closeMenu} mobile>Contact</NavLink>
-                <Link to="/quote" className="btn-primary mt-4" onClick={closeMenu}>Get Quote</Link>
+                <NavLink to="/quote" active={isActive('/quote')} onNavigate={closeMenu} mobile>Bulk / Dealer Quote</NavLink>
               </nav>
             </div>
           )}
