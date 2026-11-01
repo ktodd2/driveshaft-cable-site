@@ -1,3 +1,4 @@
+import { useCommerceView } from '../hooks/useCommerceView'
 import PolicyLinks from '../components/common/PolicyLinks'
 import { isBoltPack, packQuantity, priceUnit } from '../lib/productPresentation'
 import { captureAnalyticsContext } from '../lib/purchaseAnalytics'
@@ -5,7 +6,7 @@ import React, { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { loadStripe } from '@stripe/stripe-js'
 import { Elements, PaymentElement, useStripe, useElements } from '@stripe/react-stripe-js'
-import { useCartStore, selectTotalItems, selectSubtotal, selectPricePerUnit, selectShipping, selectOrderTotal, formatPrice, SHIPPING_FEE, FREE_SHIPPING_THRESHOLD, REPEAT_CUSTOMER_DISCOUNT } from '../stores/cartStore'
+import { useCartStore, getPriceForQuantity, selectTotalItems, selectSubtotal, selectPricePerUnit, selectShipping, selectOrderTotal, formatPrice, SHIPPING_FEE, FREE_SHIPPING_THRESHOLD, REPEAT_CUSTOMER_DISCOUNT } from '../stores/cartStore'
 import { getShippingAddressProblem, SHIPPING_ADDRESS_MESSAGES } from '../lib/shippingAddress'
 import { supabase } from '../lib/supabase'
 import { rememberCheckoutPayment, clearPurchasedCart } from '../lib/checkoutPayment'
@@ -96,6 +97,12 @@ function CheckoutPage() {
   const { items, clearCart } = useCartStore()
   const totalItems = useCartStore(selectTotalItems)
   const subtotal = useCartStore(selectSubtotal)
+  const productsLoadedAt = useCartStore(s => s.productsLoadedAt)
+  const salesLoadedAt = useCartStore(s => s.salesLoadedAt)
+  useCommerceView('begin_checkout', 'checkout', items.map(item => ({ productId: item.productId,
+    quantity: item.quantity, unitCents: getPriceForQuantity(item.productId, item.quantity) })),
+    items.length > 0 && productsLoadedAt > 0 && salesLoadedAt > 0)
+
   // Carried in from an abandoned-cart recovery link so we can auto-apply the
   // 5% code without the customer typing it.
   const recoveryDiscountCode = useCartStore(s => s.recoveryDiscountCode)

@@ -1,3 +1,4 @@
+import { publicTestimonials } from '../src/lib/publicTestimonials.js'
 import { readFile, writeFile, mkdir, rm } from 'node:fs/promises'
 import { dirname, resolve } from 'node:path'
 import { pathToFileURL } from 'node:url'
@@ -26,17 +27,28 @@ async function rows(table, params) {
     if (batch.length < 1000) return all
   }
 }
+async function publicFeedback() {
+  const response = await fetch(`${env.VITE_SUPABASE_URL}/rest/v1/rpc/get_public_testimonials`, {
+    method: 'POST', headers: { apikey: env.VITE_SUPABASE_PUBLISHABLE_KEY, 'Content-Type': 'application/json' },
+    body: '{}', signal: AbortSignal.timeout(20000), redirect: 'error',
+  })
+  if (!response.ok) throw new Error(`Public feedback fetch failed (${response.status})`)
+  const data = await response.json()
+  if (!Array.isArray(data)) throw new Error('Invalid public feedback response')
+  return data
+}
 async function loadPublicData() {
   if (fixtureAt !== -1) return JSON.parse(await readFile(process.argv[fixtureAt + 1], 'utf8'))
   if (!env.VITE_SUPABASE_URL || !env.VITE_SUPABASE_PUBLISHABLE_KEY) throw new Error('Public catalog configuration is required for prerendering')
   const products = await rows('products', { select: fields, is_active: 'eq.true', is_storefront: 'eq.true', order: 'sort_order.asc,id.asc' })
   if (!products.length) throw new Error('Public catalog is empty; refusing partial prerender')
-  const [inventory, posts, sales] = await Promise.all([
+  const [inventory, posts, sales, testimonials] = await Promise.all([
     rows('product_inventory', { select: 'product_id,stock_quantity,total_quantity', product_id: `in.(${products.map(p => p.id).join(',')})` }),
     rows('blog_posts', { select: 'id,title,slug,excerpt,content,category,tags,meta_description,published_at,updated_at,reading_time_minutes', status: 'eq.published', order: 'published_at.desc' }),
     rows('sales', { select: 'id,name,discount_percent,scope,product_id,starts_at,ends_at,is_active', is_active: 'eq.true' }),
+    publicFeedback(),
   ])
-  return { products, inventory, posts, sales }
+  return { products, inventory, posts, sales, testimonials: publicTestimonials(testimonials) }
 }
 const data = await loadPublicData()
 const rendererDir = resolve(root, '.prerender')
@@ -58,6 +70,7 @@ try {
     const post = path.startsWith('/blog/') ? data.posts.find(post => `/blog/${post.slug}` === path) : null
     const initial = { path, products: data.products, inventory: data.inventory, sales: data.sales || [],
       ...(path === '/blog' ? { blogPosts } : {}),
+      ...(path === '/' ? { testimonials: data.testimonials || [] } : {}),
       ...(post ? { post, relatedPosts: blogPosts.filter(p => p.category === post.category && p.id !== post.id).slice(0, 3) } : {}) }
     const rendered = renderPage(path, initial)
     if (!rendered.html.includes('<h1') || !rendered.head.includes('rel="canonical"')) throw new Error(`Incomplete public page: ${path}`)

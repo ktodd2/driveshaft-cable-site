@@ -1,3 +1,4 @@
+import { useCommerceView } from '../hooks/useCommerceView'
 import OptimizedImage from '../components/common/OptimizedImage'
 import PolicyLinks from '../components/common/PolicyLinks'
 import React, { useState, useEffect } from 'react'
@@ -50,6 +51,10 @@ function ProductDetailPage() {
   useCartStore(s => s.salesLoadedAt)
   useCartStore(s => s.productsLoadedAt)
   const [, forceTick] = useState(0)
+
+  useCommerceView('view_item', product?.id, product ? [{ productId: product.id,
+    quantity: effectiveMin, unitCents: getPriceForQuantity(product.id, effectiveMin, product) }] : [],
+    !loading && !stockLoading && !!product)
 
   if (loading) {
     return (
