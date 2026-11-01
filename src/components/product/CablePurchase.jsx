@@ -69,16 +69,20 @@ export function CableOrderSummary({ selection, minQuantity, step }) {
           Includes {sale.name} (−{sale.percent}%), applied after volume pricing.
         </p>
       )}
-      <p className="text-gray-400 mt-2" data-testid="cable-shipping-line">
-        Shipping: {formatPrice(SHIPPING_FEE)} per order, free when the merchandise subtotal is {formatPrice(FREE_SHIPPING_THRESHOLD)} or more.{' '}
-        {shipping.free
-          ? 'This selection alone reaches free shipping.'
-          : `On its own, this selection adds ${formatPrice(shipping.shippingCents)} shipping; ${formatPrice(shipping.remainingCents)} more merchandise reaches free shipping.`}
-      </p>
-      <p className="text-gray-500 mt-1" data-testid="cable-rules-line">
-        Volume tier is set by this cable's quantity; the best active sale applies after it and is already included above.
-        Shipping is judged on the cart's merchandise subtotal after volume and sale pricing, before any returning-customer or code discount. Tax is calculated at checkout.
-      </p>
+      <p className="text-gray-300 mt-2">Shipping: {shipping.free ? 'FREE for this selection' : `${formatPrice(shipping.shippingCents)} for this selection alone`}. Tax calculated at checkout.</p>
+      <details className="mt-2 text-gray-400">
+        <summary className="cursor-pointer min-h-[44px] py-3 text-yellow-400 underline underline-offset-4">Shipping &amp; pricing details</summary>
+        <p className="text-gray-400 mt-2" data-testid="cable-shipping-line">
+          Shipping: {formatPrice(SHIPPING_FEE)} per order, free when the merchandise subtotal is {formatPrice(FREE_SHIPPING_THRESHOLD)} or more.{' '}
+          {shipping.free
+            ? 'This selection alone reaches free shipping.'
+            : `On its own, this selection adds ${formatPrice(shipping.shippingCents)} shipping; ${formatPrice(shipping.remainingCents)} more merchandise reaches free shipping.`}
+        </p>
+        <p className="text-gray-500 mt-1" data-testid="cable-rules-line">
+          Volume tier is set by this cable's quantity; the best active sale applies after it and is already included above.
+          Shipping is judged on the cart's merchandise subtotal after volume and sale pricing, before any returning-customer or code discount. Tax is calculated at checkout.
+        </p>
+      </details>
     </div>
   )
 }

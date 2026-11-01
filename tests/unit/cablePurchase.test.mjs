@@ -280,6 +280,8 @@ test('both cable pages render positioning, summary, returning note and compariso
     // Single total, directly above the buttons; the old inline "Total:" is gone.
     assert.doesNotMatch(t, /\bTotal: \$/)
     assert.ok(html.indexOf('data-testid="cable-order-summary"') < html.indexOf('Add to Cart'))
+    assert.match(t, /Cut off and discard this cable after each job. Do not reuse/ )
+    assert.ok(html.indexOf('Single-Use Product') < html.indexOf('Add to Cart'))
     const unit = row.base_price_cents
     assert.ok(t.includes(`10 × ${s.formatPrice(unit)}/ea`), t)
     assert.ok(t.includes(`Merchandise total: ${s.formatPrice(unit * 10)}`))
@@ -307,7 +309,9 @@ test('non-cable pages render their own minimum quantity without cable additions'
   assert.doesNotMatch(html, /data-testid="cable-|data-testid="length-link|compare-lengths|data-testid="compare-/)
   assert.match(t, /Returning customers save an extra 10% — applied automatically at checkout!/)
   assert.match(t, /Total: \$25\.00/)
-  assert.doesNotMatch(t, /Merchandise total|heavy-duty towing|Standard VS XL|Shipping: \$/i)
+  assert.doesNotMatch(t, /Single-Use Product/)
+  assert.doesNotMatch(t, /Merchandise total|heavy-duty towing|Standard VS XL/i)
+  assert.match(t, /Shipping: \$20\.00 per order; free at \$600\.00 merchandise subtotal/)
   // A different slug that merely resembles a cable slug is also excluded.
   const lookalike = { ...cutter, id: 'x', slug: 'driveshaft-cable-xl-extra' }
   const s2 = harness({ product: lookalike })
