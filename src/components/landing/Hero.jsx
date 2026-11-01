@@ -47,7 +47,7 @@ function Hero() {
               src="/inuse.jpeg"
               alt="Driveshaft Cable installed on vehicle"
               className="w-full aspect-[4/3] lg:aspect-[4/5] object-cover"
-              fetchpriority="high"
+              loading="lazy"
               width="1200"
               height="900"
             />
