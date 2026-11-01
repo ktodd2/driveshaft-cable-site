@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react'
 import { Link, useLocation } from 'react-router-dom'
+import { merchantOrganization } from '../lib/merchantSchema'
 import SEOHead from '../components/common/SEOHead'
 import { SHIPPING_FEE, FREE_SHIPPING_THRESHOLD, formatPrice } from '../stores/cartStore'
 
@@ -14,7 +15,7 @@ function ShippingReturnsPage() {
 
   return (
     <div className="pt-24 md:pt-32 bg-ktodd-dark">
-      <SEOHead title="Shipping & Returns" description="Next-business-day shipping, U.S. shipping rates, 90-day returns and refund information for Driveshaft Cable customers." canonical="/shipping-returns" />
+      <SEOHead title="Shipping & Returns" description="Next-business-day shipping, U.S. shipping rates, 90-day returns and refund information for Driveshaft Cable customers." canonical="/shipping-returns" structuredData={merchantOrganization({ shippingFeeCents: SHIPPING_FEE, freeShippingThresholdCents: FREE_SHIPPING_THRESHOLD, includePolicies: true })} />
       <article className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10 md:py-16 text-gray-300">
         <h1 className="text-4xl sm:text-5xl font-industrial text-white mb-6">SHIPPING &amp; <span className="text-yellow-500">RETURNS</span></h1>
         <nav aria-label="Shipping and returns topics" className="flex flex-wrap gap-4 mb-10 text-yellow-400 underline underline-offset-4">

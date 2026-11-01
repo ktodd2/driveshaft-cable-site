@@ -31,11 +31,12 @@ async function loadPublicData() {
   if (!env.VITE_SUPABASE_URL || !env.VITE_SUPABASE_PUBLISHABLE_KEY) throw new Error('Public catalog configuration is required for prerendering')
   const products = await rows('products', { select: fields, is_active: 'eq.true', is_storefront: 'eq.true', order: 'sort_order.asc,id.asc' })
   if (!products.length) throw new Error('Public catalog is empty; refusing partial prerender')
-  const [inventory, posts] = await Promise.all([
+  const [inventory, posts, sales] = await Promise.all([
     rows('product_inventory', { select: 'product_id,stock_quantity,total_quantity', product_id: `in.(${products.map(p => p.id).join(',')})` }),
     rows('blog_posts', { select: 'id,title,slug,excerpt,content,category,tags,meta_description,published_at,updated_at,reading_time_minutes', status: 'eq.published', order: 'published_at.desc' }),
+    rows('sales', { select: 'id,name,discount_percent,scope,product_id,starts_at,ends_at,is_active', is_active: 'eq.true' }),
   ])
-  return { products, inventory, posts }
+  return { products, inventory, posts, sales }
 }
 const data = await loadPublicData()
 const rendererDir = resolve(root, '.prerender')
@@ -55,7 +56,7 @@ try {
   }
   for (const path of paths) {
     const post = path.startsWith('/blog/') ? data.posts.find(post => `/blog/${post.slug}` === path) : null
-    const initial = { path, products: data.products, inventory: data.inventory,
+    const initial = { path, products: data.products, inventory: data.inventory, sales: data.sales || [],
       ...(path === '/blog' ? { blogPosts } : {}),
       ...(post ? { post, relatedPosts: blogPosts.filter(p => p.category === post.category && p.id !== post.id).slice(0, 3) } : {}) }
     const rendered = renderPage(path, initial)

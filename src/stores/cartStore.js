@@ -186,7 +186,8 @@ export function getPriceForQuantity(productId, qty, product = null) {
 }
 
 // Seed public pricing without a state/persistence write before saved carts restore.
-export function seedStorefrontPricing(products) {
+export function seedStorefrontPricing(products, sales = []) {
+  liveSales = Array.isArray(sales) ? sales : []
   livePricing = { ...PRODUCT_PRICING }
   for (const product of products || []) livePricing[product.id] = normalizeDbProduct(product)
 }

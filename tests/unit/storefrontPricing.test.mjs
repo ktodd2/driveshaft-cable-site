@@ -199,3 +199,15 @@ test('multiple newsletter forms have distinct visible labels associated with the
   assert.equal(new Set(labels).size, 2)
   assert.deepEqual(inputs, labels)
 })
+
+test('public sale snapshots seed prices for prerender and hydration without writing a saved cart', () => {
+  const s = harness()
+  const sale = {id: 'snapshot-sale', name: 'Public sale', is_active: true, scope: 'sitewide', discount_percent: 10, starts_at: '2000-01-01', ends_at: '2999-01-01'}
+  s.seedStorefrontPricing([xl], [sale])
+  assert.equal(s.getPriceForQuantity(xl.id, 10, xl), 450)
+  assert.equal(s.getPriceForQuantity(xl.id, 200, xl), 367)
+  assert.equal(s.useCartStore.getState().productsLoadedAt, 0)
+  assert.equal(s.useCartStore.getState().items.length, 0)
+  s.seedStorefrontPricing([xl], [])
+  assert.equal(s.getPriceForQuantity(xl.id, 10, xl), 500)
+})

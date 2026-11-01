@@ -7,7 +7,7 @@ import { seedStorefrontPricing } from './stores/cartStore'
 
 const root = document.getElementById('root')
 const initialData = readPublicSnapshot(document, window.location.pathname)
-if (initialData) seedStorefrontPricing(initialData.products)
+if (initialData) seedStorefrontPricing(initialData.products, initialData.sales)
 const app = <React.StrictMode><App initialData={initialData} /></React.StrictMode>
 if (initialData && root.hasChildNodes()) ReactDOM.hydrateRoot(root, app)
 else ReactDOM.createRoot(root).render(app)

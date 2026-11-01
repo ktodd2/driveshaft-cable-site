@@ -8,62 +8,9 @@ import { useStorefrontProduct } from '../hooks/useStorefrontProduct'
 import StockAvailability from '../components/common/StockAvailability'
 import SEOHead from '../components/common/SEOHead'
 import { volumePricingRows, productMetadata, productImageClasses, isBoltPack, priceUnit, quantityUnit, packQuantity } from '../lib/productPresentation'
+import { productStructuredData } from '../lib/merchantSchema'
 import { isCableSlug, cableSelectionPricing } from '../lib/cablePurchase'
 import { CablePositioning, CableOrderSummary, CableReturningNote, CableComparisonSection } from '../components/product/CablePurchase'
-
-const SITE_ORIGIN = 'https://driveshaftcable.com'
-
-// Image URLs in the DB might be relative ('/IMG_5489.jpeg') or absolute
-// (Supabase Storage public URLs). For Schema.org we need absolute URLs.
-function toAbsolute(url) {
-  if (!url) return url
-  if (url.startsWith('http://') || url.startsWith('https://')) return url
-  return `${SITE_ORIGIN}${url.startsWith('/') ? '' : '/'}${url}`
-}
-
-function formatDecimal(cents) {
-  return ((cents || 0) / 100).toFixed(2)
-}
-
-// Build the Schema.org JSON-LD blob for the detail page from the DB row,
-// so any new product the admin creates automatically gets sound SEO markup.
-function buildStructuredData(product) {
-  if (!product) return []
-  const tiers = Array.isArray(product.tiers) ? product.tiers : []
-  const lowest = tiers.length
-    ? Math.min(product.base_price_cents, ...tiers.map(t => t.price))
-    : product.base_price_cents
-  const offerCount = 1 + tiers.length
-  const productJson = {
-    '@context': 'https://schema.org',
-    '@type': 'Product',
-    name: product.name,
-    description: product.short_description || (product.description || '').slice(0, 220),
-    brand: { '@type': 'Brand', name: 'Driveshaft Cable' },
-    sku: product.sku,
-    mpn: product.sku,
-    image: (product.images || []).map(toAbsolute),
-    offers: {
-      '@type': 'AggregateOffer',
-      lowPrice: formatDecimal(lowest),
-      highPrice: formatDecimal(product.base_price_cents),
-      priceCurrency: 'USD',
-      offerCount: String(offerCount),
-      availability: 'https://schema.org/InStock',
-      url: `${SITE_ORIGIN}/products/${product.slug}`,
-    },
-  }
-  const breadcrumb = {
-    '@context': 'https://schema.org',
-    '@type': 'BreadcrumbList',
-    itemListElement: [
-      { '@type': 'ListItem', position: 1, name: 'Home', item: `${SITE_ORIGIN}/` },
-      { '@type': 'ListItem', position: 2, name: 'Products', item: `${SITE_ORIGIN}/products` },
-      { '@type': 'ListItem', position: 3, name: product.name, item: `${SITE_ORIGIN}/products/${product.slug}` },
-    ],
-  }
-  return [productJson, breadcrumb]
-}
 
 function ProductDetailPage() {
   const { slug } = useParams()
@@ -131,16 +78,15 @@ function ProductDetailPage() {
     tiers: product.tiers,
   })
   const metadata = productMetadata(product)
-  // Standard and XL cable pages only: price from the fetched row (never the
-  // legacy product-1/2 fallback) and show the clarity blocks. All other
-  // products keep the original id-based lookup and rendering.
+  // The fetched catalog row supplies the same prices to the UI and schema.
   const isCable      = isCableSlug(product.slug)
-  const pricingRow   = isCable ? product : null
+  const pricingRow   = product
   const currentPrice = getPriceForQuantity(product.id, quantity, pricingRow)
   const tierPrice    = getTierPriceForQuantity(product.id, quantity, pricingRow)
   const appliedSale  = getActiveSaleForProduct(product.id)
   const outOfStock   = !stockLoading && stock === 0
-  const productStructuredData = buildStructuredData(product)
+  const minimumUnitCents = getPriceForQuantity(product.id, effectiveMin, product)
+  const structuredData = productStructuredData(product, { stock, stockLoading, minimumQuantity: effectiveMin, minimumUnitCents, sale: appliedSale })
   const specsEntries = Object.entries(product.specs || {})
   const features     = Array.isArray(product.features) ? product.features : []
   const applications = Array.isArray(product.applications) ? product.applications : []
@@ -175,7 +121,7 @@ function ProductDetailPage() {
         description={metadata.description}
         keywords={metadata.keywords}
         canonical={`/products/${slug}`}
-        structuredData={productStructuredData}
+        structuredData={structuredData}
       />
       {/* Breadcrumb */}
       <div className="bg-ktodd-dark border-b border-gray-800">
@@ -267,6 +213,8 @@ function ProductDetailPage() {
                   />
                 </div>
               )}
+
+              <p className="text-gray-400 text-sm mb-4">Minimum order: {effectiveMin} {isBoltPack(product) ? (effectiveMin === 1 ? '10-pack' : '10-packs') : (effectiveMin === 1 ? 'unit' : 'units')} · {formatPrice(minimumUnitCents * effectiveMin)} merchandise total.</p>
 
               {/* Quantity Selector */}
               <div className="mb-6">

@@ -7,14 +7,12 @@ import Specs from '../components/landing/Specs'
 import HowItWorks from '../components/landing/HowItWorks'
 import Customers from '../components/landing/Customers'
 import NewsletterInline from '../components/newsletter/NewsletterInline'
+import { merchantOrganization } from '../lib/merchantSchema'
 import SEOHead from '../components/common/SEOHead'
 
 const homeStructuredData = [
   {
-    '@context': 'https://schema.org',
-    '@type': 'Organization',
-    name: 'Driveshaft Cable',
-    url: 'https://driveshaftcable.com',
+    ...merchantOrganization(),
     description: 'Driveshaft Cable manufactures heavy-duty driveshaft safety cables (driveshaftcable) for professional towing and recovery operations. Made by a heavy duty operator for the heavy duty operator.',
     contactPoint: {
       '@type': 'ContactPoint',
