@@ -6,7 +6,7 @@ import {
   MIN_ORDER_QUANTITY, ORDER_QUANTITY_STEP,
 } from '../../stores/cartStore'
 import SaleCountdown from '../common/SaleCountdown'
-import { productImageClasses, volumePricingRows, isBoltPack, priceUnit, quantityUnit, packQuantity } from '../../lib/productPresentation'
+import { productImageClasses, productImageAlt, volumePricingRows, isBoltPack, priceUnit, quantityUnit, packQuantity } from '../../lib/productPresentation'
 import { useInventory } from '../../hooks/useInventory'
 import { useStorefrontProducts } from '../../hooks/useStorefrontProducts'
 import StockAvailability from '../common/StockAvailability'
@@ -109,7 +109,7 @@ function ProductCard({ product }) {
         <div className="aspect-[4/3] bg-black relative overflow-hidden">
           <img
             src={thumbnail}
-            alt={product.name}
+            alt={productImageAlt(product, thumbnail)}
             className={`w-full h-full ${productImageClasses(product)} outline outline-1 -outline-offset-1 outline-white/10 ${outOfStock ? 'grayscale' : ''}`}
             loading="lazy"
           />

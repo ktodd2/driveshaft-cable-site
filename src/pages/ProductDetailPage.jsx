@@ -7,7 +7,7 @@ import { useInventory } from '../hooks/useInventory'
 import { useStorefrontProduct } from '../hooks/useStorefrontProduct'
 import StockAvailability from '../components/common/StockAvailability'
 import SEOHead from '../components/common/SEOHead'
-import { volumePricingRows, productMetadata, productImageClasses, isBoltPack, priceUnit, quantityUnit, packQuantity } from '../lib/productPresentation'
+import { volumePricingRows, productMetadata, productImageClasses, productImageAlt, productShareImage, isBoltPack, priceUnit, quantityUnit, packQuantity } from '../lib/productPresentation'
 import { productStructuredData } from '../lib/merchantSchema'
 import { isCableSlug, cableSelectionPricing } from '../lib/cablePurchase'
 import { CablePositioning, CableOrderSummary, CableReturningNote, CableComparisonSection } from '../components/product/CablePurchase'
@@ -78,6 +78,7 @@ function ProductDetailPage() {
     tiers: product.tiers,
   })
   const metadata = productMetadata(product)
+  const shareImage = productShareImage(product)
   // The fetched catalog row supplies the same prices to the UI and schema.
   const isCable      = isCableSlug(product.slug)
   const pricingRow   = product
@@ -120,6 +121,8 @@ function ProductDetailPage() {
         title={metadata.title}
         description={metadata.description}
         keywords={metadata.keywords}
+        ogImage={shareImage}
+        ogImageAlt={shareImage ? productImageAlt(product, shareImage) : undefined}
         canonical={`/products/${slug}`}
         structuredData={structuredData}
       />
@@ -146,8 +149,9 @@ function ProductDetailPage() {
               <div className={`relative bg-gray-900 rounded-lg overflow-hidden aspect-[4/3] ${outOfStock ? 'grayscale opacity-70' : ''}`}>
                 {productImages.length > 0 ? (
                   <img
+                    id="product-main-image"
                     src={productImages[Math.min(selectedImage, productImages.length - 1)]}
-                    alt={`${product.name} - view ${selectedImage + 1}`}
+                    alt={productImageAlt(product, productImages[Math.min(selectedImage, productImages.length - 1)])}
                     className={`w-full h-full ${productImageClasses(product)}`}
                   />
                 ) : (
@@ -157,10 +161,13 @@ function ProductDetailPage() {
               </div>
               {/* Thumbnails */}
               {productImages.length > 1 && (
-                <div className="flex gap-2 overflow-x-auto pb-1">
+                <div role="group" aria-label="Product photos" className="flex gap-2 overflow-x-auto pb-1">
                   {productImages.map((img, idx) => (
                     <button
                       key={idx}
+                      aria-label={`Show ${productImageAlt(product, img)}`}
+                      aria-pressed={selectedImage === idx}
+                      aria-controls="product-main-image"
                       onClick={() => setSelectedImage(idx)}
                       className={`flex-none w-16 h-16 overflow-hidden rounded border-2 transition-colors ${
                         selectedImage === idx ? 'border-yellow-500' : 'border-gray-700 hover:border-gray-500'
@@ -168,7 +175,7 @@ function ProductDetailPage() {
                     >
                       <img
                         src={img}
-                        alt={`${product.name} thumbnail ${idx + 1}`}
+                        alt=""
                         className={`w-full h-full ${productImageClasses(product)}`}
                         loading="lazy"
                       />

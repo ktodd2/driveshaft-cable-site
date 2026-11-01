@@ -21,7 +21,16 @@ for (const path of manifest.paths) {
     assert.ok(html.includes(product.sku), `SKU in initial HTML: ${path}`)
     const stock = state.inventory.find(row => row.product_id === product.id)?.stock_quantity
     const min = stock > 0 && stock < product.min_order_quantity ? stock : product.min_order_quantity
-    const offer = schemas.find(schema => schema['@type'] === 'Product').offers
+    const productSchema = schemas.find(schema => schema['@type'] === 'Product')
+    const offer = productSchema.offers
+    if (productSchema.image?.[0]) {
+      const socialImage = productSchema.image[0].replace(/&/g, '&amp;')
+      assert.ok(head.includes(`property="og:image" content="${socialImage}"`), `Product Open Graph image: ${path}`)
+      assert.ok(head.includes(`name="twitter:image" content="${socialImage}"`), `Product Twitter image: ${path}`)
+      assert.match(head, /property="og:image:alt" content="[^"]+"/)
+      assert.match(head, /name="twitter:image:alt" content="[^"]+"/)
+    }
+    assert.doesNotMatch(html, /alt="[^"]*(?: - view \d+|thumbnail \d+)/, `Descriptive image text: ${path}`)
     assert.equal(offer['@type'], 'Offer', path)
     assert.equal(offer.eligibleQuantity.minValue, min, path)
     if (Number.isFinite(stock)) assert.equal(offer.availability, `https://schema.org/${stock > 0 ? 'InStock' : 'OutOfStock'}`, path)
