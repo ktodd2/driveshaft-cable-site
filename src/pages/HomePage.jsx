@@ -51,6 +51,7 @@ function HomePage() {
       {/* pt clears the fixed header (same offset every page uses), so the
           storefront heading is never tucked under the nav. */}
       <div className="pt-24 md:pt-32">
+        <StorefrontProducts compactIntro />
         {/* Shipping rate change notice */}
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-6">
           <div role="note" className="rounded-2xl bg-yellow-500/[0.07] ring-1 ring-inset ring-yellow-500/40 p-5 sm:p-6">
@@ -63,7 +64,6 @@ function HomePage() {
             </p>
           </div>
         </div>
-        <StorefrontProducts />
       </div>
       <Hero />
       <Problem />
