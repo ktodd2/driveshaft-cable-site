@@ -110,7 +110,7 @@ serve(async (req) => {
   const cutoff = new Date(Date.now() - REORDER_DAYS * 24 * 60 * 60 * 1000).toISOString()
 
   const { data: orders, error: fetchErr } = await supabase
-    .from('orders')
+    .from('email_candidates_reorder')
     .select('id, email, name, items, updated_at')
     .eq('payment_status', 'paid')
     .not('email', 'is', null)

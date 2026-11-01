@@ -271,20 +271,20 @@ serve(async (req) => {
   // Stage 1 → send if subscribed > 3 days ago, advance to 2
   // Stage 2 → send if subscribed > 7 days ago, advance to 3
   const [stage0, stage1, stage2] = await Promise.all([
-    supabase.from('newsletter_subscribers')
+    supabase.from('email_candidates_welcome')
       .select('id, email, welcome_stage, subscribed_at')
       .eq('status', 'active')
       .eq('confirmed', true)
       .eq('welcome_stage', 0)
       .limit(MAX_PER_RUN),
-    supabase.from('newsletter_subscribers')
+    supabase.from('email_candidates_welcome')
       .select('id, email, welcome_stage, subscribed_at')
       .eq('status', 'active')
       .eq('confirmed', true)
       .eq('welcome_stage', 1)
       .lt('subscribed_at', threeDaysAgo)
       .limit(MAX_PER_RUN),
-    supabase.from('newsletter_subscribers')
+    supabase.from('email_candidates_welcome')
       .select('id, email, welcome_stage, subscribed_at')
       .eq('status', 'active')
       .eq('confirmed', true)

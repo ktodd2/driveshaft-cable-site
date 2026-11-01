@@ -172,7 +172,7 @@ serve(async (req) => {
   const cutoff = new Date(Date.now() - ABANDONMENT_WAIT_HOURS * 60 * 60 * 1000).toISOString()
 
   const { data: abandonments, error: fetchErr } = await supabase
-    .from('cart_abandonments')
+    .from('email_candidates_recovery')
     .select('id, email, items, subtotal_cents, recovery_token, created_at')
     .is('email_sent_at', null)
     .is('recovered_order_id', null)

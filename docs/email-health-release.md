@@ -66,3 +66,12 @@ Unit provider calls were mocks. Concurrency tests exercise the claim behavior wi
 ## Approved release preparation
 
 User approved publication and an operational manual-send freeze. Final local correction records missing carrier credentials / unresolved tracking as review-required instead of a clean run. 208 unit tests, isolated SQL permissions, build and routes pass. No carrier secrets, recipients or campaigns are changed. Production application remains gated on the guarded cutover; this document records the reviewed procedure, not proof of deployment.
+
+
+## Review regression fixes before publication
+
+Confirmed P1 batch starvation and P2 out-of-order order-history response at head 89295ff. Added four service-only security-invoker views: email_candidates_recovery, email_candidates_welcome, email_candidates_reorder, email_candidates_winback. They exclude pending/uncertain/rejected attempts before existing source eligibility filters and LIMIT; accepted attempts remain eligible for legacy status reconciliation without another provider send. Win-back holds all candidate orders for the held order's email, so an older order cannot bypass the hold. New partial ledger index supports these checks. PUBLIC/anon/authenticated/service_role default view grants are revoked, then service_role gets SELECT only; base-table/RLS permissions remain in force. No new write RPC or browser access is introduced. The existing read RPC adds outstanding held-attempt counts, displayed separately from batch results.
+
+History requests now use a generation guard invalidated on order changes, unmount and newer refreshes. Old success/error/completion callbacks cannot replace the current order's state.
+
+Regression evidence: isolated SQL reproduces the original 50-held-record batch and verifies selection of the next 10 eligible records for welcome/recovery/reorder, service-only view access, and win-back older-order containment. Mocked desktop/mobile test delays order A until after order B loads and confirms B stays visible. 208 unit tests, isolated SQL, full build and 31 routes pass. No test message is sent. User approved scoped review fixes during guarded release. Jobs 21–26 paused at 18:30:14 UTC; only 21–25 are to be restored, with 26 left paused per separate explicit approval. This note is not a claim that deployment is complete.

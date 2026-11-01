@@ -113,7 +113,7 @@ serve(async (req) => {
   // win-back stamped yet. We grab a generous pool and dedupe by email below
   // to one row per customer (their most recent order in the window).
   const { data: candidates, error: fetchErr } = await supabase
-    .from('orders')
+    .from('email_candidates_winback')
     .select('id, email, name, updated_at')
     .eq('payment_status', 'paid')
     .not('email', 'is', null)
