@@ -67,7 +67,7 @@ const faqStructuredData = {
       name: 'How do I place an order?',
       acceptedAnswer: {
         '@type': 'Answer',
-        text: 'You can order directly through our website for quantities of 1-9 units. For bulk orders of 10 or more units, we recommend requesting a quote to get volume pricing.'
+        text: 'Order directly through our online shop. Standard and XL cables each have a minimum order of 10 cables, in increments of 10 per length. Cable cutters are sold individually, and brake caging bolts are sold in packs of 10. Volume pricing is applied automatically online; no quote is needed for normal orders. Contact us for dealer, fleet or special-order requests.'
       }
     },
     {
@@ -75,7 +75,7 @@ const faqStructuredData = {
       name: 'Do you offer volume discounts?',
       acceptedAnswer: {
         '@type': 'Answer',
-        text: 'Yes! We offer volume pricing for orders of 10+ units. Request a quote through our website or contact us directly to discuss fleet and wholesale pricing.'
+        text: 'Yes. Cable pricing is based on the quantity of each cable length: 10-49, 50-99, 100-199 and 200+ cables. Your price updates automatically in the shop and cart. Standard and XL quantities are priced separately. See each product page for its current prices and accessory quantity discounts. Quotes are available for dealer, fleet or special-order requests.'
       }
     },
     {
@@ -177,11 +177,11 @@ const faqs = [
     items: [
       {
         question: 'How do I place an order?',
-        answer: 'You can order directly through our website for quantities of 1-9 units. For bulk orders of 10 or more units, we recommend requesting a quote to get volume pricing.'
+        answer: 'Order directly through our online shop. Standard and XL cables each have a minimum order of 10 cables, in increments of 10 per length. Cable cutters are sold individually, and brake caging bolts are sold in packs of 10. Volume pricing is applied automatically online; no quote is needed for normal orders. Contact us for dealer, fleet or special-order requests.'
       },
       {
         question: 'Do you offer volume discounts?',
-        answer: 'Yes! We offer volume pricing for orders of 10+ units. Request a quote through our website or contact us directly to discuss fleet and wholesale pricing.'
+        answer: 'Yes. Cable pricing is based on the quantity of each cable length: 10-49, 50-99, 100-199 and 200+ cables. Your price updates automatically in the shop and cart. Standard and XL quantities are priced separately. See each product page for its current prices and accessory quantity discounts. Quotes are available for dealer, fleet or special-order requests.'
       },
       {
         question: 'Where do you ship?',

@@ -62,8 +62,10 @@ function QuoteForm() {
             <div className="w-24 h-1 bg-yellow-500 mb-6"></div>
 
             <p className="text-xl text-gray-300 mb-8">
-              Get a quote for the Driveshaft Cable. Volume discounts available for fleet and wholesale orders.
+              Shop online with automatic volume pricing. Standard and XL cables each start at 10, in increments of 10 per length. Use this form for dealer, fleet or special-order requests.
             </p>
+
+            <a href="/products" className="btn-primary inline-flex mb-8">Shop Online</a>
 
             <div className="space-y-6 mb-8">
               <div className="flex items-center gap-4">
@@ -194,21 +196,20 @@ function QuoteForm() {
                   </div>
 
                   <div>
-                    <label htmlFor="quantity" className="block text-gray-400 text-sm mb-1">Quantity Needed</label>
-                    <select
-                      id="quantity"
-                      name="quantity"
-                      value={formData.quantity}
-                      onChange={handleChange}
-                      className="bg-gray-800 border border-gray-600 text-white px-4 py-3 w-full focus:border-yellow-500 focus:outline-none"
-                    >
-                      <option value="">Select quantity</option>
-                      <option value="1">1-5 units</option>
-                      <option value="10">10-24 units</option>
-                      <option value="25">25-49 units</option>
-                      <option value="50">50-99 units</option>
-                      <option value="100">100+ units</option>
-                    </select>
+                    <label htmlFor="quantity" className="block text-gray-400 text-sm mb-1">Estimated quantity (units or packs)</label>
+                    <input
+                        type="number"
+                        id="quantity"
+                        name="quantity"
+                        min="1"
+                        step="1"
+                        value={formData.quantity}
+                        onChange={handleChange}
+                        aria-describedby="quote-quantity-help"
+                        placeholder="Enter an estimated quantity"
+                        className="w-full bg-gray-800 border border-gray-600 text-white px-4 py-3 focus:border-yellow-500 focus:outline-none"
+                      />
+                      <p id="quote-quantity-help" className="text-gray-400 text-sm mt-2">For cable orders, use 10 or more per length, in increments of 10. Count brake bolts by 10-packs and cutters individually. For mixed orders, list each product and quantity in your message.</p>
                   </div>
 
                   <div>
@@ -219,7 +220,7 @@ function QuoteForm() {
                       value={formData.message}
                       onChange={handleChange}
                       rows="4"
-                      placeholder="Tell us about your needs, timeline, or any questions..."
+                      placeholder="List the products and quantities you need, plus any special requirements or questions..."
                     ></textarea>
                   </div>
 
