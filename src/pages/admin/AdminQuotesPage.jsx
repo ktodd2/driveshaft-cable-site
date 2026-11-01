@@ -33,6 +33,12 @@ function AdminQuotesPage() {
     }
   }
 
+  useEffect(() => {
+    if (window.location.hash.startsWith('#quote-')) {
+      document.getElementById(window.location.hash.slice(1))?.scrollIntoView({ block: 'center' })
+    }
+  }, [quotes])
+
   const handleStatusChange = async (id, newStatus) => {
     const { error } = await supabase
       .from('quote_requests')
@@ -183,7 +189,7 @@ function AdminQuotesPage() {
                   </thead>
                   <tbody>
                     {quotes.map((quote) => (
-                      <tr key={quote.id} className="border-b border-gray-700 hover:bg-gray-800/50">
+                      <tr id={`quote-${quote.id}`} key={quote.id} className="border-b border-gray-700 hover:bg-gray-800/50">
                         <td className="px-6 py-4">
                           <div className="text-white text-sm">
                             {format(new Date(quote.created_at), 'MMM d, yyyy')}
