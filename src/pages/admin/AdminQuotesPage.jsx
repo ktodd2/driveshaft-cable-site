@@ -1,76 +1,13 @@
-import React, { useEffect, useState } from 'react'
+import React from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
-import { format } from 'date-fns'
+import QuoteContactReview from '../../components/admin/QuoteContactReview'
 
 function AdminQuotesPage() {
   const navigate = useNavigate()
-  const [loading, setLoading] = useState(true)
-  const [quotes, setQuotes] = useState([])
-
-  useEffect(() => {
-    checkAuth()
-    loadQuotes()
-  }, [])
-
-  const checkAuth = async () => {
-    const { data: { session } } = await supabase.auth.getSession()
-    if (!session) {
-      navigate('/admin/login')
-      return
-    }
-    setLoading(false)
-  }
-
-  const loadQuotes = async () => {
-    const { data, error } = await supabase
-      .from('quote_requests')
-      .select('*')
-      .order('created_at', { ascending: false })
-
-    if (!error && data) {
-      setQuotes(data)
-    }
-  }
-
-  useEffect(() => {
-    if (window.location.hash.startsWith('#quote-')) {
-      document.getElementById(window.location.hash.slice(1))?.scrollIntoView({ block: 'center' })
-    }
-  }, [quotes])
-
-  const handleStatusChange = async (id, newStatus) => {
-    const { error } = await supabase
-      .from('quote_requests')
-      .update({ status: newStatus })
-      .eq('id', id)
-
-    if (!error) {
-      loadQuotes()
-    }
-  }
-
   const handleSignOut = async () => {
     await supabase.auth.signOut()
     navigate('/admin/login')
-  }
-
-  const getStatusBadge = (status) => {
-    const styles = {
-      new: 'bg-yellow-500/20 text-yellow-500',
-      responded: 'bg-blue-500/20 text-blue-400',
-      converted: 'bg-green-500/20 text-green-400',
-      declined: 'bg-red-500/20 text-red-400'
-    }
-    return styles[status] || styles.new
-  }
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-ktodd-dark flex items-center justify-center">
-        <div className="text-yellow-500">Loading...</div>
-      </div>
-    )
   }
 
   return (
@@ -157,110 +94,7 @@ function AdminQuotesPage() {
         </aside>
 
         {/* Main Content */}
-        <main className="flex-1 p-6 lg:p-8">
-          <div className="max-w-6xl mx-auto">
-            <div className="flex items-center justify-between mb-8">
-              <h1 className="text-3xl font-industrial text-white">QUOTE REQUESTS</h1>
-              <span className="text-gray-400">{quotes.length} total</span>
-            </div>
-
-            {quotes.length === 0 ? (
-              /* Empty State */
-              <div className="bg-gray-800/50 border border-gray-700 p-12 text-center">
-                <svg className="w-16 h-16 text-gray-600 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
-                </svg>
-                <h2 className="text-xl font-industrial text-white mb-2">NO QUOTE REQUESTS</h2>
-                <p className="text-gray-400">Quote requests will appear here when customers submit them.</p>
-              </div>
-            ) : (
-              /* Quotes Table */
-              <div className="bg-gray-800/50 border border-gray-700 overflow-hidden">
-                <table className="w-full">
-                  <thead>
-                    <tr className="border-b border-gray-700">
-                      <th className="text-left text-gray-400 text-sm font-normal px-6 py-4">Date</th>
-                      <th className="text-left text-gray-400 text-sm font-normal px-6 py-4">Contact</th>
-                      <th className="text-left text-gray-400 text-sm font-normal px-6 py-4">Company</th>
-                      <th className="text-left text-gray-400 text-sm font-normal px-6 py-4">Qty</th>
-                      <th className="text-left text-gray-400 text-sm font-normal px-6 py-4">Status</th>
-                      <th className="text-left text-gray-400 text-sm font-normal px-6 py-4">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {quotes.map((quote) => (
-                      <tr id={`quote-${quote.id}`} key={quote.id} className="border-b border-gray-700 hover:bg-gray-800/50">
-                        <td className="px-6 py-4">
-                          <div className="text-white text-sm">
-                            {format(new Date(quote.created_at), 'MMM d, yyyy')}
-                          </div>
-                          <div className="text-gray-500 text-xs">
-                            {format(new Date(quote.created_at), 'h:mm a')}
-                          </div>
-                        </td>
-                        <td className="px-6 py-4">
-                          <div className="text-white text-sm">{quote.name}</div>
-                          <div className="text-gray-400 text-xs">{quote.email}</div>
-                        </td>
-                        <td className="px-6 py-4">
-                          <span className="text-gray-300 text-sm">{quote.company || '-'}</span>
-                        </td>
-                        <td className="px-6 py-4">
-                          <span className="text-yellow-500 font-bold">{quote.quantity || '-'}</span>
-                        </td>
-                        <td className="px-6 py-4">
-                          <span className={`px-2 py-1 text-xs uppercase ${getStatusBadge(quote.status)}`}>
-                            {quote.status || 'new'}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4">
-                          <select
-                            value={quote.status || 'new'}
-                            onChange={(e) => handleStatusChange(quote.id, e.target.value)}
-                            className="bg-gray-800 border border-gray-600 text-white text-sm px-2 py-1 focus:border-yellow-500 focus:outline-none"
-                          >
-                            <option value="new">New</option>
-                            <option value="responded">Responded</option>
-                            <option value="converted">Converted</option>
-                            <option value="declined">Declined</option>
-                          </select>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-
-            {/* Quote Detail Expandable */}
-            {quotes.length > 0 && (
-              <div className="mt-8">
-                <h2 className="text-xl font-industrial text-yellow-500 mb-4">RECENT MESSAGES</h2>
-                <div className="space-y-4">
-                  {quotes.slice(0, 5).filter(q => q.message).map((quote) => (
-                    <div key={quote.id} className="bg-gray-800/50 border border-gray-700 p-4">
-                      <div className="flex justify-between items-start mb-2">
-                        <div>
-                          <span className="text-white font-bold">{quote.name}</span>
-                          <span className="text-gray-400 text-sm ml-2">({quote.company || 'No company'})</span>
-                        </div>
-                        <span className="text-gray-500 text-xs">
-                          {format(new Date(quote.created_at), 'MMM d, yyyy')}
-                        </span>
-                      </div>
-                      <p className="text-gray-300 text-sm">{quote.message}</p>
-                      <div className="mt-2 flex items-center gap-4">
-                        <a href={`mailto:${quote.email}`} className="text-yellow-500 hover:text-yellow-400 text-sm">
-                          Reply via email →
-                        </a>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-        </main>
+        <main className="flex-1 min-w-0 p-4 sm:p-6 lg:p-8"><QuoteContactReview /></main>
       </div>
     </div>
   )
