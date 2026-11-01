@@ -36,7 +36,7 @@ try{
   await page.goto('http://127.0.0.1:3012/__report_test?view='+view+'&mode=complete');await page.getByRole('note').waitFor();await page.getByText('$6.34',{exact:true}).first().waitFor()
   for(const mode of ['empty','missing-product','error','cost-error']){
    await page.goto('http://127.0.0.1:3012/__report_test?view='+view+'&mode='+mode)
-   if(mode==='empty')await page.getByRole('note').waitFor();else if(mode==='missing-product'){await page.getByRole('note').waitFor();assert.ok(await page.getByText('Incomplete',{exact:true}).count()>0)}else{await page.getByRole('alert').waitFor();assert.equal(await page.getByRole('note').count(),0)}
+   if(mode==='empty')await page.getByRole('note').waitFor();else if(mode==='missing-product'){await page.getByRole('note').waitFor();assert.ok(await page.getByText('Incomplete',{exact:true}).count()>0)}else{await page.getByRole('alert').filter({hasText:/Orders unavailable|Product costs unavailable/}).waitFor();assert.equal(await page.getByRole('note').count(),0)}
   }
  }
  assert.deepEqual(errors,[]);console.log('PASS reporting '+width+'px: both pages, matching totals, unknown/zero shipping, estimate, product filter, CSV, empty/error, no overflow');await context.close()

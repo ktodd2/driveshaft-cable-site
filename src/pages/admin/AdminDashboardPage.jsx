@@ -3,6 +3,7 @@ import ReportQuality from '../../components/admin/ReportQuality'
 import { filterReportOrders } from '../../lib/profitReporting'
 import { readAttentionRows } from '../../lib/needsAttention'
 import NeedsAttention from '../../components/admin/NeedsAttention'
+import InventoryPlanning from '../../components/admin/InventoryPlanning'
 import React, { useEffect, useState } from 'react'
 import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
@@ -333,6 +334,7 @@ function AdminDashboardPage() {
             </h1>
 
             {user && <NeedsAttention />}
+            {user && <InventoryPlanning />}
 
             {(reportError || shipmentsError) && <p role="alert" className="text-red-300 mb-6">{reportError || shipmentsError}. Reload to retry.</p>}
             {/* Stats Grid */}
