@@ -155,3 +155,57 @@ this uncertainty; no Stripe verification or refund reconciliation was attempted.
 Live item JSON keys are only name, price, productId and quantity: no captured
 historical unit cost exists there. Receipt averages remain **current estimates**,
 not historically captured COGS. No order costs were fabricated or rewritten.
+
+## Follow-up: owner-selected $15 reporting fallback (local, not yet released)
+
+The owner's latest direction supersedes the request to fill stored costs:
+“Use 15$ as fallback for not entered.” **No production order updates were executed.**
+The preflight used SELECT queries only. No schema or provenance workaround is needed.
+
+Dashboard, Analytics, product allocation, summary/PDF and bookkeeping export now
+share a fixed **1,500-cent reporting fallback** whenever actual shipping is null
+or absent. Existing recorded zeros and positive costs win; invalid recorded values
+remain incomplete. The former browser-local editable fallback is replaced by an
+explicit owner-specified $15 explanation, so stale localStorage (including zero)
+cannot make two browsers or screens disagree. The rule applies to future missing
+shipping too. It never updates order records or triggers notifications.
+
+Bookkeeping preserves the blank actual_shipping_cost_cents field and puts 1500
+in shipping_estimate_cents, marks shipping_cost_status=estimated and adds
+shipping_estimate_source=owner_specified_reporting_fallback_not_carrier_verified.
+Mixed-product allocations divide that one $15 amount with cent-preserving rounding;
+they do not charge $15 again for each line/product. Missing product cost, tax/total
+or unrecognized fee inputs still withhold contribution. Refund/test/payment
+verification limitations remain visible. These are contribution estimates, not
+verified carrier charges or net profit.
+
+Fresh read-only source check: 2026-11-01 06:12:35 UTC. 170 eligible paid orders;
+24 missing costs across all time; 146 positive recorded costs, no recorded zeros.
+Excluded missing-cost records: 61 pending/unpaid, 4 pending/failed, 1 cancelled/paid.
+No obvious test-name/example-domain markers among the 24 eligible missing rows;
+the schema still cannot establish test mode or independently verify payment.
+
+Projected using the fallback (no data changes):
+
+| Metric | Last 30 UTC dates | All time |
+|---|---:|---:|
+| Eligible orders | 60 | 170 |
+| Orders using fallback | 15 | 24 |
+| Estimated shipping added | $225.00 | $360.00 |
+| Recorded + estimated shipping | $1,157.79 | $2,689.68 |
+| Estimated contribution | $14,752.24 | $33,916.05 |
+| Estimated contribution margin | 75.6% | 75.6% |
+| Orders still incomplete | 0 | 0 |
+
+Shipping was the only missing input in these current eligible records. Source
+amounts/IDs remain untouched. Unit coverage includes null/absent/zero/positive/
+invalid shipping, other unknowns, repeated/mixed products, date eligibility,
+future unentered shipping, export provenance and sum consistency. The full suite
+now has 186 passing tests. Build and all 31 routes pass. No push or deployment of
+this follow-up is authorized until the user approves the tested local change.
+
+Follow-up desktop/mobile verification passed at 1440px and 390px with synthetic
+fixtures and the fresh actual-data snapshot served only locally. Both pages show
+$14,752.24 for the last 30 dates, 60 CSV rows, 15 separate $15 shipping estimates,
+blank actual costs for those rows and matching source amounts. No overflow or JS
+errors. Existing recorded-zero and other-incomplete cases pass.

@@ -14,7 +14,7 @@ test('shared totals use per-product costs, ex-tax discounted revenue and estimat
 })
 test('unknown differs from recorded zero; fallback never fabricates an actual cost',()=>{
  const missing={...order,actual_shipping_cost_cents:null}
- assert.equal(calcOrderProfit(missing,costs).profit,null)
+ assert.equal(calcOrderProfit(missing,costs,0).profit,null)
  assert.equal(calcOrderProfit({...order,actual_shipping_cost_cents:0},costs).profit,634)
  const estimate=calcOrderProfit(missing,costs,200)
  assert.equal(estimate.shippingKnown,false);assert.equal(estimate.shippingEstimated,true);assert.equal(estimate.profit,434)
@@ -24,8 +24,8 @@ test('unknown differs from recorded zero; fallback never fabricates an actual co
  assert.equal(calcOrderProfit(order,{'1':0}).profit,null)
  for(const field of ['tax_cents','total_cents'])assert.equal(calcOrderProfit({...order,[field]:null},costs).profit,null)
  assert.equal(calcOrderProfit({...order,payment_method:'unknown'},costs).profit,null)
- assert.equal(calcProfitStats([order,missing],costs).netProfit,null)
- assert.equal(calcProfitStats([order,missing],costs).totalShippingCost,null)
+ assert.equal(calcProfitStats([order,missing],costs,0).netProfit,null)
+ assert.equal(calcProfitStats([order,missing],costs,0).totalShippingCost,null)
 })
 test('weighted receipts distinguish absent product from zero; changing receipts is an explicit current estimate',()=>{
  const rows=[{product_id:'1',quantity:2,total_cost_cents:200},{product_id:'1',quantity:2,total_cost_cents:400},{product_id:'2',quantity:2,total_cost_cents:0},{product_id:'3',quantity:0,total_cost_cents:100}]
@@ -44,7 +44,7 @@ test('product allocations reconcile integer cents, duplicate product lines, zero
  }
  const zero={...order,items:order.items.map(i=>({...i,price:0}))}
  assert.equal(scopeOrdersToProduct(zero,costs).length,2)
- assert.ok(scopeOrdersToProduct({...order,actual_shipping_cost_cents:null},costs).every(o=>o._report.profit===null))
+ assert.ok(scopeOrdersToProduct({...order,actual_shipping_cost_cents:null},costs,0).every(o=>o._report.profit===null))
 })
 test('UTC dates share exact boundaries, custom end includes milliseconds, and eligibility excludes known issues',()=>{
  const now=new Date('2026-11-01T15:00:00Z')
@@ -58,7 +58,7 @@ test('UTC dates share exact boundaries, custom end includes milliseconds, and el
 test('bookkeeping schema preserves gross components, unknown blanks, IDs and refund uncertainty; CSV is safe',()=>{
  const rows=bookkeepingRows([{...order,id:' =HYPERLINK("bad")',actual_shipping_cost_cents:null}],costs)
  assert.equal(rows[0].subtotal_cents,1200);assert.equal(rows[0].discount_cents,100);assert.equal(rows[0].shipping_charged_cents,100);assert.equal(rows[0].tax_cents,50)
- assert.equal(rows[0].actual_shipping_cost_cents,null);assert.equal(rows[0].contribution_estimate_cents,null);assert.equal(rows[0].refund_status,'unreconciled');assert.equal(rows[0].payment_verification,'recorded_status_only');assert.equal(rows[0].test_mode_status,'unverified')
+ assert.equal(rows[0].actual_shipping_cost_cents,null);assert.equal(rows[0].contribution_estimate_cents,-866);assert.equal(rows[0].shipping_estimate_cents,1500);assert.equal(rows[0].shipping_cost_status,'estimated');assert.equal(rows[0].refund_status,'unreconciled');assert.equal(rows[0].payment_verification,'recorded_status_only');assert.equal(rows[0].test_mode_status,'unverified')
  const csv=Papa.unparse({fields:BOOKKEEPING_COLUMNS,data:rows.map(row=>BOOKKEEPING_COLUMNS.map(k=>safeCsvCell(row[k])))},{escapeFormulae:true})
  const parsed=Papa.parse(csv,{header:true}).data[0]
  assert.ok(parsed.order_id.startsWith("' ="));assert.equal(parsed.actual_shipping_cost_cents,'')
@@ -69,4 +69,29 @@ test('bookkeeping schema preserves gross components, unknown blanks, IDs and ref
 })
 test('invalid receipts make affected product costs unknown instead of using a partial average',()=>{
  assert.deepEqual(calcWeightedAvgCostByProduct([{product_id:'1',quantity:2,total_cost_cents:200},{product_id:'1',quantity:0,total_cost_cents:200}]),{})
+})
+
+
+test('owner fallback applies to null and future unentered shipping without overwriting recorded zero or positive costs',()=>{
+ for(const actual of [null,undefined]){
+  const o={...order,actual_shipping_cost_cents:actual};const before=structuredClone(o)
+  const r=calcOrderProfit(o,costs);assert.equal(r.shippingCost,1500);assert.equal(r.profit,-866);assert.equal(r.shippingKnown,false);assert.equal(r.shippingEstimated,true);assert.deepEqual(o,before)
+  const row=bookkeepingRows([o],costs)[0];assert.equal(row.actual_shipping_cost_cents,null);assert.equal(row.shipping_estimate_cents,1500);assert.equal(row.shipping_estimate_source,'owner_specified_reporting_fallback_not_carrier_verified');assert.equal(row.data_quality,'estimate_only')
+ }
+ for(const actual of [0,875]){const r=calcOrderProfit({...order,actual_shipping_cost_cents:actual},costs);assert.equal(r.shippingCost,actual);assert.equal(r.shippingEstimated,false);assert.equal(bookkeepingRows([{...order,actual_shipping_cost_cents:actual}],costs)[0].shipping_estimate_cents,null)}
+ for(const patch of [{tax_cents:null},{payment_method:'unrecognized'},{items:[]}])assert.equal(calcOrderProfit({...order,actual_shipping_cost_cents:null,...patch},costs).profit,null)
+ assert.equal(calcOrderProfit({...order,actual_shipping_cost_cents:-1},costs).profit,null)
+})
+test('mixed product estimates allocate $15 once and export totals match aggregate and date filters',()=>{
+ const missing={...order,actual_shipping_cost_cents:null,items:[...order.items,{productId:'1',price:400,quantity:1}]}
+ const rows=filterReportOrders([missing,{...missing,id:'future',created_at:'2026-12-01T00:00:00Z'},{...missing,id:'cancelled',status:'cancelled'}],'30d','','',new Date('2026-11-01T15:00:00Z'))
+ assert.equal(rows.length,1)
+ const slices=scopeOrdersToProduct(missing,costs)
+ assert.equal(slices.reduce((s,r)=>s+r._report.shippingCost,0),1500)
+ const aggregate=calcProfitStats(rows,costs);const exported=bookkeepingRows(rows,costs)
+ assert.equal(aggregate.totalShippingCost,1500);assert.equal(aggregate.ordersWithShippingEstimates,1);assert.equal(aggregate.totalShippingEstimateCents,1500);assert.equal(aggregate.incompleteOrders,0)
+ assert.equal(slices.reduce((s,r)=>s+r._report.profit,0),aggregate.netProfit)
+ assert.equal(exported.reduce((s,r)=>s+r.contribution_estimate_cents,0),aggregate.netProfit)
+ assert.equal(exported.reduce((s,r)=>s+r.shipping_estimate_cents,0),aggregate.totalShippingEstimateCents)
+ assert.equal(calcProfitStats([],costs).totalShippingEstimateCents,0)
 })
