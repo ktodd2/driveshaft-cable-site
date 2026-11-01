@@ -67,13 +67,13 @@ function buildStructuredData(product) {
 function ProductDetailPage() {
   const { slug } = useParams()
   const navigate = useNavigate()
-  const [quantity, setQuantity] = useState(MIN_ORDER_QUANTITY)
+  const { product, loading, notFound } = useStorefrontProduct(slug)
+  const [quantity, setQuantity] = useState(product?.min_order_quantity ?? MIN_ORDER_QUANTITY)
   // String state for the input so the user can clear and type freely.
-  const [quantityDraft, setQuantityDraft] = useState(String(MIN_ORDER_QUANTITY))
+  const [quantityDraft, setQuantityDraft] = useState(String(product?.min_order_quantity ?? MIN_ORDER_QUANTITY))
   const [selectedImage, setSelectedImage] = useState(0)
   const addItem = useCartStore((state) => state.addItem)
 
-  const { product, loading, notFound } = useStorefrontProduct(slug)
   const productImages = (product?.images && product.images.length > 0) ? product.images : []
   const { stock, totalStock, loading: stockLoading } = useInventory(product?.id)
 

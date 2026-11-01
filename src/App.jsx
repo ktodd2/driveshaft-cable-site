@@ -1,6 +1,7 @@
 import React, { Suspense, useEffect } from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { HelmetProvider } from 'react-helmet-async'
+import { PublicDataContext } from './ssg/PublicData'
 import Layout from './components/layout/Layout'
 import { useCartStore } from './stores/cartStore'
 import HomePage from './pages/HomePage'
@@ -36,20 +37,22 @@ const AdminTestimonialsPage = React.lazy(() => import('./pages/admin/AdminTestim
 const AdminProductsPage = React.lazy(() => import('./pages/admin/AdminProductsPage'))
 const AdminSalesPage = React.lazy(() => import('./pages/admin/AdminSalesPage'))
 
-function App() {
+function App({ router: Router = BrowserRouter, routerProps = {}, helmetContext, initialData = null }) {
   // Hydrate the in-memory pricing map from the `products` table once at app
   // mount so admin price edits propagate without a code change. The cart
   // store falls back to the hardcoded PRODUCT_PRICING constant if the fetch
   // fails, so a flaky DB never blocks rendering.
   useEffect(() => {
+    useCartStore.persist?.rehydrate()
     const cart = useCartStore.getState()
     cart.loadProducts()
     cart.loadSales()
   }, [])
 
   return (
-    <HelmetProvider>
-    <BrowserRouter>
+    <HelmetProvider context={helmetContext}>
+    <PublicDataContext.Provider value={initialData}>
+    <Router {...routerProps}>
       <Routes>
         {/* Public routes */}
         <Route path="/" element={<Layout />}>
@@ -89,7 +92,8 @@ function App() {
         <Route path="/admin/products" element={<Suspense fallback={<div />}><AdminProductsPage /></Suspense>} />
         <Route path="/admin/sales" element={<Suspense fallback={<div />}><AdminSalesPage /></Suspense>} />
       </Routes>
-    </BrowserRouter>
+    </Router>
+    </PublicDataContext.Provider>
     </HelmetProvider>
   )
 }

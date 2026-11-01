@@ -23,3 +23,6 @@ Thumbs.db
 # Logs
 *.log
 npm-debug.log*
+
+# Temporary server renderer (never publish its server modules)
+.prerender/

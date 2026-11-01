@@ -1,12 +1,14 @@
 import { useState, useEffect } from 'react'
+import { usePublicData } from '../ssg/PublicData'
 import { supabase } from '../lib/supabase'
 
 // Single storefront product fetched by slug, used by ProductDetailPage.
 // Returns { product, loading, notFound } so the page can render a clean
 // 404 state vs a loading skeleton.
 export function useStorefrontProduct(slug) {
-  const [product, setProduct] = useState(null)
-  const [loading, setLoading] = useState(true)
+  const initial = usePublicData()?.products?.find(p => p.slug === slug)
+  const [product, setProduct] = useState(initial || null)
+  const [loading, setLoading] = useState(!initial)
   const [notFound, setNotFound] = useState(false)
 
   useEffect(() => {
@@ -16,7 +18,8 @@ export function useStorefrontProduct(slug) {
       return
     }
     let cancelled = false
-    setLoading(true)
+    if (initial) setProduct(initial)
+    setLoading(!initial)
     setNotFound(false)
     supabase
       .from('products')

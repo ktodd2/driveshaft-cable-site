@@ -121,3 +121,21 @@ test('a later successful catalog refresh still updates live pricing and existing
   assert.match(html, /Test sale/)
   assert.doesNotMatch(html, /Volume discount applied/)
 })
+
+test('prerender pricing seeds cannot overwrite a saved cart before hydration restores it', () => {
+  const saved = { productId: cutter.id, name: cutter.name, quantity: 2 }
+  const previous = globalThis.localStorage
+  let writes = 0
+  const storage = { getItem: () => JSON.stringify({ state: { items: [saved], recoveryDiscountCode: 'saved-code' }, version: 0 }), setItem() { writes++ }, removeItem() {} }
+  Object.defineProperty(globalThis, 'localStorage', { configurable: true, value: storage })
+  try {
+    const s = harness()
+    assert.equal(s.useCartStore.getState().items.length, 0)
+    s.seedStorefrontPricing([cutter, xl])
+    assert.equal(writes, 0)
+    assert.equal(s.getPriceForQuantity(cutter.id, 1), 2500)
+    s.useCartStore.persist.rehydrate()
+    assert.equal(s.useCartStore.getState().items[0].quantity, 2)
+    assert.equal(s.useCartStore.getState().recoveryDiscountCode, 'saved-code')
+  } finally { Object.defineProperty(globalThis, 'localStorage', { configurable: true, value: previous }) }
+})

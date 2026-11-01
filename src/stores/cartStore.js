@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
+import { readPublicSnapshot } from '../ssg/bootstrap'
 import { supabase } from '../lib/supabase'
 
 // Pricing constants — server-side copy lives at supabase/functions/_shared/pricing.ts
@@ -184,6 +185,12 @@ export function getPriceForQuantity(productId, qty, product = null) {
   return applySalePercent(tierPrice, sale.discount_percent)
 }
 
+// Seed public pricing without a state/persistence write before saved carts restore.
+export function seedStorefrontPricing(products) {
+  livePricing = { ...PRODUCT_PRICING }
+  for (const product of products || []) livePricing[product.id] = normalizeDbProduct(product)
+}
+
 // Read-only accessor for components that want the current pricing snapshot
 // without re-rendering. For React subscriptions, use the zustand store's
 // `productsLoadedAt` field as a re-render trigger.
@@ -348,6 +355,8 @@ export const useCartStore = create(
     }),
     {
       name: 'ktodd-cart',
+      // Restore saved carts after hydration, so the server and first browser render agree.
+      skipHydration: typeof document === 'undefined' || Boolean(readPublicSnapshot(document, window.location.pathname)),
       partialize: (state) => ({
         items: state.items,
         recoveryDiscountCode: state.recoveryDiscountCode,

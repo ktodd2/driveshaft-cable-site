@@ -44,11 +44,11 @@ function SEOHead({
         Array.isArray(structuredData)
           ? structuredData.map((data, i) => (
               <script key={i} type="application/ld+json">
-                {JSON.stringify(data)}
+                {JSON.stringify(data).replace(/</g, '\\u003c')}
               </script>
             ))
           : <script type="application/ld+json">
-              {JSON.stringify(structuredData)}
+              {JSON.stringify(structuredData).replace(/</g, '\\u003c')}
             </script>
       )}
     </Helmet>
