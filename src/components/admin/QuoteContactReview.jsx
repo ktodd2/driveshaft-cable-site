@@ -70,6 +70,10 @@ export default function QuoteContactReview() {
             <div><dt className="text-gray-400">Marketing preference</dt><dd>{review.optedOut ? 'Opt-out recorded' : sources.preferences?.error ? 'Unavailable' : 'No opt-out found here; this is not consent'}</dd></div>
           </dl>
           <p className="rounded bg-yellow-500/10 border border-yellow-500/30 p-3 text-yellow-200"><strong>Suggested next action: </strong>{review.nextAction}</p>
+          {!review.optedOut && !review.incomplete && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(quote.email || '').trim()) && <div className="mt-4 text-sm">
+            <a href={`mailto:${encodeURIComponent(quote.email.trim())}`} className="text-yellow-400 underline">Open email app</a>
+            <p className="mt-1 text-gray-400">Review history first. Opening your email app does not send a message or record contact here.</p>
+          </div>}
           <details className="mt-4">
             <summary className="cursor-pointer text-yellow-400 py-2">Review history ({review.events.length} records)</summary>
             <p className="text-sm my-2">Includes other quotes and orders with the same email. Confirm identity and relevance. No personal replies or manual contact notes are stored here.</p>

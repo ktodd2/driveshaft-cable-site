@@ -4,7 +4,7 @@ import { readFileSync } from 'node:fs'
 import { runInNewContext } from 'node:vm'
 import { stripTypeScriptTypes } from 'node:module'
 import { quoteReview } from '../../src/lib/quoteReview.js'
-import { readReviewSources } from '../../supabase/functions/_shared/quoteReview.js'
+import { readReviewSources, reviewSources } from '../../supabase/functions/_shared/quoteReview.js'
 const quote = { id:1,email:' A@Example.test ',created_at:'2026-02-01',status:'new',message:'Please quote' }
 const sources = () => ({ quotes:{rows:[quote]},orders:{rows:[]},sends:{rows:[]},preferences:{rows:[]} })
 test('matches only normalized exact email, retains pre-quote and unpaid orders as possible evidence, deduplicates IDs', () => {
@@ -41,4 +41,15 @@ test('active admin can read; repeated calls have no write path and responses can
  const e=endpoint(); for(let i=0;i<2;i++){const response=await e.call(new Request('https://offline.test',{method:'POST',headers:{Authorization:'Bearer fixture'}})); assert.equal(response.status,200); assert.equal(response.headers.get('Cache-Control'),'no-store'); assert.equal((await response.json()).sources.quotes.rows.length,1)}
  assert.equal(e.counts().reads,2)
  const invalid=await e.call(new Request('https://offline.test')); assert.equal(invalid.status,405)
+})
+
+test('missing or invalid dates never assert that an order predates a quote', () => {
+ const s=sources(); s.orders.rows=[{id:'undated',email:'a@example.test',created_at:null}]
+ assert.doesNotMatch(quoteReview(quote,s).events.find(e=>e.id==='order-undated').text,/predates/)
+ s.orders.rows[0].created_at='2026-01-01';assert.doesNotMatch(quoteReview({...quote,created_at:'invalid'},s).events.find(e=>e.id==='order-undated').text,/predates/)
+})
+test('review projections exclude private shipping/payment identifiers and subscriber tokens', () => {
+ for(const [,fields] of Object.values(reviewSources)) {
+  assert.doesNotMatch(fields,/\*|shipping_address|stripe_|token|html_content|phone|total_cents/)
+ }
 })

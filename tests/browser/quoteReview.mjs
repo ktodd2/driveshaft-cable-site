@@ -25,6 +25,10 @@ try{
  if(url.pathname==='/__quote_test')return route.fulfill({contentType:'text/html',body:`<div id="root"></div><script type="module">import RefreshRuntime from '/@react-refresh';RefreshRuntime.injectIntoGlobalHook(window);window.$RefreshReg$=()=>{};window.$RefreshSig$=()=>type=>type;window.__vite_plugin_react_preamble_installed__=true;await import('/@vite/client');await import('/tests/browser/quoteReviewHarness.jsx');</script>`});
  return route.continue();})
  await page.goto('http://127.0.0.1:3011/__quote_test');await page.getByText('2 of 2 quotes · oldest first').waitFor();
+ assert.equal(await page.getByRole('link',{name:'Open email app',exact:true}).count(),1)
+ assert.equal(await page.getByRole('link',{name:'Open email app',exact:true}).getAttribute('href'),'mailto:alex%40example.test')
+ await page.getByRole('link',{name:'Open email app',exact:true}).evaluate(a=>a.addEventListener('click',e=>e.preventDefault()))
+ const beforeLaunch=await page.evaluate(()=>window.fixture.calls);await page.getByRole('link',{name:'Open email app',exact:true}).click();assert.equal(await page.evaluate(()=>window.fixture.calls),beforeLaunch)
  assert.equal(await page.getByText('Unknown — check your inbox',{exact:true}).count(),2)
  await page.locator('#quote-1 summary').click();assert.equal(await page.getByRole('link',{name:/Order order-fi/}).getAttribute('href'),'/admin/orders?order=order-fixture');
  await page.getByText('Opt-out recorded. Review preferences; do not send marketing follow-ups.',{exact:false}).waitFor();
