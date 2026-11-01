@@ -1,21 +1,22 @@
 import React from 'react'
+import { Link } from 'react-router-dom'
 
 function HowItWorks() {
   const steps = [
     {
       number: '01',
-      title: 'DISCONNECT',
-      description: 'Remove or disconnect the driveshaft from the vehicle being towed.',
+      title: 'LIFT AND SUPPORT',
+      description: 'Lift the disconnected driveshaft and select a cable length that spans your setup.',
     },
     {
       number: '02',
-      title: 'LOOP',
-      description: 'Thread the cable through the driveshaft yoke or around the shaft itself.',
+      title: 'ROUTE CLEAR',
+      description: 'Keep the disconnected shaft away from the spinning yoke and rotating hardware.',
     },
     {
       number: '03',
-      title: 'SECURE',
-      description: 'Attach the cable ends to the frame or crossmember using the aluminum couplers.',
+      title: 'CHECK RETENTION',
+      description: 'Follow the full tie-up instructions to check forward retention and clearance before towing.',
     }
   ]
 
@@ -29,7 +30,7 @@ function HowItWorks() {
               HOW IT <span className="text-gradient">WORKS</span>
             </h2>
           </div>
-          <p className="text-lg sm:text-xl text-gray-300 lg:justify-self-end">Simple. Fast. Secure.</p>
+          <p className="text-lg sm:text-xl text-gray-300 lg:justify-self-end">Check routing, retention and clearance.</p>
         </div>
 
         <ol className="grid md:grid-cols-3 gap-5 lg:gap-6">
@@ -53,9 +54,11 @@ function HowItWorks() {
             RESULT
           </span>
           <p className="text-white font-industrial text-lg md:text-xl tracking-[0.02em]">
-            DRIVESHAFT SAFELY SUSPENDED — NO DRAGGING, NO DAMAGE
+            CHECK YOUR TIE-UP AND CLEARANCE BEFORE TOWING
           </p>
         </div>
+
+        <p className="mt-4 text-gray-300 text-sm">This is a brief overview. <Link to="/instructions" className="text-yellow-400 underline underline-offset-4">Read the full driveshaft tie-up instructions</Link>. Cables are single-use: cut off and discard after each job.</p>
 
         {/* Installation video (portrait, filmed on a phone) */}
         <figure className="mt-6 surface p-4 sm:p-6 flex flex-col items-center">
