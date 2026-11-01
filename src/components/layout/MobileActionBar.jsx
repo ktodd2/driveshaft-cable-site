@@ -58,11 +58,11 @@ function MobileActionBar() {
       }`}
       style={{ paddingBottom: 'calc(0.625rem + env(safe-area-inset-bottom))' }}
     >
-      <Link to="/quote" tabIndex={visible ? undefined : -1} className="btn-primary flex-1 px-3">Get Quote</Link>
+      <Link to="/products" tabIndex={visible ? undefined : -1} className="btn-primary flex-1 px-3">Shop Cables</Link>
       {totalItems > 0 ? (
         <Link to="/cart" tabIndex={visible ? undefined : -1} className="btn-secondary px-5">Cart ({totalItems > 99 ? '99+' : totalItems})</Link>
       ) : (
-        <Link to="/products" tabIndex={visible ? undefined : -1} className="btn-secondary px-5">Shop</Link>
+        <Link to="/quote" tabIndex={visible ? undefined : -1} className="btn-secondary px-3 text-sm">Dealer Quote</Link>
       )}
     </nav>
   )

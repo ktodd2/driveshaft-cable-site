@@ -5,7 +5,7 @@ import { useCartStore, formatPrice, getPriceForQuantity, getTierPriceForQuantity
 import SaleCountdown from '../components/common/SaleCountdown'
 import { useInventory } from '../hooks/useInventory'
 import { useStorefrontProduct } from '../hooks/useStorefrontProduct'
-import InventoryProgressBar from '../components/common/InventoryProgressBar'
+import StockAvailability from '../components/common/StockAvailability'
 import SEOHead from '../components/common/SEOHead'
 import { volumePricingRows, productMetadata, productImageClasses, isBoltPack, priceUnit, quantityUnit, packQuantity } from '../lib/productPresentation'
 import { isCableSlug, cableSelectionPricing } from '../lib/cablePurchase'
@@ -76,7 +76,7 @@ function ProductDetailPage() {
   const addItem = useCartStore((state) => state.addItem)
 
   const productImages = (product?.images && product.images.length > 0) ? product.images : []
-  const { stock, totalStock, loading: stockLoading } = useInventory(product?.id)
+  const { stock, loading: stockLoading } = useInventory(product?.id)
 
   const productMin = product?.min_order_quantity ?? MIN_ORDER_QUANTITY
   const productStep = product?.order_quantity_step ?? ORDER_QUANTITY_STEP
@@ -207,13 +207,7 @@ function ProductDetailPage() {
                 ) : (
                   <div className="w-full h-full flex items-center justify-center text-gray-400">No image</div>
                 )}
-                {outOfStock && (
-                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                    <div className="bg-red-600/95 text-white font-industrial text-4xl sm:text-5xl tracking-widest px-8 py-3 -rotate-12 shadow-2xl border-y-4 border-white/80">
-                      SOLD OUT
-                    </div>
-                  </div>
-                )}
+
               </div>
               {/* Thumbnails */}
               {productImages.length > 1 && (
@@ -258,17 +252,7 @@ function ProductDetailPage() {
                   <span className={`text-4xl font-industrial ${outOfStock ? 'text-gray-500 line-through' : 'text-yellow-500'}`}>{formatPrice(currentPrice)}</span>
                 )}
                 <span className="text-gray-400 text-sm">per {priceUnit(product)}</span>
-                {stockLoading ? (
-                  <span className="bg-gray-500/20 text-gray-400 px-3 py-1 text-sm">Checking stock...</span>
-                ) : stock === null ? (
-                  <span className="bg-gray-500/20 text-gray-400 px-3 py-1 text-sm">Stock unavailable</span>
-                ) : stock === 0 ? (
-                  <span className="bg-red-500/20 text-red-400 px-3 py-1 text-sm">Out of Stock</span>
-                ) : stock <= 20 ? (
-                  <span className="bg-yellow-500/20 text-yellow-400 px-3 py-1 text-sm">{stock} {quantityUnit(product)} left</span>
-                ) : (
-                  <span className="bg-green-500/20 text-green-400 px-3 py-1 text-sm">{stock} {quantityUnit(product)} in stock</span>
-                )}
+                <StockAvailability stock={stock} loading={stockLoading} unitLabel={quantityUnit(product)} />
               </div>
 
               {appliedSale && (
@@ -383,9 +367,6 @@ function ProductDetailPage() {
               </div>
 
               <PolicyLinks className="mb-6" />
-
-              {/* Inventory Progress Bar */}
-              <InventoryProgressBar stock={stock} totalStock={totalStock} loading={stockLoading} unitLabel={isBoltPack(product) ? 'packs' : undefined} />
 
               {/* Volume Pricing Tiers */}
               {pricingRows.length > 0 && (
