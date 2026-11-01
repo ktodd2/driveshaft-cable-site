@@ -11,6 +11,8 @@ for (const path of manifest.paths) {
   assert.ok(head.includes(`href="https://driveshaftcable.com${path}"`), `Canonical: ${path}`)
   assert.match(html, /<div id="root"><div/)
   assert.match(html, /<h1/)
+  assert.match(head, /name="robots" content="index, follow"/)
+  assert.doesNotMatch(head, /content="noindex/)
   const state = JSON.parse(html.match(/<script id="__PUBLIC_DATA__" type="application\/json">([\s\S]*?)<\/script>/)[1])
   assert.equal(state.path, path)
   const schemas = [...head.matchAll(/<script[^>]*type="application\/ld\+json"[^>]*>([\s\S]*?)<\/script>/g)].map(script => JSON.parse(script[1]))
@@ -53,10 +55,10 @@ for (const path of manifest.paths) {
     assert.ok(state.post && html.includes('<article'), path)
   }
 }
-for (const path of ['/cart', '/checkout', '/admin/login', '/order-tracking']) {
+for (const path of ['/cart', '/checkout', '/checkout/success', '/admin', '/admin/login', '/order-tracking', '/suggestions', '/testimonial']) {
   const html = await readFile(`dist/${routeFile(path)}`, 'utf8')
   assert.ok(html.includes('<div id="root"></div>'), path)
-  assert.ok(html.includes('content="noindex, nofollow"'), path)
+  assert.ok(html.includes('data-rh="true" name="robots" content="noindex, nofollow"'), path)
   assert.ok(!html.includes('__PUBLIC_DATA__'), path)
 }
 console.log(`Verified initial HTML, SEO, schema and public-only data for ${manifest.paths.length} pages`)

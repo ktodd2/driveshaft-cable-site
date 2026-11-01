@@ -56,6 +56,7 @@ function SuggestionsPage() {
         title="Suggestions"
         description="Have an idea, product request, or feedback for Driveshaft Cable? Drop us a suggestion."
         canonical="/suggestions"
+        noindex
       />
 
       {/* Header */}

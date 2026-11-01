@@ -2,6 +2,7 @@ import React, { Suspense, useEffect } from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { HelmetProvider } from 'react-helmet-async'
 import { PublicDataContext } from './ssg/PublicData'
+import UtilityIndexing from './components/common/UtilityIndexing'
 import Layout from './components/layout/Layout'
 import { useCartStore } from './stores/cartStore'
 import HomePage from './pages/HomePage'
@@ -94,6 +95,7 @@ function App({ router: Router = BrowserRouter, routerProps = {}, helmetContext, 
         <Route path="/admin/products" element={<Suspense fallback={<div />}><AdminProductsPage /></Suspense>} />
         <Route path="/admin/sales" element={<Suspense fallback={<div />}><AdminSalesPage /></Suspense>} />
       </Routes>
+      <UtilityIndexing />
     </Router>
     </PublicDataContext.Provider>
     </HelmetProvider>

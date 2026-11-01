@@ -1,7 +1,6 @@
+# Utility pages use crawlable noindex directives in their HTML.
+# Authentication and database access policies protect private data.
 User-agent: *
 Allow: /
-Disallow: /admin/
-Disallow: /checkout/
-Disallow: /cart
 
 Sitemap: https://driveshaftcable.com/sitemap.xml

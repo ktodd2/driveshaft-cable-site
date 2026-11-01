@@ -48,7 +48,7 @@ try {
     ...data.products.map(p => `/products/${p.slug}`), ...data.posts.map(p => `/blog/${p.slug}`)]
   const blogPosts = data.posts.slice(0, 13).map(({ content, ...post }) => post)
   // Preserve the ordinary SPA shell for explicitly private/interactive utility routes.
-  const privateShell = shell.replace('</head>', '<meta name="robots" content="noindex, nofollow"></head>')
+  const privateShell = shell.replace('</head>', '<meta data-rh="true" name="robots" content="noindex, nofollow"></head>')
   for (const path of ['/cart', '/checkout', '/checkout/success', '/order-tracking', '/suggestions', '/testimonial', '/admin', '/admin/login']) {
     const output = resolve(root, 'dist', routeFile(path))
     await mkdir(dirname(output), { recursive: true })
