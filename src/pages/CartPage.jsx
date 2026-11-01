@@ -1,3 +1,4 @@
+import PolicyLinks from '../components/common/PolicyLinks'
 import React from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import {
@@ -366,6 +367,8 @@ function CartPage() {
                   </div>
                 </div>
 
+                <PolicyLinks className="mt-6" />
+
                 {/* Security badges */}
                 <div className="mt-6 pt-6 border-t border-gray-700">
                   <div className="flex items-center gap-2 text-gray-400 text-sm mb-2">
@@ -378,7 +381,7 @@ function CartPage() {
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                     </svg>
-                    Free shipping on orders over $600
+                    Free shipping on orders of $600 or more
                   </div>
                 </div>
               </div>

@@ -1,3 +1,4 @@
+import PolicyLinks from '../components/common/PolicyLinks'
 import { isBoltPack, packQuantity, priceUnit } from '../lib/productPresentation'
 import { captureAnalyticsContext } from '../lib/purchaseAnalytics'
 import React, { useState, useEffect } from 'react'
@@ -902,6 +903,8 @@ function CheckoutPage() {
                     <span className="text-yellow-500 font-bold text-xl">{formatPrice(totalCents)}</span>
                   </div>
                 </div>
+
+                <PolicyLinks className="mt-6" />
 
                 <p className="text-gray-500 text-xs text-center mt-6">
                   Secure checkout powered by Stripe

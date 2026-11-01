@@ -58,7 +58,7 @@ function HomePage() {
             <h2 className="text-yellow-400 font-industrial text-lg tracking-[0.06em] mb-2">A Note About Shipping Rates</h2>
             <p className="text-gray-300 text-sm sm:text-base leading-relaxed">
               Carrier shipping costs have gone up considerably, and we've had to adjust our rates to keep up.
-              Orders over <span className="text-white font-semibold">$600</span> still ship <span className="text-yellow-400 font-semibold">FREE</span>.
+              Orders of <span className="text-white font-semibold">$600 or more</span> still ship <span className="text-yellow-400 font-semibold">FREE</span>.
               Orders under $600 now ship for a <span className="text-white font-semibold">$20 flat rate</span> anywhere in the U.S.
               We've held off as long as we could — thank you for your understanding and for your continued business.
             </p>

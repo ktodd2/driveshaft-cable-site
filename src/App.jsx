@@ -8,6 +8,7 @@ import HomePage from './pages/HomePage'
 import AboutPage from './pages/AboutPage'
 import ContactPage from './pages/ContactPage'
 import FAQPage from './pages/FAQPage'
+import ShippingReturnsPage from './pages/ShippingReturnsPage'
 import InstructionsPage from './pages/InstructionsPage'
 import NotFoundPage from './pages/NotFoundPage'
 import ProductListPage from './pages/ProductListPage'
@@ -60,6 +61,7 @@ function App({ router: Router = BrowserRouter, routerProps = {}, helmetContext, 
           <Route path="about" element={<AboutPage />} />
           <Route path="contact" element={<ContactPage />} />
           <Route path="faq" element={<FAQPage />} />
+          <Route path="shipping-returns" element={<ShippingReturnsPage />} />
           <Route path="instructions" element={<InstructionsPage />} />
           <Route path="products" element={<ProductListPage />} />
           {/* Driveshaft Cable + was retired; send old links to the main cable */}

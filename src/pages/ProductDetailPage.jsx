@@ -1,3 +1,4 @@
+import PolicyLinks from '../components/common/PolicyLinks'
 import React, { useState, useEffect } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
 import { useCartStore, formatPrice, getPriceForQuantity, getTierPriceForQuantity, getActiveSaleForProduct, MIN_ORDER_QUANTITY, ORDER_QUANTITY_STEP, SHIPPING_FEE, FREE_SHIPPING_THRESHOLD } from '../stores/cartStore'
@@ -380,6 +381,8 @@ function ProductDetailPage() {
                   </>
                 )}
               </div>
+
+              <PolicyLinks className="mb-6" />
 
               {/* Inventory Progress Bar */}
               <InventoryProgressBar stock={stock} totalStock={totalStock} loading={stockLoading} unitLabel={isBoltPack(product) ? 'packs' : undefined} />
