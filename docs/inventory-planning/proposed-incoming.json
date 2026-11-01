@@ -1,0 +1,18 @@
+{
+  "status": "proposal_only_not_recorded_in_production",
+  "source": "Owner statement November 1 2026 and transcribed supplier quote",
+  "reference": "owner-proposed-2026-11-01",
+  "etaStart": "2026-12-01",
+  "etaEnd": "2026-12-16",
+  "etaBasis": "Owner estimate 30–45 days from November 1; not carrier-confirmed",
+  "currencySymbol": "$",
+  "currencyCode": null,
+  "quoteTotal": 6950,
+  "lines": [
+    {"productId":"1","description":"Regular, 4.0 × 1000 mm","quantity":10000,"quotedUnitPrice":0.42,"quotedLineTotal":4200,"receiptIds":[]},
+    {"productId":"driveshaft-cable-xl","description":"XL, 4.0 × 1500 mm","quantity":5000,"quotedUnitPrice":0.55,"quotedLineTotal":2750,"receiptIds":[]}
+  ],
+  "unverified": ["currency code", "freight", "duties", "landed cost", "payment", "receipt"],
+  "inventoryEffect": "none",
+  "weightedCostEffect": "none"
+}

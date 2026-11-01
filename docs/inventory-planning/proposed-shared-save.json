@@ -1,0 +1,29 @@
+{
+  "p_request_id": "14bfd32d-8a3e-4c01-9c08-4f4900fa9445",
+  "p_expected_revision": 0,
+  "p_document": {
+    "days": 30,
+    "lead": "",
+    "safety": "",
+    "lines": [
+      {
+        "id": "261d36e2-3836-4811-b6c6-29cacf2df52f",
+        "reference": "owner-proposed-2026-11-01",
+        "productId": "1",
+        "quantity": 10000,
+        "etaStart": "2026-12-01",
+        "etaEnd": "2026-12-16",
+        "receiptIds": []
+      },
+      {
+        "id": "d42cbc25-d67f-4599-8d90-2826dde8e548",
+        "reference": "owner-proposed-2026-11-01",
+        "productId": "driveshaft-cable-xl",
+        "quantity": 5000,
+        "etaStart": "2026-12-01",
+        "etaEnd": "2026-12-16",
+        "receiptIds": []
+      }
+    ]
+  }
+}
