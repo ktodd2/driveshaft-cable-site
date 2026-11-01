@@ -21,42 +21,360 @@ function topSpecChips(specs) {
   if (!specs || typeof specs !== 'object') return []
   const find = (re) => {
     for (const [key, value] of Object.entries(specs)) {
-      i…6279 tokens truncated…  return () => { ro.disconnect(); window.removeEventListener('resize', update) }
-  }, [])
+      if (re.test(key)) return { key, value }
+    }
+    return null
+  }
+  const diameter = find(/cable.?diameter|^diameter$/i)
+  const length   = find(/total.?length|^length$/i)
+  const strength = find(/^breaking strength$/i)
+
+  const chips = []
+  if (diameter) chips.push({ key: diameter.key, label: '',    value: diameter.value })
+  if (length)   chips.push({ key: length.key,   label: '',    value: length.value })
+  if (strength) chips.push({ key: strength.key, label: 'Breaking strength ', value: strength.value })
+
+  if (chips.length < 3) {
+    const seen = new Set(chips.map(c => c.key))
+    for (const [key, value] of Object.entries(specs)) {
+      if (seen.has(key) || chips.length >= 3) continue
+      chips.push({ key, label: '', value })
+    }
+  }
+  return chips
+}
+
+function ProductCard({ product }) {
+  const addItem = useCartStore((state) => state.addItem)
+  const productMin = product.min_order_quantity ?? MIN_ORDER_QUANTITY
+  const productStep = product.order_quantity_step ?? ORDER_QUANTITY_STEP
+  const [quantity, setQuantity] = useState(productMin)
+  // Draft string for the input so the user can clear it and type freely
+  // without snapping to the minimum on every keystroke.
+  const [quantityDraft, setQuantityDraft] = useState(String(productMin))
+  const { stock, totalStock, loading: stockLoading } = useInventory(product.id)
+  const outOfStock = !stockLoading && stock === 0
+
+  const isLowStock = !stockLoading && stock !== null && stock > 0 && stock < productMin
+  const effectiveMin = isLowStock ? stock : productMin
+  const maxQty = stock !== null && stock > 0 ? stock : Infinity
+
+  useEffect(() => {
+    if (isLowStock) setQuantity(stock)
+  }, [stock, stockLoading])
+
+  useEffect(() => { setQuantityDraft(String(quantity)) }, [quantity])
+
+  const handleAddToCart = () => {
+    // The cart store expects `price_cents` and `images` on the product
+    // object; DB row uses `base_price_cents`. Normalize at the call site.
+    addItem(
+      {
+        id: product.id,
+        name: product.name,
+        slug: product.slug,
+        price_cents: product.base_price_cents,
+        sku: product.sku,
+        images: product.images || [],
+      },
+      quantity,
+      isLowStock ? { reducedMinimum: true } : {}
+    )
+  }
+
+  const handleQuantityChange = (delta) => {
+    const newQty = Math.min(Math.max(effectiveMin, quantity + delta), maxQty)
+    setQuantity(newQty)
+  }
+
+  // Re-render when sales reload or a countdown expires.
+  useCartStore(s => s.salesLoadedAt)
+  const [, forceTick] = useState(0)
+
+  const currentPrice = getPriceForQuantity(product.id, quantity, product)
+  const tierPrice    = getTierPriceForQuantity(product.id, quantity, product)
+  const totalPrice   = currentPrice * quantity
+  const basePrice    = product.base_price_cents
+  const appliedSale  = getActiveSaleForProduct(product.id)
+
+  const thumbnail = (product.images && product.images[0]) || '/IMG_5493.jpeg'
+  const chips = topSpecChips(product.specs)
 
   return (
-    <div className="min-h-screen bg-ktodd-dark flex flex-col">
-      <a
-        href="#main-content"
-        className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-3 focus:z-[200] focus:rounded-lg focus:bg-yellow-500 focus:px-4 focus:py-3 focus:font-bold focus:text-black"
-      >
-        Skip to content
-      </a>
-      {/* Single fixed top stack: sale banner (when active) + free-shipping
-          announcement + the actual nav header. The Header itself no longer
-          self-fixes — this wrapper does it for the whole group, so the
-          banners can't get hidden behind a fixed header. */}
-      <div className="fixed top-0 left-0 right-0 z-50">
-        <div ref={bannerRef}>
-          <SaleBanner />
-          <div className="bg-[#120d04] text-yellow-400 text-center py-2 px-4 text-xs sm:text-sm font-semibold tracking-wide border-b border-yellow-500/25">
-            <span className="text-gray-100">FREE SHIPPING</span> on orders of $600 or more &nbsp;&middot;&nbsp; $20 flat rate on orders under $600
+    <article className={`flex flex-col bg-gray-900 rounded-2xl overflow-hidden ring-1 ring-gray-700 shadow-[0_24px_48px_-32px_#000] transition-shadow duration-200 group ${
+      outOfStock ? '' : 'hover:ring-yellow-500/60'
+    }`}>
+      {/* Product Image */}
+      <Link to={`/products/${product.slug}`} className="block">
+        <div className="aspect-[4/3] bg-black relative overflow-hidden">
+          <img
+            src={thumbnail}
+            alt={product.name}
+            className={`w-full h-full ${productImageClasses(product)} outline outline-1 -outline-offset-1 outline-white/10 ${outOfStock ? 'grayscale' : ''}`}
+            loading="lazy"
+          />
+          {/* Stock Badge */}
+          {!stockLoading && stock !== null && (
+            <div className={`absolute top-3 right-3 inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold font-industrial tracking-[0.1em] uppercase tabular-nums bg-black/75 backdrop-blur-sm ring-1 ring-inset ${
+              stock === 0 ? 'text-red-300 ring-red-400/60' : stock <= 20 ? 'text-yellow-400 ring-yellow-500/60' : 'text-green-400 ring-green-400/60'
+            }`}>
+              <span className="w-2 h-2 rounded-full bg-current" aria-hidden="true" />
+              {stock === 0 ? 'OUT OF STOCK' : `${stock} in stock`}
+            </div>
+          )}
+          {/* Big diagonal "SOLD OUT" overlay so the eye actively skips this card */}
+          {outOfStock && (
+            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+              <div className="bg-black/80 text-red-300 font-industrial text-2xl tracking-[0.2em] px-6 py-2 rounded-lg ring-1 ring-inset ring-red-400/60">
+                SOLD OUT
+              </div>
+            </div>
+          )}
+        </div>
+      </Link>
+
+      {/* Product Info */}
+      <div className="p-6 flex flex-col flex-1">
+        <Link to={`/products/${product.slug}`} className="rounded">
+          <h3 className={`text-2xl font-industrial mb-2 transition-colors ${
+            outOfStock
+              ? 'text-gray-200'
+              : 'text-white group-hover:text-yellow-500'
+          }`}>
+            {product.name}
+          </h3>
+        </Link>
+        <p className="text-gray-400 text-sm mb-4">{product.short_description}</p>
+
+        {/* Specs preview — Cable Diameter, Length, then "Breaking strength <value>". */}
+        {chips.length > 0 && (
+          <div className="flex flex-wrap gap-2 mb-4">
+            {chips.map(c => (
+              <span key={c.key} className="text-xs bg-gray-800 ring-1 ring-inset ring-gray-700 text-gray-200 px-2.5 py-1 rounded-md tabular-nums">
+                {c.label}{c.value}
+              </span>
+            ))}
+          </div>
+        )}
+
+        {/* Price */}
+        <div className="mb-4">
+          {appliedSale ? (
+            <>
+              <div className="flex items-baseline gap-2 flex-wrap">
+                <span className="text-gray-500 line-through text-lg">{formatPrice(tierPrice)}</span>
+                <span className="text-red-400 text-2xl font-industrial">{formatPrice(currentPrice)}</span>
+                <span className="text-red-400 text-xs font-bold bg-red-500/20 px-2 py-0.5 rounded">−{appliedSale.discount_percent}%</span>
+                <span className="text-gray-400 text-sm">per {priceUnit(product)}</span>
+              </div>
+              <div className="text-red-400/90 text-xs mt-1 flex items-center gap-1.5">
+                <span className="font-bold uppercase tracking-wider">{appliedSale.name}</span>
+                <span className="text-gray-500">·</span>
+                <span>Ends in </span>
+                <SaleCountdown
+                  endsAt={appliedSale.ends_at}
+                  className="font-mono"
+                  onExpire={() => forceTick(t => t + 1)}
+                />
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="flex items-baseline gap-2">
+                <span className="text-white text-3xl font-industrial font-bold tabular-nums">{formatPrice(currentPrice)}</span>
+                <span className="text-gray-400 text-sm">per {priceUnit(product)}</span>
+              </div>
+              {tierPrice < basePrice && (
+                <div className="text-green-400 text-sm mt-1">Volume discount applied!</div>
+              )}
+            </>
+          )}
+        </div>
+
+        {/* Inventory Progress Bar */}
+        <InventoryProgressBar stock={stock} totalStock={totalStock} loading={stockLoading} unitLabel={isBoltPack(product) ? 'packs' : undefined} />
+
+        {/* Quantity Selector */}
+        <div className="mb-4 mt-4">
+          <label htmlFor={`qty-${product.id}`} className="block text-gray-400 text-xs uppercase tracking-[0.1em] mb-2">
+            {isBoltPack(product) ? 'Number of 10-packs' : 'Quantity'} (min. {effectiveMin}{productStep > 1 ? `, in ${productStep}s` : ''})
+          </label>
+          <div className="flex items-center gap-3">
+            <div className="flex items-center rounded-xl ring-1 ring-inset ring-gray-600 overflow-hidden">
+              <button
+                type="button"
+                onClick={() => handleQuantityChange(-productStep)}
+                disabled={outOfStock}
+                aria-label={`Decrease quantity by ${productStep}`}
+                className="min-w-[44px] min-h-[44px] px-3 text-white hover:bg-gray-700 transition-colors text-sm tabular-nums disabled:cursor-not-allowed disabled:text-gray-500 disabled:hover:bg-transparent"
+              >
+                -{productStep}
+              </button>
+              <input
+                id={`qty-${product.id}`}
+                type="number"
+                value={quantityDraft}
+                onChange={(e) => setQuantityDraft(e.target.value)}
+                disabled={outOfStock}
+                onBlur={() => {
+                  const raw = parseInt(quantityDraft, 10)
+                  const rounded = isLowStock
+                    ? (isNaN(raw) ? effectiveMin : raw)
+                    : Math.round((isNaN(raw) ? effectiveMin : raw) / productStep) * productStep
+                  const clamped = Math.min(maxQty, Math.max(effectiveMin, rounded))
+                  setQuantity(clamped)
+                  setQuantityDraft(String(clamped))
+                }}
+                className="w-20 text-center bg-transparent text-white border-0 border-x border-gray-600 rounded-none py-2 text-sm tabular-nums focus:ring-inset disabled:cursor-not-allowed disabled:text-gray-400"
+                min={productMin}
+                step={productStep}
+              />
+              <button
+                type="button"
+                onClick={() => handleQuantityChange(productStep)}
+                disabled={outOfStock}
+                aria-label={`Increase quantity by ${productStep}`}
+                className="min-w-[44px] min-h-[44px] px-3 text-white hover:bg-gray-700 transition-colors text-sm tabular-nums disabled:cursor-not-allowed disabled:text-gray-500 disabled:hover:bg-transparent"
+              >
+                +{productStep}
+              </button>
+            </div>
+            <span className="text-gray-400 text-sm">
+              Total: <span className="text-yellow-500 font-bold tabular-nums">{formatPrice(totalPrice)}</span>
+            </span>
           </div>
         </div>
-        <Header />
+
+        {isBoltPack(product) && <p className="text-gray-300 text-sm mb-3">{packQuantity(product, quantity)} selected. Each pack contains 10 bolts.</p>}
+        {/* Stock warnings */}
+        {isLowStock && (
+          <p className="text-yellow-500 text-xs mb-2">Only {stock} available — min order reduced from {productMin}</p>
+        )}
+        {!isLowStock && !outOfStock && stock !== null && quantity >= stock && (
+          <p className="text-yellow-500 text-xs mb-2">Max available: {stock} {quantityUnit(product)}</p>
+        )}
+
+        {/* Add to Cart */}
+        <button
+          onClick={handleAddToCart}
+          disabled={outOfStock || (!stockLoading && stock !== null && quantity > stock)}
+          className="btn-primary w-full mt-auto"
+        >
+          {outOfStock ? 'Out of Stock' : `Add ${quantity}${isBoltPack(product) ? (quantity === 1 ? ' pack' : ' packs') : ''} to Cart`}
+        </button>
       </div>
-      {/* Push page content down by exactly the banner height — header
-          padding stays the responsibility of each page (pt-24 md:pt-32). */}
-      <main id="main-content" tabIndex={-1} className="flex-grow focus:outline-none" style={{ paddingTop: bannerH }}>
-        <Outlet />
-      </main>
-      <div className={reserveMobileBar ? 'pb-[calc(4.25rem+env(safe-area-inset-bottom))] md:pb-0' : undefined}>
-        <Footer />
-      </div>
-      <MobileActionBar />
-      <NewsletterModal />
-    </div>
+    </article>
   )
 }
 
-export default Layout
+// Shared catalogue. The homepage uses a compact introduction and places
+// detailed pricing below the cards so customers can see products sooner.
+function StorefrontProducts({ compactIntro = false }) {
+  const { products, loading } = useStorefrontProducts()
+
+  const pricingInfo = (
+    <div id="volume-pricing" className={`surface-gold p-5 sm:p-6 ${compactIntro ? 'mt-8 scroll-mt-32' : 'mb-8'}`}>
+      <div className="flex flex-col gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <h2 className="text-white font-industrial text-lg tracking-[0.06em]">Volume Pricing (per product)</h2>
+          <div className="text-sm text-gray-300 space-y-1">
+            <div><span className="text-yellow-500">FREE SHIPPING</span> on orders of $600 or more · $20 flat rate under $600</div>
+            <div><span className="text-green-400">LOYALTY DISCOUNT</span> — returning customers get an extra 10% off!</div>
+          </div>
+        </div>
+        <div className={`grid gap-4 ${products.length >= 3 ? 'sm:grid-cols-3' : 'sm:grid-cols-2'}`}>
+          {products.map(p => {
+            const pricing = normalizeDbProduct(p)
+            const rows = volumePricingRows(pricing)
+            return (
+              <div key={p.id} className="bg-black/30 rounded-xl ring-1 ring-inset ring-yellow-500/25 p-4">
+                <div className="text-xs uppercase tracking-wider text-yellow-500 font-bold mb-2">{p.name}</div>
+                <div className="flex flex-wrap gap-x-4 gap-y-1.5 text-sm tabular-nums">
+                  {rows.length === 0 ? (
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-gray-400">Per unit:</span>
+                      <span className="text-yellow-500 font-bold">{formatPrice(pricing.basePrice)}/{isBoltPack(p) ? '10-pack' : 'ea'}</span>
+                    </div>
+                  ) : rows.map(row => (
+                    <div key={row.min} className="flex items-center gap-1.5">
+                      <span className="text-gray-400">{row.label}{isBoltPack(p) ? ' packs' : ''}:</span>
+                      <span className={`${row.price < pricing.basePrice ? 'text-green-400' : 'text-yellow-500'} font-bold`}>{formatPrice(row.price)}/{isBoltPack(p) ? '10-pack' : 'ea'}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      </div>
+    </div>
+  )
+
+  return (
+    <>
+      {/* Hero Section */}
+      <section className={compactIntro ? 'pt-6 pb-6 md:pt-8 md:pb-8 section-glow' : 'pt-12 pb-10 md:pt-16 md:pb-12 section-glow'}>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div>
+            <p className={`eyebrow ${compactIntro ? 'mb-2' : 'mb-4'}`}>Heavy-Duty Towing Safety</p>
+            <h1 className={`${compactIntro ? 'text-3xl sm:text-4xl lg:text-5xl mb-3' : 'text-4xl sm:text-5xl lg:text-6xl mb-4'} font-industrial font-bold text-white leading-[0.98]`}>
+              SHOP <span className="text-gradient">DRIVESHAFT CABLES</span>
+            </h1>
+            <p className={`${compactIntro ? 'text-base sm:text-lg' : 'text-lg sm:text-xl'} text-gray-300 max-w-2xl`}>
+              Professional-grade equipment for heavy-duty towing and recovery operations.
+            </p>
+            {compactIntro && <a href="#volume-pricing" className="inline-block mt-3 text-sm text-yellow-400 underline underline-offset-4 hover:text-yellow-300">View volume pricing &amp; shipping details</a>}
+          </div>
+        </div>
+      </section>
+
+      {/* Products Grid */}
+      <section className="pb-20 md:pb-24 bg-ktodd-dark">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          {!compactIntro && pricingInfo}
+
+          {/* Each card shows its own ordering minimum and quantity unit. */}
+
+          {/* Products */}
+          {loading && products.length === 0 ? (
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6" role="status" aria-busy="true" aria-label="Loading products">
+              {[0, 1].map((i) => (
+                <div key={i} className="rounded-2xl ring-1 ring-gray-700 bg-gray-900 overflow-hidden">
+                  <div className="aspect-[4/3] bg-gray-800 animate-pulse" />
+                  <div className="p-6 space-y-3">
+                    <div className="h-6 w-2/3 rounded bg-gray-800 animate-pulse" />
+                    <div className="h-4 w-full rounded bg-gray-800 animate-pulse" />
+                    <div className="h-12 w-full rounded-xl bg-gray-800 animate-pulse" />
+                  </div>
+                </div>
+              ))}
+              <span className="sr-only">Loading products…</span>
+            </div>
+          ) : products.length === 0 ? (
+            <div role="status" className="text-gray-400 py-12 text-center border border-dashed border-gray-600 rounded-2xl">
+              No products available right now. Check back soon.
+            </div>
+          ) : (
+            <div className={`grid md:grid-cols-2 gap-6 ${products.length >= 3 ? 'lg:grid-cols-3' : 'max-w-5xl'}`}>
+              {products.map((product) => (
+                <ProductCard key={product.id} product={product} />
+              ))}
+            </div>
+          )}
+
+          {compactIntro && pricingInfo}
+
+          {/* More products coming */}
+          <div className="mt-16 text-center">
+            <div className="inline-block surface px-8 py-6">
+              <p className="text-gray-400 mb-2">More products coming soon</p>
+              <p className="text-white font-industrial">DRIVELINE ACCESSORIES & SAFETY EQUIPMENT</p>
+            </div>
+          </div>
+        </div>
+      </section>
+    </>
+  )
+}
+
+export default StorefrontProducts

@@ -1,3 +1,4 @@
+import PolicyLinks from '../common/PolicyLinks'
 import React from 'react'
 import { Link } from 'react-router-dom'
 import NewsletterForm from '../newsletter/NewsletterForm'
@@ -99,6 +100,8 @@ function Footer() {
             <NewsletterForm source="footer" compact />
           </div>
         </div>
+
+        <PolicyLinks className="mt-8" />
 
         {/* Bottom bar */}
         <div className="mt-12 pt-8 border-t border-gray-800 flex flex-col md:flex-row justify-between items-center gap-4">
