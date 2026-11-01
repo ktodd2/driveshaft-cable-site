@@ -35,3 +35,14 @@ product pages must contain their own SKU and minimum quantity. It also checks th
 pages have no public snapshot. Use browser QA for hydration, cart restoration, quantity
 controls and client navigation; use plain HTTP to verify the deployed initial HTML.
 Render serves existing generated resources before applying the wildcard SPA rewrite.
+
+## Render routing
+
+Product and article leaf pages are generated as extensionless HTML files at their
+existing public URLs. Render's resource lookup then serves them before the SPA
+fallback. Content-Type: text/html; charset=utf-8 is set only for /products/* and
+/blog/*; these URL namespaces are reserved for HTML. The shop/blog indexes and
+other known directory pages have explicit index.html rewrites before the original
+fallback. The retired Plus redirect and empty utility shells are preserved.
+New product/article slugs do not require manual route entries: generated files
+resolve directly, and slugs created since the last build still use the SPA fallback.

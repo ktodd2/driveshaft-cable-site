@@ -11,7 +11,7 @@ test('public data cannot close script elements or inject executable HTML', () =>
 })
 test('public paths are constrained to safe output directories', () => {
   assert.equal(routeFile('/'), 'index.html')
-  assert.equal(routeFile('/products/driveshaft-cable-xl'), 'products/driveshaft-cable-xl/index.html')
+  assert.equal(routeFile('/products/driveshaft-cable-xl'), 'products/driveshaft-cable-xl')
   for (const path of ['/../private', '/products/../../admin', '/blog/%2e%2e', '/blog//post', '/blog/name?token=secret']) {
     assert.throws(() => routeFile(path), /Unsafe public path/)
   }

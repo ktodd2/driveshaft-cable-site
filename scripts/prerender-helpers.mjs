@@ -4,6 +4,9 @@ export function routeFile(path) {
   if (path === '/') return 'index.html'
   const parts = path.slice(1).split('/')
   if (!parts.every(part => /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(part))) throw new Error(`Unsafe public path: ${path}`)
+  // Render checks exact resources before SPA rewrites. Leaf catalog/article
+  // files use their existing extensionless URLs; their prefixes get HTML headers.
+  if (parts.length === 2 && ['products', 'blog'].includes(parts[0])) return parts.join('/')
   return `${parts.join('/')}/index.html`
 }
 export function pageDocument(shell, { html, head }, data) {
