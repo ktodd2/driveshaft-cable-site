@@ -1,17 +1,25 @@
+import ReportQuality from '../../components/admin/ReportQuality'
+import { filterReportOrders } from '../../lib/profitReporting'
+import { readAttentionRows } from '../../lib/needsAttention'
 import NeedsAttention from '../../components/admin/NeedsAttention'
 import React, { useEffect, useState } from 'react'
 import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
-import { formatPrice } from '../../stores/cartStore'
+import { formatPrice as currencyPrice } from '../../stores/cartStore'
 import { useAllInventory } from '../../hooks/useInventory'
 import { useProductShipments } from '../../hooks/useProductShipments'
 import { useProducts } from '../../hooks/useProducts'
 import { calcProfitStats } from '../../lib/costCalculations'
 import ShippingImportReview from '../../components/admin/ShippingImportReview'
 
+const formatPrice = n => n == null ? 'Incomplete' : currencyPrice(n)
+const percent = n => n == null ? 'Incomplete' : `${n.toFixed(1)}%`
+
 function AdminDashboardPage() {
   const navigate = useNavigate()
   const location = useLocation()
+  const [reportError, setReportError] = useState(null)
+  const [ordersLoading, setOrdersLoading] = useState(true)
   const [user, setUser] = useState(null)
   const [loading, setLoading] = useState(true)
   const [stats, setStats] = useState({
@@ -38,6 +46,7 @@ function AdminDashboardPage() {
   const {
     shipments,
     loading: shipmentsLoading,
+    error: shipmentsError,
     avgCostPerUnit,
     avgCostPerUnitByProduct,
     addShipment,
@@ -87,42 +96,28 @@ function AdminDashboardPage() {
       .select('*', { count: 'exact', head: true })
       .eq('status', 'new')
 
-    const { data: orders, error } = await supabase
-      .from('orders')
-      .select('*')
-      .order('created_at', { ascending: false })
+    let allOrders
+    try { allOrders = (await readAttentionRows(supabase, 'orders')).sort((a,b)=>Date.parse(b.created_at)-Date.parse(a.created_at)) }
+    catch { setReportError('Orders unavailable. Reporting is withheld; reload to retry.'); setOrdersLoading(false); return }
+    setReportError(null)
+    const paidOrders = filterReportOrders(allOrders, 'all')
+    const paidLast30 = filterReportOrders(allOrders, '30d')
 
-    if (error) {
-      console.error('Error loading orders:', error)
-      setStats(prev => ({ ...prev, pendingQuotes: quotesCount || 0 }))
-      return
-    }
+    const revenueAllTime = calcProfitStats(paidOrders, {}).totalRevenue
+    const revenue30d = calcProfitStats(paidLast30, {}).totalRevenue
 
-    const allOrders = orders || []
-    const paidOrders = allOrders.filter(o => o.payment_status === 'paid')
-
-    const thirtyDaysAgo = new Date()
-    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
-    const paidLast30 = paidOrders.filter(o => new Date(o.created_at) >= thirtyDaysAgo)
-
-    const revenueAllTime = paidOrders.reduce((sum, o) => sum + (o.total_cents || 0), 0)
-    const revenue30d = paidLast30.reduce((sum, o) => sum + (o.total_cents || 0), 0)
-
-    const countUnits = (orderList) => orderList.reduce((sum, o) => {
-      const items = o.items || []
-      return sum + items.reduce((s, item) => s + (item.quantity || 0), 0)
-    }, 0)
+    const countUnits = orderList => calcProfitStats(orderList, {}).totalUnits
 
     const unitsSoldAllTime = countUnits(paidOrders)
     const unitsSold30d = countUnits(paidLast30)
-    const avgOrderValue = paidOrders.length > 0 ? Math.round(revenueAllTime / paidOrders.length) : 0
+    const avgOrderValue = revenueAllTime === null ? null : paidOrders.length > 0 ? Math.round(revenueAllTime / paidOrders.length) : 0
 
     // Testimonials: recent submitted/approved for the dashboard panel,
     // plus count of orders eligible for a testimonial request that hasn't
     // been sent yet (drives the "Send pending requests (N)" button).
     const fourteenDaysAgo = new Date()
     fourteenDaysAgo.setDate(fourteenDaysAgo.getDate() - 14)
-    const pendingTestimonialCount = paidOrders.filter(o =>
+    const pendingTestimonialCount = allOrders.filter(o => o.payment_status === 'paid').filter(o =>
       !o.testimonial_request_sent_at &&
       o.email &&
       new Date(o.created_at) < fourteenDaysAgo
@@ -151,6 +146,7 @@ function AdminDashboardPage() {
       pendingTestimonialCount,
       recentTestimonials: recentTestimonials || [],
     })
+    setOrdersLoading(false)
   }
 
   const [sendingTestimonials, setSendingTestimonials] = useState(false)
@@ -170,7 +166,7 @@ function AdminDashboardPage() {
   }
 
   const handleFallbackShippingChange = (val) => {
-    const n = parseInt(val) || 0
+    const n = Math.max(0, parseInt(val) || 0)
     setFallbackShipping(n)
     localStorage.setItem('ktodd-admin-shipping-fallback', String(n))
   }
@@ -206,12 +202,12 @@ function AdminDashboardPage() {
   }
 
   useEffect(() => {
-    if (!loading && location.hash === '#shipping-import') {
+    if (!loading && !ordersLoading && !shipmentsLoading && location.hash === '#shipping-import') {
       document.getElementById('shipping-import')?.scrollIntoView({ block: 'start', behavior: 'instant' })
     }
-  }, [loading, location.hash])
+  }, [loading, ordersLoading, shipmentsLoading, location.hash])
 
-  if (loading) {
+  if (loading || ordersLoading || shipmentsLoading) {
     return (
       <div className="min-h-screen bg-ktodd-dark flex items-center justify-center">
         <div className="text-yellow-500">Loading...</div>
@@ -343,8 +339,9 @@ function AdminDashboardPage() {
 
             {user && <NeedsAttention />}
 
+            {(reportError || shipmentsError) && <p role="alert" className="text-red-300 mb-6">{reportError || shipmentsError}. Reload to retry.</p>}
             {/* Stats Grid */}
-            <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            {!reportError && <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
               <div className="bg-gray-800/50 border border-gray-700 p-6">
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-gray-400 text-sm">Total Orders</span>
@@ -361,7 +358,7 @@ function AdminDashboardPage() {
 
               <div className="bg-gray-800/50 border border-gray-700 p-6">
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-gray-400 text-sm">Revenue (30d)</span>
+                  <span className="text-gray-400 text-sm">Revenue ex. tax (30d)</span>
                   <svg className="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
@@ -420,14 +417,14 @@ function AdminDashboardPage() {
                   Manage →
                 </Link>
               </div>
-            </div>
+            </div>}
 
             {/* Revenue Insights */}
-            <div className="bg-gray-800/50 border border-gray-700 p-6 mb-8">
-              <h2 className="text-xl font-industrial text-yellow-500 mb-4">REVENUE INSIGHTS</h2>
+            {!reportError && <div className="bg-gray-800/50 border border-gray-700 p-6 mb-8">
+              <h2 className="text-xl font-industrial text-yellow-500 mb-4">REVENUE INSIGHTS (EXCLUDING TAX)</h2>
               <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
                 <div>
-                  <div className="text-gray-400 text-sm mb-1">All-Time Revenue</div>
+                  <div className="text-gray-400 text-sm mb-1">All-Time Revenue ex. tax</div>
                   <div className="text-2xl font-industrial text-white">{formatPrice(stats.revenueAllTime)}</div>
                 </div>
                 <div>
@@ -435,7 +432,7 @@ function AdminDashboardPage() {
                   <div className="text-2xl font-industrial text-green-400">{formatPrice(stats.revenue30d)}</div>
                 </div>
                 <div>
-                  <div className="text-gray-400 text-sm mb-1">Avg Order Value</div>
+                  <div className="text-gray-400 text-sm mb-1">Avg Order Value ex. tax</div>
                   <div className="text-2xl font-industrial text-white">{stats.paidOrders > 0 ? formatPrice(stats.avgOrderValue) : '--'}</div>
                 </div>
                 <div>
@@ -443,7 +440,7 @@ function AdminDashboardPage() {
                   <div className="text-2xl font-industrial text-white">{stats.unitsSoldAllTime}</div>
                 </div>
               </div>
-            </div>
+            </div>}
 
             {/* Product Shipments */}
             <div className="bg-gray-800/50 border border-gray-700 p-6 mb-8">
@@ -584,7 +581,7 @@ function AdminDashboardPage() {
               <h2 className="text-xl font-industrial text-yellow-500 mb-4">SHIPPING COSTS</h2>
               <div className="flex flex-wrap gap-6 items-end">
                 <div>
-                  <label className="text-gray-400 text-sm block mb-1">Fallback Shipping Cost (cents)</label>
+                  <label className="text-gray-400 text-sm block mb-1">Optional shipping estimate / order (cents; 0 = unknown)</label>
                   <input
                     type="number"
                     value={fallbackShipping}
@@ -597,59 +594,50 @@ function AdminDashboardPage() {
                 <div className="text-gray-400 text-sm">
                   <span className="text-white font-bold">{ordersWithShipping}</span> of <span className="text-white font-bold">{ordersTotal}</span> paid orders have actual shipping costs.
                   {ordersTotal - ordersWithShipping > 0 && (
-                    <span className="text-yellow-500 ml-1">Fallback used for {ordersTotal - ordersWithShipping}.</span>
+                    <span className="text-yellow-500 ml-1">{ordersTotal - ordersWithShipping} unknown; positive estimates affect reporting only.</span>
                   )}
                 </div>
               </div>
-              <p className="text-gray-500 text-xs mt-3">Enter actual shipping costs per order on the Orders page, or use the bulk import below. Stripe fees (2.9% + $0.30) are calculated automatically.</p>
+              <p className="text-gray-500 text-xs mt-3">Enter actual shipping costs per order on the Orders page, or use the bulk import below. Stripe fees (2.9% + $0.30) are estimates, not reconciled fees.</p>
             </div>
 
             <div id="shipping-import" className="scroll-mt-20" />
             <ShippingImportReview orders={stats.allOrders || []} onSaved={loadStats} />
 
             {/* Profit Insights */}
-            {stats.paidOrdersList && stats.paidOrdersList.length > 0 && (() => {
-              const allTime = calcProfitStats(stats.paidOrdersList, avgCostPerUnit, fallbackShipping)
-              const last30 = calcProfitStats(stats.paidLast30 || [], avgCostPerUnit, fallbackShipping)
+            {!reportError && !shipmentsError && stats.paidOrdersList && (() => {
+              const allTime = calcProfitStats(stats.paidOrdersList, avgCostPerUnitByProduct, fallbackShipping)
+              const last30 = calcProfitStats(stats.paidLast30 || [], avgCostPerUnitByProduct, fallbackShipping)
               return (
                 <div className="bg-gray-800/50 border border-gray-700 p-6 mb-8">
                   <div className="flex items-center justify-between mb-4">
-                    <h2 className="text-xl font-industrial text-yellow-500">PROFIT INSIGHTS</h2>
+                    <h2 className="text-xl font-industrial text-yellow-500">CONTRIBUTION ESTIMATES</h2>
                     <Link to="/admin/analytics" className="text-sm text-gray-400 hover:text-yellow-500">Full analytics →</Link>
                   </div>
-                  {allTime.ordersWithoutShipping > 0 && (
-                    <div className="p-3 bg-yellow-500/10 border border-yellow-500/50 rounded mb-4">
-                      <p className="text-yellow-500 text-sm">{allTime.ordersWithoutShipping} orders missing actual shipping cost — using {formatPrice(fallbackShipping)} fallback.</p>
-                    </div>
-                  )}
-                  {avgCostPerUnit === 0 && (
-                    <div className="p-3 bg-yellow-500/10 border border-yellow-500/50 rounded mb-4">
-                      <p className="text-yellow-500 text-sm">No product shipments logged — product cost is showing as $0. Add shipments above for accurate profit.</p>
-                    </div>
-                  )}
+                  <ReportQuality stats={allTime} excluded={(stats.allOrders?.length || 0) - stats.paidOrdersList.length} />
                   <div className="grid lg:grid-cols-2 gap-6">
                     {/* All Time */}
                     <div>
                       <h3 className="text-sm font-bold text-gray-400 mb-3">ALL TIME</h3>
                       <div className="space-y-2">
                         <div className="flex justify-between">
-                          <span className="text-gray-400 text-sm">Gross Revenue</span>
+                          <span className="text-gray-400 text-sm">Revenue excluding tax</span>
                           <span className="text-white font-bold">{formatPrice(allTime.totalRevenue)}</span>
                         </div>
                         <div className="flex justify-between">
-                          <span className="text-gray-400 text-sm">Product Cost ({formatPrice(avgCostPerUnit)}/unit)</span>
-                          <span className="text-red-400">-{formatPrice(allTime.totalProductCost)}</span>
+                          <span className="text-gray-400 text-sm">Product cost estimate (per product)</span>
+                          <span className="text-red-400">{formatPrice(allTime.totalProductCost)}</span>
                         </div>
                         <div className="flex justify-between">
                           <span className="text-gray-400 text-sm">Shipping Cost</span>
-                          <span className="text-red-400">-{formatPrice(allTime.totalShippingCost)}</span>
+                          <span className="text-red-400">{formatPrice(allTime.totalShippingCost)}</span>
                         </div>
                         <div className="flex justify-between">
-                          <span className="text-gray-400 text-sm">Stripe Fees</span>
-                          <span className="text-red-400">-{formatPrice(allTime.totalStripeFees)}</span>
+                          <span className="text-gray-400 text-sm">Estimated processing fees</span>
+                          <span className="text-red-400">{formatPrice(allTime.totalStripeFees)}</span>
                         </div>
                         <div className="flex justify-between pt-2 border-t border-gray-700">
-                          <span className="text-white font-bold">Net Profit</span>
+                          <span className="text-white font-bold">Estimated contribution</span>
                           <span className={`font-bold ${allTime.netProfit >= 0 ? 'text-green-400' : 'text-red-400'}`}>
                             {formatPrice(allTime.netProfit)}
                           </span>
@@ -657,7 +645,7 @@ function AdminDashboardPage() {
                         <div className="flex justify-between">
                           <span className="text-gray-400 text-sm">Margin</span>
                           <span className={`font-bold ${allTime.margin >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                            {allTime.margin.toFixed(1)}%
+                            {percent(allTime.margin)}
                           </span>
                         </div>
                       </div>
@@ -667,23 +655,23 @@ function AdminDashboardPage() {
                       <h3 className="text-sm font-bold text-gray-400 mb-3">LAST 30 DAYS</h3>
                       <div className="space-y-2">
                         <div className="flex justify-between">
-                          <span className="text-gray-400 text-sm">Gross Revenue</span>
+                          <span className="text-gray-400 text-sm">Revenue excluding tax</span>
                           <span className="text-white font-bold">{formatPrice(last30.totalRevenue)}</span>
                         </div>
                         <div className="flex justify-between">
                           <span className="text-gray-400 text-sm">Product Cost</span>
-                          <span className="text-red-400">-{formatPrice(last30.totalProductCost)}</span>
+                          <span className="text-red-400">{formatPrice(last30.totalProductCost)}</span>
                         </div>
                         <div className="flex justify-between">
                           <span className="text-gray-400 text-sm">Shipping Cost</span>
-                          <span className="text-red-400">-{formatPrice(last30.totalShippingCost)}</span>
+                          <span className="text-red-400">{formatPrice(last30.totalShippingCost)}</span>
                         </div>
                         <div className="flex justify-between">
-                          <span className="text-gray-400 text-sm">Stripe Fees</span>
-                          <span className="text-red-400">-{formatPrice(last30.totalStripeFees)}</span>
+                          <span className="text-gray-400 text-sm">Estimated processing fees</span>
+                          <span className="text-red-400">{formatPrice(last30.totalStripeFees)}</span>
                         </div>
                         <div className="flex justify-between pt-2 border-t border-gray-700">
-                          <span className="text-white font-bold">Net Profit</span>
+                          <span className="text-white font-bold">Estimated contribution</span>
                           <span className={`font-bold ${last30.netProfit >= 0 ? 'text-green-400' : 'text-red-400'}`}>
                             {formatPrice(last30.netProfit)}
                           </span>
@@ -691,7 +679,7 @@ function AdminDashboardPage() {
                         <div className="flex justify-between">
                           <span className="text-gray-400 text-sm">Margin</span>
                           <span className={`font-bold ${last30.margin >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                            {last30.margin.toFixed(1)}%
+                            {percent(last30.margin)}
                           </span>
                         </div>
                       </div>

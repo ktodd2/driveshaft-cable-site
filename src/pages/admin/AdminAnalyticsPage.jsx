@@ -1,12 +1,15 @@
+import ReportQuality from '../../components/admin/ReportQuality'
+import { filterReportOrders, bookkeepingRows, BOOKKEEPING_COLUMNS, safeCsvCell, REPORT_LIMITATIONS } from '../../lib/profitReporting'
+import { readAttentionRows } from '../../lib/needsAttention'
 import React, { useEffect, useState, useRef } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
-import { formatPrice } from '../../stores/cartStore'
+import { formatPrice as currencyPrice } from '../../stores/cartStore'
 import { useProductShipments } from '../../hooks/useProductShipments'
 import { useProducts } from '../../hooks/useProducts'
 import {
   calcOrderProfit as calcOrderProfitShared,
-  calcPerProductStats,
+  calcPerProductStats, calcProfitStats, scopeOrdersToProduct,
 } from '../../lib/costCalculations'
 import Papa from 'papaparse'
 import {
@@ -14,6 +17,9 @@ import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer, Legend
 } from 'recharts'
+
+const formatPrice = n => n == null ? 'Incomplete' : currencyPrice(n)
+const percent = n => n == null ? 'Incomplete' : `${n.toFixed(1)}%`
 
 const COLORS = {
   revenue: '#eab308',
@@ -33,7 +39,7 @@ const CustomTooltip = ({ active, payload, label }) => {
       <p className="text-gray-400 text-sm mb-1">{label}</p>
       {payload.map((p, i) => (
         <p key={i} style={{ color: p.color }} className="text-sm font-bold">
-          {p.name}: {p.name.includes('Margin') ? `${p.value.toFixed(1)}%` : formatPrice(p.value)}
+          {p.name}: {p.name.includes('Margin') ? percent(p.value) : formatPrice(p.value)}
         </p>
       ))}
     </div>
@@ -56,14 +62,16 @@ const CountTooltip = ({ active, payload, label }) => {
 
 function AdminAnalyticsPage() {
   const navigate = useNavigate()
+  const [reportError, setReportError] = useState(null)
+  const [ordersLoading, setOrdersLoading] = useState(true)
   const [user, setUser] = useState(null)
   const [loading, setLoading] = useState(true)
   const [orders, setOrders] = useState([])
   const [dateRange, setDateRange] = useState('30d')
   const [customStart, setCustomStart] = useState('')
   const [customEnd, setCustomEnd] = useState('')
-  const { shipments, avgCostPerUnit, avgCostPerUnitByProduct, loading: shipmentsLoading } = useProductShipments()
-  const { activeProducts, productsMap } = useProducts()
+  const { shipments, avgCostPerUnit, avgCostPerUnitByProduct, loading: shipmentsLoading, error: shipmentsError } = useProductShipments()
+  const { products, productsMap } = useProducts()
   const [productFilter, setProductFilter] = useState('all')
   const [fallbackShipping, setFallbackShipping] = useState(
     () => parseInt(localStorage.getItem('ktodd-admin-shipping-fallback') || '0')
@@ -87,12 +95,9 @@ function AdminAnalyticsPage() {
   }
 
   const loadOrders = async () => {
-    const { data } = await supabase
-      .from('orders')
-      .select('*')
-      .eq('payment_status', 'paid')
-      .order('created_at', { ascending: true })
-    setOrders(data || [])
+    try { setOrders(await readAttentionRows(supabase, 'orders')) }
+    catch { setReportError('Orders unavailable. Reporting is withheld; reload to retry.') }
+    setOrdersLoading(false)
   }
 
   const handleSignOut = async () => {
@@ -101,52 +106,15 @@ function AdminAnalyticsPage() {
   }
 
   const handleFallbackShippingChange = (val) => {
-    const n = parseInt(val) || 0
+    const n = Math.max(0, parseInt(val) || 0)
     setFallbackShipping(n)
     localStorage.setItem('ktodd-admin-shipping-fallback', String(n))
   }
 
   // Date-range filter only — independent of product filter so the per-product
   // KPI strip can use the date-scoped orders without losing other products.
-  const getDateFilteredOrders = () => {
-    const now = new Date()
-    let startDate
-    if (dateRange === '7d') startDate = new Date(now - 7 * 86400000)
-    else if (dateRange === '30d') startDate = new Date(now - 30 * 86400000)
-    else if (dateRange === '90d') startDate = new Date(now - 90 * 86400000)
-    else if (dateRange === 'year') { startDate = new Date(now); startDate.setFullYear(startDate.getFullYear() - 1) }
-    else if (dateRange === 'custom' && customStart) startDate = new Date(customStart)
-    else return orders
-
-    const endDate = (dateRange === 'custom' && customEnd) ? new Date(customEnd + 'T23:59:59') : now
-    return orders.filter(o => { const d = new Date(o.created_at); return d >= startDate && d <= endDate })
-  }
-
-  // Reshape an order so it represents ONLY the selected product's contribution.
-  // Revenue, shipping, and Stripe fees split proportionally by line value so a
-  // 50 Cable + 20 Cable+ order contributes its Cable+ slice to Cable+ analytics
-  // instead of showing the full order total under both products.
-  const scopeOrderToProduct = (order, productId) => {
-    const items = order.items || []
-    const lineValues = items.map(i => (i.price || 0) * (i.quantity || 0))
-    const totalLineValue = lineValues.reduce((a, b) => a + b, 0)
-    if (totalLineValue === 0) return null
-    const matchIdx = items.findIndex(i => i.productId === productId)
-    if (matchIdx === -1) return null
-    const share = lineValues[matchIdx] / totalLineValue
-    const scopedTotal = Math.round((order.total_cents || 0) * share)
-    const scopedShipping = order.actual_shipping_cost_cents != null
-      ? Math.round(order.actual_shipping_cost_cents * share)
-      : null
-    return {
-      ...order,
-      items: [items[matchIdx]],
-      total_cents: scopedTotal,
-      actual_shipping_cost_cents: scopedShipping,
-      // Mark so downstream code knows this is a synthetic scoped order.
-      _scopedToProduct: productId,
-    }
-  }
+  const getDateFilteredOrders = () => filterReportOrders(orders,dateRange,customStart,customEnd)
+  const scopeOrderToProduct = (order, id) => scopeOrdersToProduct(order,avgCostPerUnitByProduct,fallbackShipping).find(o=>o._scopedToProduct===String(id))
 
   // Orders filtered by date AND product. When productFilter is 'all' this is
   // identical to getDateFilteredOrders; otherwise each surviving order is
@@ -163,16 +131,10 @@ function AdminAnalyticsPage() {
     return calcOrderProfitShared(order, avgCostPerUnitByProduct, fallbackShipping)
   }
 
-  const getPeriodKey = (date) => {
-    if (dateRange === '7d' || dateRange === '30d') {
-      return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
-    } else if (dateRange === '90d') {
-      const startOfYear = new Date(date.getFullYear(), 0, 1)
-      const weekNum = Math.ceil(((date - startOfYear) / 86400000 + startOfYear.getDay() + 1) / 7)
-      return `Week ${weekNum}`
-    } else {
-      return date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' })
-    }
+  const getPeriodKey = date => {
+    const iso = date.toISOString()
+    if (dateRange === '7d' || dateRange === '30d' || dateRange === '90d' || dateRange === 'custom') return iso.slice(0,10)
+    return iso.slice(0,7)
   }
 
   const buildChartData = () => {
@@ -182,13 +144,13 @@ function AdminAnalyticsPage() {
     filtered.forEach(order => {
       const date = new Date(order.created_at)
       const key = getPeriodKey(date)
-      const { units, profit } = calcOrderProfit(order)
+      const { units, profit, revenue } = calcOrderProfit(order)
 
       if (!buckets[key]) {
         buckets[key] = { date: key, revenue: 0, profit: 0, orders: 0, units: 0, _timestamp: date.getTime() }
       }
-      buckets[key].revenue += order.total_cents
-      buckets[key].profit += profit
+      buckets[key].revenue = buckets[key].revenue === null || revenue === null ? null : buckets[key].revenue + revenue
+      buckets[key].profit = buckets[key].profit === null || profit === null ? null : buckets[key].profit + profit
       buckets[key].orders += 1
       buckets[key].units += units
     })
@@ -201,12 +163,13 @@ function AdminAnalyticsPage() {
   const buildMarginData = () => {
     return buildChartData().map(d => ({
       ...d,
-      margin: d.revenue > 0 ? parseFloat(((d.profit / d.revenue) * 100).toFixed(1)) : 0
+      margin: d.profit === null || d.revenue === null ? null : d.revenue > 0 ? parseFloat(((d.profit / d.revenue) * 100).toFixed(1)) : 0
     }))
   }
 
   const buildPieData = () => {
     const filtered = getFilteredOrders()
+    if (filtered.some(o => calcOrderProfit(o).profit === null)) return []
     let totalProductCost = 0
     let totalShipping = 0
     let totalStripe = 0
@@ -220,11 +183,12 @@ function AdminAnalyticsPage() {
       totalProfit += profit
     })
 
+    if (totalProfit < 0) return []
     return [
       { name: 'Product Cost', value: Math.max(0, totalProductCost), color: COLORS.loss },
       { name: 'Shipping', value: Math.max(0, totalShipping), color: COLORS.shipping },
-      { name: 'Stripe Fees', value: Math.max(0, totalStripe), color: COLORS.stripe },
-      { name: 'Net Profit', value: Math.max(0, totalProfit), color: COLORS.profit },
+      { name: 'Estimated processing fees', value: Math.max(0, totalStripe), color: COLORS.stripe },
+      { name: 'Estimated contribution', value: Math.max(0, totalProfit), color: COLORS.profit },
     ].filter(d => d.value > 0)
   }
 
@@ -255,21 +219,8 @@ function AdminAnalyticsPage() {
 
   const getSummaryStats = () => {
     const filtered = getFilteredOrders()
-    let totalRevenue = 0
-    let totalProfit = 0
-    let totalUnits = 0
-
-    filtered.forEach(order => {
-      const { units, profit } = calcOrderProfit(order)
-      totalRevenue += order.total_cents
-      totalProfit += profit
-      totalUnits += units
-    })
-
-    const margin = totalRevenue > 0 ? (totalProfit / totalRevenue) * 100 : 0
-    const avgOrder = filtered.length > 0 ? Math.round(totalRevenue / filtered.length) : 0
-
-    return { totalRevenue, totalProfit, margin, orders: filtered.length, totalUnits, avgOrder }
+    const s = calcProfitStats(filtered,avgCostPerUnitByProduct,fallbackShipping)
+    return {...s,totalProfit:s.netProfit,orders:filtered.length,avgOrder:filtered.length && s.totalRevenue !== null ? Math.round(s.totalRevenue/filtered.length) : s.totalRevenue}
   }
 
   const getDateRangeLabel = () => {
@@ -303,30 +254,32 @@ function AdminAnalyticsPage() {
 
     const rows = []
 
-    rows.push(['Analytics Report — ' + getDateRangeLabel()])
+    rows.push(['Analytics Report — ' + getDateRangeLabel() + ' · UTC · Product: ' + productFilter])
+    rows.push([REPORT_LIMITATIONS])
+    rows.push(['Missing recorded shipping', summary.ordersWithoutShipping, 'Missing product costs', summary.ordersWithoutProductCost, 'Incomplete contributions', summary.incompleteOrders])
     rows.push([])
 
     rows.push(['Summary Statistics'])
     rows.push(['Metric', 'Value'])
-    rows.push(['Revenue', formatPrice(summary.totalRevenue)])
-    rows.push(['Net Profit', formatPrice(summary.totalProfit)])
-    rows.push(['Margin %', `${summary.margin.toFixed(1)}%`])
+    rows.push(['Revenue excluding tax', formatPrice(summary.totalRevenue)])
+    rows.push(['Estimated contribution', formatPrice(summary.totalProfit)])
+    rows.push(['Margin %', percent(summary.margin)])
     rows.push(['Orders', summary.orders])
     rows.push(['Units Sold', summary.totalUnits])
     rows.push(['Avg Order Value', formatPrice(summary.avgOrder)])
     rows.push([])
 
-    rows.push(['Revenue & Profit by Period'])
-    rows.push(['Date', 'Revenue', 'Profit', 'Orders', 'Units'])
+    rows.push(['Revenue & Estimated Contribution by Period'])
+    rows.push(['Date', 'Revenue excluding tax', 'Estimated contribution', 'Orders', 'Units'])
     chartD.forEach(d => {
       rows.push([d.date, formatPrice(d.revenue), formatPrice(d.profit), d.orders, d.units])
     })
     rows.push([])
 
-    rows.push(['Profit Margin by Period'])
+    rows.push(['Estimated Contribution Margin by Period'])
     rows.push(['Date', 'Margin %'])
     marginD.forEach(d => {
-      rows.push([d.date, `${d.margin.toFixed(1)}%`])
+      rows.push([d.date, percent(d.margin)])
     })
     rows.push([])
 
@@ -344,9 +297,15 @@ function AdminAnalyticsPage() {
       rows.push([c.name, c.email, formatPrice(c.total), c.orders])
     })
 
-    const csvString = Papa.unparse(rows)
+    const csvString = Papa.unparse(rows.map(row=>row.map(safeCsvCell)), { escapeFormulae: true })
     const dateStr = new Date().toISOString().split('T')[0]
     triggerDownload(csvString, `analytics-data-${dateRange}-${dateStr}.csv`, 'text/csv;charset=utf-8;')
+  }
+
+  const handleBookkeeping = () => {
+    const rows = bookkeepingRows(getDateFilteredOrders(),avgCostPerUnitByProduct,fallbackShipping)
+    const data = rows.map(row=>BOOKKEEPING_COLUMNS.map(k=>safeCsvCell(row[k])))
+    triggerDownload(Papa.unparse({fields:BOOKKEEPING_COLUMNS,data},{escapeFormulae:true}),`bookkeeping-${dateRange}-${new Date().toISOString().slice(0,10)}.csv`,'text/csv;charset=utf-8;')
   }
 
   const handleExportPDF = async () => {
@@ -423,7 +382,7 @@ function AdminAnalyticsPage() {
     }
   }
 
-  if (loading) {
+  if (loading || ordersLoading || shipmentsLoading) {
     return (
       <div className="min-h-screen bg-ktodd-dark flex items-center justify-center">
         <div className="text-yellow-500">Loading...</div>
@@ -436,6 +395,8 @@ function AdminAnalyticsPage() {
   const pieData = buildPieData()
   const topCustomers = buildTopCustomers()
   const summary = getSummaryStats()
+  const reportProductIds = [...new Set([...products.map(p=>String(p.id)), ...getDateFilteredOrders().flatMap(o=>Array.isArray(o.items)?o.items.map(i=>String(i.productId)):[])])]
+  const reportProducts = reportProductIds.map(id=>productsMap[id] || {id,name:`Unknown product ${id}`})
   const totalPie = pieData.reduce((s, d) => s + d.value, 0)
 
   return (
@@ -532,14 +493,14 @@ function AdminAnalyticsPage() {
         </aside>
 
         {/* Main Content */}
-        <main className="flex-1 p-6 lg:p-8">
+        <main className="min-w-0 flex-1 p-4 sm:p-6 lg:p-8">
           <div className="max-w-6xl mx-auto">
-            <div className="flex items-center justify-between mb-8">
+            <div className="flex flex-wrap gap-4 items-center justify-between mb-8">
               <h1 className="text-3xl font-industrial text-white">ANALYTICS</h1>
-              <div className="flex items-center gap-3">
+              <div className="flex flex-wrap items-center gap-3">
                 <button
                   onClick={handleExportCSV}
-                  disabled={exporting}
+                  disabled={exporting || !!reportError || !!shipmentsError}
                   className="flex items-center gap-2 bg-gray-800 hover:bg-gray-700 text-gray-300 hover:text-white px-4 py-2 text-sm font-bold rounded border border-gray-700 transition-colors disabled:opacity-50"
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -549,7 +510,7 @@ function AdminAnalyticsPage() {
                 </button>
                 <button
                   onClick={handleExportPDF}
-                  disabled={exporting}
+                  disabled={exporting || !!reportError || !!shipmentsError}
                   className="flex items-center gap-2 bg-yellow-500 hover:bg-yellow-400 text-black px-4 py-2 text-sm font-bold rounded transition-colors disabled:opacity-50"
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -560,12 +521,15 @@ function AdminAnalyticsPage() {
               </div>
             </div>
 
+            <button onClick={handleBookkeeping} disabled={!!reportError || !!shipmentsError} className="bg-yellow-500 text-black px-4 py-2 mb-2 rounded disabled:opacity-50">Bookkeeping CSV (whole orders)</button>
+            <p className="text-gray-400 text-sm mb-4">Uses selected UTC dates and all products; amounts in USD cents. Unknown amounts are blank. Review refunds before using for your books.</p>
+            {(reportError || shipmentsError) && <p role="alert" className="text-red-300 mb-6">{reportError || shipmentsError}. Reload to retry.</p>}
             {/* Cost Settings */}
             <div className="bg-gray-800/50 border border-gray-700 p-6 mb-6">
               <h2 className="text-xl font-industrial text-yellow-500 mb-4">COST SETTINGS</h2>
               <div className="flex flex-wrap gap-6">
                 <div>
-                  <label className="text-gray-400 text-sm block mb-1">Weighted Avg Cost / Unit</label>
+                  <label className="text-gray-400 text-sm block mb-1">Blended receipt average (reference only)</label>
                   <div className="text-white text-lg font-bold">
                     {shipmentsLoading ? '...' : formatPrice(avgCostPerUnit)}
                   </div>
@@ -574,7 +538,7 @@ function AdminAnalyticsPage() {
                   </Link>
                 </div>
                 <div>
-                  <label className="text-gray-400 text-sm block mb-1">Fallback Shipping Per Order (cents)</label>
+                  <label className="text-gray-400 text-sm block mb-1">Optional shipping estimate / order (cents; 0 = unknown)</label>
                   <input
                     type="number"
                     value={fallbackShipping}
@@ -595,23 +559,24 @@ function AdminAnalyticsPage() {
                   {range === '7d' ? '7 Days' : range === '30d' ? '30 Days' : range === '90d' ? '90 Days' : range === 'year' ? '1 Year' : 'All Time'}
                 </button>
               ))}
-              <div className="flex items-center gap-2 ml-4">
-                <input type="date" value={customStart} onChange={e => { setCustomStart(e.target.value); setDateRange('custom') }}
+              <div className="flex flex-wrap items-center gap-2">
+                <input aria-label="Start date (UTC)" type="date" value={customStart} onChange={e => { setCustomStart(e.target.value); setDateRange('custom') }}
                   className="bg-gray-800 border border-gray-700 text-white px-3 py-2 text-sm rounded" />
                 <span className="text-gray-500">to</span>
-                <input type="date" value={customEnd} onChange={e => { setCustomEnd(e.target.value); setDateRange('custom') }}
+                <input aria-label="End date (UTC)" type="date" value={customEnd} onChange={e => { setCustomEnd(e.target.value); setDateRange('custom') }}
                   className="bg-gray-800 border border-gray-700 text-white px-3 py-2 text-sm rounded" />
               </div>
             </div>
             <div className="flex flex-wrap items-center gap-2 mb-8">
               <span className="text-gray-400 text-sm">Product:</span>
               <select
+                aria-label="Product filter"
                 value={productFilter}
                 onChange={e => setProductFilter(e.target.value)}
                 className="bg-gray-800 border border-gray-700 text-white px-3 py-2 text-sm rounded focus:border-yellow-500 focus:outline-none"
               >
                 <option value="all">All products (combined)</option>
-                {activeProducts.map(p => (
+                {reportProducts.map(p => (
                   <option key={p.id} value={p.id}>{p.name}</option>
                 ))}
               </select>
@@ -623,12 +588,14 @@ function AdminAnalyticsPage() {
             </div>
 
             {/* Exportable Report Content */}
-            <div ref={reportRef} style={{ backgroundColor: '#1A1A1A' }}>
+            {!reportError && !shipmentsError && <div ref={reportRef} style={{ backgroundColor: '#1A1A1A' }}>
 
+            <ReportQuality stats={getSummaryStats()} excluded={orders.length-getDateFilteredOrders().length} />
+            <p className="text-gray-400 mb-4">{getDateRangeLabel()} · UTC · {productFilter === 'all' ? 'All products' : productsMap[productFilter]?.name}. Product views allocate order revenue and fees by line value; zero-value carts by units.</p>
             {/* Per-Product Breakdown — uses date-filtered orders but ignores
                 the product filter so the side-by-side comparison is always
                 visible. */}
-            {activeProducts.length > 0 && (() => {
+            {reportProducts.length > 0 && (() => {
               const perProductStats = calcPerProductStats(
                 getDateFilteredOrders(),
                 avgCostPerUnitByProduct,
@@ -637,20 +604,20 @@ function AdminAnalyticsPage() {
               return (
                 <div className="mb-8">
                   <h3 className="text-gray-400 text-xs uppercase tracking-wider mb-3">By Product</h3>
-                  <div className={`grid gap-3 ${activeProducts.length >= 3 ? 'grid-cols-2 lg:grid-cols-3' : 'grid-cols-1 sm:grid-cols-2'}`}>
-                    {activeProducts.map(p => {
+                  <div className={`grid gap-3 ${reportProducts.length >= 3 ? 'grid-cols-2 lg:grid-cols-3' : 'grid-cols-1 sm:grid-cols-2'}`}>
+                    {reportProducts.map(p => {
                       const s = perProductStats[p.id] || { revenue: 0, units: 0, profit: 0, margin: 0 }
                       return (
                         <div key={p.id} className="bg-gray-800/30 border border-gray-700 p-4 rounded">
                           <div className="text-yellow-500 font-bold text-sm mb-2 truncate">{p.name}</div>
                           <div className="grid grid-cols-3 gap-2 text-center">
                             <div>
-                              <div className="text-gray-500 text-xs">Revenue</div>
+                              <div className="text-gray-500 text-xs">Revenue excluding tax</div>
                               <div className="text-green-400 font-industrial text-lg">{formatPrice(s.revenue)}</div>
                             </div>
                             <div>
-                              <div className="text-gray-500 text-xs">Profit</div>
-                              <div className={`font-industrial text-lg ${s.profit >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                              <div className="text-gray-500 text-xs">Est. contribution</div>
+                              <div className={`font-industrial text-lg ${s.profit === null ? 'text-yellow-300' : s.profit >= 0 ? 'text-green-400' : 'text-red-400'}`}>
                                 {formatPrice(s.profit)}
                               </div>
                             </div>
@@ -660,7 +627,7 @@ function AdminAnalyticsPage() {
                             </div>
                           </div>
                           <div className="text-center text-xs text-gray-500 mt-2">
-                            Margin {s.margin.toFixed(1)}%
+                            Margin {percent(s.margin)}
                           </div>
                         </div>
                       )
@@ -673,19 +640,19 @@ function AdminAnalyticsPage() {
             {/* Summary Cards */}
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
               <div className="bg-gray-800/50 border border-gray-700 p-6">
-                <div className="text-gray-400 text-sm mb-1">Revenue</div>
+                <div className="text-gray-400 text-sm mb-1">Revenue excluding tax</div>
                 <div className="text-3xl font-industrial text-green-400">{formatPrice(summary.totalRevenue)}</div>
               </div>
               <div className="bg-gray-800/50 border border-gray-700 p-6">
-                <div className="text-gray-400 text-sm mb-1">Net Profit</div>
-                <div className={`text-3xl font-industrial ${summary.totalProfit >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                <div className="text-gray-400 text-sm mb-1">Estimated contribution</div>
+                <div className={`text-3xl font-industrial ${summary.totalProfit === null ? 'text-yellow-300' : summary.totalProfit >= 0 ? 'text-green-400' : 'text-red-400'}`}>
                   {formatPrice(summary.totalProfit)}
                 </div>
               </div>
               <div className="bg-gray-800/50 border border-gray-700 p-6">
                 <div className="text-gray-400 text-sm mb-1">Margin %</div>
                 <div className={`text-3xl font-industrial ${summary.margin > 0 ? 'text-green-400' : 'text-red-400'}`}>
-                  {summary.margin.toFixed(1)}%
+                  {percent(summary.margin)}
                 </div>
               </div>
               <div className="bg-gray-800/50 border border-gray-700 p-6">
@@ -697,14 +664,14 @@ function AdminAnalyticsPage() {
                 <div className="text-3xl font-industrial text-white">{summary.totalUnits}</div>
               </div>
               <div className="bg-gray-800/50 border border-gray-700 p-6">
-                <div className="text-gray-400 text-sm mb-1">Avg Order Value</div>
+                <div className="text-gray-400 text-sm mb-1">Avg Order Value ex. tax</div>
                 <div className="text-3xl font-industrial text-white">{formatPrice(summary.avgOrder)}</div>
               </div>
             </div>
 
             {/* Revenue & Profit Trend — full width */}
             <div className="bg-gray-800/50 border border-gray-700 p-6 mb-6">
-              <h3 className="text-lg font-industrial text-yellow-500 mb-4">REVENUE & PROFIT TREND</h3>
+              <h3 className="text-lg font-industrial text-yellow-500 mb-4">REVENUE & ESTIMATED CONTRIBUTION</h3>
               {chartData.length === 0 ? (
                 <div className="flex items-center justify-center h-64 text-gray-500">No data for selected period</div>
               ) : (
@@ -725,8 +692,8 @@ function AdminAnalyticsPage() {
                     <YAxis tick={{ fill: COLORS.axisText, fontSize: 12 }} tickFormatter={v => formatPrice(v)} />
                     <Tooltip content={<CustomTooltip />} />
                     <Legend wrapperStyle={{ color: COLORS.axisText }} />
-                    <Area type="monotone" dataKey="revenue" name="Revenue" stroke={COLORS.revenue} fill="url(#revenueGrad)" strokeWidth={2} />
-                    <Area type="monotone" dataKey="profit" name="Profit" stroke={COLORS.profit} fill="url(#profitGrad)" strokeWidth={2} />
+                    <Area type="monotone" dataKey="revenue" name="Revenue ex. tax" stroke={COLORS.revenue} fill="url(#revenueGrad)" strokeWidth={2} />
+                    <Area type="monotone" dataKey="profit" name="Est. contribution" stroke={COLORS.profit} fill="url(#profitGrad)" strokeWidth={2} />
                   </AreaChart>
                 </ResponsiveContainer>
               )}
@@ -773,8 +740,8 @@ function AdminAnalyticsPage() {
 
               {/* Profit Margin Over Time */}
               <div className="bg-gray-800/50 border border-gray-700 p-6">
-                <h3 className="text-lg font-industrial text-yellow-500 mb-4">PROFIT MARGIN OVER TIME</h3>
-                {marginData.length === 0 ? (
+                <h3 className="text-lg font-industrial text-yellow-500 mb-4">ESTIMATED CONTRIBUTION MARGIN</h3>
+                {!marginData.some(d => d.margin !== null) ? (
                   <div className="flex items-center justify-center h-64 text-gray-500">No data for selected period</div>
                 ) : (
                   <ResponsiveContainer width="100%" height={300}>
@@ -793,7 +760,7 @@ function AdminAnalyticsPage() {
               <div className="bg-gray-800/50 border border-gray-700 p-6">
                 <h3 className="text-lg font-industrial text-yellow-500 mb-4">COST BREAKDOWN</h3>
                 {pieData.length === 0 ? (
-                  <div className="flex items-center justify-center h-64 text-gray-500">No data for selected period</div>
+                  <div className="flex items-center justify-center h-64 text-gray-500">Cost chart unavailable: empty period, incomplete costs or negative contribution</div>
                 ) : (
                   <ResponsiveContainer width="100%" height={300}>
                     <PieChart>
@@ -853,7 +820,7 @@ function AdminAnalyticsPage() {
               )}
             </div>
 
-            </div>{/* End exportable report content */}
+            </div>}{/* End exportable report content */}
 
           </div>
         </main>

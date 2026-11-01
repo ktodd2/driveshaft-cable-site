@@ -1,19 +1,18 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
+import { readAttentionRows } from '../lib/needsAttention'
 import { calcWeightedAvgCost, calcWeightedAvgCostByProduct } from '../lib/costCalculations'
 
 export function useProductShipments() {
   const [shipments, setShipments] = useState([])
+  const [error, setError] = useState(null)
   const [loading, setLoading] = useState(true)
 
   const fetchShipments = async () => {
     setLoading(true)
-    const { data, error } = await supabase
-      .from('product_shipments')
-      .select('*')
-      .order('received_at', { ascending: false })
-
-    if (!error) setShipments(data || [])
+    setError(null)
+    try { setShipments((await readAttentionRows(supabase, 'product_shipments')).sort((a,b) => Date.parse(b.received_at) - Date.parse(a.received_at))) }
+    catch { setShipments([]); setError('Product costs unavailable') }
     setLoading(false)
   }
 
@@ -56,6 +55,7 @@ export function useProductShipments() {
 
   return {
     shipments,
+    error,
     loading,
     avgCostPerUnit,
     avgCostPerUnitByProduct,
