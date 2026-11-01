@@ -1,3 +1,4 @@
+import { observeEmailRun } from '../_shared/emailHealth.js'
 import { isActiveAdmin } from '../_shared/storeAuthorization.js'
 import { createApiClient } from '../_shared/supabaseTransport.js'
 import { getSupabaseSecretKey, getSupabasePublishableKey, hasBackendApiKey } from '../_shared/supabaseKeys.js'
@@ -97,6 +98,7 @@ serve(async (req) => {
   if (req.method !== 'POST') return new Response('Method not allowed', { status: 405 })
 
   const supabase = createApiClient(createClient, supabaseUrl, serviceRoleKey)
+  return observeEmailRun(supabase, 'send-reorder-reminder', async (recorder) => {
   const resendApiKey = Deno.env.get('RESEND_API_KEY')
   if (!resendApiKey) {
     return new Response(
@@ -108,7 +110,7 @@ serve(async (req) => {
   const cutoff = new Date(Date.now() - REORDER_DAYS * 24 * 60 * 60 * 1000).toISOString()
 
   const { data: orders, error: fetchErr } = await supabase
-    .from('orders')
+    .from('email_candidates_reorder')
     .select('id, email, name, items, updated_at')
     .eq('payment_status', 'paid')
     .not('email', 'is', null)
@@ -131,7 +133,7 @@ serve(async (req) => {
     const firstName = (order.name || 'Customer').split(' ')[0]
     const items = Array.isArray(order.items) ? order.items : []
 
-    const res = await fetch('https://api.resend.com/emails', {
+    const res = await recorder.send(order.id, [order.email], 'https://api.resend.com/emails', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${resendApiKey}`,
@@ -152,10 +154,11 @@ serve(async (req) => {
       continue
     }
 
-    await supabase
+    const { error: stampError } = await supabase
       .from('orders')
       .update({ reorder_reminder_sent_at: new Date().toISOString() })
       .eq('id', order.id)
+    if (stampError) throw Error('Status update failed after provider acceptance')
     sent++
     await new Promise(r => setTimeout(r, 1000))
   }
@@ -164,4 +167,5 @@ serve(async (req) => {
     JSON.stringify({ sent, failed, considered: orders?.length || 0 }),
     { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
   )
+  })
 })

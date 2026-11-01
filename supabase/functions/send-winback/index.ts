@@ -1,3 +1,4 @@
+import { observeEmailRun } from '../_shared/emailHealth.js'
 import { isActiveAdmin } from '../_shared/storeAuthorization.js'
 import { createApiClient } from '../_shared/supabaseTransport.js'
 import { getSupabaseSecretKey, getSupabasePublishableKey, hasBackendApiKey } from '../_shared/supabaseKeys.js'
@@ -94,6 +95,7 @@ serve(async (req) => {
   if (req.method !== 'POST') return new Response('Method not allowed', { status: 405 })
 
   const supabase = createApiClient(createClient, supabaseUrl, serviceRoleKey)
+  return observeEmailRun(supabase, 'send-winback', async (recorder) => {
   const resendApiKey = Deno.env.get('RESEND_API_KEY')
   if (!resendApiKey) {
     return new Response(
@@ -111,7 +113,7 @@ serve(async (req) => {
   // win-back stamped yet. We grab a generous pool and dedupe by email below
   // to one row per customer (their most recent order in the window).
   const { data: candidates, error: fetchErr } = await supabase
-    .from('orders')
+    .from('email_candidates_winback')
     .select('id, email, name, updated_at')
     .eq('payment_status', 'paid')
     .not('email', 'is', null)
@@ -148,12 +150,13 @@ serve(async (req) => {
 
     // Exclude if any of this customer's orders received a winback in the
     // last 6 months (don't spam them).
-    const { count: recentWinback } = await supabase
+    const { count: recentWinback, error: winbackError } = await supabase
       .from('orders')
       .select('id', { count: 'exact', head: true })
       .eq('email', order.email)
       .gte('winback_email_sent_at', exclusionCutoff)
 
+    if (winbackError) throw Error('Recent winback eligibility unavailable')
     if ((recentWinback || 0) > 0) {
       await supabase
         .from('orders')
@@ -165,13 +168,14 @@ serve(async (req) => {
 
     // Exclude if they've placed a paid order after the candidate window —
     // they're already active, no need to win them back.
-    const { count: recentOrder } = await supabase
+    const { count: recentOrder, error: orderError } = await supabase
       .from('orders')
       .select('id', { count: 'exact', head: true })
       .eq('email', order.email)
       .eq('payment_status', 'paid')
       .gte('updated_at', maxWindow)
 
+    if (orderError) throw Error('Recent order eligibility unavailable')
     if ((recentOrder || 0) > 0) {
       await supabase
         .from('orders')
@@ -182,7 +186,7 @@ serve(async (req) => {
     }
 
     const firstName = (order.name || 'Customer').split(' ')[0]
-    const res = await fetch('https://api.resend.com/emails', {
+    const res = await recorder.send(order.id, [order.email], 'https://api.resend.com/emails', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${resendApiKey}`,
@@ -203,10 +207,11 @@ serve(async (req) => {
       continue
     }
 
-    await supabase
+    const { error: stampError } = await supabase
       .from('orders')
       .update({ winback_email_sent_at: new Date().toISOString() })
       .eq('id', order.id)
+    if (stampError) throw Error('Status update failed after provider acceptance')
     sent++
     await new Promise(r => setTimeout(r, 1000))
   }
@@ -221,4 +226,5 @@ serve(async (req) => {
     }),
     { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
   )
+  })
 })

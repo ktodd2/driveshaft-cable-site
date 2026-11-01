@@ -1,3 +1,5 @@
+import { createEmailRecorder } from '../../supabase/functions/_shared/emailHealth.js'
+import { memoryDb } from '../fixtures/emailHealthDb.mjs'
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { createTrackingWorkflow, RETRY_WINDOW_MS } from '../../src/lib/trackingNotification.js'
@@ -81,18 +83,22 @@ function endpoint({ authorized = true, result = { id: 'provider' }, stale = fals
   const source = readFileSync(new URL('../../supabase/functions/send-tracking-email-v2/index.ts', import.meta.url), 'utf8').replace(/^import .*\n/gm, '')
   const body = { customerEmail: 'fixture@example.test', customerName: 'Fixture', trackingNumber: 'A', trackingCarrier: 'ups', orderId: 'order', savedRevision: 'revision', notificationId: '00000000-0000-4000-8000-000000000001', notificationCreatedAt: Date.now(), templateVersion: 'tracking-v1' }
   const q = { select: () => q, eq: () => q, single: async () => ({ data: { id: 'order', email: body.customerEmail, name: body.customerName, tracking_number: stale ? 'B' : 'A', tracking_carrier: 'ups', updated_at: 'revision' } }) }
+  const ledger=memoryDb()
+  const provider=async (url, options) => { calls.push(options); return Response.json(result) }
   runInNewContext(stripTypeScriptTypes(source), {
+    createEmailRecorder: (db,slug) => createEmailRecorder(db,slug,null,provider),
     serve: fn => handler = fn, Response, Date, console, createClient: () => {},
-    authorizeStoreRequest: async () => authorized, createApiClient: () => ({ from: () => q }), getSupabaseSecretKey: () => 'offline',
+    authorizeStoreRequest: async () => authorized, createApiClient: () => ({ from: table => table==='orders'?q:ledger.from(table) }), getSupabaseSecretKey: () => 'offline',
     Deno: { env: { get: () => 'offline' } }, fetch: async (url, options) => { calls.push(options); return Response.json(result) },
   })
   return { calls, body, invoke: () => handler(new Request('https://offline.test', { method: 'POST', body: JSON.stringify(body) })) }
 }
 test('function preserves sender, deterministic key, and accepts repeated requests', async () => {
   const f = endpoint(); assert.equal((await f.invoke()).status, 200); await f.invoke()
-  assert.equal(f.calls[0].headers['Idempotency-Key'], f.calls[1].headers['Idempotency-Key'])
+  assert.equal(f.calls.length, 1)
+  assert.match(f.calls[0].headers['Idempotency-Key'], /^tracking\//)
   assert.equal(JSON.parse(f.calls[0].body).from, 'Driveshaft Cable <orders@driveshaftcable.com>')
-  assert.equal(f.calls[0].body, f.calls[1].body)
+  assert.ok(JSON.parse(f.calls[0].body).html)
 })
 test('function rejects unauthorized, stale, expired, missing identity and malformed provider success', async () => {
   for (const options of [{ authorized: false }, { stale: true }, { result: {} }]) {
@@ -110,9 +116,11 @@ test('function conflict requires review, not another retry', async () => {
 })
 test('concurrent function requests retain identical provider key and payload', async () => {
   const f = endpoint(); const responses = await Promise.all([f.invoke(), f.invoke()])
-  assert.ok(responses.every(r => r.status === 200))
-  assert.equal(f.calls[0].headers['Idempotency-Key'], f.calls[1].headers['Idempotency-Key'])
-  assert.equal(f.calls[0].body, f.calls[1].body)
+  assert.ok(responses.some(r => r.status === 200))
+  assert.ok(responses.every(r => [200,409].includes(r.status)))
+  assert.equal(f.calls.length, 1)
+  assert.match(f.calls[0].headers['Idempotency-Key'], /^tracking\//)
+  assert.ok(JSON.parse(f.calls[0].body).html)
 })
 
 // Initial browser timestamps can lead the server slightly; the allowance must

@@ -1,3 +1,4 @@
+import { createEmailRecorder } from '../_shared/emailHealth.js'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.118.0'
 import { getSupabaseSecretKey } from '../_shared/supabaseKeys.js'
 import { createApiClient } from '../_shared/supabaseTransport.js'
@@ -36,6 +37,8 @@ serve(async (req) => {
   if (!await authorizeStoreRequest(req, createClient)) {
     return new Response('Unauthorized', { status: 401, headers: corsHeaders })
   }
+
+  if (req.method !== 'POST') return new Response('Method not allowed', { status: 405, headers: corsHeaders })
 
   try {
     const { customerEmail, customerName, trackingNumber, trackingCarrier, orderId, savedRevision, notificationId, notificationCreatedAt, templateVersion } = await req.json()
@@ -142,7 +145,8 @@ serve(async (req) => {
 </body>
 </html>`
 
-    const res = await fetch('https://api.resend.com/emails', {
+    const recorder = createEmailRecorder(db, 'send-tracking-email-v2')
+    const res = await recorder.send(orderId, [savedRevision, customerEmail, trackingNumber, trackingCarrier, templateVersion], 'https://api.resend.com/emails', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${resendApiKey}`,
@@ -160,10 +164,10 @@ serve(async (req) => {
     const result = await res.json()
 
     if (!res.ok || typeof result.id !== 'string' || !result.id.trim()) {
-      console.error('Resend error:', result)
+      console.error('Tracking provider acceptance unconfirmed')
       return new Response(
-        JSON.stringify({ error: 'Failed to send email', details: result }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
+        JSON.stringify({ error: 'Email requires review in saved history' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 409 }
       )
     }
 

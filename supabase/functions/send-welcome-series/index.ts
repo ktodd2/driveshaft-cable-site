@@ -1,3 +1,4 @@
+import { observeEmailRun } from '../_shared/emailHealth.js'
 import { isActiveAdmin } from '../_shared/storeAuthorization.js'
 import { createApiClient } from '../_shared/supabaseTransport.js'
 import { getSupabaseSecretKey, getSupabasePublishableKey, hasBackendApiKey } from '../_shared/supabaseKeys.js'
@@ -180,7 +181,7 @@ interface Subscriber {
   subscribed_at: string
 }
 
-async function sendForSubscriber(
+async function sendForSubscriber(recorder: any,
   resendApiKey: string,
   sub: Subscriber,
   newStage: number,
@@ -201,7 +202,7 @@ async function sendForSubscriber(
     subject = 'One last thing before we leave you alone'
   }
 
-  const res = await fetch('https://api.resend.com/emails', {
+  const res = await recorder.send(sub.id, [sub.welcome_stage, sub.subscribed_at, sub.email], 'https://api.resend.com/emails', {
     method: 'POST',
     headers: {
       'Authorization': `Bearer ${resendApiKey}`,
@@ -253,6 +254,7 @@ serve(async (req) => {
   if (req.method !== 'POST') return new Response('Method not allowed', { status: 405 })
 
   const supabase = createApiClient(createClient, supabaseUrl, serviceRoleKey)
+  return observeEmailRun(supabase, 'send-welcome-series', async (recorder) => {
   const resendApiKey = Deno.env.get('RESEND_API_KEY')
   if (!resendApiKey) {
     return new Response(
@@ -269,20 +271,20 @@ serve(async (req) => {
   // Stage 1 → send if subscribed > 3 days ago, advance to 2
   // Stage 2 → send if subscribed > 7 days ago, advance to 3
   const [stage0, stage1, stage2] = await Promise.all([
-    supabase.from('newsletter_subscribers')
+    supabase.from('email_candidates_welcome')
       .select('id, email, welcome_stage, subscribed_at')
       .eq('status', 'active')
       .eq('confirmed', true)
       .eq('welcome_stage', 0)
       .limit(MAX_PER_RUN),
-    supabase.from('newsletter_subscribers')
+    supabase.from('email_candidates_welcome')
       .select('id, email, welcome_stage, subscribed_at')
       .eq('status', 'active')
       .eq('confirmed', true)
       .eq('welcome_stage', 1)
       .lt('subscribed_at', threeDaysAgo)
       .limit(MAX_PER_RUN),
-    supabase.from('newsletter_subscribers')
+    supabase.from('email_candidates_welcome')
       .select('id, email, welcome_stage, subscribed_at')
       .eq('status', 'active')
       .eq('confirmed', true)
@@ -290,6 +292,8 @@ serve(async (req) => {
       .lt('subscribed_at', sevenDaysAgo)
       .limit(MAX_PER_RUN),
   ])
+
+  if ([stage0, stage1, stage2].some(result => result.error)) throw Error('Candidate query failed')
 
   // Pull one approved testimonial to embed in Day 7. If none exists, the
   // email gracefully omits the quote block.
@@ -318,7 +322,7 @@ serve(async (req) => {
 
   for (const sub of all) {
     const newStage = sub.welcome_stage + 1
-    const ok = await sendForSubscriber(resendApiKey, sub, newStage, testimonial)
+    const ok = await sendForSubscriber(recorder, resendApiKey, sub, newStage, testimonial)
     if (!ok) {
       failed++
       continue
@@ -329,7 +333,8 @@ serve(async (req) => {
       .eq('id', sub.id)
     if (updateErr) {
       console.error(`Failed to advance subscriber ${sub.id} to stage ${newStage}:`, updateErr)
-      // Don't roll back the email — better to occasionally re-send than to lose track.
+      // Durable acceptance prevents a second provider call when this stage is retried.
+      throw Error('Subscriber stage update failed after provider acceptance')
     }
     sent++
     await new Promise(r => setTimeout(r, 1000))
@@ -339,4 +344,5 @@ serve(async (req) => {
     JSON.stringify({ sent, failed, considered: all.length }),
     { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
   )
+  })
 })

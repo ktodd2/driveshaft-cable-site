@@ -1,3 +1,4 @@
+import EmailHealth from '../../components/admin/EmailHealth'
 import React, { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
@@ -637,13 +638,17 @@ function formatDate(dateString) {
 // Status panel for the four automated email workflows. Pulls counts and last-
 // run times from get_email_automation_stats RPC. Refreshes when admin returns
 // to the page or clicks the refresh button.
+
 function EmailAutomationStatusPanel() {
   const [stats, setStats] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [statsError,setStatsError] = useState(false)
 
   const fetchStats = async () => {
     setLoading(true)
-    const { data, error } = await supabase.rpc('get_email_automation_stats')
+    setStatsError(false)
+    const { data, error } = await supabase.rpc('get_email_automation_stats').catch(() => ({error:true}))
+    setStatsError(!!error)
     if (!error && data) {
       // RPC returns an array of one row with the stats; unwrap.
       setStats(Array.isArray(data) ? data[0] : data)
@@ -656,7 +661,7 @@ function EmailAutomationStatusPanel() {
   }, [])
 
   const fmtTime = (ts) => {
-    if (!ts) return 'never'
+    if (!ts) return 'no recorded activity'
     const date = new Date(ts)
     const diffMs = Date.now() - date.getTime()
     const diffHours = Math.floor(diffMs / (1000 * 60 * 60))
@@ -670,7 +675,7 @@ function EmailAutomationStatusPanel() {
   return (
     <div className="bg-gray-800/50 border border-gray-700 p-6 mb-6">
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-xl font-industrial text-yellow-500">EMAIL AUTOMATION STATUS</h2>
+        <h2 className="text-xl font-industrial text-yellow-500">LEGACY EMAIL ACTIVITY</h2>
         <button
           onClick={fetchStats}
           disabled={loading}
@@ -679,12 +684,14 @@ function EmailAutomationStatusPanel() {
           {loading ? 'Loading...' : 'Refresh'}
         </button>
       </div>
+      <p className="text-sm text-gray-400 mb-3">These existing counters use order/subscriber timestamps, which may include eligibility skips. They are not execution or delivery evidence.</p>
+      {statsError && <p role="alert" className="text-red-300">Legacy activity unavailable; any prior figures may be stale.</p>}
       {stats ? (
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
           <div className="bg-gray-900 border border-gray-700 p-3">
             <div className="text-gray-400 text-xs uppercase tracking-wide mb-1">Abandoned Cart</div>
             <div className="text-white font-industrial text-2xl">{stats.abandoned_cart_sent_7d ?? 0}</div>
-            <div className="text-gray-500 text-xs">last 7d · {fmtTime(stats.abandoned_cart_last_run)}</div>
+            <div className="text-gray-500 text-xs">recorded updates in last 7d · {fmtTime(stats.abandoned_cart_last_run)}</div>
           </div>
           <div className="bg-gray-900 border border-gray-700 p-3">
             <div className="text-gray-400 text-xs uppercase tracking-wide mb-1">Welcome Series</div>
@@ -694,16 +701,16 @@ function EmailAutomationStatusPanel() {
           <div className="bg-gray-900 border border-gray-700 p-3">
             <div className="text-gray-400 text-xs uppercase tracking-wide mb-1">Reorder Reminder</div>
             <div className="text-white font-industrial text-2xl">{stats.reorder_sent_7d ?? 0}</div>
-            <div className="text-gray-500 text-xs">last 7d · {fmtTime(stats.reorder_last_run)}</div>
+            <div className="text-gray-500 text-xs">recorded updates in last 7d · {fmtTime(stats.reorder_last_run)}</div>
           </div>
           <div className="bg-gray-900 border border-gray-700 p-3">
             <div className="text-gray-400 text-xs uppercase tracking-wide mb-1">Win-Back</div>
             <div className="text-white font-industrial text-2xl">{stats.winback_sent_7d ?? 0}</div>
-            <div className="text-gray-500 text-xs">last 7d · {fmtTime(stats.winback_last_run)}</div>
+            <div className="text-gray-500 text-xs">recorded updates in last 7d · {fmtTime(stats.winback_last_run)}</div>
           </div>
         </div>
       ) : (
-        <p className="text-gray-500 text-sm">Loading stats...</p>
+        <p className="text-gray-500 text-sm">No activity snapshot available.</p>
       )}
       {stats && (
         <div className="bg-green-500/10 border border-green-500/30 px-4 py-3">
@@ -1117,7 +1124,8 @@ function AdminEmailPage() {
             {/* ----------------------------------------------------------------
                 Email Automation Status
             ---------------------------------------------------------------- */}
-            <EmailAutomationStatusPanel />
+            <EmailHealth />
+          <details className="mb-6"><summary className="text-gray-400 cursor-pointer">Legacy activity and recovered revenue</summary><EmailAutomationStatusPanel /></details>
 
             {/* ----------------------------------------------------------------
                 Template Picker

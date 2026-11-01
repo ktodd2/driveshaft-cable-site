@@ -1,3 +1,4 @@
+import { observeEmailRun } from '../_shared/emailHealth.js'
 import { isActiveAdmin } from '../_shared/storeAuthorization.js'
 import { createApiClient } from '../_shared/supabaseTransport.js'
 import { getSupabaseSecretKey, getSupabasePublishableKey, hasBackendApiKey } from '../_shared/supabaseKeys.js'
@@ -56,6 +57,7 @@ serve(async (req) => {
 
   const supabase = createApiClient(createClient, supabaseUrl, serviceRoleKey)
 
+  return observeEmailRun(supabase, 'dispatch-campaigns', async () => {
   const { data: due, error } = await supabase
     .from('email_campaigns')
     .select('id, subject, send_type, next_send_at')
@@ -96,4 +98,5 @@ serve(async (req) => {
   }
 
   return json({ dispatched: results.length, results })
+  })
 })

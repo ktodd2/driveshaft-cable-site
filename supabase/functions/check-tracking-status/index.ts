@@ -1,3 +1,4 @@
+import { observeEmailRun } from '../_shared/emailHealth.js'
 import { authorizeStoreRequest } from '../_shared/storeAuthorization.js'
 import { createApiClient } from '../_shared/supabaseTransport.js'
 import { getSupabaseSecretKey } from '../_shared/supabaseKeys.js'
@@ -211,6 +212,7 @@ serve(async (req) => {
   const serviceKey   = getSupabaseSecretKey()!
   const supa = createApiClient(createClient, supabaseUrl, serviceKey)
 
+  return observeEmailRun(supa, 'check-tracking-status', async () => {
   // Fetch OAuth tokens once per invocation (instead of per order). null means
   // creds for that carrier aren't set — we still process the OTHER carrier.
   const [uspsToken, upsToken] = await Promise.all([getUspsToken(), getUpsToken()])
@@ -337,4 +339,5 @@ serve(async (req) => {
     JSON.stringify(stats),
     { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
   )
+  })
 })
