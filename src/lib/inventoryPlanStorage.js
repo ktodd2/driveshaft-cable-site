@@ -19,3 +19,9 @@ export async function writeSharedPlan(client, request) {
   if (!['saved','already_saved'].includes(result.data?.status) || !Number.isInteger(result.data?.revision) || !Number.isInteger(result.data?.current_revision)) throw storageError(null)
   return result.data
 }
+
+// Postgres JSONB reorders object keys. Dirty detection compares content, not serialization order.
+export function planSignature(value) {
+  const normalize = v => Array.isArray(v) ? v.map(normalize) : v && typeof v === 'object' ? Object.fromEntries(Object.keys(v).sort().map(k=>[k,normalize(v[k])])) : v
+  return JSON.stringify(normalize(value))
+}
