@@ -1,3 +1,4 @@
+import { observeEmailRun } from '../_shared/emailHealth.js'
 import { isActiveAdmin } from '../_shared/storeAuthorization.js'
 import { createApiClient } from '../_shared/supabaseTransport.js'
 import { getSupabaseSecretKey, getSupabasePublishableKey, hasBackendApiKey } from '../_shared/supabaseKeys.js'
@@ -159,6 +160,7 @@ serve(async (req) => {
   if (req.method !== 'POST') return new Response('Method not allowed', { status: 405 })
 
   const supabase = createApiClient(createClient, supabaseUrl, serviceRoleKey)
+  return observeEmailRun(supabase, 'send-abandoned-cart', async (recorder) => {
   const resendApiKey = Deno.env.get('RESEND_API_KEY')
   if (!resendApiKey) {
     return new Response(
@@ -194,7 +196,7 @@ serve(async (req) => {
     // attribute the cart to that order. Case-insensitive match: `_` and `%`
     // are LIKE wildcards, so escape them before using ilike as an equality.
     const emailPattern = String(ab.email || '').replace(/[\\%_]/g, '\\$&')
-    const { data: paidOrders } = await supabase
+    const { data: paidOrders, error: paidError } = await supabase
       .from('orders')
       .select('id')
       .ilike('email', emailPattern)
@@ -203,6 +205,7 @@ serve(async (req) => {
       .order('created_at', { ascending: true })
       .limit(1)
 
+    if (paidError) throw Error('Recovery eligibility unavailable')
     if (paidOrders && paidOrders.length > 0) {
       await supabase
         .from('cart_abandonments')
@@ -216,7 +219,7 @@ serve(async (req) => {
     const items = Array.isArray(ab.items) ? ab.items : []
     const recoveryUrl = `${SITE_URL}/cart/recover/${ab.recovery_token}`
 
-    const resendRes = await fetch('https://api.resend.com/emails', {
+    const resendRes = await recorder.send(ab.id, [ab.email], 'https://api.resend.com/emails', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${resendApiKey}`,
@@ -237,10 +240,11 @@ serve(async (req) => {
       continue
     }
 
-    await supabase
+    const { error: stampError } = await supabase
       .from('cart_abandonments')
       .update({ email_sent_at: new Date().toISOString() })
       .eq('id', ab.id)
+    if (stampError) throw Error('Status update failed after provider acceptance')
     sent++
 
     // Respect Resend rate limits.
@@ -256,4 +260,5 @@ serve(async (req) => {
     }),
     { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
   )
+  })
 })

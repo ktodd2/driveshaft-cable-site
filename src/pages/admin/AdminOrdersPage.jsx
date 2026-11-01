@@ -1,3 +1,4 @@
+import EmailHealth from '../../components/admin/EmailHealth'
 import React, { useEffect, useRef, useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
@@ -1086,6 +1087,7 @@ ${addr.country}`
 
                           </div>
                         )}
+                        <EmailHealth orderId={selectedOrder.id} />
                         {trackingState && <div role="status" className="mt-3 text-sm text-gray-200">
                           {trackingState.message}
                           {trackingState.retry && <button disabled={savingTracking}

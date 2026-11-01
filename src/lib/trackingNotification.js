@@ -1,4 +1,4 @@
-// Session-only workflow: no durable outbox or automatic resend after reload.
+// In-page workflow; server-side attempt history survives reload. Never automatically resend.
 export const RETRY_WINDOW_MS = 23 * 60 * 60 * 1000
 const snapshot = row => ({ orderId: row.id, trackingNumber: row.tracking_number,
   trackingCarrier: row.tracking_carrier, customerEmail: row.email,
@@ -27,12 +27,12 @@ export function createTrackingWorkflow(client, { onState, onSaved, now = Date.no
     try {
       const { data, error } = await client.functions.invoke('send-tracking-email-v2', { body })
       if (error?.context?.status === 409) {
-        publish(id, { ...state, retry: false, message: 'Tracking saved. Notification no longer matches or has expired; review required.' }); return
+        publish(id, { ...state, retry: false, message: 'Tracking saved. Notification requires review in saved history; no automatic resend.' }); return
       }
       if (error || data?.success !== true || typeof data.emailId !== 'string' || !data.emailId.trim()) throw Error('Email acceptance not confirmed')
       publish(id, { ...state, retry: false, message: 'Tracking saved. Email accepted by provider.', emailId: data.emailId })
     } catch {
-      publish(id, { ...state, retry: true, message: 'Tracking saved. Email outcome unconfirmed; retry this same notification safely within 23 hours.' })
+      publish(id, { ...state, retry: true, message: 'Tracking saved. Email outcome unconfirmed; review saved history before retrying this notification within 23 hours.' })
     }
   }
   return {
