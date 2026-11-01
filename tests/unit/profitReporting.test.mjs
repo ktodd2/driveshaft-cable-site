@@ -58,7 +58,7 @@ test('UTC dates share exact boundaries, custom end includes milliseconds, and el
 test('bookkeeping schema preserves gross components, unknown blanks, IDs and refund uncertainty; CSV is safe',()=>{
  const rows=bookkeepingRows([{...order,id:' =HYPERLINK("bad")',actual_shipping_cost_cents:null}],costs)
  assert.equal(rows[0].subtotal_cents,1200);assert.equal(rows[0].discount_cents,100);assert.equal(rows[0].shipping_charged_cents,100);assert.equal(rows[0].tax_cents,50)
- assert.equal(rows[0].actual_shipping_cost_cents,null);assert.equal(rows[0].contribution_estimate_cents,null);assert.equal(rows[0].refund_status,'unreconciled')
+ assert.equal(rows[0].actual_shipping_cost_cents,null);assert.equal(rows[0].contribution_estimate_cents,null);assert.equal(rows[0].refund_status,'unreconciled');assert.equal(rows[0].payment_verification,'recorded_status_only');assert.equal(rows[0].test_mode_status,'unverified')
  const csv=Papa.unparse({fields:BOOKKEEPING_COLUMNS,data:rows.map(row=>BOOKKEEPING_COLUMNS.map(k=>safeCsvCell(row[k])))},{escapeFormulae:true})
  const parsed=Papa.parse(csv,{header:true}).data[0]
  assert.ok(parsed.order_id.startsWith("' ="));assert.equal(parsed.actual_shipping_cost_cents,'')

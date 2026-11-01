@@ -1,7 +1,7 @@
 import { isRecordedPaidOrder } from './needsAttention.js'
 import { calcOrderProfit } from './costCalculations.js'
 export { isRecordedPaidOrder }
-export const REPORT_LIMITATIONS = 'Estimates, not net profit: current per-product weighted costs are not historical COGS. Stripe fees assume 2.9% + $0.30 (unknown method assumes Stripe); cash/Zelle/CashApp assume no fees. Tax is excluded. Refunds and operating expenses are unreconciled. Unknown costs remain unknown.'
+export const REPORT_LIMITATIONS = 'Estimates, not net profit: current per-product weighted costs are not historical COGS. Stripe fees assume 2.9% + $0.30 (unknown method assumes Stripe); cash/Zelle/CashApp assume no fees. Tax is excluded. Refunds and operating expenses are unreconciled; test-mode and refund history are not fully available. Unknown costs remain unknown.'
 // UTC calendar dates, inclusive start, exclusive end; today plus prior N-1 days.
 export function filterReportOrders(orders, range='30d', start='', end='', now=new Date()) {
   let from = -Infinity, to = Date.UTC(now.getUTCFullYear(),now.getUTCMonth(),now.getUTCDate()+1)
@@ -21,7 +21,7 @@ export function bookkeepingRows(orders,costs,fallback=0) {
       revenue_excluding_tax_cents:r.revenue,units:r.units,product_cost_estimate_cents:r.productCost,actual_shipping_cost_cents:o.actual_shipping_cost_cents??null,
       shipping_estimate_cents:r.shippingEstimated?r.shippingCost:null,processing_fee_estimate_cents:r.stripeFee,contribution_estimate_cents:r.profit,
       shipping_cost_status:r.shippingKnown?'recorded':r.shippingEstimated?'estimated':'unknown',product_cost_status:r.productKnown?'current_weighted_average':'unknown',
-      refund_status:'unreconciled',uncertainty_flags:r.uncertaintyFlags.join(';'),data_quality:r.profit===null?'incomplete':'estimate_only',limitations:REPORT_LIMITATIONS}
+      refund_status:'unreconciled',payment_verification:'recorded_status_only',test_mode_status:'unverified',uncertainty_flags:r.uncertaintyFlags.join(';'),data_quality:r.profit===null?'incomplete':'estimate_only',limitations:REPORT_LIMITATIONS}
   })
 }
 export const BOOKKEEPING_COLUMNS = Object.keys(bookkeepingRows([{items:[]}],{})[0])
