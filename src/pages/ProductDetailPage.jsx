@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
-import { useCartStore, formatPrice, getPriceForQuantity, getTierPriceForQuantity, getActiveSaleForProduct, MIN_ORDER_QUANTITY, ORDER_QUANTITY_STEP } from '../stores/cartStore'
+import { useCartStore, formatPrice, getPriceForQuantity, getTierPriceForQuantity, getActiveSaleForProduct, MIN_ORDER_QUANTITY, ORDER_QUANTITY_STEP, SHIPPING_FEE, FREE_SHIPPING_THRESHOLD } from '../stores/cartStore'
 import SaleCountdown from '../components/common/SaleCountdown'
 import { useInventory } from '../hooks/useInventory'
 import { useStorefrontProduct } from '../hooks/useStorefrontProduct'
@@ -190,11 +190,11 @@ function ProductDetailPage() {
       </div>
 
       {/* Product Section */}
-      <section className="py-12 bg-ktodd-dark">
+      <section className="py-6 md:py-12 bg-ktodd-dark">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid lg:grid-cols-2 gap-12">
+          <div className="grid lg:grid-cols-2 gap-6 lg:gap-12">
             {/* Product Image Gallery */}
-            <div className="flex flex-col gap-3">
+            <div className="flex flex-col gap-3 min-w-0">
               {/* Main Image */}
               <div className={`relative bg-gray-900 rounded-lg overflow-hidden aspect-[4/3] ${outOfStock ? 'grayscale opacity-70' : ''}`}>
                 {productImages.length > 0 ? (
@@ -216,12 +216,12 @@ function ProductDetailPage() {
               </div>
               {/* Thumbnails */}
               {productImages.length > 1 && (
-                <div className="flex gap-2 flex-wrap">
+                <div className="flex gap-2 overflow-x-auto pb-1">
                   {productImages.map((img, idx) => (
                     <button
                       key={idx}
                       onClick={() => setSelectedImage(idx)}
-                      className={`flex-1 min-w-[80px] aspect-square overflow-hidden rounded border-2 transition-colors ${
+                      className={`flex-none w-16 h-16 overflow-hidden rounded border-2 transition-colors ${
                         selectedImage === idx ? 'border-yellow-500' : 'border-gray-700 hover:border-gray-500'
                       }`}
                     >
@@ -283,56 +283,17 @@ function ProductDetailPage() {
                 </div>
               )}
 
-              {/* Inventory Progress Bar */}
-              <InventoryProgressBar stock={stock} totalStock={totalStock} loading={stockLoading} unitLabel={isBoltPack(product) ? 'packs' : undefined} />
-
-              {/* Volume Pricing Tiers */}
-              {pricingRows.length > 0 && (
-                <div aria-label="Volume pricing" className="flex flex-wrap gap-3 mb-6 mt-6">
-                  {pricingRows.map((row, i) => (
-                    <span key={row.min} className={`text-xs px-3 py-1 border ${tierPrice === row.price ? (i === 0 ? 'border-yellow-500 text-yellow-500' : 'border-green-500 text-green-400') : 'border-gray-700 text-gray-500'}`}>
-                      {row.label}{isBoltPack(product) ? ' packs' : ''}: {formatPrice(row.price)}/{isBoltPack(product) ? '10-pack' : 'ea'}
-                    </span>
-                  ))}
-                </div>
-              )}
-
-              {/* Loyalty Discount Note */}
-              {isCable ? <CableReturningNote /> : (
-                <div className="bg-green-500/10 border border-green-500/30 px-4 py-2 mb-6 text-sm text-green-400">
-                  Returning customers save an extra <span className="font-bold">10%</span> — applied automatically at checkout!
-                </div>
-              )}
-
-              {product.description && (
-                <p className="text-gray-300 mb-6 whitespace-pre-line">{product.description}</p>
-              )}
-
-              {/* Single-Use Notice — only for products that have a "single-use" feature
-                  in their features JSONB (e.g. Driveshaft Cable). Hidden for products
-                  like the brake caging bolt that aren't cut-off-after-use. */}
-              {features.some(f => (f?.title || '').toLowerCase().includes('single-use')) && (
-                <div className="bg-yellow-500/10 border border-yellow-500/40 px-4 py-3 mb-8 flex items-start gap-3">
-                  <svg className="w-5 h-5 text-yellow-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                  <div>
-                    <span className="text-yellow-500 font-bold text-sm uppercase tracking-wider">Single-Use Product</span>
-                    <p className="text-gray-300 text-sm mt-1">This cable is designed to be cut off after each job. One cable per use — no reuse, no risk.</p>
-                  </div>
-                </div>
-              )}
-
               {/* Quantity Selector */}
               <div className="mb-6">
                 <label htmlFor="product-quantity" className="block text-gray-400 text-sm mb-2">
                   {isBoltPack(product) ? 'Number of 10-packs' : 'Quantity'} (min. {effectiveMin}{productStep > 1 ? `, in increments of ${productStep}` : ''})
                 </label>
-                <div className="flex items-center gap-4">
+                <div className="flex flex-wrap items-center gap-4">
                   <div className="flex items-center border border-gray-700">
                     <button
+                      aria-label={`Decrease quantity by ${productStep}`}
                       onClick={() => handleQuantityChange(-productStep)}
-                      className="px-3 py-2 text-white hover:bg-gray-700 transition-colors text-sm font-bold"
+                      className="min-w-[44px] min-h-[44px] px-3 py-2 text-white hover:bg-gray-700 transition-colors text-sm font-bold"
                     >
                       -{productStep}
                     </button>
@@ -353,11 +314,12 @@ function ProductDetailPage() {
                         setQuantity(clamped)
                         setQuantityDraft(String(clamped))
                       }}
-                      className="w-20 text-center bg-transparent text-white border-x border-gray-700 py-2"
+                      className="w-20 min-h-[44px] text-center bg-transparent text-white border-x border-gray-700 py-2"
                     />
                     <button
+                      aria-label={`Increase quantity by ${productStep}`}
                       onClick={() => handleQuantityChange(productStep)}
-                      className="px-3 py-2 text-white hover:bg-gray-700 transition-colors text-sm font-bold"
+                      className="min-w-[44px] min-h-[44px] px-3 py-2 text-white hover:bg-gray-700 transition-colors text-sm font-bold"
                     >
                       +{productStep}
                     </button>
@@ -386,6 +348,21 @@ function ProductDetailPage() {
                 />
               )}
 
+              {/* Keep the single-use rule beside purchasing on both cable lengths. */}
+              {(isCable || features.some(f => (f?.title || '').toLowerCase().includes('single-use'))) && (
+                <div className="bg-yellow-500/10 border border-yellow-500/40 px-4 py-3 mb-4 flex items-start gap-3">
+                  <svg className="w-5 h-5 text-yellow-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <div>
+                    <span className="text-yellow-500 font-bold text-sm uppercase tracking-wider">Single-Use Product</span>
+                    <p className="text-gray-300 text-sm mt-1">Cut off and discard this cable after each job. Do not reuse.</p>
+                  </div>
+                </div>
+              )}
+
+              {!isCable && <p className="text-gray-400 text-sm mb-4">Shipping: {formatPrice(SHIPPING_FEE)} per order; free at {formatPrice(FREE_SHIPPING_THRESHOLD)} merchandise subtotal. Tax calculated at checkout.</p>}
+
               {/* Action Buttons */}
               <div className="flex flex-col sm:flex-row gap-4 mb-8">
                 {stock === 0 ? (
@@ -404,19 +381,32 @@ function ProductDetailPage() {
                 )}
               </div>
 
-              {/* Quick Specs */}
-              {specsEntries.length > 0 && (
-                <div className="border-t border-gray-700 pt-6">
-                  <h3 className="text-lg font-industrial text-yellow-500 mb-4">KEY SPECIFICATIONS</h3>
-                  <div className="grid grid-cols-2 gap-4">
-                    {specsEntries.slice(0, 4).map(([key, value]) => (
-                      <div key={key}>
-                        <div className="text-gray-400 text-sm">{key}</div>
-                        <div className="text-white font-bold">{value}</div>
-                      </div>
-                    ))}
-                  </div>
+              {/* Inventory Progress Bar */}
+              <InventoryProgressBar stock={stock} totalStock={totalStock} loading={stockLoading} unitLabel={isBoltPack(product) ? 'packs' : undefined} />
+
+              {/* Volume Pricing Tiers */}
+              {pricingRows.length > 0 && (
+                <div aria-label="Volume pricing" className="flex flex-wrap gap-3 mb-6 mt-6">
+                  {pricingRows.map((row, i) => (
+                    <span key={row.min} className={`text-xs px-3 py-1 border ${tierPrice === row.price ? (i === 0 ? 'border-yellow-500 text-yellow-500' : 'border-green-500 text-green-400') : 'border-gray-700 text-gray-500'}`}>
+                      {row.label}{isBoltPack(product) ? ' packs' : ''}: {formatPrice(row.price)}/{isBoltPack(product) ? '10-pack' : 'ea'}
+                    </span>
+                  ))}
                 </div>
+              )}
+
+              {/* Loyalty Discount Note */}
+              {isCable ? <CableReturningNote /> : (
+                <div className="bg-green-500/10 border border-green-500/30 px-4 py-2 mb-6 text-sm text-green-400">
+                  Returning customers save an extra <span className="font-bold">10%</span> — applied automatically at checkout!
+                </div>
+              )}
+
+              {product.description && (
+                <section aria-labelledby="product-description-heading" className="border-t border-gray-700 pt-6 mt-6">
+                  <h2 id="product-description-heading" className="text-xl font-industrial text-white mb-4">PRODUCT DETAILS</h2>
+                  <p className="text-gray-300 whitespace-pre-line">{product.description}</p>
+                </section>
               )}
             </div>
           </div>
