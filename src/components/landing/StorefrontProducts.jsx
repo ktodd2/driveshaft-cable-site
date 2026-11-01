@@ -6,7 +6,7 @@ import {
   MIN_ORDER_QUANTITY, ORDER_QUANTITY_STEP,
 } from '../../stores/cartStore'
 import SaleCountdown from '../common/SaleCountdown'
-import { productImageClasses, volumePricingRows } from '../../lib/productPresentation'
+import { productImageClasses, volumePricingRows, isBoltPack, priceUnit, quantityUnit, packQuantity } from '../../lib/productPresentation'
 import { useInventory } from '../../hooks/useInventory'
 import { useStorefrontProducts } from '../../hooks/useStorefrontProducts'
 import InventoryProgressBar from '../common/InventoryProgressBar'
@@ -165,7 +165,7 @@ function ProductCard({ product }) {
                 <span className="text-gray-500 line-through text-lg">{formatPrice(tierPrice)}</span>
                 <span className="text-red-400 text-2xl font-industrial">{formatPrice(currentPrice)}</span>
                 <span className="text-red-400 text-xs font-bold bg-red-500/20 px-2 py-0.5 rounded">−{appliedSale.discount_percent}%</span>
-                <span className="text-gray-400 text-sm">per unit</span>
+                <span className="text-gray-400 text-sm">per {priceUnit(product)}</span>
               </div>
               <div className="text-red-400/90 text-xs mt-1 flex items-center gap-1.5">
                 <span className="font-bold uppercase tracking-wider">{appliedSale.name}</span>
@@ -182,7 +182,7 @@ function ProductCard({ product }) {
             <>
               <div className="flex items-baseline gap-2">
                 <span className="text-white text-3xl font-industrial font-bold tabular-nums">{formatPrice(currentPrice)}</span>
-                <span className="text-gray-400 text-sm">per unit</span>
+                <span className="text-gray-400 text-sm">per {priceUnit(product)}</span>
               </div>
               {tierPrice < basePrice && (
                 <div className="text-green-400 text-sm mt-1">Volume discount applied!</div>
@@ -192,12 +192,12 @@ function ProductCard({ product }) {
         </div>
 
         {/* Inventory Progress Bar */}
-        <InventoryProgressBar stock={stock} totalStock={totalStock} loading={stockLoading} />
+        <InventoryProgressBar stock={stock} totalStock={totalStock} loading={stockLoading} unitLabel={isBoltPack(product) ? 'packs' : undefined} />
 
         {/* Quantity Selector */}
         <div className="mb-4 mt-4">
           <label htmlFor={`qty-${product.id}`} className="block text-gray-400 text-xs uppercase tracking-[0.1em] mb-2">
-            Quantity (min. {effectiveMin}{productStep > 1 ? `, in ${productStep}s` : ''})
+            {isBoltPack(product) ? 'Number of 10-packs' : 'Quantity'} (min. {effectiveMin}{productStep > 1 ? `, in ${productStep}s` : ''})
           </label>
           <div className="flex items-center gap-3">
             <div className="flex items-center rounded-xl ring-1 ring-inset ring-gray-600 overflow-hidden">
@@ -245,12 +245,13 @@ function ProductCard({ product }) {
           </div>
         </div>
 
+        {isBoltPack(product) && <p className="text-gray-300 text-sm mb-3">{packQuantity(product, quantity)} selected. Each pack contains 10 bolts.</p>}
         {/* Stock warnings */}
         {isLowStock && (
           <p className="text-yellow-500 text-xs mb-2">Only {stock} available — min order reduced from {productMin}</p>
         )}
         {!isLowStock && !outOfStock && stock !== null && quantity >= stock && (
-          <p className="text-yellow-500 text-xs mb-2">Max available: {stock} units</p>
+          <p className="text-yellow-500 text-xs mb-2">Max available: {stock} {quantityUnit(product)}</p>
         )}
 
         {/* Add to Cart */}
@@ -259,7 +260,7 @@ function ProductCard({ product }) {
           disabled={outOfStock || (!stockLoading && stock !== null && quantity > stock)}
           className="btn-primary w-full mt-auto"
         >
-          {outOfStock ? 'Out of Stock' : `Add ${quantity} to Cart`}
+          {outOfStock ? 'Out of Stock' : `Add ${quantity}${isBoltPack(product) ? (quantity === 1 ? ' pack' : ' packs') : ''} to Cart`}
         </button>
       </div>
     </article>
@@ -314,12 +315,12 @@ function StorefrontProducts() {
                         {rows.length === 0 ? (
                           <div className="flex items-center gap-1.5">
                             <span className="text-gray-400">Per unit:</span>
-                            <span className="text-yellow-500 font-bold">{formatPrice(pricing.basePrice)}/ea</span>
+                            <span className="text-yellow-500 font-bold">{formatPrice(pricing.basePrice)}/{isBoltPack(p) ? '10-pack' : 'ea'}</span>
                           </div>
                         ) : rows.map(row => (
                           <div key={row.min} className="flex items-center gap-1.5">
-                            <span className="text-gray-400">{row.label}:</span>
-                            <span className={`${row.price < pricing.basePrice ? 'text-green-400' : 'text-yellow-500'} font-bold`}>{formatPrice(row.price)}/ea</span>
+                            <span className="text-gray-400">{row.label}{isBoltPack(p) ? ' packs' : ''}:</span>
+                            <span className={`${row.price < pricing.basePrice ? 'text-green-400' : 'text-yellow-500'} font-bold`}>{formatPrice(row.price)}/{isBoltPack(p) ? '10-pack' : 'ea'}</span>
                           </div>
                         ))}
                       </div>

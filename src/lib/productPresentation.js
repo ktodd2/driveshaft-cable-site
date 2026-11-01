@@ -36,3 +36,21 @@ export function productMetadata(product) {
     keywords: [product.name, product.sku, breakingStrength ? `${breakingStrength} breaking strength` : null].filter(Boolean).join(', '),
   }
 }
+
+// Bolt ordering, pricing and inventory all count packs. These labels are
+// display-only: the stored quantity and checkout arithmetic remain in packs.
+export function isBoltPack(product) {
+  return product?.slug === 'value-brake-caging-bolt' || product?.id === '3' || product?.productId === '3'
+}
+
+export function priceUnit(product) {
+  return isBoltPack(product) ? '10-pack' : 'unit'
+}
+
+export function quantityUnit(product) {
+  return isBoltPack(product) ? 'packs' : 'units'
+}
+
+export function packQuantity(product, quantity) {
+  return isBoltPack(product) ? `${quantity} ${quantity === 1 ? 'pack' : 'packs'} · ${quantity * 10} bolts` : `${quantity} units`
+}

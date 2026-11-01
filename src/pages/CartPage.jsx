@@ -24,7 +24,7 @@ import {
 import SaleCountdown from '../components/common/SaleCountdown'
 import SEOHead from '../components/common/SEOHead'
 import CartProductImage from '../components/cart/CartProductImage'
-import { volumePricingRows } from '../lib/productPresentation'
+import { volumePricingRows, isBoltPack, priceUnit, quantityUnit, packQuantity } from '../lib/productPresentation'
 
 function CartPage() {
   const navigate = useNavigate()
@@ -72,7 +72,7 @@ function CartPage() {
         if (item.quantity < tier.min) {
           const unitsNeeded = tier.min - item.quantity
           if (!best || unitsNeeded < best.unitsNeeded) {
-            best = { unitsNeeded, price: tier.price, productName: item.name }
+            best = { unitsNeeded, price: tier.price, productName: item.name, item }
           }
           break
         }
@@ -114,7 +114,7 @@ function CartPage() {
           <h1 className="text-3xl sm:text-4xl font-industrial text-white">
             YOUR <span className="text-yellow-500">CART</span>
           </h1>
-          <p className="text-gray-400 mt-2">{totalItems} unit{totalItems !== 1 ? 's' : ''} in cart</p>
+          <p className="text-gray-400 mt-2">{items.length} product{items.length !== 1 ? 's' : ''} in cart</p>
         </div>
       </section>
 
@@ -168,7 +168,7 @@ function CartPage() {
                     <div>
                       <p className="text-white font-bold">Unlock Better Pricing!</p>
                       <p className="text-gray-300 text-sm">
-                        Add {nextTier.unitsNeeded} more {nextTier.productName} unit{nextTier.unitsNeeded !== 1 ? 's' : ''} to get {formatPrice(nextTier.price)}/unit
+                        Add {nextTier.unitsNeeded} more {quantityUnit(nextTier.item)} of {nextTier.productName} to get {formatPrice(nextTier.price)}/{priceUnit(nextTier.item)}
                       </p>
                     </div>
                   </div>
@@ -202,7 +202,7 @@ function CartPage() {
                         </Link>
                         <p className="text-gray-400 text-sm mb-2">SKU: {item.sku}</p>
                         <p className={`text-sm ${appliedSale ? 'text-red-400' : lineHasDiscount ? 'text-green-400' : 'text-yellow-500'}`}>
-                          {formatPrice(linePrice)}/unit
+                          {formatPrice(linePrice)}/{priceUnit(item)}
                           {(appliedSale || lineHasDiscount) && (
                             <span className="text-gray-500 line-through ml-2">{formatPrice(struckPrice)}</span>
                           )}
@@ -219,6 +219,7 @@ function CartPage() {
                           </p>
                         )}
                         {!appliedSale && <div className="mb-4" />}
+                        {isBoltPack(item) && <p className="text-gray-300 text-sm mb-3">{packQuantity(item, item.quantity)} · 10 bolts per pack</p>}
 
                         <div className="flex flex-wrap items-center gap-4">
                           {/* Quantity — increment matches each product's
@@ -293,7 +294,7 @@ function CartPage() {
                       const linePrice = getPriceForQuantity(item.productId, item.quantity)
                       return (
                         <div key={item.productId} className="flex justify-between text-sm">
-                          <span>{item.quantity} × {item.name}</span>
+                          <span>{item.quantity} × {item.name}{isBoltPack(item) ? ` · ${item.quantity * 10} bolts total` : ''}</span>
                           <span className="text-white">{formatPrice(linePrice * item.quantity)}</span>
                         </div>
                       )
@@ -347,8 +348,8 @@ function CartPage() {
                           <div className="space-y-1 text-sm">
                             {rows.map((row, i) => (
                               <div key={row.min} className={`flex justify-between ${activePrice === row.price ? (i === 0 ? 'text-yellow-500' : 'text-green-400') : 'text-gray-500'}`}>
-                                <span>{row.label} units</span>
-                                <span>{formatPrice(row.price)}/ea</span>
+                                <span>{row.label} {quantityUnit(item)}</span>
+                                <span>{formatPrice(row.price)}/{isBoltPack(item) ? '10-pack' : 'ea'}</span>
                               </div>
                             ))}
                           </div>

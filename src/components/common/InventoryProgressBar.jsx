@@ -1,6 +1,6 @@
 import React from 'react'
 
-function InventoryProgressBar({ stock, totalStock, loading }) {
+function InventoryProgressBar({ stock, totalStock, loading, unitLabel }) {
   if (loading || stock === null) {
     return null
   }
@@ -24,7 +24,7 @@ function InventoryProgressBar({ stock, totalStock, loading }) {
         <div className="flex items-center gap-2 text-sm">
           <div className={`w-2 h-2 rounded-full ${getStockDotColor()}`} />
           <span className="text-gray-400">
-            Available: <span className={`font-bold ${getStockTextColor()}`}>{stock}</span> units
+            Available: <span className={`font-bold ${getStockTextColor()}`}>{stock}</span> {unitLabel || 'units'}
           </span>
         </div>
       </div>
@@ -52,10 +52,10 @@ function InventoryProgressBar({ stock, totalStock, loading }) {
     <div className="mt-3">
       <div className="flex items-center justify-between text-sm mb-1.5">
         <span className="text-gray-400">
-          Available: <span className={`font-bold ${getTextColor()}`}>{stock}</span>
+          Available: <span className={`font-bold ${getTextColor()}`}>{stock}</span>{unitLabel ? ` ${unitLabel}` : ''}
         </span>
         <span className="text-gray-400">
-          Sold: <span className="text-white font-bold">{sold}</span>
+          Sold: <span className="text-white font-bold">{sold}</span>{unitLabel ? ` ${unitLabel}` : ''}
         </span>
       </div>
       <div className="w-full h-2 bg-gray-700 rounded-full overflow-hidden">
