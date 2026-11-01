@@ -1,5 +1,6 @@
+import NeedsAttention from '../../components/admin/NeedsAttention'
 import React, { useEffect, useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
 import { formatPrice } from '../../stores/cartStore'
 import { useAllInventory } from '../../hooks/useInventory'
@@ -10,6 +11,7 @@ import { parsePirateShipFile } from '../../lib/csvParser'
 
 function AdminDashboardPage() {
   const navigate = useNavigate()
+  const location = useLocation()
   const [user, setUser] = useState(null)
   const [loading, setLoading] = useState(true)
   const [stats, setStats] = useState({
@@ -259,6 +261,12 @@ function AdminDashboardPage() {
     navigate('/admin/login')
   }
 
+  useEffect(() => {
+    if (!loading && location.hash === '#shipping-import') {
+      document.getElementById('shipping-import')?.scrollIntoView({ block: 'start', behavior: 'instant' })
+    }
+  }, [loading, location.hash])
+
   if (loading) {
     return (
       <div className="min-h-screen bg-ktodd-dark flex items-center justify-center">
@@ -383,11 +391,13 @@ function AdminDashboardPage() {
         </aside>
 
         {/* Main Content */}
-        <main className="flex-1 p-6 lg:p-8">
+        <main className="min-w-0 flex-1 p-4 sm:p-6 lg:p-8">
           <div className="max-w-6xl mx-auto">
             <h1 className="text-3xl font-industrial text-white mb-8">
               DASHBOARD
             </h1>
+
+            {user && <NeedsAttention />}
 
             {/* Stats Grid */}
             <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
@@ -650,6 +660,7 @@ function AdminDashboardPage() {
               <p className="text-gray-500 text-xs mt-3">Enter actual shipping costs per order on the Orders page, or use the bulk import below. Stripe fees (2.9% + $0.30) are calculated automatically.</p>
             </div>
 
+            <div id="shipping-import" className="scroll-mt-20" />
             {/* Bulk Shipping Import */}
             <div className="bg-gray-800/50 border border-gray-700 mb-8">
               <button

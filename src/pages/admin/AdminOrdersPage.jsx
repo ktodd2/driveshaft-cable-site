@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
 import { createTrackingWorkflow } from '../../lib/trackingNotification'
 import { formatPrice, getPriceForQuantity, MIN_ORDER_QUANTITY, ORDER_QUANTITY_STEP, PRODUCT_PRICING } from '../../stores/cartStore'
@@ -33,6 +33,8 @@ function getEmptyManualForm() {
 
 function AdminOrdersPage() {
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+  const requestedOrder = searchParams.get('order')
   const [loading, setLoading] = useState(true)
   const [orders, setOrders] = useState([])
   const [selectedOrder, setSelectedOrder] = useState(null)
@@ -41,7 +43,7 @@ function AdminOrdersPage() {
   // change (desktop) and bring the detail into view on mobile.
   const listPaneRef = useRef(null)
   const detailPaneRef = useRef(null)
-  const [statusFilter, setStatusFilter] = useState('confirmed')
+  const [statusFilter, setStatusFilter] = useState(() => requestedOrder ? 'all' : 'confirmed')
   const [paymentFilter, setPaymentFilter] = useState('all')
   const [trackingNumber, setTrackingNumber] = useState('')
   const [trackingCarrier, setTrackingCarrier] = useState('ups')
@@ -387,6 +389,15 @@ function AdminOrdersPage() {
       console.error('Error fetching orders:', error)
     } else {
       setOrders(data || [])
+      if (requestedOrder) {
+        const existing = (data || []).find(o => String(o.id) === requestedOrder)
+        if (existing) setSelectedOrder(existing)
+        else {
+          // A linked older order may be outside the existing list's row limit.
+          const { data: linked } = await supabase.from('orders').select('*').eq('id', requestedOrder).maybeSingle()
+          if (linked) { setOrders(prev => [...prev, linked]); setSelectedOrder(linked) }
+        }
+      }
     }
     setLoading(false)
   }
