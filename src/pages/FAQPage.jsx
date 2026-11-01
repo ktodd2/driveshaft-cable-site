@@ -27,7 +27,7 @@ const faqStructuredData = {
       name: 'What are the specifications?',
       acceptedAnswer: {
         '@type': 'Answer',
-        text: 'Cable Diameter: 5/32" steel wire cable. Total Length: 1000mm (39"). Working Load Limit: 3000 lb. End Construction: Crimped loops with aluminum couplers. The cable is galvanized for corrosion resistance.'
+        text: 'Cable Diameter: 5/32" steel wire cable. Total Length: 1000mm (39"). Breaking Strength: 3000 lb. End Construction: Crimped loops with aluminum couplers. The cable is galvanized for corrosion resistance.'
       }
     },
     {
@@ -123,7 +123,7 @@ const faqStructuredData = {
       name: 'What is a driveshaftcable?',
       acceptedAnswer: {
         '@type': 'Answer',
-        text: 'A driveshaftcable (also written as driveshaft cable) is a safety cable used to secure a disconnected driveshaft during towing operations. The Driveshaft Cable is a purpose-built driveshaftcable featuring 5/32" galvanized steel wire and aluminum couplers with a 3000lb working load limit.'
+        text: 'A driveshaftcable (also written as driveshaft cable) is a safety cable used to secure a disconnected driveshaft during towing operations. The Driveshaft Cable is a purpose-built driveshaftcable featuring 5/32" galvanized steel wire and aluminum couplers with a 3000lb breaking strength.'
       }
     }
   ]
@@ -143,7 +143,7 @@ const faqs = [
       },
       {
         question: 'What are the specifications?',
-        answer: 'Cable Diameter: 5/32" steel wire cable. Total Length: 1000mm (39"). Working Load Limit: 3000 lb. End Construction: Crimped loops with aluminum couplers. The cable is galvanized for corrosion resistance.'
+        answer: 'Cable Diameter: 5/32" steel wire cable. Total Length: 1000mm (39"). Breaking Strength: 3000 lb. End Construction: Crimped loops with aluminum couplers. The cable is galvanized for corrosion resistance.'
       },
       {
         question: 'Is it reusable?',
@@ -151,7 +151,7 @@ const faqs = [
       },
       {
         question: 'What is a driveshaftcable?',
-        answer: 'A driveshaftcable (also written as driveshaft cable) is a safety cable used to secure a disconnected driveshaft during towing operations. The Driveshaft Cable is a purpose-built driveshaftcable featuring 5/32" galvanized steel wire and aluminum couplers with a 3000lb working load limit.'
+        answer: 'A driveshaftcable (also written as driveshaft cable) is a safety cable used to secure a disconnected driveshaft during towing operations. The Driveshaft Cable is a purpose-built driveshaftcable featuring 5/32" galvanized steel wire and aluminum couplers with a 3000lb breaking strength.'
       }
     ]
   },
@@ -245,7 +245,7 @@ function FAQPage() {
     <div className="pt-24 md:pt-32">
       <SEOHead
         title="Driveshaft Cable FAQ — Questions Answered"
-        description="Frequently asked questions about Driveshaft Cable safety cables (driveshaftcable). Learn about WLL ratings, installation, pricing, and shipping."
+        description="Frequently asked questions about Driveshaft Cable safety cables (driveshaftcable). Learn about breaking strength, installation, pricing, and shipping."
         keywords="driveshaft cable FAQ, driveshaftcable questions, towing cable specifications"
         canonical="/faq"
         structuredData={faqStructuredData}

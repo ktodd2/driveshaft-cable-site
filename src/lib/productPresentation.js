@@ -26,14 +26,14 @@ export function volumePricingRows(pricing) {
 
 export function productMetadata(product) {
   const specs = Object.entries(product.specs || {})
-  const wll = specs.find(([key]) => /^(working load limit|wll)$/i.test(key))?.[1]
-  const facts = specs.filter(([key]) => /^(working load limit|wll|length|total length|cable diameter)$/i.test(key))
+  const breakingStrength = specs.find(([key]) => /^breaking strength$/i.test(key))?.[1]
+  const facts = specs.filter(([key]) => /^(breaking strength|length|total length|cable diameter)$/i.test(key))
     .map(([key, value]) => `${key}: ${value}`)
   const hasTiers = Array.isArray(product.tiers) && product.tiers.length > 0
   const price = (product.base_price_cents / 100).toFixed(2)
   return {
-    title: `${product.name}${wll ? ` — ${wll} WLL` : ''}`,
+    title: `${product.name}${breakingStrength ? ` — ${breakingStrength} breaking strength` : ''}`,
     description: [product.name + '.', product.short_description, ...facts.map(fact => fact + '.'), `Starting at $${price}/unit${hasTiers ? ' with volume discounts' : ''}.`].filter(Boolean).join(' '),
-    keywords: [product.name, product.sku, wll ? `${wll} WLL` : null].filter(Boolean).join(', '),
+    keywords: [product.name, product.sku, breakingStrength ? `${breakingStrength} breaking strength` : null].filter(Boolean).join(', '),
   }
 }

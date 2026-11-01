@@ -4,7 +4,7 @@ function Specs() {
   const specs = [
     { label: 'Cable Diameter', value: '5/32"', detail: 'Steel wire cable' },
     { label: 'Total Length', value: '1000mm', detail: '39 inches' },
-    { label: 'Working Load Limit', value: '3000 lbs', detail: 'Heavy-duty rated' },
+    { label: 'Breaking Strength', value: '3000 lbs', detail: 'Not a working load limit' },
     { label: 'End Construction', value: 'Crimped Loops', detail: 'Secure attachment' },
     { label: 'Coupler Material', value: 'Aluminum', detail: 'Yellow anodized finish' },
     { label: 'Cable Material', value: 'Steel Wire', detail: 'Galvanized for corrosion resistance' },
@@ -80,7 +80,7 @@ function Specs() {
             <div>
               <h4 className="text-ember-400 font-industrial text-xl mb-2">SAFETY WARNING</h4>
               <p className="text-gray-200">
-                Driveshaft must be properly secured prior to towing. Failure to support driveline components may result in equipment damage or personal injury. Always inspect cable before each use. Do not exceed working load limit. Replace if any damage or wear is visible.
+                Driveshaft must be properly secured prior to towing. Failure to support driveline components may result in equipment damage or personal injury. Always inspect cable before each use. Breaking strength is not a working load limit. This cable is single-use; cut it off and discard it after each job. Do not use a damaged cable.
               </p>
             </div>
           </div>

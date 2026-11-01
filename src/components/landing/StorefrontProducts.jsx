@@ -14,8 +14,8 @@ import InventoryProgressBar from '../common/InventoryProgressBar'
 // Pick the three spec chips we want to highlight on the card. The first
 // three values in product.specs would be brittle because Postgres JSONB
 // doesn't guarantee insertion order — we kept seeing the "1.2 lb" Weight
-// spec sneak into the chip row instead of the WLL. Look up by recognized
-// label, prefix WLL since "3000 lbs" alone doesn't read clearly. Falls
+// spec sneak into the chip row instead of the strength. Look up by recognized
+// label, prefix breaking strength since "3000 lbs" alone doesn't read clearly. Falls
 // back to first-three for products that don't have these specific keys.
 function topSpecChips(specs) {
   if (!specs || typeof specs !== 'object') return []
@@ -27,12 +27,12 @@ function topSpecChips(specs) {
   }
   const diameter = find(/cable.?diameter|^diameter$/i)
   const length   = find(/total.?length|^length$/i)
-  const wll      = find(/working.?load.?limit|^wll$/i)
+  const strength = find(/^breaking strength$/i)
 
   const chips = []
   if (diameter) chips.push({ key: diameter.key, label: '',    value: diameter.value })
   if (length)   chips.push({ key: length.key,   label: '',    value: length.value })
-  if (wll)      chips.push({ key: wll.key,      label: 'WLL ',value: wll.value })
+  if (strength) chips.push({ key: strength.key, label: 'Breaking strength ', value: strength.value })
 
   if (chips.length < 3) {
     const seen = new Set(chips.map(c => c.key))
@@ -146,7 +146,7 @@ function ProductCard({ product }) {
         </Link>
         <p className="text-gray-400 text-sm mb-4">{product.short_description}</p>
 
-        {/* Specs preview — Cable Diameter, Length, then "WLL <value>". */}
+        {/* Specs preview — Cable Diameter, Length, then "Breaking strength <value>". */}
         {chips.length > 0 && (
           <div className="flex flex-wrap gap-2 mb-4">
             {chips.map(c => (
