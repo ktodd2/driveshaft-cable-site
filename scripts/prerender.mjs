@@ -3,6 +3,7 @@ import { dirname, resolve } from 'node:path'
 import { pathToFileURL } from 'node:url'
 import { build, loadEnv } from 'vite'
 import { pageDocument, routeFile } from './prerender-helpers.mjs'
+import { STATIC_PUBLIC_PATHS, sitemapEntries } from './sitemap-helpers.mjs'
 
 const root = process.cwd()
 const env = loadEnv('production', root, 'VITE_')
@@ -10,7 +11,7 @@ const fixtureAt = process.argv.indexOf('--fixture')
 if (process.env.RENDER === 'true' && fixtureAt !== -1) throw new Error('Fixture data cannot be deployed')
 const shell = await readFile(resolve(root, 'dist/index.html'), 'utf8')
 if (!shell.includes('<div id="root"></div>')) throw new Error('Prerender requires a fresh Vite build; run npm run build')
-const fields = 'id,slug,name,sku,base_price_cents,tiers,min_order_quantity,order_quantity_step,short_description,description,specs,applications,features,images,tagline,showcase_bullets,cta_label'
+const fields = 'id,slug,name,sku,base_price_cents,tiers,min_order_quantity,order_quantity_step,short_description,description,specs,applications,features,images,tagline,showcase_bullets,cta_label,updated_at'
 async function rows(table, params) {
   const all = []
   for (let offset = 0; ; offset += 1000) {
@@ -42,7 +43,7 @@ try {
   await build({ build: { ssr: 'src/entry-server.jsx', outDir: rendererDir, emptyOutDir: true }, ssr: { noExternal: ['react-helmet-async'] } })
   const { renderPage } = await import(pathToFileURL(resolve(rendererDir, 'entry-server.js')))
   // Only marketing/catalog/editorial pages. Never snapshot carts, auth, tracking or orders.
-  const paths = ['/', '/products', '/about', '/faq', '/instructions', '/contact', '/quote', '/blog',
+  const paths = [...STATIC_PUBLIC_PATHS,
     ...data.products.map(p => `/products/${p.slug}`), ...data.posts.map(p => `/blog/${p.slug}`)]
   const blogPosts = data.posts.slice(0, 13).map(({ content, ...post }) => post)
   // Preserve the ordinary SPA shell for explicitly private/interactive utility routes.
@@ -63,7 +64,7 @@ try {
     await mkdir(dirname(output), { recursive: true })
     await writeFile(output, pageDocument(shell, rendered, initial))
   }
-  await writeFile(resolve(root, 'dist/prerender-manifest.json'), JSON.stringify({ generatedAt: new Date().toISOString(), paths }, null, 2))
+  await writeFile(resolve(root, 'dist/prerender-manifest.json'), JSON.stringify({ generatedAt: new Date().toISOString(), paths, sitemapEntries: sitemapEntries(data, paths) }, null, 2))
   console.log(`[prerender] Generated ${paths.length} complete public pages`)
 } finally {
   await rm(rendererDir, { recursive: true, force: true })

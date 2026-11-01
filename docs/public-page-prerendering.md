@@ -1,6 +1,6 @@
 # Public page HTML generation
 
-`npm run build` now runs Vite, the existing sitemap generator, and `scripts/prerender.mjs`.
+`npm run build` runs Vite, `scripts/prerender.mjs`, the sitemap generator, and the generated-page verifier.
 The final step fetches only publicly readable active storefront products, their stock rows,
 and published articles using the existing publishable key. React renders the public routes
 with the same components used in the browser, extracting route-specific Helmet metadata.
@@ -46,3 +46,19 @@ other known directory pages have explicit index.html rewrites before the origina
 fallback. The retired Plus redirect and empty utility shells are preserved.
 New product/article slugs do not require manual route entries: generated files
 resolve directly, and slugs created since the last build still use the SPA fallback.
+
+## Sitemap
+
+The sitemap is generated from the same filtered snapshot and public paths as the HTML.
+Every active storefront product and published article is included once at its canonical
+URL. Retired products, drafts, carts, checkout, tracking and admin pages are excluded.
+Product image URLs come from the current public product records, without old brand labels.
+Product/article lastmod values use actual database modification timestamps (falling back
+to publication for posts). Catalog and blog indexes use the newest relevant record date.
+Unknown dates on static pages are omitted; deployment time is never used as a fake edit date.
+The build refuses to publish a sitemap that disagrees with its public-page manifest.
+
+The initial product timestamp baseline was backfilled to the verified November 1,
+2026 metadata publication time (20:21:43.426176 UTC) for the four active storefront
+products. Their recent page/metadata corrections had not advanced record timestamps.
+This is a historical correction, not an instruction to change dates on every build.

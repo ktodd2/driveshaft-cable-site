@@ -34,3 +34,10 @@ for (const path of ['/cart', '/checkout', '/admin/login', '/order-tracking']) {
   assert.ok(!html.includes('__PUBLIC_DATA__'), path)
 }
 console.log(`Verified initial HTML, SEO, schema and public-only data for ${manifest.paths.length} pages`)
+
+const sitemap = await readFile('dist/sitemap.xml', 'utf8')
+const sitemapPaths = [...sitemap.matchAll(/<loc>https:\/\/driveshaftcable\.com([^<]*)<\/loc>/g)].map(match => match[1])
+assert.equal(sitemapPaths.length, new Set(sitemapPaths).size, 'Duplicate sitemap URLs')
+assert.deepEqual([...sitemapPaths].sort(), [...manifest.paths].sort(), 'Sitemap must match the generated public pages')
+assert.doesNotMatch(sitemap, /driveshaft-cable-plus|\/checkout|\/cart|\/admin|\/order-tracking/)
+console.log(`Verified sitemap coverage: ${sitemapPaths.length} unique canonical public URLs`)
