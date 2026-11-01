@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react'
+import { planSignature } from '../../lib/inventoryPlanStorage'
 import { useInventoryPlanning } from '../../hooks/useInventoryPlanning'
 import { forecast, reconcileIncoming, incomingWarning, PLANNING_LIMITATIONS } from '../../lib/inventoryPlanning'
 const field = 'bg-gray-950 border border-gray-600 rounded p-2 w-full text-white'
@@ -15,7 +16,7 @@ export function InventoryPlanningView({ data }) {
   const [busy, setBusy] = useState(false)
   const [uncertain, setUncertain] = useState(false)
   const pending = useRef(null)
-  const savedEditor = useRef(JSON.stringify({days:30,lead:'',safety:'',lines:[]}))
+  const savedEditor = useRef(planSignature({days:30,lead:'',safety:'',lines:[]}))
   const document = () => ({ days, lead, safety, lines })
   const fetchShared = async () => {
     setBusy(true)
@@ -31,7 +32,7 @@ export function InventoryPlanningView({ data }) {
       // Never discard work silently. If the backup cannot be written, keep editor intact.
       localStorage.setItem('inventory-planning-before-shared', JSON.stringify(document()))
       const d=fetched.document
-      savedEditor.current=JSON.stringify(d);setSharedSnapshot(JSON.stringify(d));setDays(d.days);setLead(d.lead);setSafety(d.safety);setLines(d.lines);setRevision(fetched.revision);setFetched(null)
+      savedEditor.current=planSignature(d);setSharedSnapshot(planSignature(d));setDays(d.days);setLead(d.lead);setSafety(d.safety);setLines(d.lines);setRevision(fetched.revision);setFetched(null)
       setSharedMessage(`Loaded shared revision ${fetched.revision}. Previous editor saved as a local recovery backup.`)
     } catch { setSharedMessage('Could not back up this editor. Shared plan not loaded; current work is unchanged.') }
   }
@@ -41,8 +42,8 @@ export function InventoryPlanningView({ data }) {
     setBusy(true)
     try {
       const result=await data.writeShared(pending.current)
-      const stillCurrent=JSON.stringify(document())===JSON.stringify(pending.current.p_document)
-      savedEditor.current=JSON.stringify(pending.current.p_document);setSharedSnapshot(savedEditor.current);pending.current=null;setUncertain(false);setFetched(null)
+      const stillCurrent=planSignature(document())===planSignature(pending.current.p_document)
+      savedEditor.current=planSignature(pending.current.p_document);setSharedSnapshot(savedEditor.current);pending.current=null;setUncertain(false);setFetched(null)
       setRevision(result.current_revision===result.revision?result.revision:null)
       setSharedMessage(result.current_revision!==result.revision ? 'Your previous save succeeded, but another device has since updated the plan. Fetch and review the latest version.' : `Shared revision ${result.revision} saved. ${stillCurrent?'Available to active admins on Mac and phone.':'Newer editor changes are not yet saved.'} Inventory and costs unchanged.`)
     } catch(e) {
@@ -52,7 +53,7 @@ export function InventoryPlanningView({ data }) {
   }
   const [clock, setClock] = useState(Date.now())
   useEffect(() => { const id = setInterval(() => setClock(Date.now()), 30000); return () => clearInterval(id) }, [])
-  useEffect(() => { const warn=e=>{if(JSON.stringify(document())!==savedEditor.current || pending.current){e.preventDefault();e.returnValue=''}};window.addEventListener('beforeunload',warn);return()=>window.removeEventListener('beforeunload',warn) }, [days,lead,safety,lines])
+  useEffect(() => { const warn=e=>{if(planSignature(document())!==savedEditor.current || pending.current){e.preventDefault();e.returnValue=''}};window.addEventListener('beforeunload',warn);return()=>window.removeEventListener('beforeunload',warn) }, [days,lead,safety,lines])
   const patch = (index, change) => setLines(lines.map((line,i) => i === index ? { ...line, ...change } : line))
   const load = () => {
     try {
@@ -63,7 +64,7 @@ export function InventoryPlanningView({ data }) {
     } catch { setMessage('No valid local draft available. Current plan unchanged.') }
   }
   const save = () => {
-    try { localStorage.setItem('inventory-planning-v1', JSON.stringify({ days, lead, safety, lines })); savedEditor.current=JSON.stringify(document()); setMessage('Draft saved on this browser only. No inventory or costs changed.') }
+    try { localStorage.setItem('inventory-planning-v1', JSON.stringify({ days, lead, safety, lines })); savedEditor.current=planSignature(document()); setMessage('Draft saved on this browser only. No inventory or costs changed.') }
     catch { setMessage('Unable to save locally. Keep this page open or copy your plan before leaving.') }
   }
   const stale = data.loadedAt && clock - new Date(data.loadedAt).getTime() > 15*60000
@@ -76,7 +77,7 @@ export function InventoryPlanningView({ data }) {
     <div className="border border-gray-600 rounded p-3 my-4">
       <h3 className="font-bold">Shared planning storage</h3>
       <p role="status" className="my-2">{sharedMessage}</p>
-      {revision!==null && JSON.stringify(document())!==sharedSnapshot && <p className="text-yellow-300">Unsaved shared changes in this editor.</p>}
+      {revision!==null && planSignature(document())!==sharedSnapshot && <p className="text-yellow-300">Unsaved shared changes in this editor.</p>}
       <p className="text-sm">{revision===null?'No shared version loaded in this editor.':`Editing shared revision ${revision}.`} Save explicitly before leaving; browser backups do not sync.</p>
       <div className="flex flex-wrap gap-4 my-2"><button type="button" className="underline disabled:opacity-50" disabled={busy||uncertain} onClick={fetchShared}>Fetch shared plan</button><button type="button" className="underline disabled:opacity-50" disabled={busy||revision===null} onClick={saveShared}>{uncertain?'Retry previous shared save':'Save shared plan'}</button></div>
       {fetched && <div className="my-3"><p>Fetched revision {fetched.revision} · {fetched.document.lines.length} lines · {fetched.document.days} day window · Lead: {fetched.document.lead||'unset'} · Safety: {fetched.document.safety||'unset'}</p><ul>{fetched.document.lines.map(l=><li key={l.id}>{l.reference} · {l.productId} · {l.quantity} units · {l.etaStart||'unknown'} to {l.etaEnd||'unknown'}</li>)}</ul><button type="button" className="underline mt-2" disabled={busy||uncertain} onClick={useShared}>Replace editor with fetched plan (back up current editor locally)</button></div>}

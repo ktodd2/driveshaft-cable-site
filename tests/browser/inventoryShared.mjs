@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict'
+import {planSignature} from '../../src/lib/inventoryPlanStorage.js'
 const {chromium}=await import(process.env.REPORT_PLAYWRIGHT_MODULE||'playwright')
 const browser=await chromium.launch(process.env.REPORT_BROWSER?{executablePath:process.env.REPORT_BROWSER}:{})
 let state={revision:0,document:{days:30,lead:'',safety:'',lines:[]}},requests=new Map(),failAfterSave=false,missing=false,forbidden=false
@@ -11,7 +12,7 @@ async function pageFor(width){
   if(url.pathname.startsWith('/__plan/')){
    if(missing)return reply({error:{code:'PGRST202'}})
    if(forbidden)return reply({error:{code:'42501'}})
-   if(url.pathname.endsWith('get_inventory_plan'))return reply({data:state})
+   if(url.pathname.endsWith('get_inventory_plan'))return reply({data:JSON.parse(planSignature(state))})
    const args=JSON.parse(route.request().postData());const previous=requests.get(args.p_request_id)
    if(previous){assert.deepEqual(args,previous.args);return reply({data:{status:'already_saved',revision:previous.revision,current_revision:state.revision}})}
    if(args.p_expected_revision!==state.revision)return reply({error:{code:'40001'}})
@@ -29,7 +30,7 @@ async function pageFor(width){
 async function load(page){await page.getByRole('button',{name:'Fetch shared plan',exact:true}).click();await page.getByRole('button',{name:'Replace editor with fetched plan',exact:false}).click()}
 try{
  const desktop=await pageFor(1440),mobile=await pageFor(390),a=desktop.page,b=mobile.page
- await load(a);await load(b)
+ await load(a);await load(b);assert.equal(await a.getByText('Unsaved shared changes in this editor.',{exact:true}).count(),0);assert.equal(await b.getByText('Unsaved shared changes in this editor.',{exact:true}).count(),0)
  await a.getByLabel('Supplier lead time (days)').fill('45');await a.getByLabel('Safety cushion (days)').fill('7')
  await a.getByRole('button',{name:'Add incoming draft line'}).click();await a.getByLabel('Shipment reference').fill('Shared fixture');await a.getByLabel('Product',{exact:true}).selectOption('1');await a.getByLabel('Ordered units').fill('100')
  failAfterSave=true
