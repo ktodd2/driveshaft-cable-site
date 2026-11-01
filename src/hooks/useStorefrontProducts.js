@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '../lib/supabase'
+import { usePublicData } from '../ssg/PublicData'
 import { useCartStore } from '../stores/cartStore'
 
 // Storefront-facing product list. Returns only products that are both
@@ -37,8 +38,9 @@ async function fetchAll() {
 }
 
 export function useStorefrontProducts() {
-  const [products, setProducts] = useState(cached || [])
-  const [loading, setLoading] = useState(!cached)
+  const initial = usePublicData()?.products
+  const [products, setProducts] = useState(cached || initial || [])
+  const [loading, setLoading] = useState(!cached && !initial)
 
   const refetch = useCallback(async () => {
     setLoading(true)

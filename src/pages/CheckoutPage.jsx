@@ -1,3 +1,4 @@
+import { isBoltPack, packQuantity, priceUnit } from '../lib/productPresentation'
 import { captureAnalyticsContext } from '../lib/purchaseAnalytics'
 import React, { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
@@ -790,7 +791,8 @@ function CheckoutPage() {
                       </div>
                       <div className="flex-grow">
                         <div className="text-white text-sm">{item.name}</div>
-                        <div className="text-gray-400 text-xs">Qty: {item.quantity}</div>
+                        <div className="text-gray-400 text-xs">Qty: {isBoltPack(item) ? packQuantity(item, item.quantity) : item.quantity}</div>
+                        {isBoltPack(item) && <div className="text-gray-400 text-xs">{formatPrice(item.price)}/{priceUnit(item)}</div>}
                       </div>
                       <div className="text-white text-sm">
                         {formatPrice(item.price * item.quantity)}

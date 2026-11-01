@@ -121,13 +121,14 @@ function ContactPage() {
               </div>
 
               <div className="bg-gray-800/50 border border-gray-700 p-6">
-                <h3 className="text-lg font-industrial text-white mb-4">BULK ORDERS?</h3>
+                <h3 className="text-lg font-industrial text-white mb-4">ONLINE ORDERS &amp; CUSTOM QUOTES</h3>
                 <p className="text-gray-400 mb-4">
-                  For orders of 10+ units, request a quote for volume pricing and faster turnaround.
+                  Order online with automatic volume pricing. Standard and XL cables each start at 10, in increments of 10 per length. Need dealer pricing, fleet purchasing assistance or a special order? Request a quote.
                 </p>
                 <a href="/quote" className="text-yellow-500 hover:text-yellow-400 font-bold transition-colors">
                   Request a Quote →
                 </a>
+                <a href="/products" className="block mt-3 text-yellow-500 hover:text-yellow-400 font-bold transition-colors">Shop Online →</a>
               </div>
 
               <div id="canada" className="bg-gray-800/50 border border-yellow-500/50 p-6 scroll-mt-40">

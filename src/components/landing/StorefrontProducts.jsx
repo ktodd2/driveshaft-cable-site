@@ -6,7 +6,7 @@ import {
   MIN_ORDER_QUANTITY, ORDER_QUANTITY_STEP,
 } from '../../stores/cartStore'
 import SaleCountdown from '../common/SaleCountdown'
-import { productImageClasses, volumePricingRows } from '../../lib/productPresentation'
+import { productImageClasses, volumePricingRows, isBoltPack, priceUnit, quantityUnit, packQuantity } from '../../lib/productPresentation'
 import { useInventory } from '../../hooks/useInventory'
 import { useStorefrontProducts } from '../../hooks/useStorefrontProducts'
 import InventoryProgressBar from '../common/InventoryProgressBar'
@@ -14,8 +14,8 @@ import InventoryProgressBar from '../common/InventoryProgressBar'
 // Pick the three spec chips we want to highlight on the card. The first
 // three values in product.specs would be brittle because Postgres JSONB
 // doesn't guarantee insertion order — we kept seeing the "1.2 lb" Weight
-// spec sneak into the chip row instead of the WLL. Look up by recognized
-// label, prefix WLL since "3000 lbs" alone doesn't read clearly. Falls
+// spec sneak into the chip row instead of the strength. Look up by recognized
+// label, prefix breaking strength since "3000 lbs" alone doesn't read clearly. Falls
 // back to first-three for products that don't have these specific keys.
 function topSpecChips(specs) {
   if (!specs || typeof specs !== 'object') return []
@@ -27,12 +27,12 @@ function topSpecChips(specs) {
   }
   const diameter = find(/cable.?diameter|^diameter$/i)
   const length   = find(/total.?length|^length$/i)
-  const wll      = find(/working.?load.?limit|^wll$/i)
+  const strength = find(/^breaking strength$/i)
 
   const chips = []
   if (diameter) chips.push({ key: diameter.key, label: '',    value: diameter.value })
   if (length)   chips.push({ key: length.key,   label: '',    value: length.value })
-  if (wll)      chips.push({ key: wll.key,      label: 'WLL ',value: wll.value })
+  if (strength) chips.push({ key: strength.key, label: 'Breaking strength ', value: strength.value })
 
   if (chips.length < 3) {
     const seen = new Set(chips.map(c => c.key))
@@ -146,7 +146,7 @@ function ProductCard({ product }) {
         </Link>
         <p className="text-gray-400 text-sm mb-4">{product.short_description}</p>
 
-        {/* Specs preview — Cable Diameter, Length, then "WLL <value>". */}
+        {/* Specs preview — Cable Diameter, Length, then "Breaking strength <value>". */}
         {chips.length > 0 && (
           <div className="flex flex-wrap gap-2 mb-4">
             {chips.map(c => (
@@ -165,7 +165,7 @@ function ProductCard({ product }) {
                 <span className="text-gray-500 line-through text-lg">{formatPrice(tierPrice)}</span>
                 <span className="text-red-400 text-2xl font-industrial">{formatPrice(currentPrice)}</span>
                 <span className="text-red-400 text-xs font-bold bg-red-500/20 px-2 py-0.5 rounded">−{appliedSale.discount_percent}%</span>
-                <span className="text-gray-400 text-sm">per unit</span>
+                <span className="text-gray-400 text-sm">per {priceUnit(product)}</span>
               </div>
               <div className="text-red-400/90 text-xs mt-1 flex items-center gap-1.5">
                 <span className="font-bold uppercase tracking-wider">{appliedSale.name}</span>
@@ -182,7 +182,7 @@ function ProductCard({ product }) {
             <>
               <div className="flex items-baseline gap-2">
                 <span className="text-white text-3xl font-industrial font-bold tabular-nums">{formatPrice(currentPrice)}</span>
-                <span className="text-gray-400 text-sm">per unit</span>
+                <span className="text-gray-400 text-sm">per {priceUnit(product)}</span>
               </div>
               {tierPrice < basePrice && (
                 <div className="text-green-400 text-sm mt-1">Volume discount applied!</div>
@@ -192,12 +192,12 @@ function ProductCard({ product }) {
         </div>
 
         {/* Inventory Progress Bar */}
-        <InventoryProgressBar stock={stock} totalStock={totalStock} loading={stockLoading} />
+        <InventoryProgressBar stock={stock} totalStock={totalStock} loading={stockLoading} unitLabel={isBoltPack(product) ? 'packs' : undefined} />
 
         {/* Quantity Selector */}
         <div className="mb-4 mt-4">
           <label htmlFor={`qty-${product.id}`} className="block text-gray-400 text-xs uppercase tracking-[0.1em] mb-2">
-            Quantity (min. {effectiveMin}{productStep > 1 ? `, in ${productStep}s` : ''})
+            {isBoltPack(product) ? 'Number of 10-packs' : 'Quantity'} (min. {effectiveMin}{productStep > 1 ? `, in ${productStep}s` : ''})
           </label>
           <div className="flex items-center gap-3">
             <div className="flex items-center rounded-xl ring-1 ring-inset ring-gray-600 overflow-hidden">
@@ -245,12 +245,13 @@ function ProductCard({ product }) {
           </div>
         </div>
 
+        {isBoltPack(product) && <p className="text-gray-300 text-sm mb-3">{packQuantity(product, quantity)} selected. Each pack contains 10 bolts.</p>}
         {/* Stock warnings */}
         {isLowStock && (
           <p className="text-yellow-500 text-xs mb-2">Only {stock} available — min order reduced from {productMin}</p>
         )}
         {!isLowStock && !outOfStock && stock !== null && quantity >= stock && (
-          <p className="text-yellow-500 text-xs mb-2">Max available: {stock} units</p>
+          <p className="text-yellow-500 text-xs mb-2">Max available: {stock} {quantityUnit(product)}</p>
         )}
 
         {/* Add to Cart */}
@@ -259,33 +260,70 @@ function ProductCard({ product }) {
           disabled={outOfStock || (!stockLoading && stock !== null && quantity > stock)}
           className="btn-primary w-full mt-auto"
         >
-          {outOfStock ? 'Out of Stock' : `Add ${quantity} to Cart`}
+          {outOfStock ? 'Out of Stock' : `Add ${quantity}${isBoltPack(product) ? (quantity === 1 ? ' pack' : ' packs') : ''} to Cart`}
         </button>
       </div>
     </article>
   )
 }
 
-// Shared storefront grid: hero header, pricing banner, min-order notice,
-// product cards, "more products coming" footer. Rendered both on the
-// /products page and at the top of the homepage so the catalogue is the
-// first thing customers see when they land on driveshaftcable.com.
-function StorefrontProducts() {
+// Shared catalogue. The homepage uses a compact introduction and places
+// detailed pricing below the cards so customers can see products sooner.
+function StorefrontProducts({ compactIntro = false }) {
   const { products, loading } = useStorefrontProducts()
+
+  const pricingInfo = (
+    <div id="volume-pricing" className={`surface-gold p-5 sm:p-6 ${compactIntro ? 'mt-8 scroll-mt-32' : 'mb-8'}`}>
+      <div className="flex flex-col gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <h2 className="text-white font-industrial text-lg tracking-[0.06em]">Volume Pricing (per product)</h2>
+          <div className="text-sm text-gray-300 space-y-1">
+            <div><span className="text-yellow-500">FREE SHIPPING</span> on orders over $600 · $20 flat rate under $600</div>
+            <div><span className="text-green-400">LOYALTY DISCOUNT</span> — returning customers get an extra 10% off!</div>
+          </div>
+        </div>
+        <div className={`grid gap-4 ${products.length >= 3 ? 'sm:grid-cols-3' : 'sm:grid-cols-2'}`}>
+          {products.map(p => {
+            const pricing = normalizeDbProduct(p)
+            const rows = volumePricingRows(pricing)
+            return (
+              <div key={p.id} className="bg-black/30 rounded-xl ring-1 ring-inset ring-yellow-500/25 p-4">
+                <div className="text-xs uppercase tracking-wider text-yellow-500 font-bold mb-2">{p.name}</div>
+                <div className="flex flex-wrap gap-x-4 gap-y-1.5 text-sm tabular-nums">
+                  {rows.length === 0 ? (
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-gray-400">Per unit:</span>
+                      <span className="text-yellow-500 font-bold">{formatPrice(pricing.basePrice)}/{isBoltPack(p) ? '10-pack' : 'ea'}</span>
+                    </div>
+                  ) : rows.map(row => (
+                    <div key={row.min} className="flex items-center gap-1.5">
+                      <span className="text-gray-400">{row.label}{isBoltPack(p) ? ' packs' : ''}:</span>
+                      <span className={`${row.price < pricing.basePrice ? 'text-green-400' : 'text-yellow-500'} font-bold`}>{formatPrice(row.price)}/{isBoltPack(p) ? '10-pack' : 'ea'}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      </div>
+    </div>
+  )
 
   return (
     <>
       {/* Hero Section */}
-      <section className="pt-12 pb-10 md:pt-16 md:pb-12 section-glow">
+      <section className={compactIntro ? 'pt-6 pb-6 md:pt-8 md:pb-8 section-glow' : 'pt-12 pb-10 md:pt-16 md:pb-12 section-glow'}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div>
-            <p className="eyebrow mb-4">Heavy-Duty Towing Safety</p>
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-industrial font-bold text-white mb-4 leading-[0.98]">
+            <p className={`eyebrow ${compactIntro ? 'mb-2' : 'mb-4'}`}>Heavy-Duty Towing Safety</p>
+            <h1 className={`${compactIntro ? 'text-3xl sm:text-4xl lg:text-5xl mb-3' : 'text-4xl sm:text-5xl lg:text-6xl mb-4'} font-industrial font-bold text-white leading-[0.98]`}>
               SHOP <span className="text-gradient">DRIVESHAFT CABLES</span>
             </h1>
-            <p className="text-lg sm:text-xl text-gray-300 max-w-2xl">
+            <p className={`${compactIntro ? 'text-base sm:text-lg' : 'text-lg sm:text-xl'} text-gray-300 max-w-2xl`}>
               Professional-grade equipment for heavy-duty towing and recovery operations.
             </p>
+            {compactIntro && <a href="#volume-pricing" className="inline-block mt-3 text-sm text-yellow-400 underline underline-offset-4 hover:text-yellow-300">View volume pricing &amp; shipping details</a>}
           </div>
         </div>
       </section>
@@ -293,46 +331,9 @@ function StorefrontProducts() {
       {/* Products Grid */}
       <section className="pb-20 md:pb-24 bg-ktodd-dark">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          {/* Pricing Info Banner */}
-          <div className="surface-gold p-5 sm:p-6 mb-8">
-            <div className="flex flex-col gap-4">
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                <h2 className="text-white font-industrial text-lg tracking-[0.06em]">Volume Pricing (per product)</h2>
-                <div className="text-sm text-gray-300 space-y-1">
-                  <div><span className="text-yellow-500">FREE SHIPPING</span> on orders over $600 · $20 flat rate under $600</div>
-                  <div><span className="text-green-400">LOYALTY DISCOUNT</span> — returning customers get an extra 10% off!</div>
-                </div>
-              </div>
-              <div className={`grid gap-4 ${products.length >= 3 ? 'sm:grid-cols-3' : 'sm:grid-cols-2'}`}>
-                {products.map(p => {
-                  const pricing = normalizeDbProduct(p)
-                  const rows = volumePricingRows(pricing)
-                  return (
-                    <div key={p.id} className="bg-black/30 rounded-xl ring-1 ring-inset ring-yellow-500/25 p-4">
-                      <div className="text-xs uppercase tracking-wider text-yellow-500 font-bold mb-2">{p.name}</div>
-                      <div className="flex flex-wrap gap-x-4 gap-y-1.5 text-sm tabular-nums">
-                        {rows.length === 0 ? (
-                          <div className="flex items-center gap-1.5">
-                            <span className="text-gray-400">Per unit:</span>
-                            <span className="text-yellow-500 font-bold">{formatPrice(pricing.basePrice)}/ea</span>
-                          </div>
-                        ) : rows.map(row => (
-                          <div key={row.min} className="flex items-center gap-1.5">
-                            <span className="text-gray-400">{row.label}:</span>
-                            <span className={`${row.price < pricing.basePrice ? 'text-green-400' : 'text-yellow-500'} font-bold`}>{formatPrice(row.price)}/ea</span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )
-                })}
-              </div>
-            </div>
-          </div>
+          {!compactIntro && pricingInfo}
 
-          {/* Minimum-order notice removed — each product card now shows its
-              own min/step in the quantity selector, since the brake caging
-              bolt sells in 1s while the cables ship in 10-packs. */}
+          {/* Each card shows its own ordering minimum and quantity unit. */}
 
           {/* Products */}
           {loading && products.length === 0 ? (
@@ -360,6 +361,8 @@ function StorefrontProducts() {
               ))}
             </div>
           )}
+
+          {compactIntro && pricingInfo}
 
           {/* More products coming */}
           <div className="mt-16 text-center">

@@ -14,7 +14,7 @@ function ProductListPage() {
     <div className="pt-24 md:pt-32">
       <SEOHead
         title="Shop Driveshaft Safety Cables"
-        description="Browse heavy-duty Driveshaft Cables (driveshaftcable). Volume pricing from $2.45/unit. Free shipping on orders over $600."
+        description="Shop Standard and XL driveshaft cables, cable cutters, and brake caging bolts. Compare product specifications and current volume pricing, then order online."
         keywords="buy driveshaft cable, driveshaftcable, driveshaft cable price, bulk driveshaft cable, towing safety cable"
         canonical="/products"
         structuredData={{

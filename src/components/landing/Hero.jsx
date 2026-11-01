@@ -6,7 +6,7 @@ import { Link } from 'react-router-dom'
 const quickSpecs = [
   { label: 'Steel Cable', value: '5/32"' },
   { label: 'Length', value: '39"' },
-  { label: 'Working Limit', value: '3000 lbs' },
+  { label: 'Breaking Strength', value: '3000 lbs' },
   { label: 'Built for', value: 'Class 7-8' },
 ]
 

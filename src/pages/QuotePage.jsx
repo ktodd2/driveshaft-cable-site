@@ -88,7 +88,7 @@ function QuotePage() {
             </h1>
             <div className="w-24 h-1 bg-yellow-500 mx-auto mb-6"></div>
             <p className="text-xl text-gray-400 max-w-2xl mx-auto">
-              Get volume pricing for orders of 10+ units. We'll respond within 24 hours.
+              Buy online with automatic volume pricing. For dealer, fleet or special-order requests, use this form. We'll respond within 24 hours.
             </p>
           </div>
         </div>
@@ -100,7 +100,7 @@ function QuotePage() {
           <div className="grid lg:grid-cols-2 gap-12">
             {/* Left Side - Benefits */}
             <div>
-              <h2 className="text-2xl font-industrial text-yellow-500 mb-8">VOLUME PRICING BENEFITS</h2>
+              <h2 className="text-2xl font-industrial text-yellow-500 mb-8">DEALER &amp; FLEET REQUESTS</h2>
 
               <div className="space-y-6 mb-12">
                 <div className="flex items-center gap-4">
@@ -111,7 +111,7 @@ function QuotePage() {
                   </div>
                   <div>
                     <div className="text-white font-bold">Discounted Pricing</div>
-                    <div className="text-gray-400 text-sm">Save more with larger orders</div>
+                    <div className="text-gray-400 text-sm">Volume prices apply automatically online</div>
                   </div>
                 </div>
 
@@ -152,31 +152,13 @@ function QuotePage() {
                 </div>
               </div>
 
-              {/* Pricing Tiers */}
+              {/* Online ordering rules */}
               <div className="bg-gray-800/50 border border-gray-700 p-6">
-                <h3 className="text-lg font-industrial text-white mb-4">VOLUME PRICING TIERS</h3>
-                <div className="space-y-3">
-                  <div className="flex justify-between items-center py-2 border-b border-gray-700">
-                    <span className="text-gray-400">1-9 units</span>
-                    <span className="text-white">Standard pricing</span>
-                  </div>
-                  <div className="flex justify-between items-center py-2 border-b border-gray-700">
-                    <span className="text-gray-400">10-24 units</span>
-                    <span className="text-yellow-500 font-bold">Contact for quote</span>
-                  </div>
-                  <div className="flex justify-between items-center py-2 border-b border-gray-700">
-                    <span className="text-gray-400">25-49 units</span>
-                    <span className="text-yellow-500 font-bold">Contact for quote</span>
-                  </div>
-                  <div className="flex justify-between items-center py-2 border-b border-gray-700">
-                    <span className="text-gray-400">50-99 units</span>
-                    <span className="text-yellow-500 font-bold">Contact for quote</span>
-                  </div>
-                  <div className="flex justify-between items-center py-2">
-                    <span className="text-gray-400">100+ units</span>
-                    <span className="text-yellow-500 font-bold">Contact for quote</span>
-                  </div>
-                </div>
+                <h3 className="text-lg font-industrial text-white mb-4">ORDER ONLINE - NO QUOTE NEEDED</h3>
+                <p className="text-gray-300 mb-4">Standard and XL cables each start at 10 cables, in increments of 10 per length. Volume pricing applies separately to each length.</p>
+                <p className="text-gray-400 mb-4">Cable pricing tiers: 10-49, 50-99, 100-199 and 200+ cables. See the shop for current prices; discounts update automatically.</p>
+                <p className="text-gray-400 mb-4">Cutters are sold individually. Brake caging bolts are sold in packs of 10, with their own pack pricing.</p>
+                <Link to="/products" className="btn-primary inline-flex">Shop Online</Link>
               </div>
 
               {/* Contact info */}
@@ -220,8 +202,8 @@ function QuotePage() {
 
                   {items.length > 0 && (
                     <div className="bg-gray-700/50 border border-gray-600 p-4 mb-6">
-                      <p className="text-gray-400 text-sm mb-2">Cart items included in quote:</p>
-                      <div className="text-white font-bold">{totalItems} x Driveshaft Cable</div>
+                      <p className="text-gray-400 text-sm mb-2">Your current cart:</p>
+                      <ul className="text-white space-y-1">{items.map(item => <li key={item.productId}>{item.quantity} × {item.name}</li>)}</ul>
                     </div>
                   )}
 
@@ -283,21 +265,20 @@ function QuotePage() {
                     </div>
 
                     <div>
-                      <label htmlFor="quantity" className="block text-gray-400 text-sm mb-1">Quantity Needed *</label>
-                      <select
+                      <label htmlFor="quantity" className="block text-gray-400 text-sm mb-1">Estimated quantity (units or packs)</label>
+                      <input
+                        type="number"
                         id="quantity"
                         name="quantity"
+                        min="1"
+                        step="1"
                         value={formData.quantity}
                         onChange={handleChange}
-                        required
+                        aria-describedby="quote-quantity-help"
+                        placeholder="Enter an estimated quantity"
                         className="w-full bg-gray-800 border border-gray-600 text-white px-4 py-3 focus:border-yellow-500 focus:outline-none"
-                      >
-                        <option value="">Select quantity</option>
-                        <option value="10">10-24 units</option>
-                        <option value="25">25-49 units</option>
-                        <option value="50">50-99 units</option>
-                        <option value="100">100+ units</option>
-                      </select>
+                      />
+                      <p id="quote-quantity-help" className="text-gray-400 text-sm mt-2">For cable orders, use 10 or more per length, in increments of 10. Count brake bolts by 10-packs and cutters individually. For mixed orders, list each product and quantity in your message.</p>
                     </div>
 
                     <div>
@@ -308,7 +289,7 @@ function QuotePage() {
                         value={formData.message}
                         onChange={handleChange}
                         rows="4"
-                        placeholder="Tell us about your needs, timeline, or any questions..."
+                        placeholder="List the products and quantities you need, plus any special requirements or questions..."
                         className="w-full bg-gray-800 border border-gray-600 text-white px-4 py-3 focus:border-yellow-500 focus:outline-none resize-none"
                       ></textarea>
                     </div>

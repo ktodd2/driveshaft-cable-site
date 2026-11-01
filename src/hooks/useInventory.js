@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { usePublicData } from '../ssg/PublicData'
 import { supabase } from '../lib/supabase'
 
 // Returns inventory rows for every product in one query. Used by admin
@@ -31,9 +32,10 @@ export function useAllInventory() {
 }
 
 export function useInventory(productId = '1') {
-  const [stock, setStock] = useState(null)
-  const [totalStock, setTotalStock] = useState(null)
-  const [loading, setLoading] = useState(true)
+  const initial = usePublicData()?.inventory?.find(row => row.product_id === productId)
+  const [stock, setStock] = useState(initial?.stock_quantity ?? null)
+  const [totalStock, setTotalStock] = useState(initial?.total_quantity ?? null)
+  const [loading, setLoading] = useState(!initial)
 
   const fetchStock = async () => {
     const { data, error } = await supabase

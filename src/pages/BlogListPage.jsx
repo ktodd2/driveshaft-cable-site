@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
+import { usePublicData } from '../ssg/PublicData'
 import SEOHead from '../components/common/SEOHead'
 import AdSlot from '../components/ads/AdSlot'
 
@@ -17,15 +18,16 @@ const CATEGORIES = [
 const POSTS_PER_PAGE = 12
 
 function BlogListPage() {
-  const [posts, setPosts] = useState([])
-  const [loading, setLoading] = useState(true)
+  const initial = usePublicData()?.blogPosts
+  const [posts, setPosts] = useState(initial || [])
+  const [loading, setLoading] = useState(!initial)
   const [category, setCategory] = useState('all')
   const [page, setPage] = useState(0)
-  const [hasMore, setHasMore] = useState(false)
+  const [hasMore, setHasMore] = useState((initial || []).length > POSTS_PER_PAGE)
 
   useEffect(() => {
     const fetchPosts = async () => {
-      setLoading(true)
+      if (!initial || page !== 0 || category !== 'all') setLoading(true)
       let query = supabase
         .from('blog_posts')
         .select('id, title, slug, excerpt, category, tags, published_at, reading_time_minutes')
@@ -56,6 +58,7 @@ function BlogListPage() {
 
   const formatDate = (dateStr) => {
     return new Date(dateStr).toLocaleDateString('en-US', {
+      timeZone: 'UTC',
       year: 'numeric',
       month: 'long',
       day: 'numeric',

@@ -12,15 +12,16 @@ Object.defineProperty(globalThis, 'localStorage', { configurable: true, value: {
 const require = createRequire(import.meta.url)
 const root = new URL('../..', import.meta.url).pathname
 const compiled = await build({
-  stdin: { contents: `export * from './src/stores/cartStore.js'; export { default as Grid } from './src/components/landing/StorefrontProducts.jsx'; export { default as Showcase } from './src/components/landing/ProductShowcase.jsx';`, resolveDir: root },
+  stdin: { contents: `export * from './src/stores/cartStore.js'; export { default as Grid } from './src/components/landing/StorefrontProducts.jsx'; export { default as Cart } from './src/pages/CartPage.jsx'; export { default as Showcase } from './src/components/landing/ProductShowcase.jsx';`, resolveDir: root },
   bundle: true, write: false, platform: 'node', format: 'cjs', packages: 'external',
   plugins: [{ name: 'read-only-fixtures', setup(b) {
-    b.onResolve({ filter: /(?:lib\/supabase|hooks\/useStorefrontProducts|hooks\/useInventory|^react-router-dom$)/ }, args => ({ path: args.path, namespace: 'fixtures' }))
+    b.onResolve({ filter: /(?:lib\/supabase|hooks\/useStorefrontProducts|hooks\/useInventory|common\/SEOHead|^react-router-dom$)/ }, args => ({ path: args.path, namespace: 'fixtures' }))
     b.onLoad({ filter: /.*/, namespace: 'fixtures' }, ({ path }) => ({ contents:
+      path.includes('SEOHead') ? `export default function SEOHead() { return null }` :
       path.includes('supabase') ? `export const supabase = { from(table) { const q = { select() { return q }, eq() { return q }, then(resolve) { return Promise.resolve(table === 'sales' ? {data: testData.sales || []} : testData.response).then(resolve) } }; return q } }` :
       path.includes('useStorefrontProducts') ? `export function useStorefrontProducts() { return { products: testData.products, loading: false } }` :
       path.includes('useInventory') ? `export function useInventory() { return { stock: 9999, totalStock: 9999, loading: false } }` :
-      `import React from 'react'; export function Link({to, children, ...props}) { return React.createElement('a', {...props, href:to}, children) }`, loader: 'js', resolveDir: root }))
+      `import React from 'react'; export function useNavigate() { return () => {} } export function Link({to, children, ...props}) { return React.createElement('a', {...props, href:to}, children) }`, loader: 'js', resolveDir: root }))
   }}],
 })
 const cutter = { id: 'driveshaft-cable-cutters', slug: 'driveshaft-cable-cutters', name: 'Driveshaft Cable Cutters', base_price_cents: 2500, min_order_quantity: 1, order_quantity_step: 1, tiers: [] }
@@ -120,4 +121,57 @@ test('a later successful catalog refresh still updates live pricing and existing
   assert.match(html, /\$25\.00 \$22\.50/)
   assert.match(html, /Test sale/)
   assert.doesNotMatch(html, /Volume discount applied/)
+})
+
+test('prerender pricing seeds cannot overwrite a saved cart before hydration restores it', () => {
+  const saved = { productId: cutter.id, name: cutter.name, quantity: 2 }
+  const previous = globalThis.localStorage
+  let writes = 0
+  const storage = { getItem: () => JSON.stringify({ state: { items: [saved], recoveryDiscountCode: 'saved-code' }, version: 0 }), setItem() { writes++ }, removeItem() {} }
+  Object.defineProperty(globalThis, 'localStorage', { configurable: true, value: storage })
+  try {
+    const s = harness()
+    assert.equal(s.useCartStore.getState().items.length, 0)
+    s.seedStorefrontPricing([cutter, xl])
+    assert.equal(writes, 0)
+    assert.equal(s.getPriceForQuantity(cutter.id, 1), 2500)
+    s.useCartStore.persist.rehydrate()
+    assert.equal(s.useCartStore.getState().items[0].quantity, 2)
+    assert.equal(s.useCartStore.getState().recoveryDiscountCode, 'saved-code')
+  } finally { Object.defineProperty(globalThis, 'localStorage', { configurable: true, value: previous }) }
+})
+
+const bolts = { id: '3', slug: 'value-brake-caging-bolt', name: 'Value Brake Caging Bolt (10-Pack)', base_price_cents: 2199, min_order_quantity: 1, order_quantity_step: 1, tiers: [{ min: 5, price: 2099 }, { min: 10, price: 1999 }, { min: 20, price: 1899 }] }
+
+test('bolt storefront labels distinguish pack prices, pack tiers and physical bolt counts', () => {
+  const s = harness([bolts])
+  const html = text(renderToStaticMarkup(React.createElement(s.Grid)))
+  assert.match(html, /1-4 packs: \$21\.99\/10-pack 5-9 packs: \$20\.99\/10-pack 10-19 packs: \$19\.99\/10-pack 20\+ packs: \$18\.99\/10-pack/)
+  assert.match(html, /\$21\.99 per 10-pack/)
+  assert.match(html, /Number of 10-packs/)
+  assert.match(html, /1 pack · 10 bolts selected/)
+  assert.match(html, /Add 1 pack to Cart/)
+  assert.doesNotMatch(html, /\/ea|per unit|9999 units/)
+})
+
+test('bolt cart keeps stored quantities and totals in packs while showing total bolts', () => {
+  const s = harness([bolts]), store = s.useCartStore
+  store.getState().hydrateStorefrontProducts([bolts])
+  store.getState().addItem({ ...bolts, price_cents: 2199 }, 2)
+  assert.equal(store.getState().items[0].quantity, 2)
+  assert.equal(s.selectSubtotal(store.getState()), 4398)
+  // React's server renderer reads Zustand's initial snapshot. Seed that
+  // snapshot with the cart produced by the actual store actions.
+  Object.assign(store.getInitialState(), store.getState())
+  const html = text(renderToStaticMarkup(React.createElement(s.Cart)))
+  assert.match(html, /2 packs · 20 bolts/)
+  assert.match(html, /\$21\.99\/10-pack/)
+  assert.match(html, /20 bolts total/)
+  assert.match(html, /\$43\.98/)
+  assert.match(html, /Add 3 more packs/)
+  for (const [packs, subtotal] of [[5, 10495], [10, 19990], [20, 37980]]) {
+    store.getState().updateQuantity('3', packs)
+    assert.equal(store.getState().items[0].quantity, packs)
+    assert.equal(s.selectSubtotal(store.getState()), subtotal)
+  }
 })

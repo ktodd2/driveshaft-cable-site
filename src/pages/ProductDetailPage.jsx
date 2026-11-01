@@ -6,7 +6,7 @@ import { useInventory } from '../hooks/useInventory'
 import { useStorefrontProduct } from '../hooks/useStorefrontProduct'
 import InventoryProgressBar from '../components/common/InventoryProgressBar'
 import SEOHead from '../components/common/SEOHead'
-import { volumePricingRows, productMetadata, productImageClasses } from '../lib/productPresentation'
+import { volumePricingRows, productMetadata, productImageClasses, isBoltPack, priceUnit, quantityUnit, packQuantity } from '../lib/productPresentation'
 import { isCableSlug, cableSelectionPricing } from '../lib/cablePurchase'
 import { CablePositioning, CableOrderSummary, CableReturningNote, CableComparisonSection } from '../components/product/CablePurchase'
 
@@ -67,13 +67,13 @@ function buildStructuredData(product) {
 function ProductDetailPage() {
   const { slug } = useParams()
   const navigate = useNavigate()
-  const [quantity, setQuantity] = useState(MIN_ORDER_QUANTITY)
+  const { product, loading, notFound } = useStorefrontProduct(slug)
+  const [quantity, setQuantity] = useState(product?.min_order_quantity ?? MIN_ORDER_QUANTITY)
   // String state for the input so the user can clear and type freely.
-  const [quantityDraft, setQuantityDraft] = useState(String(MIN_ORDER_QUANTITY))
+  const [quantityDraft, setQuantityDraft] = useState(String(product?.min_order_quantity ?? MIN_ORDER_QUANTITY))
   const [selectedImage, setSelectedImage] = useState(0)
   const addItem = useCartStore((state) => state.addItem)
 
-  const { product, loading, notFound } = useStorefrontProduct(slug)
   const productImages = (product?.images && product.images.length > 0) ? product.images : []
   const { stock, totalStock, loading: stockLoading } = useInventory(product?.id)
 
@@ -256,7 +256,7 @@ function ProductDetailPage() {
                 ) : (
                   <span className={`text-4xl font-industrial ${outOfStock ? 'text-gray-500 line-through' : 'text-yellow-500'}`}>{formatPrice(currentPrice)}</span>
                 )}
-                <span className="text-gray-400 text-sm">per unit</span>
+                <span className="text-gray-400 text-sm">per {priceUnit(product)}</span>
                 {stockLoading ? (
                   <span className="bg-gray-500/20 text-gray-400 px-3 py-1 text-sm">Checking stock...</span>
                 ) : stock === null ? (
@@ -264,9 +264,9 @@ function ProductDetailPage() {
                 ) : stock === 0 ? (
                   <span className="bg-red-500/20 text-red-400 px-3 py-1 text-sm">Out of Stock</span>
                 ) : stock <= 20 ? (
-                  <span className="bg-yellow-500/20 text-yellow-400 px-3 py-1 text-sm">{stock} units left</span>
+                  <span className="bg-yellow-500/20 text-yellow-400 px-3 py-1 text-sm">{stock} {quantityUnit(product)} left</span>
                 ) : (
-                  <span className="bg-green-500/20 text-green-400 px-3 py-1 text-sm">{stock} units in stock</span>
+                  <span className="bg-green-500/20 text-green-400 px-3 py-1 text-sm">{stock} {quantityUnit(product)} in stock</span>
                 )}
               </div>
 
@@ -284,14 +284,14 @@ function ProductDetailPage() {
               )}
 
               {/* Inventory Progress Bar */}
-              <InventoryProgressBar stock={stock} totalStock={totalStock} loading={stockLoading} />
+              <InventoryProgressBar stock={stock} totalStock={totalStock} loading={stockLoading} unitLabel={isBoltPack(product) ? 'packs' : undefined} />
 
               {/* Volume Pricing Tiers */}
               {pricingRows.length > 0 && (
                 <div aria-label="Volume pricing" className="flex flex-wrap gap-3 mb-6 mt-6">
                   {pricingRows.map((row, i) => (
                     <span key={row.min} className={`text-xs px-3 py-1 border ${tierPrice === row.price ? (i === 0 ? 'border-yellow-500 text-yellow-500' : 'border-green-500 text-green-400') : 'border-gray-700 text-gray-500'}`}>
-                      {row.label}: {formatPrice(row.price)}/ea
+                      {row.label}{isBoltPack(product) ? ' packs' : ''}: {formatPrice(row.price)}/{isBoltPack(product) ? '10-pack' : 'ea'}
                     </span>
                   ))}
                 </div>
@@ -325,8 +325,8 @@ function ProductDetailPage() {
 
               {/* Quantity Selector */}
               <div className="mb-6">
-                <label className="block text-gray-400 text-sm mb-2">
-                  Quantity (min. {effectiveMin}{productStep > 1 ? `, in increments of ${productStep}` : ''})
+                <label htmlFor="product-quantity" className="block text-gray-400 text-sm mb-2">
+                  {isBoltPack(product) ? 'Number of 10-packs' : 'Quantity'} (min. {effectiveMin}{productStep > 1 ? `, in increments of ${productStep}` : ''})
                 </label>
                 <div className="flex items-center gap-4">
                   <div className="flex items-center border border-gray-700">
@@ -337,6 +337,7 @@ function ProductDetailPage() {
                       -{productStep}
                     </button>
                     <input
+                      id="product-quantity"
                       type="number"
                       value={quantityDraft}
                       min={effectiveMin}
@@ -367,11 +368,12 @@ function ProductDetailPage() {
                     </span>
                   )}
                 </div>
+                {isBoltPack(product) && <p className="text-gray-300 text-sm mb-3">{packQuantity(product, quantity)} selected. Each pack contains 10 bolts.</p>}
                 {isLowStock && (
                   <p className="text-yellow-500 text-sm mt-2">Only {stock} available — min order reduced from {productMin}</p>
                 )}
                 {!isLowStock && stock !== null && quantity >= stock && stock > 0 && (
-                  <p className="text-yellow-500 text-sm mt-2">Maximum available: {stock} units</p>
+                  <p className="text-yellow-500 text-sm mt-2">Maximum available: {stock} {quantityUnit(product)}</p>
                 )}
               </div>
 

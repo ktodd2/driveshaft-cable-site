@@ -3,7 +3,7 @@ import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import { volumePricingRows, productMetadata } from '../../src/lib/productPresentation.js'
 
-const xl = { name: 'Driveshaft Cable XL', sku: 'XL', base_price_cents: 500, min_order_quantity: 10, tiers: [{ min: 50, price: 483 }, { min: 100, price: 450 }, { min: 200, price: 408 }], specs: { Length: '60 inches', 'Cable diameter': '5/32 inch', 'Working Load Limit': '3000 lb' } }
+const xl = { name: 'Driveshaft Cable XL', sku: 'XL', base_price_cents: 500, min_order_quantity: 10, tiers: [{ min: 50, price: 483 }, { min: 100, price: 450 }, { min: 200, price: 408 }], specs: { Length: '60 inches', 'Cable diameter': '5/32 inch', 'Breaking Strength': '3000 lb' } }
 const pricing = p => ({ basePrice: p.base_price_cents, minOrderQuantity: p.min_order_quantity, tiers: p.tiers })
 
 test('XL labels use its own DB prices and threshold-derived ranges without mutation', () => {
@@ -33,19 +33,21 @@ test('single-unit products derive their own ranges, independent of tier order or
   assert.deepEqual(rows.map(r => r.label), ['1-4', '5-9', '10-19', '20+'])
 })
 
-test('XL confirmed WLL and dimensions are retained in factual metadata', () => {
+test('XL breaking strength and dimensions are retained in factual metadata', () => {
   const meta = productMetadata(xl)
-  assert.equal(meta.title, 'Driveshaft Cable XL — 3000 lb WLL')
-  for (const fact of ['3000 lb', '60 inches', '5/32 inch', '$5.00/unit', 'volume discounts']) assert.ok(meta.description.includes(fact))
+  assert.equal(meta.title, 'Driveshaft Cable XL — 3000 lb breaking strength')
+  assert.doesNotMatch(meta.description, /\$|Starting at/)
+  assert.equal(productMetadata({ ...xl, base_price_cents: 750 }).description, meta.description)
+  for (const fact of ['3000 lb', '60 inches', '5/32 inch', 'volume discounts']) assert.ok(meta.description.includes(fact))
 })
 
-test('standard cable verified rating is retained, but unrated accessories get no WLL or cable claim', () => {
-  assert.match(productMetadata({ ...xl, name: 'Driveshaft Cable', specs: { 'Working Load Limit': '3000 lbs' } }).title, /3000 lbs WLL/)
+test('standard cable verified rating is retained, but unrated accessories get no strength or cable claim', () => {
+  assert.match(productMetadata({ ...xl, name: 'Driveshaft Cable', specs: { 'Breaking Strength': '3000 lbs' } }).title, /3000 lbs breaking strength/)
   const meta = productMetadata({ name: 'Driveshaft Cable Cutters', base_price_cents: 2500, tiers: [], specs: { 'Sold as': 'One cutter' } })
   assert.equal(meta.title, 'Driveshaft Cable Cutters')
-  assert.match(meta.description, /\$25\.00\/unit/)
-  assert.doesNotMatch(JSON.stringify(meta), /3000|WLL|safety cable|volume discounts/i)
-  assert.doesNotMatch(JSON.stringify(productMetadata({ name: 'New accessory', base_price_cents: 100 })), /WLL|3000|volume discounts/i)
+  assert.match(meta.description, /View current pricing and order online/)
+  assert.doesNotMatch(JSON.stringify(meta), /3000|WLL|breaking strength|safety cable|volume discounts/i)
+  assert.doesNotMatch(JSON.stringify(productMetadata({ name: 'New accessory', base_price_cents: 100 })), /WLL|breaking strength|3000|volume discounts/i)
 })
 
 test('static shell has no universal rating and lets Helmet replace fallback descriptions', () => {

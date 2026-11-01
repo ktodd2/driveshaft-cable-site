@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import { normalizeDbProduct, formatPrice, getActiveSaleForProduct, useCartStore } from '../../stores/cartStore'
 import { useStorefrontProducts } from '../../hooks/useStorefrontProducts'
 import SaleCountdown from '../common/SaleCountdown'
-import { productImageClasses } from '../../lib/productPresentation'
+import { productImageClasses, isBoltPack } from '../../lib/productPresentation'
 
 function ProductShowcase() {
   // Re-render when sales reload / countdown expires.
@@ -92,17 +92,17 @@ function ProductShowcase() {
                             {appliedSale ? (
                               <div className="flex items-baseline gap-2 flex-wrap">
                                 <span className="text-gray-500 line-through text-lg">{formatPrice(pricing.basePrice)}</span>
-                                <span className="text-red-400 text-2xl font-industrial">{formatPrice(saleBase)}<span className="text-gray-500 text-sm">/ea</span></span>
+                                <span className="text-red-400 text-2xl font-industrial">{formatPrice(saleBase)}<span className="text-gray-500 text-sm">/{isBoltPack(product) ? '10-pack' : 'ea'}</span></span>
                                 <span className="text-red-400 text-xs font-bold bg-red-500/20 px-2 py-0.5 rounded">−{appliedSale.discount_percent}%</span>
                               </div>
                             ) : (
-                              <div className="text-yellow-500 text-2xl font-industrial">{formatPrice(pricing.basePrice)}<span className="text-gray-500 text-sm">/ea</span></div>
+                              <div className="text-yellow-500 text-2xl font-industrial">{formatPrice(pricing.basePrice)}<span className="text-gray-500 text-sm">/{isBoltPack(product) ? '10-pack' : 'ea'}</span></div>
                             )}
                           </div>
                           {bulkPrice < pricing.basePrice && (
                             <div className="text-xs text-gray-500 text-right">
                               Bulk: as low as<br/>
-                              <span className="text-green-400 font-bold">{formatPrice(bulkPrice)}/ea</span>
+                              <span className="text-green-400 font-bold">{formatPrice(bulkPrice)}/{isBoltPack(product) ? '10-pack' : 'ea'}</span>
                             </div>
                           )}
                         </div>

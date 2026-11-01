@@ -27,7 +27,7 @@ const faqStructuredData = {
       name: 'What are the specifications?',
       acceptedAnswer: {
         '@type': 'Answer',
-        text: 'Cable Diameter: 5/32" steel wire cable. Total Length: 1000mm (39"). Working Load Limit: 3000 lb. End Construction: Crimped loops with aluminum couplers. The cable is galvanized for corrosion resistance.'
+        text: 'Cable Diameter: 5/32" steel wire cable. Total Length: 1000mm (39"). Breaking Strength: 3000 lb. End Construction: Crimped loops with aluminum couplers. The cable is galvanized for corrosion resistance.'
       }
     },
     {
@@ -67,7 +67,7 @@ const faqStructuredData = {
       name: 'How do I place an order?',
       acceptedAnswer: {
         '@type': 'Answer',
-        text: 'You can order directly through our website for quantities of 1-9 units. For bulk orders of 10 or more units, we recommend requesting a quote to get volume pricing.'
+        text: 'Order directly through our online shop. Standard and XL cables each have a minimum order of 10 cables, in increments of 10 per length. Cable cutters are sold individually, and brake caging bolts are sold in packs of 10. Volume pricing is applied automatically online; no quote is needed for normal orders. Contact us for dealer, fleet or special-order requests.'
       }
     },
     {
@@ -75,7 +75,7 @@ const faqStructuredData = {
       name: 'Do you offer volume discounts?',
       acceptedAnswer: {
         '@type': 'Answer',
-        text: 'Yes! We offer volume pricing for orders of 10+ units. Request a quote through our website or contact us directly to discuss fleet and wholesale pricing.'
+        text: 'Yes. Cable pricing is based on the quantity of each cable length: 10-49, 50-99, 100-199 and 200+ cables. Your price updates automatically in the shop and cart. Standard and XL quantities are priced separately. See each product page for its current prices and accessory quantity discounts. Quotes are available for dealer, fleet or special-order requests.'
       }
     },
     {
@@ -123,7 +123,7 @@ const faqStructuredData = {
       name: 'What is a driveshaftcable?',
       acceptedAnswer: {
         '@type': 'Answer',
-        text: 'A driveshaftcable (also written as driveshaft cable) is a safety cable used to secure a disconnected driveshaft during towing operations. The Driveshaft Cable is a purpose-built driveshaftcable featuring 5/32" galvanized steel wire and aluminum couplers with a 3000lb working load limit.'
+        text: 'A driveshaftcable (also written as driveshaft cable) is a safety cable used to secure a disconnected driveshaft during towing operations. The Driveshaft Cable is a purpose-built driveshaftcable featuring 5/32" galvanized steel wire and aluminum couplers with a 3000lb breaking strength.'
       }
     }
   ]
@@ -143,7 +143,7 @@ const faqs = [
       },
       {
         question: 'What are the specifications?',
-        answer: 'Cable Diameter: 5/32" steel wire cable. Total Length: 1000mm (39"). Working Load Limit: 3000 lb. End Construction: Crimped loops with aluminum couplers. The cable is galvanized for corrosion resistance.'
+        answer: 'Cable Diameter: 5/32" steel wire cable. Total Length: 1000mm (39"). Breaking Strength: 3000 lb. End Construction: Crimped loops with aluminum couplers. The cable is galvanized for corrosion resistance.'
       },
       {
         question: 'Is it reusable?',
@@ -151,7 +151,7 @@ const faqs = [
       },
       {
         question: 'What is a driveshaftcable?',
-        answer: 'A driveshaftcable (also written as driveshaft cable) is a safety cable used to secure a disconnected driveshaft during towing operations. The Driveshaft Cable is a purpose-built driveshaftcable featuring 5/32" galvanized steel wire and aluminum couplers with a 3000lb working load limit.'
+        answer: 'A driveshaftcable (also written as driveshaft cable) is a safety cable used to secure a disconnected driveshaft during towing operations. The Driveshaft Cable is a purpose-built driveshaftcable featuring 5/32" galvanized steel wire and aluminum couplers with a 3000lb breaking strength.'
       }
     ]
   },
@@ -177,11 +177,11 @@ const faqs = [
     items: [
       {
         question: 'How do I place an order?',
-        answer: 'You can order directly through our website for quantities of 1-9 units. For bulk orders of 10 or more units, we recommend requesting a quote to get volume pricing.'
+        answer: 'Order directly through our online shop. Standard and XL cables each have a minimum order of 10 cables, in increments of 10 per length. Cable cutters are sold individually, and brake caging bolts are sold in packs of 10. Volume pricing is applied automatically online; no quote is needed for normal orders. Contact us for dealer, fleet or special-order requests.'
       },
       {
         question: 'Do you offer volume discounts?',
-        answer: 'Yes! We offer volume pricing for orders of 10+ units. Request a quote through our website or contact us directly to discuss fleet and wholesale pricing.'
+        answer: 'Yes. Cable pricing is based on the quantity of each cable length: 10-49, 50-99, 100-199 and 200+ cables. Your price updates automatically in the shop and cart. Standard and XL quantities are priced separately. See each product page for its current prices and accessory quantity discounts. Quotes are available for dealer, fleet or special-order requests.'
       },
       {
         question: 'Where do you ship?',
@@ -245,7 +245,7 @@ function FAQPage() {
     <div className="pt-24 md:pt-32">
       <SEOHead
         title="Driveshaft Cable FAQ — Questions Answered"
-        description="Frequently asked questions about Driveshaft Cable safety cables (driveshaftcable). Learn about WLL ratings, installation, pricing, and shipping."
+        description="Frequently asked questions about Driveshaft Cable safety cables (driveshaftcable). Learn about breaking strength, installation, pricing, and shipping."
         keywords="driveshaft cable FAQ, driveshaftcable questions, towing cable specifications"
         canonical="/faq"
         structuredData={faqStructuredData}

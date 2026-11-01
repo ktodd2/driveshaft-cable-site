@@ -299,14 +299,14 @@ test('page links: positioning links exist without the catalog and the current le
   assert.ok(!html.includes('data-testid="cable-comparison"'), 'no half comparison when catalog sibling is missing')
 })
 
-test('non-cable pages keep their original rendering with none of the cable additions', () => {
+test('non-cable pages render their own minimum quantity without cable additions', () => {
   const s = harness({ product: cutter, products: [standard, xl, cutter] })
   s.useCartStore.getState().hydrateStorefrontProducts([cutter]) // what the app's catalog load does
   const html = render(s, React.createElement(s.Page))
   const t = text(html)
   assert.doesNotMatch(html, /data-testid="cable-|data-testid="length-link|compare-lengths|data-testid="compare-/)
   assert.match(t, /Returning customers save an extra 10% — applied automatically at checkout!/)
-  assert.match(t, /Total: \$250\.00/)
+  assert.match(t, /Total: \$25\.00/)
   assert.doesNotMatch(t, /Merchandise total|heavy-duty towing|Standard VS XL|Shipping: \$/i)
   // A different slug that merely resembles a cable slug is also excluded.
   const lookalike = { ...cutter, id: 'x', slug: 'driveshaft-cable-xl-extra' }

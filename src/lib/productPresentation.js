@@ -26,14 +26,31 @@ export function volumePricingRows(pricing) {
 
 export function productMetadata(product) {
   const specs = Object.entries(product.specs || {})
-  const wll = specs.find(([key]) => /^(working load limit|wll)$/i.test(key))?.[1]
-  const facts = specs.filter(([key]) => /^(working load limit|wll|length|total length|cable diameter)$/i.test(key))
+  const breakingStrength = specs.find(([key]) => /^breaking strength$/i.test(key))?.[1]
+  const facts = specs.filter(([key]) => /^(breaking strength|length|total length|cable diameter)$/i.test(key))
     .map(([key, value]) => `${key}: ${value}`)
   const hasTiers = Array.isArray(product.tiers) && product.tiers.length > 0
-  const price = (product.base_price_cents / 100).toFixed(2)
   return {
-    title: `${product.name}${wll ? ` — ${wll} WLL` : ''}`,
-    description: [product.name + '.', product.short_description, ...facts.map(fact => fact + '.'), `Starting at $${price}/unit${hasTiers ? ' with volume discounts' : ''}.`].filter(Boolean).join(' '),
-    keywords: [product.name, product.sku, wll ? `${wll} WLL` : null].filter(Boolean).join(', '),
+    title: `${product.name}${breakingStrength ? ` — ${breakingStrength} breaking strength` : ''}`,
+    description: [product.name + '.', product.short_description, ...facts.map(fact => fact + '.'), hasTiers ? 'View current volume discounts and order online.' : 'View current pricing and order online.'].filter(Boolean).join(' '),
+    keywords: [product.name, product.sku, breakingStrength ? `${breakingStrength} breaking strength` : null].filter(Boolean).join(', '),
   }
+}
+
+// Bolt ordering, pricing and inventory all count packs. These labels are
+// display-only: the stored quantity and checkout arithmetic remain in packs.
+export function isBoltPack(product) {
+  return product?.slug === 'value-brake-caging-bolt' || product?.id === '3' || product?.productId === '3'
+}
+
+export function priceUnit(product) {
+  return isBoltPack(product) ? '10-pack' : 'unit'
+}
+
+export function quantityUnit(product) {
+  return isBoltPack(product) ? 'packs' : 'units'
+}
+
+export function packQuantity(product, quantity) {
+  return isBoltPack(product) ? `${quantity} ${quantity === 1 ? 'pack' : 'packs'} · ${quantity * 10} bolts` : `${quantity} units`
 }

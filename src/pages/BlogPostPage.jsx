@@ -2,19 +2,22 @@ import React, { useState, useEffect, useMemo } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import ReactMarkdown from 'react-markdown'
 import { supabase } from '../lib/supabase'
+import { usePublicData } from '../ssg/PublicData'
 import SEOHead from '../components/common/SEOHead'
 import AdSlot from '../components/ads/AdSlot'
 import InlineNewsletterCTA from '../components/newsletter/InlineNewsletterCTA'
 
 function BlogPostPage() {
   const { slug } = useParams()
-  const [post, setPost] = useState(null)
-  const [relatedPosts, setRelatedPosts] = useState([])
-  const [loading, setLoading] = useState(true)
+  const initial = usePublicData()
+  const seededPost = initial?.post?.slug === slug ? initial.post : null
+  const [post, setPost] = useState(seededPost)
+  const [relatedPosts, setRelatedPosts] = useState(initial?.relatedPosts || [])
+  const [loading, setLoading] = useState(!seededPost)
 
   useEffect(() => {
     const fetchPost = async () => {
-      setLoading(true)
+      if (!seededPost) setLoading(true)
       const { data, error } = await supabase
         .from('blog_posts')
         .select('*')
@@ -57,6 +60,7 @@ function BlogPostPage() {
 
   const formatDate = (dateStr) => {
     return new Date(dateStr).toLocaleDateString('en-US', {
+      timeZone: 'UTC',
       year: 'numeric',
       month: 'long',
       day: 'numeric',
