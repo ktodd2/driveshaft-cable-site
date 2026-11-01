@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { usePublicData } from '../ssg/PublicData'
 import SEOHead from '../components/common/SEOHead'
+import BuyingGuides from '../components/blog/BuyingGuides'
 import AdSlot from '../components/ads/AdSlot'
 
 const CATEGORIES = [
@@ -113,6 +114,8 @@ function BlogListPage() {
           </p>
         </div>
       </section>
+
+      <BuyingGuides />
 
       {/* Category Filters */}
       <section className="bg-ktodd-charcoal border-b border-gray-700">
