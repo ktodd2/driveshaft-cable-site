@@ -589,7 +589,7 @@
       "element": "CheckoutPage",
       "module": "./pages/CheckoutPage",
       "redirectTo": null,
-      "lazy": false,
+      "lazy": true,
       "category": "commerce",
       "samples": [
         {

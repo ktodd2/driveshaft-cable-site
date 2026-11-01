@@ -1,3 +1,4 @@
+import OptimizedImage from '../components/common/OptimizedImage'
 import PolicyLinks from '../components/common/PolicyLinks'
 import React, { useState, useEffect } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
@@ -148,8 +149,10 @@ function ProductDetailPage() {
               {/* Main Image */}
               <div className={`relative bg-gray-900 rounded-lg overflow-hidden aspect-[4/3] ${outOfStock ? 'grayscale opacity-70' : ''}`}>
                 {productImages.length > 0 ? (
-                  <img
+                  <OptimizedImage
                     id="product-main-image"
+                    loading="eager"
+                    fetchpriority="high"
                     src={productImages[Math.min(selectedImage, productImages.length - 1)]}
                     alt={productImageAlt(product, productImages[Math.min(selectedImage, productImages.length - 1)])}
                     className={`w-full h-full ${productImageClasses(product)}`}
@@ -173,7 +176,7 @@ function ProductDetailPage() {
                         selectedImage === idx ? 'border-yellow-500' : 'border-gray-700 hover:border-gray-500'
                       }`}
                     >
-                      <img
+                      <OptimizedImage
                         src={img}
                         alt=""
                         className={`w-full h-full ${productImageClasses(product)}`}

@@ -1,3 +1,4 @@
+import OptimizedImage from '../common/OptimizedImage'
 import React from 'react'
 import { Link } from 'react-router-dom'
 
@@ -42,12 +43,13 @@ function Hero() {
 
           {/* Product Visual */}
           <figure className="photo-frame">
-            <img
+            <OptimizedImage
               src="/inuse.jpeg"
               alt="Driveshaft Cable installed on vehicle"
               className="w-full aspect-[4/3] lg:aspect-[4/5] object-cover"
-              width="900"
-              height="1200"
+              fetchpriority="high"
+              width="1200"
+              height="900"
             />
             <figcaption className="absolute left-0 right-0 bottom-0 px-5 pb-4 pt-12 bg-gradient-to-t from-black/85 to-transparent text-sm text-gray-200">
               <span className="font-industrial tracking-[0.12em] text-yellow-500 mr-2">CLASS 7-8 TRUCKS</span>

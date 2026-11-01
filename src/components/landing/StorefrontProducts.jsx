@@ -1,3 +1,4 @@
+import OptimizedImage from '../common/OptimizedImage'
 import React, { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import {
@@ -44,7 +45,7 @@ function topSpecChips(specs) {
   return chips
 }
 
-function ProductCard({ product }) {
+function ProductCard({ product, priority }) {
   const addItem = useCartStore((state) => state.addItem)
   const productMin = product.min_order_quantity ?? MIN_ORDER_QUANTITY
   const productStep = product.order_quantity_step ?? ORDER_QUANTITY_STEP
@@ -107,11 +108,12 @@ function ProductCard({ product }) {
       {/* Product Image */}
       <Link to={`/products/${product.slug}`} className="block">
         <div className="aspect-[4/3] bg-black relative overflow-hidden">
-          <img
+          <OptimizedImage
             src={thumbnail}
             alt={productImageAlt(product, thumbnail)}
             className={`w-full h-full ${productImageClasses(product)} outline outline-1 -outline-offset-1 outline-white/10 ${outOfStock ? 'grayscale' : ''}`}
-            loading="lazy"
+            loading={priority ? 'eager' : 'lazy'}
+            fetchpriority={priority ? 'high' : 'auto'}
           />
 
         </div>
@@ -341,8 +343,8 @@ function StorefrontProducts({ compactIntro = false }) {
             </div>
           ) : (
             <div className={`grid md:grid-cols-2 gap-6 ${products.length >= 3 ? 'lg:grid-cols-3' : 'max-w-5xl'}`}>
-              {products.map((product) => (
-                <ProductCard key={product.id} product={product} />
+              {products.map((product, index) => (
+                <ProductCard key={product.id} product={product} priority={index === 0 && compactIntro} />
               ))}
             </div>
           )}

@@ -26,7 +26,7 @@ test('all storefront gallery/card images use the shared policy without independe
     ['pages/ProductDetailPage.jsx', 2],
   ]) {
     const source = readFileSync(new URL('../../src/' + path, import.meta.url), 'utf8')
-    const images = source.match(/<img\b[\s\S]*?\/>/g) || []
+    const images = source.match(/<(?:img|OptimizedImage)\b[\s\S]*?\/>/g) || []
     assert.equal(images.length, count, path)
     for (const image of images) {
       assert.match(image, /productImageClasses\(product/, path)

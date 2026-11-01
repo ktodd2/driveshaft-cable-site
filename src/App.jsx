@@ -15,7 +15,7 @@ import NotFoundPage from './pages/NotFoundPage'
 import ProductListPage from './pages/ProductListPage'
 import ProductDetailPage from './pages/ProductDetailPage'
 import CartPage from './pages/CartPage'
-import CheckoutPage from './pages/CheckoutPage'
+const CheckoutPage = React.lazy(() => import('./pages/CheckoutPage'))
 import OrderSuccessPage from './pages/OrderSuccessPage'
 import QuotePage from './pages/QuotePage'
 import OrderTrackingPage from './pages/OrderTrackingPage'
@@ -69,7 +69,7 @@ function App({ router: Router = BrowserRouter, routerProps = {}, helmetContext, 
           <Route path="products/driveshaft-cable-plus" element={<Navigate to="/products/driveshaft-cable" replace />} />
           <Route path="products/:slug" element={<ProductDetailPage />} />
           <Route path="cart" element={<CartPage />} />
-          <Route path="checkout" element={<CheckoutPage />} />
+          <Route path="checkout" element={<Suspense fallback={<div role="status" className="py-16 text-center">Loading secure checkout…</div>}><CheckoutPage /></Suspense>} />
           <Route path="checkout/success" element={<OrderSuccessPage />} />
           <Route path="quote" element={<QuotePage />} />
           <Route path="order-tracking" element={<OrderTrackingPage />} />
