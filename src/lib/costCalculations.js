@@ -1,4 +1,6 @@
 /** Read-only reporting estimates in cents. No historical costs are persisted. */
+// Owner-selected reporting fallback; never written to an order.
+export const DEFAULT_SHIPPING_ESTIMATE_CENTS = 1500
 export const validCents = n => Number.isSafeInteger(n) && n >= 0
 export function calcWeightedAvgCost(shipments = []) {
   const valid = shipments.filter(s => validCents(s.total_cost_cents) && Number.isInteger(s.quantity) && s.quantity > 0)
@@ -15,7 +17,7 @@ export function calcWeightedAvgCostByProduct(shipments = []) {
   }
   return Object.fromEntries(Object.entries(groups).filter(([id]) => !invalid.has(id)).map(([id, rows]) => [id, calcWeightedAvgCost(rows)]))
 }
-export function calcOrderProfit(order, costMap = {}, fallback = 0) {
+export function calcOrderProfit(order, costMap = {}, fallback = DEFAULT_SHIPPING_ESTIMATE_CENTS) {
   if (order._report) return order._report
   const items = Array.isArray(order.items) ? order.items : []
   const units = items.reduce((s, i) => s + (Number.isInteger(i.quantity) && i.quantity > 0 ? i.quantity : 0), 0)
@@ -31,13 +33,15 @@ export function calcOrderProfit(order, costMap = {}, fallback = 0) {
   return { units, revenue, productCost, shippingCost, stripeFee, profit, shippingKnown, shippingEstimated, productKnown, uncertaintyFlags }
 }
 const sumKnown = (rows, key) => rows.reduce((sum, r) => sum + (r[key] ?? 0), 0)
-export function calcProfitStats(orders, costs, fallback = 0) {
+export function calcProfitStats(orders, costs, fallback = DEFAULT_SHIPPING_ESTIMATE_CENTS) {
   const rows = orders.map(o => calcOrderProfit(o, costs, fallback))
   const totalRevenue = rows.every(r => r.revenue !== null) ? sumKnown(rows, 'revenue') : null
   const netProfit = rows.every(r => r.profit !== null) ? sumKnown(rows, 'profit') : null
   return { totalRevenue, totalProductCost: rows.every(r => r.productCost !== null) ? sumKnown(rows, 'productCost') : null, totalShippingCost: rows.every(r => r.shippingCost !== null) ? sumKnown(rows, 'shippingCost') : null, totalStripeFees: rows.every(r => r.stripeFee !== null) ? sumKnown(rows, 'stripeFee') : null, netProfit,
     margin: netProfit === null || totalRevenue === null ? null : totalRevenue > 0 ? netProfit / totalRevenue * 100 : 0,
-    ordersWithoutShipping: rows.filter(r => !r.shippingKnown).length, ordersWithoutProductCost: rows.filter(r => !r.productKnown).length,
+    ordersWithoutShipping: rows.filter(r => !r.shippingKnown).length,
+    ordersWithShippingEstimates: rows.filter(r => r.shippingEstimated).length,
+    totalShippingEstimateCents: rows.filter(r => r.shippingEstimated).reduce((sum, r) => sum + r.shippingCost, 0), ordersWithoutProductCost: rows.filter(r => !r.productKnown).length,
     incompleteOrders: rows.filter(r => r.profit === null).length, ordersWithOtherUnknowns: rows.filter(r => r.revenue === null || r.stripeFee === null).length, totalUnits: sumKnown(rows, 'units') }
 }
 // Largest-remainder allocation preserves cents, including fixed fees.
@@ -51,7 +55,7 @@ function allocate(value, weights) {
   for(let i=0; i<remainder; i++) result[priority[i].i]++
   return result
 }
-export function scopeOrdersToProduct(order, costs, fallback = 0) {
+export function scopeOrdersToProduct(order, costs, fallback = DEFAULT_SHIPPING_ESTIMATE_CENTS) {
   const items = Array.isArray(order.items) ? order.items : []
   if (!items.length || items.some(i => !Number.isInteger(i.quantity) || i.quantity <= 0 || i.productId == null)) return []
   const ids = [...new Set(items.map(i => String(i.productId)))].sort()
@@ -68,7 +72,7 @@ export function scopeOrdersToProduct(order, costs, fallback = 0) {
     return {...order,items:groups[index],total_cents:totals[index],_scopedToProduct:id,_report:r}
   })
 }
-export function calcPerProductStats(orders,costs,fallback=0) {
+export function calcPerProductStats(orders,costs,fallback=DEFAULT_SHIPPING_ESTIMATE_CENTS) {
   const groups={}
   for(const order of orders) for(const row of scopeOrdersToProduct(order,costs,fallback)) (groups[row._scopedToProduct] ||= []).push(row)
   return Object.fromEntries(Object.entries(groups).map(([id,rows])=>{const s=calcProfitStats(rows,costs,fallback);return [id,{revenue:s.totalRevenue,units:s.totalUnits,profit:s.netProfit,margin:s.margin}]}))

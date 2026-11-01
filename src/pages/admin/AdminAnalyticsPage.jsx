@@ -1,3 +1,4 @@
+import { DEFAULT_SHIPPING_ESTIMATE_CENTS } from '../../lib/costCalculations'
 import ReportQuality from '../../components/admin/ReportQuality'
 import { filterReportOrders, bookkeepingRows, BOOKKEEPING_COLUMNS, safeCsvCell, REPORT_LIMITATIONS } from '../../lib/profitReporting'
 import { readAttentionRows } from '../../lib/needsAttention'
@@ -73,9 +74,7 @@ function AdminAnalyticsPage() {
   const { shipments, avgCostPerUnit, avgCostPerUnitByProduct, loading: shipmentsLoading, error: shipmentsError } = useProductShipments()
   const { products, productsMap } = useProducts()
   const [productFilter, setProductFilter] = useState('all')
-  const [fallbackShipping, setFallbackShipping] = useState(
-    () => parseInt(localStorage.getItem('ktodd-admin-shipping-fallback') || '0')
-  )
+  const fallbackShipping = DEFAULT_SHIPPING_ESTIMATE_CENTS
   const [exporting, setExporting] = useState(false)
   const reportRef = useRef(null)
 
@@ -105,11 +104,7 @@ function AdminAnalyticsPage() {
     navigate('/admin/login')
   }
 
-  const handleFallbackShippingChange = (val) => {
-    const n = Math.max(0, parseInt(val) || 0)
-    setFallbackShipping(n)
-    localStorage.setItem('ktodd-admin-shipping-fallback', String(n))
-  }
+
 
   // Date-range filter only — independent of product filter so the per-product
   // KPI strip can use the date-scoped orders without losing other products.
@@ -538,15 +533,9 @@ function AdminAnalyticsPage() {
                   </Link>
                 </div>
                 <div>
-                  <label className="text-gray-400 text-sm block mb-1">Optional shipping estimate / order (cents; 0 = unknown)</label>
-                  <input
-                    type="number"
-                    value={fallbackShipping}
-                    onChange={e => handleFallbackShippingChange(e.target.value)}
-                    className="bg-gray-900 border border-gray-700 text-white px-3 py-2 text-sm rounded w-40"
-                    placeholder="e.g. 800"
-                  />
-                  <span className="text-gray-500 text-xs ml-2">{formatPrice(fallbackShipping)} per order</span>
+                  <div className="text-gray-400 text-sm mb-1">Missing shipping: reporting fallback</div>
+                  <div className="text-white text-lg font-bold">{formatPrice(fallbackShipping)} per order</div>
+                  <p className="text-gray-400 text-xs mt-2">Owner-specified estimate only. Existing recorded costs, including $0, are preserved. Actual order costs are not changed.</p>
                 </div>
               </div>
             </div>

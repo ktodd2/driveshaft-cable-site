@@ -7,7 +7,7 @@ const browser=await chromium.launch(process.env.REPORT_BROWSER?{executablePath:p
 const mock=`
 const mode=new URLSearchParams(location.search).get('mode');
 const o={id:'fixture-order',created_at:new Date().toISOString(),name:'Example Customer',email:'example@example.test',payment_status:'paid',status:'confirmed',payment_method:'stripe',total_cents:1250,tax_cents:50,subtotal_cents:1200,discount_cents:100,shipping_cents:100,actual_shipping_cost_cents:mode==='complete'?0:null,items:[{productId:'1',quantity:2,price:400},{productId:'2',quantity:1,price:400}]};
-const rows={orders:mode==='empty'?[]:[o,{...o,id:'excluded',status:'cancelled'}],products:[{id:'1',name:'Cable',is_active:true},{id:'2',name:'Cable Plus',is_active:true}],product_shipments:[{id:1,product_id:'1',quantity:2,total_cost_cents:200,received_at:o.created_at},{id:2,product_id:'2',quantity:1,total_cost_cents:300,received_at:o.created_at}],product_inventory:[],quote_requests:[],testimonials:[]};
+const rows={orders:mode==='empty'?[]:[o,{...o,id:'excluded',status:'cancelled'}],products:[{id:'1',name:'Cable',is_active:true},{id:'2',name:'Cable Plus',is_active:true}],product_shipments:[{id:1,product_id:'1',quantity:2,total_cost_cents:mode==='missing-product'?null:200,received_at:o.created_at},{id:2,product_id:'2',quantity:1,total_cost_cents:300,received_at:o.created_at}],product_inventory:[],quote_requests:[],testimonials:[]};
 class Query{constructor(table){this.table=table;this.start=0;this.end=999}select(){return this}order(){return this}eq(){return this}neq(){return this}limit(){return this}range(a,b){this.start=a;this.end=b;return this}then(resolve){return Promise.resolve(mode==='error'&&this.table==='orders'||mode==='cost-error'&&this.table==='product_shipments'?{error:Error('fixture unavailable')}:{data:(rows[this.table]||[]).slice(this.start,this.end+1),count:0}).then(resolve)}}
 export const supabase={from:t=>new Query(t),auth:{getSession:async()=>({data:{session:{user:{email:'admin@example.test'}}}}),signOut:async()=>{}},functions:{invoke:async()=>({data:{}})}};`
 try{
@@ -21,21 +21,22 @@ try{
  return route.continue()})
  for(const view of ['dashboard','analytics']){
   await page.goto('http://127.0.0.1:3012/__report_test?view='+view);await page.getByRole('note').waitFor()
-  await page.getByText('1 included orders lack recorded shipping costs',{exact:false}).waitFor()
-  assert.ok(await page.getByText('Incomplete',{exact:true}).count()>0)
+  await page.getByText('1 included orders use the owner-specified $15 shipping fallback',{exact:false}).waitFor()
+  await page.getByText('-$8.66',{exact:true}).first().waitFor()
+  assert.equal(await page.getByText('Incomplete',{exact:true}).count(),0)
   assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false,view+' overflow')
   await page.screenshot({path:'/tmp/profit-'+view+'-'+width+'.png',fullPage:true})
   if(view==='analytics'){
-   const downloadPromise=page.waitForEvent('download');await page.getByRole('button',{name:'Bookkeeping CSV (whole orders)'}).click();const download=await downloadPromise;const csv=await fs.readFile(await download.path(),'utf8');const rows=Papa.parse(csv,{header:true}).data;assert.equal(rows.length,1);assert.equal(rows[0].order_id,'fixture-order');assert.equal(rows[0].actual_shipping_cost_cents,'');assert.equal(rows[0].contribution_estimate_cents,'');assert.equal(rows[0].refund_status,'unreconciled');await fs.writeFile('/tmp/profit-bookkeeping-fixture.csv',csv)
-   await page.getByRole('spinbutton').fill('200');await page.getByText('$4.34',{exact:true}).first().waitFor()
-   await page.getByRole('combobox',{name:'Product filter'}).selectOption('1');await page.getByRole('note').waitFor()
+   const downloadPromise=page.waitForEvent('download');await page.getByRole('button',{name:'Bookkeeping CSV (whole orders)'}).click();const download=await downloadPromise;const csv=await fs.readFile(await download.path(),'utf8');const rows=Papa.parse(csv,{header:true}).data;assert.equal(rows.length,1);assert.equal(rows[0].order_id,'fixture-order');assert.equal(rows[0].actual_shipping_cost_cents,'');assert.equal(rows[0].contribution_estimate_cents,'-866');assert.equal(rows[0].shipping_estimate_cents,'1500');assert.equal(rows[0].shipping_cost_status,'estimated');assert.equal(rows[0].shipping_estimate_source,'owner_specified_reporting_fallback_not_carrier_verified');assert.equal(rows[0].refund_status,'unreconciled');await fs.writeFile('/tmp/profit-bookkeeping-fixture.csv',csv)
+   assert.equal(await page.getByRole('spinbutton').count(),0)
+   await page.getByRole('combobox',{name:'Product filter'}).selectOption('1');await page.getByRole('note').waitFor();await page.getByText('-$4.44',{exact:true}).first().waitFor()
    if(width===1440){const pdfPromise=page.waitForEvent('download');await page.getByRole('button',{name:'Export PDF',exact:true}).click();const pdf=await pdfPromise;assert.ok((await fs.stat(await pdf.path())).size>1000)}
   }
-  await page.evaluate(()=>localStorage.clear())
+  await page.evaluate(()=>localStorage.setItem('ktodd-admin-shipping-fallback','0'))
   await page.goto('http://127.0.0.1:3012/__report_test?view='+view+'&mode=complete');await page.getByRole('note').waitFor();await page.getByText('$6.34',{exact:true}).first().waitFor()
-  for(const mode of ['empty','error','cost-error']){
+  for(const mode of ['empty','missing-product','error','cost-error']){
    await page.goto('http://127.0.0.1:3012/__report_test?view='+view+'&mode='+mode)
-   if(mode==='empty')await page.getByRole('note').waitFor();else{await page.getByRole('alert').waitFor();assert.equal(await page.getByRole('note').count(),0)}
+   if(mode==='empty')await page.getByRole('note').waitFor();else if(mode==='missing-product'){await page.getByRole('note').waitFor();assert.ok(await page.getByText('Incomplete',{exact:true}).count()>0)}else{await page.getByRole('alert').waitFor();assert.equal(await page.getByRole('note').count(),0)}
   }
  }
  assert.deepEqual(errors,[]);console.log('PASS reporting '+width+'px: both pages, matching totals, unknown/zero shipping, estimate, product filter, CSV, empty/error, no overflow');await context.close()
