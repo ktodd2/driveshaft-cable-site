@@ -31,10 +31,21 @@ export async function planAutomaticShipping(rows, orders, receipts = [], now = D
   })
   for (const row of unique) {
     const copies = identities.get(row.identity)
-    result.skipped += copies.length - 1
-    if (copies.some(r => r.cost !== row.cost || /refund|void|cancel/i.test(`${r.raw.Type || ''} ${r.raw.Status || ''} ${r.raw['Label Status'] || ''}`))) {
-      addException(row, 'Conflicting or refunded copies of this label; no cost saved.'); continue
+    // A shared label identity does not prove that every copy names the same
+    // recipient. Check all copies before discarding any or consulting receipts.
+    // Missing versus supplied identifiers also require review: never let row
+    // order decide whether the more informative copy gets checked.
+    const recipientConflict = copies.some(r => exact(r.name) !== exact(row.name) || exact(r.email) !== exact(row.email) || tracking(r.tracking) !== tracking(row.tracking))
+    const sourceConflict = copies.some(r => r.cost !== row.cost || /refund|void|cancel/i.test(`${r.raw.Type || ''} ${r.raw.Status || ''} ${r.raw['Label Status'] || ''}`))
+    if (recipientConflict || sourceConflict) {
+      // Retain every conflicting row so possible orders for ALL recipients are
+      // excluded from other partial shipment totals later in this plan.
+      for (const copy of copies) addException(copy, recipientConflict
+        ? 'Copies of this label disagree on recipient details; no cost saved.'
+        : 'Conflicting or refunded copies of this label; no cost saved.')
+      continue
     }
+    result.skipped += copies.length - 1
     if (isLedger(row) && !['label', 'refund'].includes(exact(row.raw.Type)) && !/refund|void|cancel/i.test(row.raw.Type)) { result.skipped++; continue }
     if (row.blocked) { addException(row, row.blocked); continue }
     row.sourceKey = await shippingSourceKey(row.identity)

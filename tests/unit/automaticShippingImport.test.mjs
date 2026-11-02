@@ -74,3 +74,49 @@ test('context loads all pages and fails closed if history or order read fails', 
   const failed = { from() { return { select(){return this},order(){return this},range(){return Promise.resolve({error:{message:'offline'}})} } } }
   await assert.rejects(loadShippingImportContext(failed), /Unable to load/)
 })
+
+test('conflicting duplicate recipients never save in either order or any three-row permutation', async () => {
+  const rows = [shipment(), shipment({ Name: 'Other Customer' }), shipment({ Email: 'other@example.invalid' })]
+  const permutations = items => items.length <= 1 ? [items] : items.flatMap((item, i) => permutations(items.filter((_, j) => j !== i)).map(rest => [item, ...rest]))
+  for (const raw of [...permutations(rows.slice(0, 2)), ...permutations(rows)]) {
+    const p = await plan(raw)
+    assert.equal(p.groups.length, 0)
+    assert.equal(p.skipped, 0)
+    assert.equal(p.exceptions.length, raw.length)
+    assert.ok(p.exceptions.every(e => /disagree on recipient details/.test(e.reason)))
+    assert.deepEqual(await applyAutomaticShipping({ rpc: () => assert.fail('Conflicting copies must never call the save RPC') }, p, 'duplicate.csv'), [])
+  }
+})
+test('sparse copies and shared transaction IDs also require recipient agreement', async () => {
+  for (const pair of [
+    [shipment(), shipment({ Name: '', Email: '' })],
+    [shipment({ 'Tracking Number': '', 'Transaction ID': 'LABEL42' }), shipment({ 'Tracking Number': '', 'Transaction ID': 'LABEL42', Name: 'Other Customer', Email: 'other@example.invalid' })],
+  ]) for (const raw of [pair, [...pair].reverse()]) {
+    const p = await plan(raw)
+    assert.equal(p.groups.length, 0); assert.equal(p.exceptions.length, 2)
+  }
+})
+test('agreement uses the same normalization as matching and preserves benign duplicate handling', async () => {
+  for (const raw of [
+    [shipment(), shipment()],
+    [shipment(), shipment({ Name: ' SAMPLE CUSTOMER ', Email: ' SAMPLE@EXAMPLE.INVALID ', 'Tracking Number': ' keep123 ' })],
+  ]) for (const ordered of [raw, [...raw].reverse()]) {
+    const p = await plan(ordered)
+    assert.equal(p.groups.length, 1); assert.equal(p.groups[0].total, 525); assert.equal(p.skipped, 1); assert.equal(p.exceptions.length, 0)
+  }
+})
+test('every conflicting recipient blocks related partial shipments, even for previously recorded source keys', async () => {
+  const other = { ...order, id: 'two', name: 'Other Customer', email: 'other@example.invalid', tracking_number: 'OTHER123' }
+  const a = shipment(), b = shipment({ Name: other.name, Email: other.email })
+  const extra = shipment({ Name: other.name, Email: other.email, 'Tracking Number': other.tracking_number })
+  for (const raw of [[a,b,extra],[b,a,extra],[extra,a,b]]) {
+    const p = await plan(raw, [order, other]); assert.equal(p.groups.length, 0)
+    assert.ok(p.exceptions.some(e => e.potentialOrderIds.includes(other.id)))
+  }
+  const key = await shippingSourceKey(reviewShippingRows([a], [order])[0].identity)
+  const receipt = { order_id: order.id, source_keys: [key], after_cost: 525, labels: [{ source_key: key, cost_cents: 525 }] }
+  for (const raw of [[a,b],[b,a]]) {
+    const p = await plan(raw, [{ ...order, actual_shipping_cost_cents: 525 }], [receipt])
+    assert.equal(p.alreadyImported, 0); assert.equal(p.exceptions.length, 2); assert.equal(p.groups.length, 0)
+  }
+})
