@@ -3,15 +3,6 @@ import { Link, useSearchParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import SEOHead from '../components/common/SEOHead'
 
-function defaultDisplayName(fullName) {
-  if (!fullName) return ''
-  const parts = fullName.trim().split(/\s+/)
-  if (parts.length === 1) return parts[0]
-  const first = parts[0]
-  const lastInitial = parts[parts.length - 1].charAt(0).toUpperCase()
-  return `${first} ${lastInitial}.`
-}
-
 function TestimonialPage() {
   const [searchParams] = useSearchParams()
   const token = searchParams.get('token')
@@ -32,11 +23,7 @@ function TestimonialPage() {
     }
     let cancelled = false
     ;(async () => {
-      const { data, error } = await supabase
-        .from('testimonials')
-        .select('customer_name, customer_email, status, expires_at')
-        .eq('token', token)
-        .maybeSingle()
+      const { data, error } = await supabase.rpc('get_testimonial_request', { p_token: token })
 
       if (cancelled) return
 
@@ -50,7 +37,7 @@ function TestimonialPage() {
         setRow(data)
       } else {
         setRow(data)
-        setDisplayName(defaultDisplayName(data.customer_name))
+        setDisplayName(data.display_name || '')
         setState('form')
       }
       setLoading(false)
@@ -68,19 +55,13 @@ function TestimonialPage() {
     setState('submitting')
     setErrorMessage('')
 
-    const { error } = await supabase
-      .from('testimonials')
-      .update({
-        testimonial_text: text.trim(),
-        display_name: displayName.trim() || defaultDisplayName(row.customer_name),
-        consented_to_promo: true,
-        submitted_at: new Date().toISOString(),
-        status: 'submitted',
-      })
-      .eq('token', token)
-      .eq('status', 'pending')
+    const { data: submitted, error } = await supabase.rpc('submit_testimonial_request', {
+      p_token: token, p_text: text.trim(),
+      p_display_name: displayName.trim() || row.display_name,
+      p_consent: consent,
+    })
 
-    if (error) {
+    if (error || submitted !== true) {
       console.error('Testimonial submit failed:', error)
       setState('error')
       setErrorMessage('Something went wrong. Please try again, or reply to the email directly.')
@@ -127,7 +108,7 @@ function TestimonialPage() {
                 </div>
                 <h3 className="text-2xl font-industrial text-white mb-3">THANKS!</h3>
                 <p className="text-gray-400 mb-6">
-                  Your testimonial is in. We may feature it on our site, social media, or marketing emails — credited as <span className="text-yellow-500">{displayName.trim() || defaultDisplayName(row?.customer_name)}</span>.
+                  Your testimonial is in. We may feature it on our site, social media, or marketing emails — credited as <span className="text-yellow-500">{displayName.trim() || row?.display_name}</span>.
                 </p>
                 <Link to="/" className="text-yellow-500 hover:text-yellow-400 underline">Back to Driveshaft Cable</Link>
               </div>
@@ -170,7 +151,7 @@ function TestimonialPage() {
                 <h2 className="text-2xl font-industrial text-yellow-500 mb-6">SHARE YOUR EXPERIENCE</h2>
 
                 <p className="text-gray-400 text-sm mb-6">
-                  Submitting as <span className="text-white">{row.customer_email}</span>
+                  Your public credit: <span className="text-white">{displayName || row.display_name}</span>
                 </p>
 
                 <form onSubmit={handleSubmit} className="space-y-4">
@@ -178,6 +159,7 @@ function TestimonialPage() {
                     <label htmlFor="text" className="block text-gray-400 text-sm mb-1">Your experience *</label>
                     <textarea
                       id="text"
+                      maxLength={5000}
                       value={text}
                       onChange={(e) => setText(e.target.value)}
                       required
@@ -194,9 +176,10 @@ function TestimonialPage() {
                     <input
                       type="text"
                       id="displayName"
+                      maxLength={100}
                       value={displayName}
                       onChange={(e) => setDisplayName(e.target.value)}
-                      placeholder={defaultDisplayName(row.customer_name) || 'Mike S.'}
+                      placeholder={row.display_name || 'Mike S.'}
                       className="w-full bg-gray-800 border border-gray-600 text-white px-4 py-3 focus:border-yellow-500 focus:outline-none"
                     />
                     <p className="text-gray-500 text-xs mt-1">

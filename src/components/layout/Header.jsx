@@ -1,3 +1,4 @@
+import OptimizedImage from '../common/OptimizedImage'
 import React, { useEffect, useRef, useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { useCartStore, selectTotalItems } from '../../stores/cartStore'
@@ -146,7 +147,7 @@ function Header() {
           <div className="flex justify-between items-center gap-6 h-24 md:h-32">
             {/* Logo */}
             <Link to="/" className="flex items-center flex-none rounded-lg" aria-label="Driveshaft Cable home">
-              <img
+              <OptimizedImage
                 src="/logos/main-logo.png"
                 alt="Driveshaft Cable"
                 className="h-16 sm:h-20 md:h-28 w-auto"

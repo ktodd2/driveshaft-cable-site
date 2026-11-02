@@ -1,68 +1,18 @@
+import { useCommerceView } from '../hooks/useCommerceView'
+import OptimizedImage from '../components/common/OptimizedImage'
+import PolicyLinks from '../components/common/PolicyLinks'
 import React, { useState, useEffect } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
 import { useCartStore, formatPrice, getPriceForQuantity, getTierPriceForQuantity, getActiveSaleForProduct, MIN_ORDER_QUANTITY, ORDER_QUANTITY_STEP, SHIPPING_FEE, FREE_SHIPPING_THRESHOLD } from '../stores/cartStore'
 import SaleCountdown from '../components/common/SaleCountdown'
 import { useInventory } from '../hooks/useInventory'
 import { useStorefrontProduct } from '../hooks/useStorefrontProduct'
-import InventoryProgressBar from '../components/common/InventoryProgressBar'
+import StockAvailability from '../components/common/StockAvailability'
 import SEOHead from '../components/common/SEOHead'
-import { volumePricingRows, productMetadata, productImageClasses, isBoltPack, priceUnit, quantityUnit, packQuantity } from '../lib/productPresentation'
+import { volumePricingRows, productMetadata, productImageClasses, productImageAlt, productShareImage, isBoltPack, priceUnit, quantityUnit, packQuantity } from '../lib/productPresentation'
+import { productStructuredData } from '../lib/merchantSchema'
 import { isCableSlug, cableSelectionPricing } from '../lib/cablePurchase'
 import { CablePositioning, CableOrderSummary, CableReturningNote, CableComparisonSection } from '../components/product/CablePurchase'
-
-const SITE_ORIGIN = 'https://driveshaftcable.com'
-
-// Image URLs in the DB might be relative ('/IMG_5489.jpeg') or absolute
-// (Supabase Storage public URLs). For Schema.org we need absolute URLs.
-function toAbsolute(url) {
-  if (!url) return url
-  if (url.startsWith('http://') || url.startsWith('https://')) return url
-  return `${SITE_ORIGIN}${url.startsWith('/') ? '' : '/'}${url}`
-}
-
-function formatDecimal(cents) {
-  return ((cents || 0) / 100).toFixed(2)
-}
-
-// Build the Schema.org JSON-LD blob for the detail page from the DB row,
-// so any new product the admin creates automatically gets sound SEO markup.
-function buildStructuredData(product) {
-  if (!product) return []
-  const tiers = Array.isArray(product.tiers) ? product.tiers : []
-  const lowest = tiers.length
-    ? Math.min(product.base_price_cents, ...tiers.map(t => t.price))
-    : product.base_price_cents
-  const offerCount = 1 + tiers.length
-  const productJson = {
-    '@context': 'https://schema.org',
-    '@type': 'Product',
-    name: product.name,
-    description: product.short_description || (product.description || '').slice(0, 220),
-    brand: { '@type': 'Brand', name: 'Driveshaft Cable' },
-    sku: product.sku,
-    mpn: product.sku,
-    image: (product.images || []).map(toAbsolute),
-    offers: {
-      '@type': 'AggregateOffer',
-      lowPrice: formatDecimal(lowest),
-      highPrice: formatDecimal(product.base_price_cents),
-      priceCurrency: 'USD',
-      offerCount: String(offerCount),
-      availability: 'https://schema.org/InStock',
-      url: `${SITE_ORIGIN}/products/${product.slug}`,
-    },
-  }
-  const breadcrumb = {
-    '@context': 'https://schema.org',
-    '@type': 'BreadcrumbList',
-    itemListElement: [
-      { '@type': 'ListItem', position: 1, name: 'Home', item: `${SITE_ORIGIN}/` },
-      { '@type': 'ListItem', position: 2, name: 'Products', item: `${SITE_ORIGIN}/products` },
-      { '@type': 'ListItem', position: 3, name: product.name, item: `${SITE_ORIGIN}/products/${product.slug}` },
-    ],
-  }
-  return [productJson, breadcrumb]
-}
 
 function ProductDetailPage() {
   const { slug } = useParams()
@@ -75,7 +25,7 @@ function ProductDetailPage() {
   const addItem = useCartStore((state) => state.addItem)
 
   const productImages = (product?.images && product.images.length > 0) ? product.images : []
-  const { stock, totalStock, loading: stockLoading } = useInventory(product?.id)
+  const { stock, loading: stockLoading } = useInventory(product?.id)
 
   const productMin = product?.min_order_quantity ?? MIN_ORDER_QUANTITY
   const productStep = product?.order_quantity_step ?? ORDER_QUANTITY_STEP
@@ -101,6 +51,10 @@ function ProductDetailPage() {
   useCartStore(s => s.salesLoadedAt)
   useCartStore(s => s.productsLoadedAt)
   const [, forceTick] = useState(0)
+
+  useCommerceView('view_item', product?.id, product ? [{ productId: product.id,
+    quantity: effectiveMin, unitCents: getPriceForQuantity(product.id, effectiveMin, product) }] : [],
+    !loading && !stockLoading && !!product)
 
   if (loading) {
     return (
@@ -130,16 +84,16 @@ function ProductDetailPage() {
     tiers: product.tiers,
   })
   const metadata = productMetadata(product)
-  // Standard and XL cable pages only: price from the fetched row (never the
-  // legacy product-1/2 fallback) and show the clarity blocks. All other
-  // products keep the original id-based lookup and rendering.
+  const shareImage = productShareImage(product)
+  // The fetched catalog row supplies the same prices to the UI and schema.
   const isCable      = isCableSlug(product.slug)
-  const pricingRow   = isCable ? product : null
+  const pricingRow   = product
   const currentPrice = getPriceForQuantity(product.id, quantity, pricingRow)
   const tierPrice    = getTierPriceForQuantity(product.id, quantity, pricingRow)
   const appliedSale  = getActiveSaleForProduct(product.id)
   const outOfStock   = !stockLoading && stock === 0
-  const productStructuredData = buildStructuredData(product)
+  const minimumUnitCents = getPriceForQuantity(product.id, effectiveMin, product)
+  const structuredData = productStructuredData(product, { stock, stockLoading, minimumQuantity: effectiveMin, minimumUnitCents, sale: appliedSale })
   const specsEntries = Object.entries(product.specs || {})
   const features     = Array.isArray(product.features) ? product.features : []
   const applications = Array.isArray(product.applications) ? product.applications : []
@@ -173,8 +127,10 @@ function ProductDetailPage() {
         title={metadata.title}
         description={metadata.description}
         keywords={metadata.keywords}
+        ogImage={shareImage}
+        ogImageAlt={shareImage ? productImageAlt(product, shareImage) : undefined}
         canonical={`/products/${slug}`}
-        structuredData={productStructuredData}
+        structuredData={structuredData}
       />
       {/* Breadcrumb */}
       <div className="bg-ktodd-dark border-b border-gray-800">
@@ -198,36 +154,36 @@ function ProductDetailPage() {
               {/* Main Image */}
               <div className={`relative bg-gray-900 rounded-lg overflow-hidden aspect-[4/3] ${outOfStock ? 'grayscale opacity-70' : ''}`}>
                 {productImages.length > 0 ? (
-                  <img
+                  <OptimizedImage
+                    id="product-main-image"
+                    loading="eager"
+                    fetchpriority="high"
                     src={productImages[Math.min(selectedImage, productImages.length - 1)]}
-                    alt={`${product.name} - view ${selectedImage + 1}`}
+                    alt={productImageAlt(product, productImages[Math.min(selectedImage, productImages.length - 1)])}
                     className={`w-full h-full ${productImageClasses(product)}`}
                   />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center text-gray-400">No image</div>
                 )}
-                {outOfStock && (
-                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                    <div className="bg-red-600/95 text-white font-industrial text-4xl sm:text-5xl tracking-widest px-8 py-3 -rotate-12 shadow-2xl border-y-4 border-white/80">
-                      SOLD OUT
-                    </div>
-                  </div>
-                )}
+
               </div>
               {/* Thumbnails */}
               {productImages.length > 1 && (
-                <div className="flex gap-2 overflow-x-auto pb-1">
+                <div role="group" aria-label="Product photos" className="flex gap-2 overflow-x-auto pb-1">
                   {productImages.map((img, idx) => (
                     <button
                       key={idx}
+                      aria-label={`Show ${productImageAlt(product, img)}`}
+                      aria-pressed={selectedImage === idx}
+                      aria-controls="product-main-image"
                       onClick={() => setSelectedImage(idx)}
                       className={`flex-none w-16 h-16 overflow-hidden rounded border-2 transition-colors ${
                         selectedImage === idx ? 'border-yellow-500' : 'border-gray-700 hover:border-gray-500'
                       }`}
                     >
-                      <img
+                      <OptimizedImage
                         src={img}
-                        alt={`${product.name} thumbnail ${idx + 1}`}
+                        alt=""
                         className={`w-full h-full ${productImageClasses(product)}`}
                         loading="lazy"
                       />
@@ -257,17 +213,7 @@ function ProductDetailPage() {
                   <span className={`text-4xl font-industrial ${outOfStock ? 'text-gray-500 line-through' : 'text-yellow-500'}`}>{formatPrice(currentPrice)}</span>
                 )}
                 <span className="text-gray-400 text-sm">per {priceUnit(product)}</span>
-                {stockLoading ? (
-                  <span className="bg-gray-500/20 text-gray-400 px-3 py-1 text-sm">Checking stock...</span>
-                ) : stock === null ? (
-                  <span className="bg-gray-500/20 text-gray-400 px-3 py-1 text-sm">Stock unavailable</span>
-                ) : stock === 0 ? (
-                  <span className="bg-red-500/20 text-red-400 px-3 py-1 text-sm">Out of Stock</span>
-                ) : stock <= 20 ? (
-                  <span className="bg-yellow-500/20 text-yellow-400 px-3 py-1 text-sm">{stock} {quantityUnit(product)} left</span>
-                ) : (
-                  <span className="bg-green-500/20 text-green-400 px-3 py-1 text-sm">{stock} {quantityUnit(product)} in stock</span>
-                )}
+                <StockAvailability stock={stock} loading={stockLoading} unitLabel={quantityUnit(product)} />
               </div>
 
               {appliedSale && (
@@ -282,6 +228,8 @@ function ProductDetailPage() {
                   />
                 </div>
               )}
+
+              <p className="text-gray-400 text-sm mb-4">Minimum order: {effectiveMin} {isBoltPack(product) ? (effectiveMin === 1 ? '10-pack' : '10-packs') : (effectiveMin === 1 ? 'unit' : 'units')} · {formatPrice(minimumUnitCents * effectiveMin)} merchandise total.</p>
 
               {/* Quantity Selector */}
               <div className="mb-6">
@@ -381,8 +329,7 @@ function ProductDetailPage() {
                 )}
               </div>
 
-              {/* Inventory Progress Bar */}
-              <InventoryProgressBar stock={stock} totalStock={totalStock} loading={stockLoading} unitLabel={isBoltPack(product) ? 'packs' : undefined} />
+              <PolicyLinks className="mb-6" />
 
               {/* Volume Pricing Tiers */}
               {pricingRows.length > 0 && (

@@ -1,3 +1,4 @@
+import { reportCommerceEvent } from '../lib/commerceAnalytics'
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import { readPublicSnapshot } from '../ssg/bootstrap'
@@ -186,7 +187,8 @@ export function getPriceForQuantity(productId, qty, product = null) {
 }
 
 // Seed public pricing without a state/persistence write before saved carts restore.
-export function seedStorefrontPricing(products) {
+export function seedStorefrontPricing(products, sales = []) {
+  liveSales = Array.isArray(sales) ? sales : []
   livePricing = { ...PRODUCT_PRICING }
   for (const product of products || []) livePricing[product.id] = normalizeDbProduct(product)
 }
@@ -283,6 +285,7 @@ export const useCartStore = create(
         const items = get().items
         const existingIndex = items.findIndex(item => item.productId === product.id)
         const existingItem = existingIndex >= 0 ? items[existingIndex] : null
+        const previousQuantity = existingItem?.quantity || 0
 
         // If the existing line is reducedMinimum (partial pack), preserve the
         // exception. Otherwise round the incoming quantity to a multiple of
@@ -318,6 +321,11 @@ export const useCartStore = create(
             }]
           })
         }
+
+        const added = get().items.find(item => item.productId === product.id)
+        if (added) reportCommerceEvent('add_to_cart', [{ productId: product.id,
+          quantity: added.quantity - previousQuantity,
+          unitCents: getPriceForQuantity(product.id, added.quantity) }])
 
         // Show notification
         set({ notification: { name: product.name, quantity } })

@@ -83,6 +83,7 @@ const SAMPLES = {
   '/': [{ url: '/', state: 'default' }],
   '/about': [{ url: '/about', state: 'default' }],
   '/contact': [{ url: '/contact', state: 'form idle' }],
+  '/shipping-returns': [{ url: '/shipping-returns', state: 'shipping and return guidance' }],
   '/faq': [{ url: '/faq', state: 'default' }],
   '/instructions': [{ url: '/instructions', state: 'instructions/legal-style content' }],
   '/products': [{ url: '/products', state: 'catalogue (mock products + inventory)' }],

@@ -1,7 +1,7 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
-import { volumePricingRows, productMetadata } from '../../src/lib/productPresentation.js'
+import { volumePricingRows, productMetadata, productImageAlt, productShareImage } from '../../src/lib/productPresentation.js'
 
 const xl = { name: 'Driveshaft Cable XL', sku: 'XL', base_price_cents: 500, min_order_quantity: 10, tiers: [{ min: 50, price: 483 }, { min: 100, price: 450 }, { min: 200, price: 408 }], specs: { Length: '60 inches', 'Cable diameter': '5/32 inch', 'Breaking Strength': '3000 lb' } }
 const pricing = p => ({ basePrice: p.base_price_cents, minOrderQuantity: p.min_order_quantity, tiers: p.tiers })
@@ -70,4 +70,29 @@ test('page wiring keeps presentation data live and cutter-only image containment
   assert.match(cart, /getLivePricing\(\)/)
   assert.match(cart, /volumeProducts.length > 0/)
   assert.match(cart, /livePricing\[item.productId\]/)
+})
+
+
+test('buyer-focused product titles use catalog length and hex facts without guessing Standard length', () => {
+  const standard = productMetadata({ ...xl, slug: 'driveshaft-cable', name: 'Driveshaft Cable', specs: { 'Total Length': '1000mm (39")', 'Breaking Strength': '3000 lbs' } })
+  assert.equal(standard.title, 'Standard Driveshaft Tie-Up Cable for Towing')
+  assert.doesNotMatch(standard.title, /39|40/)
+  assert.equal(productMetadata({ ...xl, slug: 'driveshaft-cable-xl' }).title, '60-Inch XL Driveshaft Tie-Up Cable')
+  assert.equal(productMetadata({ ...xl, slug: 'driveshaft-cable-xl', specs: { Length: '72 inches' } }).title, '72-Inch XL Driveshaft Tie-Up Cable')
+  assert.equal(productMetadata({ name: 'Value Brake Caging Bolt (10-Pack)', slug: 'value-brake-caging-bolt', specs: { 'Hex Size': '18mm (NOT 3/4"/19mm)' } }).title, '18mm Brake Caging Bolts – 10-Pack')
+})
+
+test('reviewed image descriptions follow the photo across reordering and avoid claims about unknown photos', () => {
+  const product = { slug: 'driveshaft-cable', name: 'Driveshaft Cable' }
+  assert.match(productImageAlt(product, '/inuse.jpeg'), /supporting a disconnected driveshaft/)
+  assert.match(productImageAlt(product, 'https://driveshaftcable.com/IMG_5489.jpeg?v=2'), /Caliper measuring/)
+  assert.equal(productImageAlt(product, '/new-photo.jpeg'), 'Driveshaft Cable')
+  assert.equal(productImageAlt({name: 'A different product', slug: 'new'}, '/inuse.jpeg'), 'A different product')
+  assert.doesNotMatch(productImageAlt({slug: 'driveshaft-cable-cutters', name: 'Cutters'}, '/authentic-main-8807.jpeg'), /safety cable|breaking strength|3000/)
+})
+
+test('share images use absolute product URLs and reject unsafe media protocols', () => {
+  assert.equal(productShareImage({ images: ['/inuse.jpeg'] }), 'https://driveshaftcable.com/inuse.jpeg')
+  assert.equal(productShareImage({ images: ['javascript:alert(1)', 'https://example.com/product.jpg'] }), 'https://example.com/product.jpg')
+  assert.equal(productShareImage({ images: [] }), undefined)
 })

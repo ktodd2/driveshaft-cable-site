@@ -2,18 +2,20 @@ import React, { Suspense, useEffect } from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { HelmetProvider } from 'react-helmet-async'
 import { PublicDataContext } from './ssg/PublicData'
+import UtilityIndexing from './components/common/UtilityIndexing'
 import Layout from './components/layout/Layout'
 import { useCartStore } from './stores/cartStore'
 import HomePage from './pages/HomePage'
 import AboutPage from './pages/AboutPage'
 import ContactPage from './pages/ContactPage'
 import FAQPage from './pages/FAQPage'
+import ShippingReturnsPage from './pages/ShippingReturnsPage'
 import InstructionsPage from './pages/InstructionsPage'
 import NotFoundPage from './pages/NotFoundPage'
 import ProductListPage from './pages/ProductListPage'
 import ProductDetailPage from './pages/ProductDetailPage'
 import CartPage from './pages/CartPage'
-import CheckoutPage from './pages/CheckoutPage'
+const CheckoutPage = React.lazy(() => import('./pages/CheckoutPage'))
 import OrderSuccessPage from './pages/OrderSuccessPage'
 import QuotePage from './pages/QuotePage'
 import OrderTrackingPage from './pages/OrderTrackingPage'
@@ -60,13 +62,14 @@ function App({ router: Router = BrowserRouter, routerProps = {}, helmetContext, 
           <Route path="about" element={<AboutPage />} />
           <Route path="contact" element={<ContactPage />} />
           <Route path="faq" element={<FAQPage />} />
+          <Route path="shipping-returns" element={<ShippingReturnsPage />} />
           <Route path="instructions" element={<InstructionsPage />} />
           <Route path="products" element={<ProductListPage />} />
           {/* Driveshaft Cable + was retired; send old links to the main cable */}
           <Route path="products/driveshaft-cable-plus" element={<Navigate to="/products/driveshaft-cable" replace />} />
           <Route path="products/:slug" element={<ProductDetailPage />} />
           <Route path="cart" element={<CartPage />} />
-          <Route path="checkout" element={<CheckoutPage />} />
+          <Route path="checkout" element={<Suspense fallback={<div role="status" className="py-16 text-center">Loading secure checkout…</div>}><CheckoutPage /></Suspense>} />
           <Route path="checkout/success" element={<OrderSuccessPage />} />
           <Route path="quote" element={<QuotePage />} />
           <Route path="order-tracking" element={<OrderTrackingPage />} />
@@ -92,6 +95,7 @@ function App({ router: Router = BrowserRouter, routerProps = {}, helmetContext, 
         <Route path="/admin/products" element={<Suspense fallback={<div />}><AdminProductsPage /></Suspense>} />
         <Route path="/admin/sales" element={<Suspense fallback={<div />}><AdminSalesPage /></Suspense>} />
       </Routes>
+      <UtilityIndexing />
     </Router>
     </PublicDataContext.Provider>
     </HelmetProvider>

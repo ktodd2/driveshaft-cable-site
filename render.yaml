@@ -26,6 +26,9 @@ services:
         name: Content-Type
         value: text/html; charset=utf-8
     routes:
+      - type: rewrite
+        source: /shipping-returns
+        destination: /shipping-returns/index.html
       - type: redirect
         source: /products/driveshaft-cable-plus
         destination: /products/driveshaft-cable

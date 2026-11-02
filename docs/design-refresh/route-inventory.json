@@ -211,6 +211,29 @@
       }
     },
     {
+      "path": "/shipping-returns",
+      "element": "ShippingReturnsPage",
+      "module": "./pages/ShippingReturnsPage",
+      "redirectTo": null,
+      "lazy": false,
+      "category": "public",
+      "samples": [
+        {
+          "url": "/shipping-returns",
+          "state": "shipping and return guidance"
+        }
+      ],
+      "work": {
+        "status": "implemented",
+        "notes": "Owner-confirmed next-business-day shipping, 90-day returns, customer-paid return shipping and five-business-day approved refunds. Linked from footer, products, cart and checkout."
+      },
+      "test": {
+        "status": "automated-only",
+        "notes": "Production build verifies initial HTML, canonical metadata and sitemap inclusion. Live browser checks run after deployment.",
+        "results": []
+      }
+    },
+    {
       "path": "/instructions",
       "element": "InstructionsPage",
       "module": "./pages/InstructionsPage",
@@ -566,7 +589,7 @@
       "element": "CheckoutPage",
       "module": "./pages/CheckoutPage",
       "redirectTo": null,
-      "lazy": false,
+      "lazy": true,
       "category": "commerce",
       "samples": [
         {

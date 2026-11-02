@@ -1,3 +1,4 @@
+import OptimizedImage from '../common/OptimizedImage'
 import React, { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import {
@@ -6,10 +7,10 @@ import {
   MIN_ORDER_QUANTITY, ORDER_QUANTITY_STEP,
 } from '../../stores/cartStore'
 import SaleCountdown from '../common/SaleCountdown'
-import { productImageClasses, volumePricingRows, isBoltPack, priceUnit, quantityUnit, packQuantity } from '../../lib/productPresentation'
+import { productImageClasses, productImageAlt, volumePricingRows, isBoltPack, priceUnit, quantityUnit, packQuantity } from '../../lib/productPresentation'
 import { useInventory } from '../../hooks/useInventory'
 import { useStorefrontProducts } from '../../hooks/useStorefrontProducts'
-import InventoryProgressBar from '../common/InventoryProgressBar'
+import StockAvailability from '../common/StockAvailability'
 
 // Pick the three spec chips we want to highlight on the card. The first
 // three values in product.specs would be brittle because Postgres JSONB
@@ -44,7 +45,7 @@ function topSpecChips(specs) {
   return chips
 }
 
-function ProductCard({ product }) {
+function ProductCard({ product, priority }) {
   const addItem = useCartStore((state) => state.addItem)
   const productMin = product.min_order_quantity ?? MIN_ORDER_QUANTITY
   const productStep = product.order_quantity_step ?? ORDER_QUANTITY_STEP
@@ -52,7 +53,7 @@ function ProductCard({ product }) {
   // Draft string for the input so the user can clear it and type freely
   // without snapping to the minimum on every keystroke.
   const [quantityDraft, setQuantityDraft] = useState(String(productMin))
-  const { stock, totalStock, loading: stockLoading } = useInventory(product.id)
+  const { stock, loading: stockLoading } = useInventory(product.id)
   const outOfStock = !stockLoading && stock === 0
 
   const isLowStock = !stockLoading && stock !== null && stock > 0 && stock < productMin
@@ -107,29 +108,14 @@ function ProductCard({ product }) {
       {/* Product Image */}
       <Link to={`/products/${product.slug}`} className="block">
         <div className="aspect-[4/3] bg-black relative overflow-hidden">
-          <img
+          <OptimizedImage
             src={thumbnail}
-            alt={product.name}
+            alt={productImageAlt(product, thumbnail)}
             className={`w-full h-full ${productImageClasses(product)} outline outline-1 -outline-offset-1 outline-white/10 ${outOfStock ? 'grayscale' : ''}`}
-            loading="lazy"
+            loading={priority ? 'eager' : 'lazy'}
+            fetchpriority={priority ? 'high' : 'auto'}
           />
-          {/* Stock Badge */}
-          {!stockLoading && stock !== null && (
-            <div className={`absolute top-3 right-3 inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold font-industrial tracking-[0.1em] uppercase tabular-nums bg-black/75 backdrop-blur-sm ring-1 ring-inset ${
-              stock === 0 ? 'text-red-300 ring-red-400/60' : stock <= 20 ? 'text-yellow-400 ring-yellow-500/60' : 'text-green-400 ring-green-400/60'
-            }`}>
-              <span className="w-2 h-2 rounded-full bg-current" aria-hidden="true" />
-              {stock === 0 ? 'OUT OF STOCK' : `${stock} in stock`}
-            </div>
-          )}
-          {/* Big diagonal "SOLD OUT" overlay so the eye actively skips this card */}
-          {outOfStock && (
-            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-              <div className="bg-black/80 text-red-300 font-industrial text-2xl tracking-[0.2em] px-6 py-2 rounded-lg ring-1 ring-inset ring-red-400/60">
-                SOLD OUT
-              </div>
-            </div>
-          )}
+
         </div>
       </Link>
 
@@ -191,8 +177,8 @@ function ProductCard({ product }) {
           )}
         </div>
 
-        {/* Inventory Progress Bar */}
-        <InventoryProgressBar stock={stock} totalStock={totalStock} loading={stockLoading} unitLabel={isBoltPack(product) ? 'packs' : undefined} />
+        {/* One availability message, with stock counted in the order unit. */}
+        <StockAvailability stock={stock} loading={stockLoading} unitLabel={quantityUnit(product)} />
 
         {/* Quantity Selector */}
         <div className="mb-4 mt-4">
@@ -226,7 +212,8 @@ function ProductCard({ product }) {
                   setQuantityDraft(String(clamped))
                 }}
                 className="w-20 text-center bg-transparent text-white border-0 border-x border-gray-600 rounded-none py-2 text-sm tabular-nums focus:ring-inset disabled:cursor-not-allowed disabled:text-gray-400"
-                min={productMin}
+                min={effectiveMin}
+                max={stock ?? undefined}
                 step={productStep}
               />
               <button
@@ -278,7 +265,7 @@ function StorefrontProducts({ compactIntro = false }) {
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <h2 className="text-white font-industrial text-lg tracking-[0.06em]">Volume Pricing (per product)</h2>
           <div className="text-sm text-gray-300 space-y-1">
-            <div><span className="text-yellow-500">FREE SHIPPING</span> on orders over $600 · $20 flat rate under $600</div>
+            <div><span className="text-yellow-500">FREE SHIPPING</span> on orders of $600 or more · $20 flat rate under $600</div>
             <div><span className="text-green-400">LOYALTY DISCOUNT</span> — returning customers get an extra 10% off!</div>
           </div>
         </div>
@@ -356,8 +343,8 @@ function StorefrontProducts({ compactIntro = false }) {
             </div>
           ) : (
             <div className={`grid md:grid-cols-2 gap-6 ${products.length >= 3 ? 'lg:grid-cols-3' : 'max-w-5xl'}`}>
-              {products.map((product) => (
-                <ProductCard key={product.id} product={product} />
+              {products.map((product, index) => (
+                <ProductCard key={product.id} product={product} priority={index === 0 && compactIntro} />
               ))}
             </div>
           )}

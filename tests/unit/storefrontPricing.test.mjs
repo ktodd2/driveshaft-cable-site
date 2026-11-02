@@ -12,7 +12,7 @@ Object.defineProperty(globalThis, 'localStorage', { configurable: true, value: {
 const require = createRequire(import.meta.url)
 const root = new URL('../..', import.meta.url).pathname
 const compiled = await build({
-  stdin: { contents: `export * from './src/stores/cartStore.js'; export { default as Grid } from './src/components/landing/StorefrontProducts.jsx'; export { default as Cart } from './src/pages/CartPage.jsx'; export { default as Showcase } from './src/components/landing/ProductShowcase.jsx';`, resolveDir: root },
+  stdin: { contents: `export * from './src/stores/cartStore.js'; export { default as Stock } from './src/components/common/StockAvailability.jsx'; export { default as Newsletter } from './src/components/newsletter/NewsletterForm.jsx'; export { default as Grid } from './src/components/landing/StorefrontProducts.jsx'; export { default as Cart } from './src/pages/CartPage.jsx'; export { default as Showcase } from './src/components/landing/ProductShowcase.jsx';`, resolveDir: root },
   bundle: true, write: false, platform: 'node', format: 'cjs', packages: 'external',
   plugins: [{ name: 'read-only-fixtures', setup(b) {
     b.onResolve({ filter: /(?:lib\/supabase|hooks\/useStorefrontProducts|hooks\/useInventory|common\/SEOHead|^react-router-dom$)/ }, args => ({ path: args.path, namespace: 'fixtures' }))
@@ -163,8 +163,11 @@ test('bolt cart keeps stored quantities and totals in packs while showing total 
   // React's server renderer reads Zustand's initial snapshot. Seed that
   // snapshot with the cart produced by the actual store actions.
   Object.assign(store.getInitialState(), store.getState())
-  const html = text(renderToStaticMarkup(React.createElement(s.Cart)))
+  const markup = renderToStaticMarkup(React.createElement(s.Cart))
+  const html = text(markup)
   assert.match(html, /2 packs · 20 bolts/)
+  assert.match(markup, /aria-label="Remove Value Brake Caging Bolt \(10-Pack\) from cart"/)
+  assert.match(markup, /aria-label="Increase Value Brake Caging Bolt \(10-Pack\) quantity by 1"/)
   assert.match(html, /\$21\.99\/10-pack/)
   assert.match(html, /20 bolts total/)
   assert.match(html, /\$43\.98/)
@@ -174,4 +177,37 @@ test('bolt cart keeps stored quantities and totals in packs while showing total 
     assert.equal(store.getState().items[0].quantity, packs)
     assert.equal(s.selectSubtotal(store.getState()), subtotal)
   }
+})
+
+
+test('stock messages distinguish loading, unknown, empty and single pack counts without sales totals', () => {
+  const s = harness()
+  const show = props => text(renderToStaticMarkup(React.createElement(s.Stock, props)))
+  assert.equal(show({stock: 85, loading: true}), 'Checking stock…')
+  assert.equal(show({stock: null, loading: false}), 'Stock unavailable')
+  assert.equal(show({stock: 0, loading: false}), 'Out of stock')
+  assert.equal(show({stock: 1, loading: false, unitLabel: 'packs'}), '1 pack in stock')
+  assert.equal(show({stock: 85, loading: false, unitLabel: 'packs'}), '85 packs in stock')
+})
+
+test('multiple newsletter forms have distinct visible labels associated with their email inputs', () => {
+  const s = harness()
+  const html = renderToStaticMarkup(React.createElement('div', {}, React.createElement(s.Newsletter), React.createElement(s.Newsletter, {compact: true})))
+  const labels = [...html.matchAll(/<label for="([^"]+)"[^>]*>Email address<\/label>/g)].map(m => m[1])
+  const inputs = [...html.matchAll(/<input id="([^"]+)" name="email" type="email"/g)].map(m => m[1])
+  assert.equal(labels.length, 2)
+  assert.equal(new Set(labels).size, 2)
+  assert.deepEqual(inputs, labels)
+})
+
+test('public sale snapshots seed prices for prerender and hydration without writing a saved cart', () => {
+  const s = harness()
+  const sale = {id: 'snapshot-sale', name: 'Public sale', is_active: true, scope: 'sitewide', discount_percent: 10, starts_at: '2000-01-01', ends_at: '2999-01-01'}
+  s.seedStorefrontPricing([xl], [sale])
+  assert.equal(s.getPriceForQuantity(xl.id, 10, xl), 450)
+  assert.equal(s.getPriceForQuantity(xl.id, 200, xl), 367)
+  assert.equal(s.useCartStore.getState().productsLoadedAt, 0)
+  assert.equal(s.useCartStore.getState().items.length, 0)
+  s.seedStorefrontPricing([xl], [])
+  assert.equal(s.getPriceForQuantity(xl.id, 10, xl), 500)
 })

@@ -11,6 +11,7 @@ function SEOHead({
   keywords,
   canonical,
   ogImage = DEFAULT_IMAGE,
+  ogImageAlt,
   noindex = false,
   structuredData,
 }) {
@@ -23,12 +24,13 @@ function SEOHead({
       <meta name="description" content={description} />
       {keywords && <meta name="keywords" content={keywords} />}
       {canonicalUrl && <link rel="canonical" href={canonicalUrl} />}
-      {noindex && <meta name="robots" content="noindex, nofollow" />}
+      <meta name="robots" content={noindex ? 'noindex, nofollow' : 'index, follow'} />
 
       {/* Open Graph */}
       <meta property="og:title" content={fullTitle} />
       <meta property="og:description" content={description} />
       <meta property="og:image" content={ogImage} />
+      {ogImageAlt && <meta property="og:image:alt" content={ogImageAlt} />}
       <meta property="og:type" content="website" />
       <meta property="og:site_name" content={SITE_NAME} />
       {canonicalUrl && <meta property="og:url" content={canonicalUrl} />}
@@ -38,6 +40,7 @@ function SEOHead({
       <meta name="twitter:title" content={fullTitle} />
       <meta name="twitter:description" content={description} />
       <meta name="twitter:image" content={ogImage} />
+      {ogImageAlt && <meta name="twitter:image:alt" content={ogImageAlt} />}
 
       {/* Structured Data — supports single object or array of objects */}
       {structuredData && (

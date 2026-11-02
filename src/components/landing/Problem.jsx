@@ -11,7 +11,7 @@ const risks = [
   },
   {
     title: 'Costly Secondary Failures',
-    body: 'What starts as a simple tow can become a $10,000+ repair bill.',
+    body: 'Contact with road surfaces or moving parts can lead to additional repairs and downtime.',
   },
   {
     title: 'Safety Hazards',
@@ -20,7 +20,7 @@ const risks = [
 ]
 
 const outcomes = [
-  'Equipment damage exceeding $15,000',
+  'Damage to driveline components',
   'Extended vehicle downtime',
   'Liability claims from road incidents',
   'Worker injury risks',
@@ -38,7 +38,7 @@ function Problem() {
             </h2>
           </div>
           <p className="text-lg sm:text-xl text-gray-300 leading-relaxed max-w-xl">
-            Loose or unsupported driveshafts during towing and recovery operations create serious hazards and costly damage.
+            Loose or unsupported driveshafts during towing and recovery operations can create hazards and damage equipment.
           </p>
         </div>
 
@@ -84,7 +84,7 @@ function Problem() {
 
             <blockquote className="mt-8 pt-6 border-t border-ember-500/25">
               <p className="text-gray-100 text-lg italic leading-relaxed">
-                &ldquo;Makeshift solutions like bungee cords and zip ties aren&apos;t built for heavy-duty applications.&rdquo;
+                Choose tie-up equipment and a routing method suited to your setup. Check retention and clearance before towing.
               </p>
             </blockquote>
           </div>
