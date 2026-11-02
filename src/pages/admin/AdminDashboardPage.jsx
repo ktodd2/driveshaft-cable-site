@@ -513,7 +513,7 @@ function AdminDashboardPage() {
             </div>
 
             <div id="shipping-import" className="scroll-mt-20" />
-            <ShippingImportReview orders={stats.allOrders || []} onSaved={loadStats} />
+            <ShippingImportReview onSaved={loadStats} />
 
             {/* Profit Insights */}
             {!reportError && !shipmentsError && stats.paidOrdersList && (() => {

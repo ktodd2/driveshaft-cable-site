@@ -1,6 +1,8 @@
 // Run with PGLITE_MODULE pointing to an installed @electric-sql/pglite module.
 // All schema and writes live in an ephemeral in-memory PostgreSQL instance.
 import assert from 'node:assert/strict'
+import { reviewShippingRows } from '../../src/lib/shippingImport.js'
+import { planAutomaticShipping, applyAutomaticShipping } from '../../src/lib/automaticShippingImport.js'
 import { readFile } from 'node:fs/promises'
 const { PGlite } = await import(process.env.PGLITE_MODULE || '@electric-sql/pglite')
 const db = new PGlite()
@@ -55,5 +57,28 @@ assert.equal((await db.query('SELECT count(*)::int n FROM shipping_import_receip
 await assert.rejects(run(), /Active admin/)
 await db.exec('RESET ROLE; SET ROLE anon;')
 await assert.rejects(run(), /permission denied/)
+// Exercise the upload planner against the unchanged real PostgreSQL save function.
+await db.exec("RESET ROLE; SET app.actor = '00000000-0000-0000-0000-000000000001'")
+const autoId = '10000000-0000-0000-0000-000000000003'
+await db.query('INSERT INTO orders(id, tracking_number) VALUES ($1,$2)', [autoId, 'AUTOKEEP'])
+const autoOrder = { id: autoId, name: 'Auto Fixture', email: 'auto@example.invalid', payment_status: 'paid', status: 'confirmed', actual_shipping_cost_cents: null, tracking_number: 'AUTOKEEP' }
+const autoRows = reviewShippingRows([{ Name: autoOrder.name, Email: autoOrder.email, Cost: '0', 'Tracking Number': 'AUTOKEEP' }], [autoOrder])
+const autoPlan = await planAutomaticShipping(autoRows, [autoOrder])
+const adapter = { async rpc(name, p) {
+  assert.equal(name, 'apply_shipping_import')
+  try { return { data: (await db.query('SELECT public.apply_shipping_import($1,$2,$3,$4,$5,$6) result', [p.p_order_id,p.p_expected_cost,p.p_expected_tracking,p.p_tracking,JSON.stringify(p.p_labels),p.p_filename])).rows[0].result } }
+  catch(error) { return { error } }
+} }
+assert.equal((await applyAutomaticShipping(adapter, autoPlan, 'auto.csv'))[0].status, 'saved')
+const savedAuto = (await db.query('SELECT * FROM orders WHERE id=$1', [autoId])).rows[0]
+assert.equal(savedAuto.actual_shipping_cost_cents, 0); assert.equal(savedAuto.tracking_number, 'AUTOKEEP'); assert.equal(savedAuto.status, 'confirmed')
+const autoReceipts = (await db.query('SELECT * FROM shipping_import_receipts')).rows
+const repeatPlan = await planAutomaticShipping(autoRows, [{ ...autoOrder, actual_shipping_cost_cents: 0 }], autoReceipts)
+assert.equal(repeatPlan.groups.length, 0); assert.equal(repeatPlan.alreadyImported, 1)
+const staleRows = reviewShippingRows([{ Name: autoOrder.name, Email: autoOrder.email, Cost: '5' }], [autoOrder])
+const stalePlan = await planAutomaticShipping(staleRows, [autoOrder])
+assert.equal((await applyAutomaticShipping(adapter, stalePlan, 'stale.csv'))[0].status, 'error')
+assert.equal((await db.query('SELECT actual_shipping_cost_cents FROM orders WHERE id=$1', [autoId])).rows[0].actual_shipping_cost_cents, 0)
+console.log('Automatic planner + real PostgreSQL checks passed: zero save, preserved tracking/status, repeat-file skip and concurrent-cost rejection.')
 console.log('PostgreSQL fixture checks passed: atomic saves, replay, cross-order duplicates, reordered labels, zero, stale conflicts, rollback/retry, admin authorization and audit RLS.')
 await db.close()

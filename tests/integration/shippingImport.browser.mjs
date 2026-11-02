@@ -1,109 +1,78 @@
-// Local fixture-only UI test. Set PLAYWRIGHT_MODULE and optional CHROME_EXECUTABLE.
+// Fixture-only browser QA; all backend requests are mocked, never production writes.
 const { chromium } = await import(process.env.PLAYWRIGHT_MODULE || 'playwright')
 import assert from 'node:assert/strict'
 import { mkdir } from 'node:fs/promises'
 const browser = await chromium.launch({ headless: true, executablePath: process.env.CHROME_EXECUTABLE || '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome' })
 try {
-const context = await browser.newContext()
-const page = await context.newPage()
-const errors = []
+const context = await browser.newContext(), page = await context.newPage(), errors = []
 page.on('pageerror', e => errors.push(e.message))
-const base = { payment_status: 'paid', status: 'confirmed', name: 'Alex Fixture', created_at: '2026-10-30T12:00:00Z', items: [], total_cents: 5000, email: 'fixture@example.invalid', actual_shipping_cost_cents: null, tracking_number: null }
-const orders = [{ ...base, id: 'order-a', actual_shipping_cost_cents: 800, tracking_number: 'OLD' }, { ...base, id: 'order-b', email: 'other@example.invalid' }]
-const saved = new Map()
-let failSecond = true, rpcCalls = 0, simulatedLostReply = false
-await context.addInitScript(() => localStorage.setItem('sb-127-auth-token', JSON.stringify({ access_token: 'fixture-token', refresh_token: 'fixture-refresh', expires_at: 9999999999, user: { id: 'fixture-admin', email: 'admin@example.invalid' } })))
-await page.route('**/*', async route => {
-  const url = new URL(route.request().url())
-  if (url.port === '4178') return route.continue()
-  if (url.hostname === 'js.stripe.com') return route.fulfill({ contentType: 'application/javascript', body: 'window.Stripe = function(){ return {} }' })
-  if (url.port !== '9999') return route.abort()
-  const table = url.pathname.split('/').pop()
-  if (route.request().method() === 'POST') {
-    assert.equal(table, 'apply_shipping_import', 'No email or unrelated mutation allowed')
-    const payload = route.request().postDataJSON(); rpcCalls++
-    if (payload.p_order_id === 'order-b' && failSecond) { failSecond = false; return route.fulfill({ status: 503, json: { message: 'Fixture connection interrupted' } }) }
-    const existing = saved.get(payload.p_order_id)
-    if (existing) return route.fulfill({ json: { status: 'already_applied', receipt_id: 1 } })
-    saved.set(payload.p_order_id, payload)
-    const order = orders.find(o => o.id === payload.p_order_id)
-    order.actual_shipping_cost_cents = payload.p_labels.reduce((sum,l) => sum + l.cost_cents, 0)
-    order.tracking_number = payload.p_tracking
-    // Simulate a server commit whose response is lost. Retrying must keep identical keys.
-    if (!simulatedLostReply) { simulatedLostReply = true; return route.fulfill({ status: 503, json: { message: 'Fixture response lost after commit' } }) }
-    return route.fulfill({ json: { status: 'saved', receipt_id: 2 } })
-  }
-  assert.ok(['GET', 'HEAD', 'OPTIONS'].includes(route.request().method()))
-  let data = []
-  if (table === 'orders') data = orders
-  if (table === 'shipping_import_receipts') data = [{ id: 1, order_id: 'order-a', created_at: '2026-11-01T00:00:00Z', filename: 'fixture.csv', before_cost: 800, after_cost: 525, before_tracking: 'OLD', after_tracking: 'OLD', labels: [{ cost_cents: 525, source_row: 2, source_key: 'a'.repeat(64), tracking: 'NEW' }] }]
-  return route.fulfill({ json: data, headers: { 'content-range': `0-${Math.max(0,data.length-1)}/${data.length}` } })
+const base = {payment_status:'paid',status:'shipped',created_at:'2026-10-28T12:00:00Z',items:[],total_cents:5000,email:'fixture@example.invalid',actual_shipping_cost_cents:null,tracking_number:'KEEP123'}
+const orders = [{...base,id:'a',name:'Alex Fixture'}, {...base,id:'z',name:'Zero Fixture',tracking_number:null}, {...base,id:'s1',name:'Same Name'}, {...base,id:'s2',name:'Same Name'}, {...base,id:'c',name:'Conflict Fixture',actual_shipping_cost_cents:800}]
+const receipts=[], requests=[]
+let loseNext=false, concurrent=false, failReads=false
+await context.addInitScript(() => localStorage.setItem('sb-127-auth-token',JSON.stringify({access_token:'fixture-token',refresh_token:'fixture-refresh',expires_at:9999999999,user:{id:'fixture-admin',email:'admin@example.invalid'}})))
+await page.route('**/*',async route=>{
+ const req=route.request(),url=new URL(req.url()),table=url.pathname.split('/').pop()
+ if(url.port==='4178') return route.continue()
+ if(url.hostname==='js.stripe.com') return route.fulfill({contentType:'application/javascript',body:'window.Stripe=function(){return {}}'})
+ if(url.port!=='9999') return route.abort()
+ if(req.method()==='POST' && table==='get_suggestion_attention') return route.fulfill({json:[]})
+ if(req.method()==='POST'){
+  assert.equal(table,'apply_shipping_import','No email/status/other mutation permitted')
+  const p=req.postDataJSON();requests.push(p)
+  const o=orders.find(o=>o.id===p.p_order_id)
+  assert.equal(p.p_tracking,o.tracking_number);assert.equal(p.p_expected_tracking,o.tracking_number)
+  if(concurrent){concurrent=false;o.actual_shipping_cost_cents=999;return route.fulfill({status:409,json:{message:'Order cost or tracking changed since preview.'}})}
+  assert.equal(o.actual_shipping_cost_cents,null)
+  o.actual_shipping_cost_cents=p.p_labels.reduce((s,l)=>s+l.cost_cents,0)
+  receipts.push({id:receipts.length+1,order_id:o.id,source_keys:p.p_labels.map(l=>l.source_key),labels:p.p_labels,after_cost:o.actual_shipping_cost_cents,after_tracking:o.tracking_number,filename:p.p_filename,created_at:new Date().toISOString()})
+  if(loseNext){loseNext=false;return route.fulfill({status:503,json:{message:'Response lost after save; upload again to check.'}})}
+  return route.fulfill({json:{status:'saved'}})
+ }
+ assert.ok(['GET','HEAD','OPTIONS'].includes(req.method()))
+ if(failReads&&table==='shipping_import_receipts')return route.fulfill({status:503,json:{message:'offline'}})
+ const data=table==='orders'?orders:table==='shipping_import_receipts'?receipts:[]
+ return route.fulfill({json:data,headers:{'content-range':`0-${Math.max(0,data.length-1)}/${data.length}`}})
 })
-await page.setViewportSize({ width: 1440, height: 1100 })
+await page.setViewportSize({width:1440,height:1100})
 await page.goto('http://127.0.0.1:4178/admin')
-await page.getByRole('button', { name: /BULK SHIPPING IMPORT/ }).click()
-const panel = page.locator('section').filter({ has: page.getByRole('button', { name: /BULK SHIPPING IMPORT/ }) })
-const upload = async (text, name = 'fixture.csv') => { await panel.getByLabel('Shipping file').setInputFiles({ name, mimeType: 'text/csv', buffer: Buffer.from(text) }); await panel.getByRole('button', { name: 'Parse & Preview' }).click() }
-await upload('Name,Cost,Tracking Number,Status\nAlex Fixture,5.25,NEW,\nAlex Fixture,0,ZERO,\nNobody,3.00,THIRD,\nAlex Fixture,5.25,NEW,\nAlex Fixture,2.00,VOID,Voided\nBad,garbage,BAD,')
-await panel.getByText(/6 source rows/).waitFor()
-assert.equal(await panel.getByRole('combobox', { name: /Order for row/ }).count(), 3)
-assert.equal(await panel.getByLabel('Order for row 2').inputValue(), '')
-await panel.getByLabel('Order for row 2').selectOption('order-a')
-await panel.getByLabel('Order for row 3').selectOption('order-a')
-await panel.getByLabel('Order for row 4').selectOption('order-b')
-const groups = panel.locator('article').filter({ has: page.getByRole('heading', { name: /^Save to/ }) })
-assert.equal(await groups.count(), 2)
-assert.match(await groups.first().innerText(), /New order total: \$5.25/)
-assert.equal(await groups.first().getByRole('combobox').inputValue(), 'OLD')
-await groups.first().getByRole('combobox').selectOption('NEW')
-assert.match(await groups.first().innerText(), /including replacing existing tracking/)
-await groups.first().getByRole('combobox').selectOption('OLD')
-for (const g of await groups.all()) await g.getByRole('checkbox').check()
-await mkdir('qa/shipping-import', { recursive: true })
-await panel.screenshot({ path: 'qa/shipping-import/desktop-review.png', style: 'header { visibility: hidden }' })
-await page.setViewportSize({ width: 390, height: 844 })
-assert.ok(await panel.evaluate(el => el.scrollWidth <= el.clientWidth), 'Importer overflows mobile')
-await panel.screenshot({ path: 'qa/shipping-import/mobile-review.png', style: 'header { visibility: hidden }' })
-await panel.getByRole('button', { name: /Save confirmed orders/ }).click()
-await panel.getByText(/Fixture response lost after commit/).waitFor()
-assert.equal(rpcCalls, 1)
-await panel.getByRole('button', { name: /Save confirmed orders/ }).click()
-await panel.getByText(/Already saved; nothing applied twice/).waitFor()
-await panel.getByText(/Fixture connection interrupted/).waitFor()
-assert.equal(rpcCalls, 3)
-await panel.getByRole('button', { name: /Save confirmed orders/ }).click()
-await panel.getByText('Saved cost and tracking. No email sent.').waitFor()
-assert.equal(rpcCalls, 4)
-assert.equal(saved.get('order-a').p_tracking, 'OLD')
-assert.equal(saved.get('order-a').p_labels.length, 2)
-assert.equal(await panel.getByRole('button', { name: /Save confirmed orders/ }).isDisabled(), true)
-await panel.getByRole('button', { name: 'Load recent saved imports' }).click()
-await panel.getByRole('heading', { name: 'Latest 20 saved imports' }).waitFor()
-await panel.getByRole('button', { name: /Clear review/ }).click()
-assert.equal(await panel.getByRole('combobox', { name: /Order for row/ }).count(), 0)
-assert.equal(saved.size, 2, 'Cancel must not undo saves')
-await upload('Name,Cost\nAlex Fixture,1')
-await panel.getByLabel('Order for row 2').waitFor()
-await panel.getByLabel('Order for row 2').selectOption('order-b')
-await panel.getByRole('button', { name: /Clear review/ }).click()
-assert.equal(rpcCalls, 4, 'Cancel before save must not mutate')
-await upload('Name,Cost\n"unclosed,2')
-await panel.getByRole('alert').filter({ hasText: /Malformed CSV/ }).waitFor()
-await upload('junk', 'bad.xlsx')
-await panel.getByRole('alert').waitFor()
-await upload('Name,Cost,Tracking Number\n<script>alert(1)</script>,1,SAFE123\nMalicious,1,=1+1')
-await panel.getByText(/Invalid tracking number/).waitFor()
-assert.equal(await panel.locator('script').count(), 0)
-await panel.getByLabel('Shipping file').setInputFiles('tests/fixtures/shipping-import.xlsx')
-await panel.getByRole('button', { name: 'Parse & Preview' }).click()
-await panel.getByText('Row 2: Alex Fixture — $0.00').waitFor()
-await panel.getByText(/0012345678901234567890/).waitFor()
-await panel.getByLabel('Order for row 2').selectOption('order-b')
-await page.goto('http://127.0.0.1:4178/admin/orders')
-await page.goBack()
-await page.getByRole('button', { name: /BULK SHIPPING IMPORT/ }).click()
-assert.equal(await panel.getByRole('combobox', { name: /Order for row/ }).count(), 0)
-assert.equal(rpcCalls, 4)
-assert.deepEqual(errors, [])
-console.log('Headless desktop/mobile fixture QA passed: explicit ambiguous/manual choices, combined total, tracking conflict/keep, duplicates/voids/errors, lost response, partial retry, cancel, history, malformed CSV/XLSX; only mocked RPC mutations.')
-} finally { await browser.close() }
+const panel=page.getByRole('region',{name:'BULK SHIPPING IMPORT'}),input=panel.getByLabel('Pirate Ship CSV or XLSX')
+await panel.waitFor()
+assert.equal(await panel.getByRole('button',{name:/Preview|Save confirmed/}).count(),0)
+await mkdir('qa/shipping-auto',{recursive:true})
+await panel.screenshot({path:'qa/shipping-auto/desktop-ready.png',style:'header {visibility:hidden}'})
+const upload=async(text,name='fixture.csv')=>input.setInputFiles({name,mimeType:'text/csv',buffer:Buffer.from(text)})
+await input.setInputFiles('tests/fixtures/pirate-ship-transactions.csv')
+await panel.getByText('2 orders updated · 0 already recorded · 2 need attention').waitFor()
+assert.equal(requests.length,2);assert.equal(orders[0].tracking_number,'KEEP123');assert.equal(orders[1].actual_shipping_cost_cents,0);assert.equal(orders[4].actual_shipping_cost_cents,800)
+assert.equal(await panel.getByRole('combobox').count(),0)
+await panel.screenshot({path:'qa/shipping-auto/desktop-result.png',style:'header {visibility:hidden}'})
+await page.setViewportSize({width:390,height:844})
+assert.ok(await panel.evaluate(el=>el.scrollWidth<=el.clientWidth))
+await panel.screenshot({path:'qa/shipping-auto/mobile-result.png',style:'header {visibility:hidden}'})
+await input.setInputFiles('tests/fixtures/pirate-ship-transactions.csv')
+await panel.getByText('0 orders updated · 2 already recorded · 2 need attention').waitFor()
+assert.equal(requests.length,2)
+await upload('Name,Email,Cost,Tracking Number\nConflict Fixture,fixture@example.invalid,9,KEEP123')
+await panel.getByText('0 orders updated · 0 already recorded · 1 need attention').waitFor()
+assert.equal(requests.length,2)
+orders.push({...base,id:'retry',name:'Retry Fixture',tracking_number:null})
+loseNext=true
+const retry='Date,Type,Description,Total,Balance\n10/29/26 10:40 PM CDT,Label,Retry Fixture: 1 Label Batch,-3.00,1.00'
+await upload(retry);await panel.getByText(/Response lost after save/).waitFor()
+await upload(retry);await panel.getByText('0 orders updated · 1 already recorded · 0 need attention').waitFor()
+assert.equal(requests.length,3)
+orders.push({...base,id:'stale',name:'Stale Fixture',tracking_number:null});concurrent=true
+await upload('Date,Type,Description,Total,Balance\n10/29/26 10:40 PM CDT,Label,Stale Fixture: 1 Label Batch,-3.00,1.00')
+await panel.getByText(/changed since preview/).waitFor();assert.equal(orders.at(-1).actual_shipping_cost_cents,999)
+const writes=requests.length
+await upload('Name,Cost\n"bad,2');await panel.getByRole('alert').waitFor();assert.equal(requests.length,writes)
+await upload('junk','bad.xlsx');await panel.getByRole('alert').waitFor();assert.equal(requests.length,writes)
+await input.setInputFiles('tests/fixtures/shipping-import.xlsx')
+await panel.getByRole('status').filter({hasText:/need attention/}).waitFor();assert.equal(requests.length,writes)
+failReads=true
+await input.setInputFiles('tests/fixtures/pirate-ship-transactions.csv')
+await panel.getByRole('alert').filter({hasText:/Unable to load/}).waitFor();assert.equal(requests.length,writes)
+assert.deepEqual(errors,[])
+console.log('Automatic upload desktop/mobile QA passed: no wizard or per-row buttons, exact ledger matches, zero, same-name ambiguity, cost conflicts, repeated upload, lost-response recovery, concurrent edit, malformed CSV/XLSX, failed history read, tracking/status/email preservation.')
+}finally{await browser.close()}
