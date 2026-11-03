@@ -23,3 +23,7 @@ Publication status: the combined git push / draft PR action to ktodd2/driveshaft
 before execution by automatic approval review. Reason: local staging/review authorization did not explicitly
 include external publication or opening a PR. No remote branch or PR was created. Do not retry through
 another tool. Explicit human approval is required to publish the draft branch/PR; local files remain usable.
+
+Later publication authorization: the human explicitly approved pushing the disabled version and opening a draft PR.
+This supersedes the publication-only denial above; production changes, activation, scheduling and sends remain unapproved.
+The new order-access follow-up document contains findings/proposals only, no permission-policy implementation.
