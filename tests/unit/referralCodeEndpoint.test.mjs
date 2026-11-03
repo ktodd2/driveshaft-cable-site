@@ -3,9 +3,9 @@ import assert from 'node:assert/strict'
 import {build} from 'esbuild'
 import {runInNewContext} from 'node:vm'
 const output=await build({entryPoints:['supabase/functions/referral-admin/index.ts'],bundle:true,write:false,platform:'node',format:'cjs',plugins:[{name:'offline',setup(b){
- b.onResolve({filter:/https:|_shared\//},args=>({path:args.path,namespace:'fixture'}))
+ b.onResolve({filter:/https:|_shared\//},args=>args.path.endsWith('/referralInviteOrigin.js')?undefined:({path:args.path,namespace:'fixture'}))
  b.onLoad({filter:/.*/,namespace:'fixture'},({path})=>({loader:'js',contents:
- path.includes('/http/server')?'export const serve=fn=>h.handler=fn;':path.includes('supabase-js')?'export const createClient=()=>({});':
+ path.includes('stripe@')?'export default class Stripe{};':path.includes('secureCheckout')?'export const cancelSecurePayment=async(db,stripe,input,options)=>{h.calls.push({name:"cancel",input,options});return {status:200,body:{status:"cancelled"}}};':path.includes('/http/server')?'export const serve=fn=>h.handler=fn;':path.includes('supabase-js')?'export const createClient=()=>({});':
  path.includes('supabaseTransport')?'export const createApiClient=()=>({auth:{getUser:async()=>({data:{user:h.user},error:null})}});':
  path.includes('supabaseKeys')?'export const getSupabaseSecretKey=()=>"fixture-only",getSupabasePublishableKey=()=>"fixture-public";':
  path.includes('storeAuthorization')?'export const isActiveAdmin=async()=>h.active;':

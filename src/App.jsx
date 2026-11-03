@@ -24,6 +24,7 @@ import BlogPostPage from './pages/BlogPostPage'
 import SuggestionsPage from './pages/SuggestionsPage'
 import TestimonialPage from './pages/TestimonialPage'
 import ReferralSignupPage from './pages/ReferralSignupPage'
+import BuyerEmailVerificationPage from './pages/BuyerEmailVerificationPage'
 import CartRecoverPage from './pages/CartRecoverPage'
 
 // Admin pages (lazy loaded — excluded from public bundle)
@@ -73,6 +74,7 @@ function App({ router: Router = BrowserRouter, routerProps = {}, helmetContext, 
           <Route path="cart" element={<CartPage />} />
           <Route path="checkout" element={<Suspense fallback={<div role="status" className="py-16 text-center">Loading secure checkout…</div>}><CheckoutPage /></Suspense>} />
           <Route path="checkout/success" element={<OrderSuccessPage />} />
+          <Route path="checkout/verify-email" element={<BuyerEmailVerificationPage />} />
           <Route path="quote" element={<QuotePage />} />
           <Route path="order-tracking" element={<OrderTrackingPage />} />
           <Route path="blog" element={<BlogListPage />} />

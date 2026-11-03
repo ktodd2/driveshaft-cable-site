@@ -11,10 +11,12 @@ serve(async req=>{
  try{
   if(Deno.env.get('REFERRAL_REWARDS_ENABLED')!=='true')throw Error()
   const body=await req.text();if(body.length>4096)throw Error()
-  const {token,name,address,preference,accepted}=JSON.parse(body)
-  if(typeof token!=='string'||!/^[a-f0-9]{64}$/.test(token)||accepted!==true)throw Error()
+  const {token,name,address,preference,accepted,action='submit',revision}=JSON.parse(body)
+  if(typeof token!=='string'||!/^[a-f0-9]{64}$/.test(token))throw Error()
   const db=createApiClient(createClient,Deno.env.get('SUPABASE_URL'),getSupabaseSecretKey())
-  const result=await rpc(db,'referral_signup',{p_hash:await digest(token),p_name:name,p_address:address,p_preference:preference})
+  if(action==='preview')return Response.json(await rpc(db,'referral_invite_preview',{p_hash:await digest(token)}),{headers})
+  if(action!=='submit'||accepted!==true||!Number.isSafeInteger(revision)||revision<1)throw Error()
+  const result=await rpc(db,'referral_signup_policy',{p_hash:await digest(token),p_name:name,p_address:address,p_preference:preference,p_revision:revision})
   return Response.json(result,{headers})
  }catch{return Response.json({error:'Signup could not be completed. Check the required fields or ask the owner for a new invitation.'},{headers,status:400})}
 })

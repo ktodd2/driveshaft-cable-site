@@ -26,17 +26,26 @@
     <meta data-rh="true" name="twitter:image" content="https://driveshaftcable.com/logos/main-logo.png" />
 
     <script src="/referral-invite.js"></script>
+    <script src="/buyer-email-verification.js"></script>
 
     <!-- Strip Stripe return secrets before any third-party script can read them. -->
     <script src="/payment-return.js"></script>
 
     <!-- Google Analytics -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-SDQTZK079P"></script>
     <script>
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
-      gtag('js', new Date());
-      gtag('config', 'G-SDQTZK079P');
+      (function () {
+        // Independent of scrubber delivery: private email/invitation pages
+        // never load analytics, even when a first-party asset is blocked.
+        if (/^\/(checkout\/verify-email|referral\/signup)\/?$/.test(window.location.pathname)) return;
+        window.dataLayer = window.dataLayer || [];
+        window.gtag = function () { window.dataLayer.push(arguments); };
+        var analytics = document.createElement('script');
+        analytics.async = true;
+        analytics.src = 'https://www.googletagmanager.com/gtag/js?id=G-SDQTZK079P';
+        document.head.appendChild(analytics);
+        window.gtag('js', new Date());
+        window.gtag('config', 'G-SDQTZK079P');
+      })();
     </script>
 
     <!-- Google AdSense -->

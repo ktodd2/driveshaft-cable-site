@@ -56,8 +56,26 @@ export async function getOrCreateCheckoutDraft(signature, browser = window) {
   if(Date.now()-draft.createdAt>=23*3600000)throw Error('Your previous payment needs owner verification before retrying. Please contact us before paying again.')
   return draft
  }
+ if(draft?.submitted||draft?.orderId)throw Error('Your previous checkout may still be payable. Cancel that unpaid checkout before changing its details, or resume it before paying again.')
  draft={signature:hash,id:crypto.randomUUID(),token:Array.from(crypto.getRandomValues(new Uint8Array(32)),b=>b.toString(16).padStart(2,'0')).join(''),createdAt:Date.now()}
  browser.__checkoutDraft=draft
  try{browser.sessionStorage.setItem('ktodd-checkout-draft',JSON.stringify(draft))}catch{}
  return draft
+}
+export function getCurrentCheckoutDraft(browser=window){
+ let draft=browser.__checkoutDraft
+ if(!draft){try{draft=JSON.parse(browser.sessionStorage.getItem('ktodd-checkout-draft'))}catch{}}
+ return draft||null
+}
+export function markCheckoutDraftSubmitted(draft,browser=window){
+ draft.submitted=true;browser.__checkoutDraft=draft
+ try{browser.sessionStorage.setItem('ktodd-checkout-draft',JSON.stringify(draft))}catch{}
+}
+export function forgetCancelledCheckoutDraft(id,browser=window){
+ const draft=getCurrentCheckoutDraft(browser)
+ if(draft?.id!==id)return
+ delete browser.__checkoutDraft
+ try{browser.sessionStorage.removeItem('ktodd-checkout-draft')}catch{}
+ if(browser.__checkoutPayment?.orderId===draft.orderId)delete browser.__checkoutPayment
+ try{const payment=JSON.parse(browser.sessionStorage.getItem(STORAGE_KEY));if(payment?.orderId===draft.orderId)browser.sessionStorage.removeItem(STORAGE_KEY)}catch{}
 }

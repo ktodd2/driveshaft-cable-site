@@ -12,7 +12,7 @@ serve(async req=>{
  try{
   const text=await req.text();if(text.length>32768)throw Error('Invalid quote')
   const input=normalizeCheckoutInput(JSON.parse(text),{complete:false})
-  const quote=await priceCheckout(createAdminClient(),stripe,input)
-  return Response.json({subtotalCents:quote.subtotalCents,discountCents:quote.discountCents,shippingCents:quote.shippingCents,taxCents:quote.taxCents,totalCents:quote.totalCents,discountSource:quote.discountSource,repeat:quote.repeat,taxQuoted:!!quote.taxCalculationId},{headers})
- }catch{return Response.json({error:'Could not verify your order price. Please review the cart and try again.'},{status:409,headers})}
+  const quote=await priceCheckout(createAdminClient(),stripe,input,{referralEnabled:Deno.env.get('REFERRAL_REWARDS_ENABLED')==='true',buyerVerificationEnabled:Deno.env.get('BUYER_EMAIL_VERIFICATION_ENABLED')==='true'})
+  return Response.json({subtotalCents:quote.subtotalCents,discountCents:quote.discountCents,shippingCents:quote.shippingCents,taxCents:quote.taxCents,totalCents:quote.totalCents,discountSource:quote.discountSource,repeat:quote.repeat,taxQuoted:!!quote.taxCalculationId,baseDiscountCents:quote.baseDiscountCents,baseDiscountSource:quote.baseDiscountSource,referralDiscountCents:quote.referralDiscountCents,referralDiscountBps:quote.referralDiscountBps,verificationRequired:quote.verificationRequired},{headers})
+ }catch(error){const message=error instanceof Error&&error.message.startsWith('This discount makes the order total zero.')?error.message:'Could not verify your order price. Please review the cart and try again.';return Response.json({error:message},{status:409,headers})}
 })

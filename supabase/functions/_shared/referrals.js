@@ -1,6 +1,7 @@
 // Service-only adapter. Currency is always integer USD cents. No secrets or bodies in logs.
+import {referralPolicyRate} from './referralPolicy.js'
 export const normalizeReferralEmail = value => String(value ?? '').trim().toLowerCase()
-export const referralRate = n => n === 1 ? 1000 : n === 2 ? 500 : n <= 10 ? 200 : 100
+export const referralRate = (n,tiers) => referralPolicyRate(n,tiers)
 export const referralCommission = (base, refunded, bps) => Math.round((base - refunded) * bps / 10000)
 export const referralMonth = date => new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Chicago', year: 'numeric', month: '2-digit' }).format(date)
 export async function rpc(db, name, args) {
@@ -90,7 +91,7 @@ export function customerStatementText(details) {
 export function statementText(partner,statement) {
  const money=n=>new Intl.NumberFormat('en-US',{style:'currency',currency:'USD'}).format(n/100)
  const b=statement.balance
- return `Hello ${statementDisplayName(partner.name)},\n\nYour referral code is ${partner.code}. Your ${statement.month} referral reward statement. Balance prepared ${new Date(statement.created_at).toISOString()} (UTC):\nAvailable: ${money(b.available)}\nPending (seven-day wait): ${money(b.pending)}\nOn review hold: ${money(b.held)}\nReserved: ${money(b.reserved)}\nAlready issued: ${money(b.paid)}\nRefund reductions: ${money(b.reversed)}\n\nReply to choose a check or products. For products, tell us what you want. $1 in rewards covers $1 of merchandise at retail prices; shipping also comes from rewards. Every redemption needs owner approval and sufficient available balance. No payment has been issued by this email. Some orders may await payment or refund verification. Negative balances reduce future earnings.\n\nRewards are 10% on each referred buyer's first paid website retail order, 5% on their second, 2% on orders 3–10 and 1% thereafter. Product revenue after discounts only; tax and shipping do not earn rewards. Fully refunded orders retain their original tier position.\n${customerStatementText(statement.customer_details)}\n\nDriveshaft Cable by K.Todd`
+ return `Hello ${statementDisplayName(partner.name)},\n\nYour referral code is ${partner.code}. Your ${statement.month} referral reward statement. Balance prepared ${new Date(statement.created_at).toISOString()} (UTC):\nAvailable: ${money(b.available)}\nPending (seven-day wait): ${money(b.pending)}\nOn review hold: ${money(b.held)}\nReserved: ${money(b.reserved)}\nAlready issued: ${money(b.paid)}\nRefund reductions: ${money(b.reversed)}\n\nReply to choose a check or products. For products, tell us what you want. $1 in rewards covers $1 of merchandise at retail prices; shipping also comes from rewards. Every redemption needs owner approval and sufficient available balance. No payment has been issued by this email. Some orders may await payment or refund verification. Negative balances reduce future earnings.\n\nCommission rates and order limits are configured per code; your actual earned rates appear in the customer/order breakdown below. Changes affect newly prepared future orders, including existing referred buyers. Already prepared checkouts and earned commissions retain their recorded terms. Product revenue after discounts only; tax and shipping do not earn rewards. Fully refunded orders retain their original tier position.\n${customerStatementText(statement.customer_details)}\n\nDriveshaft Cable by K.Todd`
 }
 
 export function validateReferralRecovery(snapshot, input, tokenHash) {

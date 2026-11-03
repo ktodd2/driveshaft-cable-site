@@ -12,7 +12,7 @@ Refund reductions: $2.00
 
 Reply to choose a check or products. For products, tell us what you want. $1 in rewards covers $1 of merchandise at retail prices; shipping also comes from rewards. Every redemption needs owner approval and sufficient available balance. No payment has been issued by this email. Some orders may await payment or refund verification. Negative balances reduce future earnings.
 
-Rewards are 10% on each referred buyer's first paid website retail order, 5% on their second, 2% on orders 3–10 and 1% thereafter. Product revenue after discounts only; tax and shipping do not earn rewards. Fully refunded orders retain their original tier position.
+Commission rates and order limits are configured per code; actual earned rates appear in the customer/order breakdown. Settings changes affect newly prepared future orders for existing and new linked customers. Previously prepared checkouts and earned commissions retain their recorded terms. Product revenue after discounts only; tax and shipping do not earn rewards. Fully refunded orders retain their original tier position.
 
 REFERRED CUSTOMER DETAILS
 Purchase period: 2026-11 (America/Chicago calendar month). Period totals are for orders paid in that month. Refunds shown are cumulative through preparation, including reductions on earlier orders. Lifetime totals include all attributed orders through preparation.

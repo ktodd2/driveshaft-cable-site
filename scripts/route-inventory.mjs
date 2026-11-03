@@ -99,6 +99,7 @@ const SAMPLES = {
   ],
   '/checkout': [{ url: '/checkout', state: 'with items (Stripe blocked, tax mocked)', seedCart: true }],
   '/checkout/success': [{ url: '/checkout/success', state: 'no order param' }],
+  '/checkout/verify-email': [{ url: '/checkout/verify-email', state: 'private link absent; explicit confirmation required' }],
   '/quote': [{ url: '/quote', state: 'form idle' }],
   '/order-tracking': [{ url: '/order-tracking', state: 'form idle' }],
   '/blog': [{ url: '/blog', state: 'list (mock posts)' }],

@@ -22,18 +22,22 @@ try{for(const width of [1440,390]){
    return route.fulfill({json:[]})
   }
   if(path==='/functions/v1/quote-checkout'){
-   const input=route.request().postDataJSON();quotes.push(input);const repeat=false,tax=input.customer.zip==='77001'?200:0
-   return route.fulfill({json:{subtotalCents:3000,discountCents:repeat?300:0,shippingCents:2000,taxCents:tax,totalCents:5000-(repeat?300:0)+tax,discountSource:repeat?'loyalty':null,repeat,taxQuoted:input.customer.zip==='77001'}})
+   const input=route.request().postDataJSON();quotes.push(input);const repeat=false,tax=input.customer.zip==='77001'?200:0,referral=input.referralCode?150:0
+   return route.fulfill({json:{subtotalCents:3000,discountCents:(repeat?300:0)+referral,shippingCents:2000,taxCents:tax,totalCents:5000-(repeat?300:0)-referral+tax,referralDiscountCents:referral,referralDiscountBps:referral?500:0,discountSource:referral?'referral':repeat?'loyalty':null,repeat,taxQuoted:input.customer.zip==='77001'}})
+  }
+  if(path==='/functions/v1/resume-secure-checkout'){
+   const input=route.request().postDataJSON();assert.equal(input.checkoutId,creates[0].checkoutId);assert.equal(input.checkoutToken,creates[0].checkoutToken)
+   return route.fulfill({json:{orderId,clientSecret:secret,status:'requires_payment_method',checkout:{customer:creates[0].customer,items:[{productId:'1',name:'Frozen Fixture Cable',quantity:10,price:300}],referralCode:'SHOP-10',discountCode:null,pricing:{subtotalCents:3000,discountCents:150,shippingCents:2000,taxCents:200,totalCents:5050,discountSource:'referral',taxQuoted:true}}}})
   }
   if(path==='/functions/v1/create-secure-checkout'){
    const input=route.request().postDataJSON();creates.push(input)
-   assert.equal(input.amount,5200);assert.equal(input.customer.email,'new@invalid.test');assert.ok(/^[a-f0-9]{64}$/.test(input.checkoutToken));assert.ok(input.checkoutId);assert.equal(input.referralCode,'SHOP-10');assert.equal(input.discountCode,null);assert.equal(input.orderId,undefined);assert.equal(input.payment_status,undefined)
+   assert.equal(input.amount,5050);assert.equal(input.customer.email,'new@invalid.test');assert.ok(/^[a-f0-9]{64}$/.test(input.checkoutToken));assert.ok(input.checkoutId);assert.equal(input.referralCode,'SHOP-10');assert.equal(input.discountCode,null);assert.equal(input.orderId,undefined);assert.equal(input.payment_status,undefined)
    if(lose){lose=false;return route.fulfill({status:503,json:{error:'Fixture response lost; retry this checkout'}})}
    return route.fulfill({json:{orderId,clientSecret:secret,status:'requires_payment_method'}})
   }
   if(path==='/functions/v1/verify-purchase'){
    const input=route.request().postDataJSON();assert.equal(input.orderId,orderId);assert.equal(input.clientSecret,secret)
-   return route.fulfill({json:{status:'paid',purchase:null,order:{subtotal_cents:3000,discount_cents:0,shipping_cents:2000,tax_cents:200,total_cents:5200}}})
+   return route.fulfill({json:{status:'paid',purchase:null,order:{subtotal_cents:3000,discount_cents:150,shipping_cents:2000,tax_cents:200,total_cents:5050}}})
   }
   return route.continue()
  })
@@ -48,7 +52,7 @@ try{for(const width of [1440,390]){
  await page.getByLabel('City *',{exact:true}).fill('Houston')
  await page.getByLabel('State *',{exact:true}).fill('TX')
  await page.getByLabel('ZIP Code *',{exact:true}).fill('77001')
- await page.waitForFunction(()=>document.body.textContent.includes('$52.00'))
+ await page.waitForFunction(()=>document.body.textContent.includes('$50.50'))
  await page.evaluate(()=>window.scrollTo(0,0));await page.waitForTimeout(100)
  await page.screenshot({path:`docs/integration/screenshots/referral-code-${width}.png`,fullPage:true})
  await page.getByRole('button',{name:'Continue to Payment',exact:true}).click()
@@ -58,6 +62,10 @@ try{for(const width of [1440,390]){
  assert.equal(creates.length,2);assert.equal(creates[0].checkoutId,creates[1].checkoutId);assert.equal(creates[0].checkoutToken,creates[1].checkoutToken)
  await page.evaluate(()=>window.scrollTo(0,0));await page.waitForTimeout(100)
  await page.screenshot({path:`docs/integration/screenshots/checkout-${width}.png`,fullPage:true})
+ // Reload drops globals and form state; private capability resumes the frozen checkout.
+ await page.reload();await page.getByRole('button',{name:'Resume / check payment',exact:true}).click()
+ await page.getByRole('heading',{name:'PAYMENT',exact:true}).waitFor();await page.getByText('Frozen Fixture Cable',{exact:true}).waitFor()
+ assert.equal(creates.length,2,'resume never creates another checkout');assert.equal(await page.getByRole('button',{name:'Pay $50.50',exact:true}).count(),1)
  // Full navigation simulates a Stripe/3DS return: globals disappear, tab-private capability remains.
  await page.goto(`http://127.0.0.1:3018/checkout/success?order=${orderId}`)
  await page.getByRole('heading',{name:'ORDER CONFIRMED!',exact:false}).waitFor()

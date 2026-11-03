@@ -5,13 +5,13 @@ import {readFileSync} from 'node:fs'
 import {runInNewContext} from 'node:vm'
 import {stripTypeScriptTypes} from 'node:module'
 import {commerceFixture} from '../fixtures/integrationCommerceDb.mjs'
-import {createSecurePayment} from '../../supabase/functions/_shared/secureCheckout.js'
+import {createSecurePayment,checkoutErrorMessage} from '../../supabase/functions/_shared/secureCheckout.js'
 import {createPurchaseSnapshot} from '../../supabase/functions/_shared/purchaseAnalytics.js'
 function endpoint(f,enabled=true,name='create-secure-checkout'){
  let handler
  class Stripe{constructor(){return f.stripe}}
  const source=readFileSync(`supabase/functions/${name}/index.ts`,'utf8').replace(/^import .*\n/gm,'')
- runInNewContext(stripTypeScriptTypes(source),{serve:fn=>{handler=fn},Stripe,createAdminClient:()=>f.db,createSecurePayment,priceCheckout:(_db,_stripe,input)=>f.price(input),createPurchaseSnapshot,analyticsMetadata:()=>({}),Deno:{env:{get:key=>key==='REFERRAL_REWARDS_ENABLED'&&enabled?'true':''}},Response,JSON,Error})
+ runInNewContext(stripTypeScriptTypes(source),{serve:fn=>{handler=fn},Stripe,createAdminClient:()=>f.db,createSecurePayment,checkoutErrorMessage,priceCheckout:(_db,_stripe,input)=>f.price(input),createPurchaseSnapshot,analyticsMetadata:()=>({}),Deno:{env:{get:key=>key==='REFERRAL_REWARDS_ENABLED'&&enabled?'true':''}},Response,JSON,Error})
  return body=>handler(new Request('http://fixture',{method:'POST',body:JSON.stringify(body)}))
 }
 const input=(email='new@invalid.test',code='SHOP-10')=>({checkoutId:crypto.randomUUID(),checkoutToken:'a'.repeat(64),customer:{email,name:'Named Buyer',phone:'5551234567',address1:'123 Fixture Lane',address2:'',city:'Houston',state:'TX',zip:'77001',country:'US'},items:[{productId:'1',quantity:10}],amount:7375,referralCode:code})
