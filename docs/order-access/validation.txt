@@ -1,0 +1,23 @@
+Separate local order-access repair, 2026-11-03 UTC
+Base: main 38adb33bbddf38b7625ff3a4df5823ab9aef7d45 (shipping PR24)
+
+npm test: 283 passed, 0 failed
+Local PGlite/Postgres order-access/payment migration suite: PASS
+Existing shipping import Postgres integration suite: PASS
+Headless desktop 1440 and mobile 390 actual checkout/return fixtures: PASS
+  - only localhost requests; separate temporary Chrome profile; no active user browser
+  - server quote preserves repeat loyalty/tax/shipping
+  - lost response repeats identical private checkout ID/token
+  - full redirect restores payment capability and clears completed draft
+  - zero browser /orders queries/writes
+Deno type checks: create-secure-checkout, create-payment-intent, quote-checkout, stripe-webhook, verify-purchase PASS
+Fixture Vite build + prerender/schema/sitemap: 10 public pages / 10 canonical URLs PASS
+Route inventory: 32 routes complete
+Git whitespace check: PASS
+Independent local read-only security review and fix recheck: complete
+
+No production operations, customer rows, real payment/provider calls, emails, schedules, credential changes or remote publication.
+Main-based separate diff; combined referral/access checkout has NOT been composed or tested.
+Remaining: explicit publication/release permission, hosted gateway/RLS/advisors/multi-connection/provider validation,
+coordinated frontend/backend/grants cutover, legacy pending-delivery and uncertain tax/provider verification.
+See README for rollout/rollback and referral named-prepare hook including normalized buyer name.

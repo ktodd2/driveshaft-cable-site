@@ -87,3 +87,6 @@ export function serverPurchase(intent, orderId) {
   if (intent?.metadata?.ga4_reporting !== 'server_v1') return null
   return verifiedPurchaseResponse({ ...intent, metadata: { ...intent.metadata, ga4_reporting: 'server_payload' } }, orderId, intent.client_secret)?.purchase || null
 }
+
+// Immutable monetary evidence for server-side legacy reconciliation; never includes customer data.
+export function trustedFinancialSnapshot(intent) { return intent?.status==='succeeded' ? readSnapshot(intent) : null }

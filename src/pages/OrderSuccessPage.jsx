@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { getCheckoutPayment, verifyCheckoutPayment, clearPurchasedCart } from '../lib/checkoutPayment'
-import { supabase } from '../lib/supabase'
 import { reportPurchase } from '../lib/purchaseAnalytics'
 import { formatPrice, useCartStore } from '../stores/cartStore'
 import SEOHead from '../components/common/SEOHead'
@@ -33,16 +32,6 @@ function OrderSuccessPage() {
           setOrder(result.order)
           setPurchase(result.purchase)
           clearPurchasedCart(orderId, useCartStore.getState().items, clearCart)
-          // Keep the existing confirmation fallback for fulfillment, but gate
-          // it on server verification—not the forgeable redirect_status flag.
-          // Its outcome is not payment proof and never controls GA reporting.
-          try {
-            await supabase.from('orders').update({
-              payment_status: 'paid', status: 'confirmed',
-              stripe_payment_intent_id: payment.clientSecret.split('_secret_')[0],
-              updated_at: new Date().toISOString(),
-            }).neq('payment_status', 'paid').eq('id', orderId)
-          } catch { /* A fulfillment update must not turn a verified payment into an apparent failure. */ }
           return
         }
         setPaymentStatus(result.status === 'failed' ? 'failed' : 'pending')

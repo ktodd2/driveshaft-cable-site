@@ -9,7 +9,7 @@ import { Elements, PaymentElement, useStripe, useElements } from '@stripe/react-
 import { useCartStore, getPriceForQuantity, selectTotalItems, selectSubtotal, selectPricePerUnit, selectShipping, selectOrderTotal, formatPrice, SHIPPING_FEE, FREE_SHIPPING_THRESHOLD, REPEAT_CUSTOMER_DISCOUNT } from '../stores/cartStore'
 import { getShippingAddressProblem, SHIPPING_ADDRESS_MESSAGES } from '../lib/shippingAddress'
 import { supabase } from '../lib/supabase'
-import { rememberCheckoutPayment, clearPurchasedCart } from '../lib/checkoutPayment'
+import { rememberCheckoutPayment, clearPurchasedCart, getOrCreateCheckoutDraft } from '../lib/checkoutPayment'
 import SEOHead from '../components/common/SEOHead'
 
 // Initialize Stripe
@@ -45,15 +45,9 @@ function PaymentForm({ clientSecret, orderId, totalCents, onSuccess, items }) {
       return
     }
 
-    // Preserve the existing checkout fulfillment fallback, but only after
-    // Stripe itself confirms success. Analytics is independently server-verified.
+    // The server webhook and capability-protected confirmation own fulfillment.
     if (paymentIntent && ['succeeded', 'processing'].includes(paymentIntent.status)) {
       if (paymentIntent.status === 'succeeded') {
-        await supabase.from('orders').update({
-          payment_status: 'paid', status: 'confirmed',
-          stripe_payment_intent_id: paymentIntent.id,
-          updated_at: new Date().toISOString(),
-        }).neq('payment_status', 'paid').eq('id', orderId)
         clearPurchasedCart(orderId, useCartStore.getState().items, clearCart)
       }
       navigate(`/checkout/success?order=${orderId}`)
@@ -130,11 +124,9 @@ function CheckoutPage() {
   const [isRepeatCustomer, setIsRepeatCustomer] = useState(false)
   const [checkingEmail, setCheckingEmail] = useState(false)
 
-  // Stripe Tax state. taxCalculationId is the id of a stripe.tax.calculations
-  // record that the webhook will finalize into a transaction after payment.
-  // Without it, the sale won't appear in Stripe Tax's filing reports.
+  // The quote exposes amounts only; the server retains and finalizes the tax calculation.
   const [taxCents, setTaxCents] = useState(0)
-  const [taxCalculationId, setTaxCalculationId] = useState(null)
+  const [taxQuoted, setTaxQuoted] = useState(false)
   const [isCalculatingTax, setIsCalculatingTax] = useState(false)
   const [taxError, setTaxError] = useState(null)
 
@@ -171,25 +163,18 @@ function CheckoutPage() {
   // burn a Stripe Tax API call. Tax calculations are billed per-request once
   // Stripe Tax is on a paid plan, so this debounce matters.
   useEffect(() => {
-    const hasMinimumAddress =
-      formData.country &&
-      formData.zip && formData.zip.trim().length >= 5 &&
-      formData.state && formData.state.trim().length > 0
-    if (!hasMinimumAddress || items.length === 0) {
-      setTaxCents(0)
-      setTaxCalculationId(null)
-      setTaxError(null)
-      return
-    }
-
+    if (items.length === 0) return
+    const controller = new AbortController()
     const handle = setTimeout(async () => {
       setIsCalculatingTax(true)
+      setCheckingEmail(true)
       setTaxError(null)
       try {
         const response = await fetch(
-          `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/calculate-tax`,
+          `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/quote-checkout`,
           {
             method: 'POST',
+            signal: controller.signal,
             headers: {
               'Content-Type': 'application/json',
               'apikey': import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
@@ -200,37 +185,33 @@ function CheckoutPage() {
                 name: item.name,
                 quantity: item.quantity,
               })),
-              shippingAddress: {
-                line1: formData.address1,
-                line2: formData.address2,
-                city: formData.city,
-                state: formData.state,
-                postal_code: formData.zip,
-                country: formData.country,
-              },
-              discountCents,
+              customer: formData,
+              discountCode: appliedCode,
             }),
           }
         )
         const data = await response.json()
         if (data.error) throw new Error(data.error)
+        if (controller.signal.aborted) return
+        setIsRepeatCustomer(data.repeat === true)
         setTaxCents(data.taxCents || 0)
-        setTaxCalculationId(data.calculationId)
+        setTaxQuoted(data.taxQuoted === true)
       } catch (err) {
+        if (controller.signal.aborted) return
         // Fail closed: don't show a tax line, but surface the error so the
         // customer knows their address may need attention.
         setTaxCents(0)
-        setTaxCalculationId(null)
+        setTaxQuoted(false)
         setTaxError(err.message || 'Could not calculate tax for this address.')
       } finally {
-        setIsCalculatingTax(false)
+        if (!controller.signal.aborted) { setIsCalculatingTax(false); setCheckingEmail(false) }
       }
     }, 500)
 
-    return () => clearTimeout(handle)
+    return () => { clearTimeout(handle); controller.abort() }
   }, [
-    formData.address1, formData.city, formData.state, formData.zip, formData.country,
-    items, discountCents
+    formData.email, appliedCode, formData.address1, formData.city, formData.state, formData.zip, formData.country,
+    items
   ])
 
   // Write an abandoned-cart row when the customer has entered a valid email
@@ -312,26 +293,6 @@ function CheckoutPage() {
   const handleApplyCode = () => applyCode()
 
   // Check if email belongs to a returning customer
-  const checkRepeatCustomer = async (email) => {
-    if (!email || !email.includes('@')) return
-    setCheckingEmail(true)
-    try {
-      const { count, error } = await supabase
-        .from('orders')
-        .select('*', { count: 'exact', head: true })
-        .eq('email', email.toLowerCase().trim())
-        .eq('payment_status', 'paid')
-      if (!error && count > 0) {
-        setIsRepeatCustomer(true)
-      } else {
-        setIsRepeatCustomer(false)
-      }
-    } catch {
-      setIsRepeatCustomer(false)
-    }
-    setCheckingEmail(false)
-  }
-
   const handleChange = (e) => {
     const { name, value } = e.target
     setFormData(prev => ({ ...prev, [name]: value }))
@@ -343,7 +304,6 @@ function CheckoutPage() {
   useEffect(() => {
     if (recoveryEmail && !formData.email) {
       setFormData(prev => ({ ...prev, email: recoveryEmail }))
-      checkRepeatCustomer(recoveryEmail)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [recoveryEmail])
@@ -372,82 +332,40 @@ function CheckoutPage() {
     setIsCreatingOrder(true)
 
     try {
-      // 1. Create order in Supabase
-      const { data: order, error: orderError } = await supabase
-        .from('orders')
-        .insert([{
-          // Lowercased so it matches the cart_abandonments row and the
-          // repeat-customer lookup, which both normalise the email.
-          email: formData.email.toLowerCase().trim(),
-          name: formData.name,
-          company: formData.company,
-          phone: formData.phone,
-          shipping_address: {
-            address1: formData.address1,
-            address2: formData.address2,
-            city: formData.city,
-            state: formData.state,
-            zip: formData.zip,
-            country: formData.country
-          },
-          items: items.map(item => ({
-            productId: item.productId,
-            name: item.name,
-            quantity: item.quantity,
-            price: item.price
-          })),
-          subtotal_cents: subtotal,
-          discount_cents: discountCents,
-          discount_reason:
-            discountSource === 'loyalty' ? 'Returning customer 10% loyalty discount' :
-            discountSource === 'code' ? `Discount code ${appliedCode}` :
-            null,
-          discount_code: discountSource === 'code' ? appliedCode : null,
-          shipping_cents: shippingCents,
-          tax_cents: taxCents,
-          stripe_tax_calculation_id: taxCalculationId,
-          total_cents: totalCents,
-          how_heard: formData.hearAboutUs === 'Other'
-            ? (formData.hearAboutUsOther.trim() || 'Other')
-            : (formData.hearAboutUs || null),
-          status: 'pending',
-          payment_status: 'pending',
-          payment_method: 'stripe'
-        }])
-        .select()
-        .single()
-
-      if (orderError) throw orderError
-
-      setOrderId(order.id)
-
-      // 2. Create payment intent via Edge Function
+      const signature = JSON.stringify([formData,items.map(i=>[i.productId,i.quantity]),totalCents,appliedCode])
+      const draft = await getOrCreateCheckoutDraft(signature)
       const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-payment-intent`,
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-secure-checkout`,
         {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
             'apikey': import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY
           },
-          // The server recomputes the total from the order row and refuses
+          // The server creates the order, recomputes its total and refuses
           // if it doesn't match `amount` (what the customer is shown).
           body: JSON.stringify({
             amount: totalCents,
             analytics: await captureAnalyticsContext(),
-            orderId: order.id,
+            checkoutId: draft.id,
+            checkoutToken: draft.token,
+            customer: formData,
+            items: items.map(item=>({productId:item.productId,quantity:item.quantity})),
+            howHeard: formData.hearAboutUs === 'Other' ? formData.hearAboutUsOther.trim() || 'Other' : formData.hearAboutUs,
             discountCode: discountSource === 'code' ? appliedCode : null,
           })
         }
       )
 
-      const { clientSecret: secret, error: intentError } = await response.json()
+      const { clientSecret: secret, orderId: createdOrderId, status, error: intentError } = await response.json()
 
       if (intentError) throw new Error(intentError)
 
-      rememberCheckoutPayment(order.id, secret, window, items)
+      setOrderId(createdOrderId)
+      rememberCheckoutPayment(createdOrderId, secret, window, items)
       setClientSecret(secret)
-      setStep(2)
+      if (status === 'succeeded' || status === 'processing') navigate(`/checkout/success?order=${createdOrderId}`)
+      else setStep(2)
     } catch (err) {
       console.error('Error creating order:', err)
       setOrderError(err.message || 'Failed to create order. Please try again.')
@@ -528,7 +446,6 @@ function CheckoutPage() {
                           name="email"
                           value={formData.email}
                           onChange={handleChange}
-                          onBlur={(e) => checkRepeatCustomer(e.target.value)}
                           required
                           placeholder="your@email.com"
                           className="w-full bg-gray-800 border border-gray-600 text-white px-4 py-3 focus:border-yellow-500 focus:outline-none"
@@ -896,7 +813,7 @@ function CheckoutPage() {
                     <span>Tax</span>
                     {isCalculatingTax ? (
                       <span className="text-gray-500 text-sm italic">Calculating…</span>
-                    ) : taxCalculationId ? (
+                    ) : taxQuoted ? (
                       <span className="text-white">{formatPrice(taxCents)}</span>
                     ) : (
                       <span className="text-gray-500 text-sm italic">Enter address</span>

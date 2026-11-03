@@ -1,7 +1,8 @@
-// Read-only verification for the browser confirmation page. No DB mutations,
-// fulfillment, GA Measurement Protocol calls, or customer data in the response.
+// Capability-protected payment verification and server reconciliation. No customer data in the response.
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import Stripe from 'https://esm.sh/stripe@13.10.0?target=deno'
+import {createAdminClient} from '../_shared/pricing.ts'
+import {reconcileOrderPayment} from '../_shared/secureCheckout.js'
 import { verifiedPurchaseResponse } from '../_shared/purchaseAnalytics.js'
 
 // Keep the API/SDK version aligned with this site's existing payment functions.
@@ -35,6 +36,7 @@ serve(async (req) => {
       // Confirmation remains paid, but a refunded/unverified charge is not a new sale.
       if ('purchase' in result) result.purchase = null
     }
+    if (intent.status === 'succeeded') await reconcileOrderPayment(createAdminClient(),stripe,intent)
     return json(result)
   } catch {
     // Never log/echo the request, secret, Stripe object, or upstream error.
