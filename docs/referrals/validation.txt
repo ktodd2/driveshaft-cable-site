@@ -48,3 +48,8 @@ clarity issues were fixed and regression-tested. See sample-monthly-statement.tx
 Separate order-access repair is locally committed on feature/order-access-repair at 020cec1 and remains unpublished.
 Its 283 unit tests plus SQL/payment/RLS/shipping/checkout UI/Edge/build checks pass. Referral/access composition
 still needs explicit local integration testing before any release. No production operations have run.
+
+Illustrative statement-size fixture: 100 named customers and 1,200 orders, all four tiers, $3,300 total
+commissions reconcile; 387,004 plaintext bytes; local SQL measured 50ms. This is not a hosted performance
+or provider-size guarantee. No real recipients or provider requests were used. The final buyer disclosure
+now states the sharing rule in two short sentences covering this and future same-email orders.

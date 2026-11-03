@@ -37,8 +37,8 @@ test('legacy missing names/details do not fall back to a buyer email or live ord
 })
 test('checkout code entry and referrer signup explain named-purchase sharing upfront',()=>{
  const checkout=readFileSync('src/pages/CheckoutPage.jsx','utf8'),signup=readFileSync('src/pages/ReferralSignupPage.jsx','utf8')
- assert.match(checkout,/By using a referral code, you share your name, eligible product purchases after discounts, and commission information/)
- assert.match(checkout,/Your email, address, tax, shipping and payment details are not included/)
+ assert.match(checkout,/Using this code lets the referrer see your name, eligible product spending after discounts, and commission details/)
+ assert.match(checkout,/This applies to this order and future orders using the same email/);assert.match(checkout,/Your email, address, tax, shipping and payment details are not included/)
  assert.match(signup,/Statements include your referred customers’ names, eligible product spending and commission details/)
 })
 test('unallocated partial refunds are visibly provisional and excluded from confirmed spend and commission',()=>{
