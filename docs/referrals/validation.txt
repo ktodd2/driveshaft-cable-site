@@ -18,3 +18,8 @@ Limits: local Postgres engine serializes simultaneous calls. Hosted multi-connec
 provider event subscription verification and real environment delivery checks remain approval-gated staging work.
 Existing broad production orders permissions are a release blocker; see README.
 No payment cancellation or per-email checkout limit remains in the implementation.
+
+Publication status: the combined git push / draft PR action to ktodd2/driveshaft-cable-site was rejected
+before execution by automatic approval review. Reason: local staging/review authorization did not explicitly
+include external publication or opening a PR. No remote branch or PR was created. Do not retry through
+another tool. Explicit human approval is required to publish the draft branch/PR; local files remain usable.
