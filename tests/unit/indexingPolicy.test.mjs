@@ -4,7 +4,7 @@ import { readFileSync } from 'node:fs'
 import { isUtilityPath } from '../../src/lib/indexingPolicy.js'
 
 test('utility indexing covers bare routes, nested admin, checkout and recovery tokens', () => {
-  for (const path of ['/cart', '/cart/', '/cart/recover/public-test-token', '/checkout', '/checkout/success', '/admin', '/admin/login', '/admin/orders', '/order-tracking', '/suggestions', '/testimonial']) assert.equal(isUtilityPath(path), true, path)
+  for (const path of ['/cart', '/cart/', '/cart/recover/public-test-token', '/checkout', '/checkout/success', '/admin', '/admin/login', '/admin/orders', '/order-tracking', '/suggestions', '/testimonial', '/referral/signup', '/referral/signup/']) assert.equal(isUtilityPath(path), true, path)
   for (const path of ['/', '/products', '/products/driveshaft-cable', '/blog', '/blog/field-guide', '/shipping-returns', '/quote', '/cartography', '/administrator']) assert.equal(isUtilityPath(path), false, path)
 })
 

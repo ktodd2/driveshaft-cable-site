@@ -1,3 +1,4 @@
+import { handleReferralEvent } from '../_shared/referrals.js'
 import { createApiClient } from '../_shared/supabaseTransport.js'
 import { getSupabaseSecretKey } from '../_shared/supabaseKeys.js'
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
@@ -20,13 +21,13 @@ serve(async (req) => {
   let event: Stripe.Event
 
   try {
-    event = stripe.webhooks.constructEvent(
+    event = await stripe.webhooks.constructEventAsync(
       body,
       signature!,
-      Deno.env.get('STRIPE_WEBHOOK_SECRET')!
+      Deno.env.get('STRIPE_WEBHOOK_SECRET')!, undefined, Stripe.createSubtleCryptoProvider()
     )
   } catch (err) {
-    console.error('Webhook signature verification failed:', err.message)
+    console.error('Webhook signature verification failed')
     return new Response(JSON.stringify({ error: 'Invalid signature' }), { status: 400 })
   }
 
@@ -120,7 +121,7 @@ serve(async (req) => {
           payment_status: 'failed',
           updated_at: new Date().toISOString(),
         })
-        .eq('id', orderId)
+        .eq('id', orderId).neq('payment_status', 'paid')
 
       console.log(`Order ${orderId} payment failed`)
       break
@@ -132,6 +133,12 @@ serve(async (req) => {
     // this, refunded sales remain in Stripe Tax reports as if the tax was kept,
     // overstating tax liability at filing time.
   }
+
+  // This path reads Stripe directly and never trusts mutable orders.payment_status.
+  // Run after legacy fulfillment so reward reconciliation never prevents the paid/stock update.
+  // A transient failure remains retryable, including refund-before-success delivery.
+  try { await handleReferralEvent(supabase, stripe, event) }
+  catch { return new Response('Referral reconciliation unavailable', { status: 503 }) }
 
   return new Response(JSON.stringify({ received: true }), { status: 200 })
 })

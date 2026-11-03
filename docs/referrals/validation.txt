@@ -1,0 +1,20 @@
+Local staged validation, 2026-11-03 UTC
+Base: main 38adb33bbddf38b7625ff3a4df5823ab9aef7d45 (fresh fetch verified)
+
+npm test: 281 passed, 0 failed
+Isolated PGlite/Postgres migration and business/security tests: PASS
+Actual pinned Stripe signature verification fixture: 1 passed, 0 failed
+Deno type-check: create-payment-intent, stripe-webhook, referral-admin, referral-signup, referral-monthly PASS
+Isolated headless desktop/mobile admin and signup fixtures: PASS
+Route inventory: 34 routes, complete
+Vite build with fixture public configuration: PASS (existing large chunk warning)
+Offline prerender, schema and sitemap verification: 10 public pages / 10 canonical URLs PASS
+Git whitespace check: PASS
+
+No production migrations, deployments, emails, invitations, schedules, payouts or order mutations.
+No active user browser/profile used. Headless tests blocked all external network requests.
+
+Limits: local Postgres engine serializes simultaneous calls. Hosted multi-connection stress, hosted gateway/RLS/advisors,
+provider event subscription verification and real environment delivery checks remain approval-gated staging work.
+Existing broad production orders permissions are a release blocker; see README.
+No payment cancellation or per-email checkout limit remains in the implementation.

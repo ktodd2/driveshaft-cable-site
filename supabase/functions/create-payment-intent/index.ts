@@ -8,6 +8,8 @@
 // total it displayed; if that disagrees with the server total we refuse
 // rather than charge an amount the customer never saw.
 
+import { digest } from '../_shared/emailHealth.js'
+import { prepareReferralCheckout, validateReferralRecovery } from '../_shared/referrals.js'
 import { analyticsMetadata } from '../_shared/ga4Outbox.js'
 import { createPurchaseSnapshot } from '../_shared/purchaseAnalytics.js'
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
@@ -57,24 +59,51 @@ serve(async (req) => {
   try {
     const adminClient = createAdminClient()
 
-    const { amount: clientAmount, orderId, discountCode, analytics } = await req.json()
+    const { amount: clientAmount, orderId, discountCode, referralCode, checkoutToken, analytics } = await req.json()
 
     if (!orderId) return json({ error: 'orderId is required' }, 400)
 
     const { data: order, error: orderError } = await adminClient
       .from('orders')
-      .select('id, email, items, shipping_address, payment_status')
+      .select('id, email, items, shipping_address, payment_status, payment_method, status')
       .eq('id', orderId)
       .single()
 
     if (orderError || !order) return json({ error: 'Order not found' }, 400)
     if (order.payment_status === 'paid') return json({ error: 'This order has already been paid.' }, 400)
 
+    if (Deno.env.get('REFERRAL_REWARDS_ENABLED') === 'true' && (order.payment_method !== 'stripe' || order.status !== 'pending' || !['pending', 'failed'].includes(order.payment_status))) {
+      return json({ error: 'This order is not an eligible website retail checkout.' }, 400)
+    }
+
     const items: OrderItem[] = Array.isArray(order.items) ? order.items : []
     if (items.length === 0) return json({ error: 'Order has no items' }, 400)
     for (const item of items) {
       if (!item?.productId || !Number.isInteger(item.quantity) || item.quantity <= 0) {
         return json({ error: 'Order contains an invalid item' }, 400)
+      }
+    }
+
+    if (Deno.env.get('REFERRAL_REWARDS_ENABLED') === 'true') {
+      const { data: retail, error } = await adminClient.from('products').select('id').eq('is_active', true).eq('is_storefront', true).in('id', items.map(item => item.productId))
+      if (error || items.some(item => !retail?.some(product => product.id === item.productId))) return json({ error: 'Only active website retail products are eligible.' }, 400)
+    }
+
+    let checkoutHash: string | null = null
+    let orderHash: string | null = null
+    if (Deno.env.get('REFERRAL_REWARDS_ENABLED') === 'true') {
+      if (typeof checkoutToken !== 'string' || !/^[a-f0-9]{64}$/.test(checkoutToken)) return json({ error: 'Checkout session is unavailable. Please restart checkout.' }, 400)
+      checkoutHash = await digest(checkoutToken)
+      orderHash = await digest(JSON.stringify([(order.email || '').trim().toLowerCase(), items.map(i=>[i.productId,i.quantity]), order.shipping_address]))
+      const { data: prior, error } = await adminClient.from('referral_checkouts').select('*').eq('order_id', orderId).maybeSingle()
+      if (error) return json({ error: 'Checkout verification unavailable. Please try again.' }, 503)
+      if (prior) {
+        if (!validateReferralRecovery(prior, { amount: clientAmount, code: referralCode, orderHash }, checkoutHash)) return json({ error: 'Checkout details changed. Please restart checkout.' }, 409)
+        const intent = await prepareReferralCheckout(adminClient, stripe, {
+          p_order: orderId, p_email: prior.email, p_code: referralCode || null,
+          p_merch: prior.merchandise_cents, p_shipping: prior.shipping_cents, p_tax: prior.tax_cents, p_params: prior.intent_params,
+        })
+        return json({ clientSecret: intent.client_secret }, 200)
       }
     }
 
@@ -198,11 +227,12 @@ serve(async (req) => {
     const purchaseSnapshot = createPurchaseSnapshot(
       namedLines, subtotalCents, discountCents, shippingCents, taxCents,
     )
-    const paymentIntent = await stripe.paymentIntents.create({
+    const intentParams = {
       amount: totalCents,
       currency: 'usd',
       metadata: {
         order_id: orderId,
+        ...(Deno.env.get('REFERRAL_REWARDS_ENABLED') === 'true' ? { referral_system: 'v1', referral_checkout_hash: checkoutHash!, referral_order_hash: orderHash!, referral_code: (referralCode || '').trim().toUpperCase() } : {}),
         ...(purchaseSnapshot ? { ga4_purchase: purchaseSnapshot, ...analyticsMetadata(analytics, Deno.env.get('GA4_SERVER_PURCHASES_ENABLED') === 'true') } : {}),
         items: JSON.stringify(items.map(i => ({ productId: i.productId, quantity: i.quantity }))),
         // Stored so the webhook can call stripe.tax.transactions.createFromCalculation
@@ -211,7 +241,17 @@ serve(async (req) => {
         tax_calculation_id: taxCalculationId || '',
       },
       receipt_email: email || undefined,
-    })
+    }
+    let paymentIntent
+    if (Deno.env.get('REFERRAL_REWARDS_ENABLED') === 'true') {
+      paymentIntent = await prepareReferralCheckout(adminClient, stripe, {
+        p_order: orderId, p_email: email, p_code: referralCode || null,
+        p_merch: subtotalCents - discountCents, p_shipping: shippingCents, p_tax: taxCents, p_params: intentParams,
+      })
+    } else {
+      if (referralCode) return json({ error: 'Referral codes are not available yet.' }, 409)
+      paymentIntent = await stripe.paymentIntents.create(intentParams)
+    }
 
     return json({ clientSecret: paymentIntent.client_secret }, 200)
   } catch (error) {
