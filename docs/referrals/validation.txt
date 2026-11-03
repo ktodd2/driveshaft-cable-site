@@ -53,3 +53,12 @@ Illustrative statement-size fixture: 100 named customers and 1,200 orders, all f
 commissions reconcile; 387,004 plaintext bytes; local SQL measured 50ms. This is not a hosted performance
 or provider-size guarantee. No real recipients or provider requests were used. The final buyer disclosure
 now states the sharing rule in two short sentences covering this and future same-email orders.
+
+Local composition completed separately at 9cb3735b9f0e5478ff95ced2af25d0785782b929 on
+feature/referral-access-integration. Original access/referral branches remain separate. Combined checks:
+331 unit tests, five actual endpoint/webhook PostgreSQL fixtures through seven migrations, six standalone
+SQL suites plus scale, eight Edge checks, signature, desktop/mobile new/repeat/referral/return/admin/code/signup,
+build/prerender/routes. Independent review passed after Unicode retry and ambiguous legacy ordering fixes.
+Ambiguous untracked payment history holds code-bearing rewards for verified review; it does not guess or discard
+attribution, block checkout, or award history. The integration branch is unpublished and not folded into PR25.
+Hosted staging/provider/concurrency checks and all deployment/access/activation/email/scheduler operations remain gated.
