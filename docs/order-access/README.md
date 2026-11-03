@@ -1,6 +1,6 @@
 # Separate order-access repair — local build/test only
 
-Branch `feature/order-access-repair`, based on current main `38adb33bbddf38b7625ff3a4df5823ab9aef7d45` (shipping recipient fix, PR 24). This diff does not contain referral rules or automatic email sending. No production schema, permissions, order, payment, email, schedule, credential or deployment was changed. Do not publish this branch or create another PR without separate permission.
+Branch `feature/order-access-repair`, based on current main `38adb33bbddf38b7625ff3a4df5823ab9aef7d45` (shipping recipient fix, PR 24). This diff does not contain referral rules or automatic email sending. No production schema, permissions, order, payment, email, schedule, credential or deployment was changed. Draft GitHub publication was separately approved on 2026-11-03. Merging, hosted staging, production deployment and permission changes remain unapproved.
 
 ## Result
 
@@ -50,17 +50,17 @@ Local optional validation tools are in `/tmp/referral-tools`. This worktree temp
 2. With staging authorization, apply only the additive service migration in an isolated environment. Deploy `quote-checkout`, the new versioned `create-secure-checkout`, shared reconciliation dependencies and capability-protected confirmation. Exercise real gateway authentication, RLS/grants/advisors, multi-connection concurrency, provider/webhook delivery, new/repeat/code/shipping/tax totals, manual-owner workflows and denied non-admin access using synthetic data and intercepted email. The isolated engine serializes calls and is not a hosted concurrency stress test.
 3. For production after approval, deploy the additive schema and versioned safe endpoints first. Publish the new frontend so fresh buyers use `create-secure-checkout`; the old endpoint can remain unchanged briefly during this coordinated transition. Then deploy the safe `create-payment-intent` retirement behavior and server-owned webhook, and apply the least-privilege cutover migration. Old pre-payment tabs must refresh; already-paid returns can still verify by their private payment capability. Never reopen order access or charge again to recover a stale client.
 4. Coordinate the frontend/backend/policy transition in a bounded maintenance/release window. Test an existing paid return, a fresh checkout and an active-owner manual/shipping update immediately after cutover. Keep referral/email activation off until separate composition and validation are complete.
-5. Any new remote PR publication needs explicit approval. This local build/test authorization is not production or publication authorization.
+5. Draft publication is approved; keep the PR unmerged. Hosted staging and production operations still need separate authorization.
 
 ## Rollback
 
 Keep the private service schema and payment receipts so retries cannot create duplicate effects. Keep the safe versioned checkout/confirmation path available; roll forward to a known-good compatible build or briefly stop new checkout preparation if necessary. **Do not restore permissive anonymous order policies** as a routine rollback. Reverting only the frontend to direct table access would break checkout under the repaired policies, so frontend/server rollback must be coordinated. Existing captured payments must continue to reconcile safely; do not cancel or charge again automatically. Manually issued orders or provider tax transactions are not undone by a code rollback.
 
-## Referral integration — not yet tested as a combined system
+## Referral integration — separately composed and tested
 
 This branch is intentionally based on main and separate from PR #25. It necessarily overlaps `CheckoutPage.jsx`, `create-payment-intent`, `stripe-webhook` and shared purchase/confirmation behavior. Do not blindly cherry-pick both versions and claim combined coverage.
 
-An explicit composed implementation must:
+The separate `feature/referral-access-integration` branch implements and locally tests the following composition requirements (331 unit tests plus composed database/browser fixtures). This main-based access diff remains isolated. Any later integration changes must preserve these requirements:
 
 1. Keep the access repair's normalized intake, private retry capability, service-created order and immutable intent parameters as the single checkout source of truth.
 2. After `prepare_secure_checkout` returns the new order UUID and before Stripe creation, invoke PR #25's **named** referral preparation using that order ID, normalized email, frozen `normalized.customer.name`, buyer-entered code, discounted merchandise and separate shipping/tax. Include the referral code in the immutable request fingerprint and preserve it on retries. Never fall back to browser order insert/read/update.
