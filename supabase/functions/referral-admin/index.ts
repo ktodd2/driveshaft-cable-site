@@ -4,7 +4,8 @@ import { getSupabaseSecretKey, getSupabasePublishableKey } from '../_shared/supa
 import { createApiClient } from '../_shared/supabaseTransport.js'
 import { isActiveAdmin } from '../_shared/storeAuthorization.js'
 import { createEmailRecorder, digest } from '../_shared/emailHealth.js'
-import { rpc, statementText } from '../_shared/referrals.js'
+import {sendReferralStatement} from '../_shared/referralStatements.js'
+import { rpc } from '../_shared/referrals.js'
 const headers={'Access-Control-Allow-Origin':'*','Access-Control-Allow-Headers':'authorization, x-client-info, apikey, content-type','Content-Type':'application/json','Cache-Control':'no-store'}
 const json=(body:unknown,status=200)=>new Response(JSON.stringify(body),{headers,status})
 serve(async req=>{
@@ -19,7 +20,16 @@ serve(async req=>{
   const text=await req.text();if(text.length>8192)return json({error:'Request too large'},400)
   const {action,data={}}=JSON.parse(text)
   const actor=auth.user.id
-  if(action==='send-invite'||action==='send-statement'){
+  if(action==='create'){
+   const mode=data.codeMode||'custom'
+   if(!['custom','generated'].includes(mode))return json({error:'Choose a custom or generated referral code'},400)
+   return json(await rpc(db,'referral_create_partner',{p_actor:actor,p_email:data.email,p_name:data.name,p_code:data.code||null,p_generate:mode==='generated'}))
+  }
+  if(action==='send-statement'){
+   const result=await sendReferralStatement(db,data.id,{enabled:Deno.env.get('REFERRAL_EMAILS_ENABLED')==='true',apiKey:Deno.env.get('RESEND_API_KEY')})
+   return json(result.body,result.status)
+  }
+  if(action==='send-invite'){
    const {data:settings,error}=await db.from('referral_settings').select('*').single()
    if(error||!settings?.emails_enabled||Deno.env.get('REFERRAL_EMAILS_ENABLED')!=='true')return json({error:'Referral email delivery is disabled for review'},409)
    if(!Deno.env.get('RESEND_API_KEY'))return json({error:'Email service unavailable'},503)
@@ -33,12 +43,6 @@ serve(async req=>{
     const link=`https://driveshaftcable.com/referral/signup#${secret}`
     entity=invite.id;identity='invite-v1';subject='Your Driveshaft Cable referral invitation'
     message=`Hello ${partner.name},\n\nYou have been invited to the Driveshaft Cable referral program. Complete signup within seven days: ${link}\n\nYou will provide your name, mailing address and preferred reward (check or products). No account password or dashboard is created. Rewards and the permanent email-link rules are shown before you accept. This link is for you only.\n\nDriveshaft Cable by K.Todd`
-   }else{
-    const result=await db.from('referral_statements').select('*').eq('id',data.id).single();const statement=result.data
-    if(result.error||!statement)return json({error:'Statement unavailable'},404)
-    const found=await db.from('referral_partners').select('*').eq('id',statement.partner_id).single();partner=found.data
-    if(found.error||!partner)return json({error:'Partner unavailable'},404)
-    entity=statement.id;identity='statement-v1';subject=`Your ${statement.month} referral balance`;message=statementText(partner,statement)
    }
    const recorder=createEmailRecorder(db,'referral-'+action)
    const response=await recorder.send(entity,identity,'https://api.resend.com/emails',{method:'POST',headers:{Authorization:`Bearer ${Deno.env.get('RESEND_API_KEY')}`,'Content-Type':'application/json'},body:JSON.stringify({from:'Driveshaft Cable <orders@driveshaftcable.com>',reply_to:'houstontruckwreck@gmail.com',to:partner.email,subject,text:message})})

@@ -27,3 +27,24 @@ another tool. Explicit human approval is required to publish the draft branch/PR
 Later publication authorization: the human explicitly approved pushing the disabled version and opening a draft PR.
 This supersedes the publication-only denial above; production changes, activation, scheduling and sends remain unapproved.
 The new order-access follow-up document contains findings/proposals only, no permission-policy implementation.
+
+Updated referral draft validation, 2026-11-03 UTC:
+- Automatic monthly delivery completed locally with shared manual/automatic dedupe, immutable snapshots,
+  durable batches, recurring-worker continuation, Chicago activation/signup cutovers and persistent review visibility.
+- User-requested attributed customer names, eligible product spend and commissions added, with explicit previous
+  calendar-month vs lifetime totals, per-order mixed rates, known refund reductions and provisional unallocated refunds.
+- Buyer code-entry disclosure covers this and future same-email purchases. Buyer email/address/tax/shipping/payment
+  details are excluded from delivery. Unicode/Bidi/email-like names and missing-name capture are regression-tested.
+- Custom/generated code creation added with 3–24 safe characters, atomic case-insensitive uniqueness, random
+  collision recovery, no confusing generated characters and no editing/overwriting existing codes.
+
+Full unit suite: 311 passed, 0 failed.
+Core referral, automatic statements, named customer details and code-choice isolated SQL suites: PASS.
+Five Edge Function type checks: PASS. Fixture Vite/prerender/schema/sitemap: PASS.
+Headless desktop/mobile admin/signup/custom/generated code fixtures: PASS; real provider network blocked.
+Independent read-only reviews completed; identified observability, Unicode/name-capture and provisional-refund
+clarity issues were fixed and regression-tested. See sample-monthly-statement.txt and code-choices screenshots.
+
+Separate order-access repair is locally committed on feature/order-access-repair at 020cec1 and remains unpublished.
+Its 283 unit tests plus SQL/payment/RLS/shipping/checkout UI/Edge/build checks pass. Referral/access composition
+still needs explicit local integration testing before any release. No production operations have run.

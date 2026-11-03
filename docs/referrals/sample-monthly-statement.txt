@@ -1,0 +1,43 @@
+FICTIONAL FIXTURE — no customer email sent
+
+Hello Example Referrer,
+
+Your referral code is EXAMPLE10. Your 2026-12 referral reward statement. Balance prepared 2026-12-01T15:00:00.000Z (UTC):
+Available: $11.50
+Pending (seven-day wait): $2.00
+On review hold: $0.00
+Reserved: $0.00
+Already issued: $0.00
+Refund reductions: $2.00
+
+Reply to choose a check or products. For products, tell us what you want. $1 in rewards covers $1 of merchandise at retail prices; shipping also comes from rewards. Every redemption needs owner approval and sufficient available balance. No payment has been issued by this email. Some orders may await payment or refund verification. Negative balances reduce future earnings.
+
+Rewards are 10% on each referred buyer's first paid website retail order, 5% on their second, 2% on orders 3–10 and 1% thereafter. Product revenue after discounts only; tax and shipping do not earn rewards. Fully refunded orders retain their original tier position.
+
+REFERRED CUSTOMER DETAILS
+Purchase period: 2026-11 (America/Chicago calendar month). Period totals are for orders paid in that month. Refunds shown are cumulative through preparation, including reductions on earlier orders. Lifetime totals include all attributed orders through preparation.
+Customer vested commissions are before account-level payouts and reservations; your overall available balance above deducts those amounts. Rates vary by order, as shown below.
+
+Customer 1: Example Customer & Sons
+Purchase period 2026-11: 2 order(s); product purchases $150.00 after discounts; confirmed product refunded $0.00; confirmed net product spend $150.00; calculated commission $4.50. Original commission $4.50; confirmed refund reductions $0.00.
+Lifetime: 3 order(s); product purchases $250.00 after discounts; confirmed product refunded $20.00; confirmed net product spend $230.00; calculated commission $12.50. Original commission $14.50; confirmed refund reductions $2.00.
+Commission timing: pending $2.00; vested before payouts/reservations $10.50; on hold $0.00 (subject to review).
+Lifetime rate summary:
+  10%: 1 order(s), confirmed net products $80.00, confirmed commission $8.00.
+  5%: 1 order(s), confirmed net products $50.00, confirmed commission $2.50.
+  2%: 1 order(s), confirmed net products $100.00, confirmed commission $2.00.
+Order breakdown: purchase-period orders plus other orders with refunds, pending commissions or holds.
+  Order 1 (2026-10-20, outside purchase period): 10%; products $100.00, confirmed product refunded $20.00; net products $80.00; commission $8.00 (original $10.00 less $2.00 confirmed refund reductions); vested before payouts/reservations.
+  Order 2 (2026-11-05, in purchase period): 5%; products $50.00, confirmed product refunded $0.00; net products $50.00; commission $2.50 (original $2.50 less $0.00 confirmed refund reductions); vested before payouts/reservations.
+  Order 3 (2026-11-29, in purchase period): 2%; products $100.00, confirmed product refunded $0.00; net products $100.00; commission $2.00 (original $2.00 less $0.00 confirmed refund reductions); pending.
+
+Customer 2: Customer name unavailable
+Purchase period 2026-11: 1 order(s); product purchases $10.00 after discounts; confirmed product refunded $0.00; confirmed net product spend $10.00; calculated commission $1.00. Original commission $1.00; confirmed refund reductions $0.00.
+Lifetime: 1 order(s); product purchases $10.00 after discounts; confirmed product refunded $0.00; confirmed net product spend $10.00; calculated commission $1.00. Original commission $1.00; confirmed refund reductions $0.00.
+Commission timing: pending $0.00; vested before payouts/reservations $1.00; on hold $0.00 (subject to review).
+Lifetime rate summary:
+  10%: 1 order(s), confirmed net products $10.00, confirmed commission $1.00.
+Order breakdown: purchase-period orders plus other orders with refunds, pending commissions or holds.
+  Order 1 (2026-11-07, in purchase period): 10%; products $10.00, confirmed product refunded $0.00; net products $10.00; commission $1.00 (original $1.00 less $0.00 confirmed refund reductions); vested before payouts/reservations.
+
+Driveshaft Cable by K.Todd

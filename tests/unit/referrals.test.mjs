@@ -54,7 +54,7 @@ test('storage failure remains retryable; missing authoritative charge cannot awa
  intent.latest_charge={paid:true,created:1};await assert.rejects(()=>handleReferralEvent({rpc:async()=>({error:{message:'offline'}})}, {paymentIntents:{retrieve:async()=>intent}},event),/offline/)
 })
 test('balance email is a statement and cannot claim a payment happened',()=>{
- const text=statementText({name:'Fixture',code:'CODE10'},{month:'2026-11',balance:{available:-100,pending:200,held:300,reserved:0,paid:500,reversed:100}})
+ const text=statementText({name:'Fixture',code:'CODE10'},{month:'2026-11',created_at:'2026-11-01T15:00:00Z',balance:{available:-100,pending:200,held:300,reserved:0,paid:500,reversed:100}})
  assert.match(text,/-\$1.00/);assert.match(text,/Reply to choose/);assert.match(text,/shipping also comes from rewards/);assert.match(text,/No payment has been issued/)
 })
 test('invitation bearer is scrubbed before analytics loads',()=>{

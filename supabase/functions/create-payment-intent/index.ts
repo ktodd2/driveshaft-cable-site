@@ -65,7 +65,7 @@ serve(async (req) => {
 
     const { data: order, error: orderError } = await adminClient
       .from('orders')
-      .select('id, email, items, shipping_address, payment_status, payment_method, status')
+      .select('id, email, items, shipping_address, payment_status, payment_method, status, name')
       .eq('id', orderId)
       .single()
 
@@ -100,7 +100,7 @@ serve(async (req) => {
       if (prior) {
         if (!validateReferralRecovery(prior, { amount: clientAmount, code: referralCode, orderHash }, checkoutHash)) return json({ error: 'Checkout details changed. Please restart checkout.' }, 409)
         const intent = await prepareReferralCheckout(adminClient, stripe, {
-          p_order: orderId, p_email: prior.email, p_code: referralCode || null,
+          p_order: orderId, p_email: prior.email, p_code: referralCode || null, p_buyer_name: order.name || null,
           p_merch: prior.merchandise_cents, p_shipping: prior.shipping_cents, p_tax: prior.tax_cents, p_params: prior.intent_params,
         })
         return json({ clientSecret: intent.client_secret }, 200)
@@ -245,7 +245,7 @@ serve(async (req) => {
     let paymentIntent
     if (Deno.env.get('REFERRAL_REWARDS_ENABLED') === 'true') {
       paymentIntent = await prepareReferralCheckout(adminClient, stripe, {
-        p_order: orderId, p_email: email, p_code: referralCode || null,
+        p_order: orderId, p_email: email, p_code: referralCode || null, p_buyer_name: order.name || null,
         p_merch: subtotalCents - discountCents, p_shipping: shippingCents, p_tax: taxCents, p_params: intentParams,
       })
     } else {

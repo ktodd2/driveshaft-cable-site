@@ -9,7 +9,8 @@ export async function rpc(db, name, args) {
  return data
 }
 export async function prepareReferralCheckout(db, stripe, input, now = Date.now()) {
- const snapshot = await rpc(db,'referral_prepare',input)
+ const named=Object.prototype.hasOwnProperty.call(input,'p_buyer_name')
+ const snapshot = await rpc(db,named?'referral_prepare_named':'referral_prepare',input)
  if(!snapshot.intent_id && now-new Date(snapshot.created_at).getTime()>=23*3600000) throw Error('This checkout needs owner review; start a new checkout rather than retrying an uncertain payment.')
  const intent=snapshot.intent_id ? await stripe.paymentIntents.retrieve(snapshot.intent_id) :
   await stripe.paymentIntents.create(snapshot.intent_params,{idempotencyKey:`referral-checkout/${snapshot.order_id}`})
@@ -60,10 +61,36 @@ export async function handleReferralEvent(db,stripe,event) {
  if(typeof id==='object') id=id?.id
  if(typeof id==='string') await syncReferralIntent(db,stripe,id,event.created,event.type==='payment_intent.succeeded'?event.created:null)
 }
+export function statementDisplayName(value) {
+ const clean=String(value||'').replace(/[\u0000-\u001f\u007f-\u009f]/g,' ').replace(/\p{Bidi_Control}/gu,' ').replace(/\S*@\S*/gu,'[email omitted]').replace(/\s+/g,' ').trim()
+ return !clean.replace(/\[email omitted\]/g,'').trim()?'Customer name unavailable':Array.from(clean).slice(0,160).join('')
+}
+export function customerStatementText(details) {
+ if(!details?.customers)return '\nCustomer details were not captured for this older statement.'
+ const money=n=>new Intl.NumberFormat('en-US',{style:'currency',currency:'USD'}).format(Number(n||0)/100)
+ const provisional=t=>t.refund_allocation_pending_orders>0?` ${t.refund_allocation_pending_orders} order(s) await product-refund allocation: excluded from confirmed net totals; provisional maximum product spend ${money(t.provisional_net_product_sales_cents)} and potential commission ${money(t.provisional_commission_cents)} are not final or available.`:''
+ const totals=(label,t)=>`${label}: ${t.orders} order(s); product purchases ${money(t.product_sales_cents)} after discounts; confirmed product refunded ${money(t.refunded_product_cents)}; confirmed net product spend ${money(t.net_product_sales_cents)}; calculated commission ${money(t.commission_cents)}. Original commission ${money(t.original_commission_cents)}; confirmed refund reductions ${money(t.refund_reduction_cents)}.${provisional(t)}`
+ const lines=[`\nREFERRED CUSTOMER DETAILS`, `Purchase period: ${details.period_month} (America/Chicago calendar month). Period totals are for orders paid in that month. Refunds shown are cumulative through preparation, including reductions on earlier orders. Lifetime totals include all attributed orders through preparation.`, 'Customer vested commissions are before account-level payouts and reservations; your overall available balance above deducts those amounts. Rates vary by order, as shown below.']
+ if(!details.customers.length)lines.push('No attributed paid customer orders in this statement yet.')
+ for(const [index,c] of details.customers.entries()) {
+  lines.push(`\nCustomer ${index+1}: ${statementDisplayName(c.name)}`,totals(`Purchase period ${details.period_month}`,c.period),totals('Lifetime',c.lifetime),
+   `Commission timing: pending ${money(c.timing.pending_cents)}; vested before payouts/reservations ${money(c.timing.vested_cents)}; on hold ${money(c.timing.held_cents)} (subject to review).`,
+   'Lifetime rate summary:')
+  for(const r of c.rates)lines.push(`  ${r.rate_bps/100}%: ${r.orders} order(s), confirmed net products ${money(r.net_product_sales_cents)}, confirmed commission ${money(r.commission_cents)}.${provisional(r)}`)
+  lines.push('Order breakdown: purchase-period orders plus other orders with refunds, pending commissions or holds.')
+  if(!c.orders.length)lines.push('  No purchase-period orders or outstanding adjustments; see lifetime rate summary.')
+  for(const o of c.orders) {
+   const prefix=`  Order ${o.number} (${o.paid_on}${o.in_period?', in purchase period':', outside purchase period'}): ${o.rate_bps/100}%; products ${money(o.product_sales_cents)}, confirmed product refunded ${money(o.refunded_product_cents)};`
+   lines.push(o.refund_allocation_pending?`${prefix} final eligible spend and commission await product-refund allocation. Provisional maximum net products ${money(o.net_product_sales_cents)}, potential commission ${money(o.commission_cents)}; held, not final or available.`:
+    `${prefix} net products ${money(o.net_product_sales_cents)}; commission ${money(o.commission_cents)} (original ${money(o.original_commission_cents)} less ${money(o.refund_reduction_cents)} confirmed refund reductions); ${o.timing==='vested'?'vested before payouts/reservations':o.timing}${o.dispute_hold?' (dispute review; not available)':''}.`)
+  }
+ }
+ return lines.join('\n')
+}
 export function statementText(partner,statement) {
  const money=n=>new Intl.NumberFormat('en-US',{style:'currency',currency:'USD'}).format(n/100)
  const b=statement.balance
- return `Hello ${partner.name},\n\nYour referral code is ${partner.code}. Your ${statement.month} referral reward statement:\nAvailable: ${money(b.available)}\nPending (seven-day wait): ${money(b.pending)}\nOn review hold: ${money(b.held)}\nReserved: ${money(b.reserved)}\nAlready issued: ${money(b.paid)}\nRefund reductions: ${money(b.reversed)}\n\nReply to choose a check or products. For products, tell us what you want. $1 in rewards covers $1 of merchandise at retail prices; shipping also comes from rewards. Every redemption needs owner approval and sufficient available balance. No payment has been issued by this email. Some orders may await payment or refund verification. Negative balances reduce future earnings.\n\nRewards are 10% on each referred buyer's first paid website retail order, 5% on their second, 2% on orders 3–10 and 1% thereafter. Product revenue after discounts only; tax and shipping do not earn rewards. Fully refunded orders retain their original tier position.\n\nDriveshaft Cable by K.Todd`
+ return `Hello ${statementDisplayName(partner.name)},\n\nYour referral code is ${partner.code}. Your ${statement.month} referral reward statement. Balance prepared ${new Date(statement.created_at).toISOString()} (UTC):\nAvailable: ${money(b.available)}\nPending (seven-day wait): ${money(b.pending)}\nOn review hold: ${money(b.held)}\nReserved: ${money(b.reserved)}\nAlready issued: ${money(b.paid)}\nRefund reductions: ${money(b.reversed)}\n\nReply to choose a check or products. For products, tell us what you want. $1 in rewards covers $1 of merchandise at retail prices; shipping also comes from rewards. Every redemption needs owner approval and sufficient available balance. No payment has been issued by this email. Some orders may await payment or refund verification. Negative balances reduce future earnings.\n\nRewards are 10% on each referred buyer's first paid website retail order, 5% on their second, 2% on orders 3–10 and 1% thereafter. Product revenue after discounts only; tax and shipping do not earn rewards. Fully refunded orders retain their original tier position.\n${customerStatementText(statement.customer_details)}\n\nDriveshaft Cable by K.Todd`
 }
 
 export function validateReferralRecovery(snapshot, input, tokenHash) {

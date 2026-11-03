@@ -22,7 +22,7 @@ function harness(enabled=true){
  const writes=[],rpcCalls=[],payments=[];let stored=null,handler
  const order={id:orderId,email:' Buyer@invalid.test ',items:[{productId:'1',quantity:10}],shipping_address:{country:'US'},payment_status:'pending',payment_method:'stripe',status:'pending'}
  const db={from(table){let update=false;const q={select(){return q},eq(){return q},in(){return q},update(value){writes.push(value);update=true;return q},single:async()=>({data:table==='orders'?order:{stock_quantity:1000}}),maybeSingle:async()=>({data:stored}),then(ok){return Promise.resolve(update?{}:{data:[{id:'1',name:'Fixture Product'}]}).then(ok)}};return q},rpc:async(name,args)=>{
-  rpcCalls.push([name,args]);if(name==='referral_prepare')stored={order_id:args.p_order,email:args.p_email,state:'prepared',intent_id:stored?.intent_id||null,merchandise_cents:args.p_merch,shipping_cents:args.p_shipping,tax_cents:args.p_tax,total_cents:args.p_merch+args.p_shipping+args.p_tax,intent_params:args.p_params,created_at:new Date().toISOString()}
+  rpcCalls.push([name,args]);if(['referral_prepare','referral_prepare_named'].includes(name))stored={order_id:args.p_order,email:args.p_email,state:'prepared',intent_id:stored?.intent_id||null,merchandise_cents:args.p_merch,shipping_cents:args.p_shipping,tax_cents:args.p_tax,total_cents:args.p_merch+args.p_shipping+args.p_tax,intent_params:args.p_params,created_at:new Date().toISOString()}
   if(name==='referral_attach')stored.intent_id=args.p_intent
   return {data:stored}
  }}

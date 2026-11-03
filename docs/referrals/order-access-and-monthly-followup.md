@@ -1,6 +1,6 @@
 # Production order access and automatic monthly email follow-up
 
-Read-only investigation on 2026-11-03 UTC against Supabase project `twrihhyfvomqiqbxkitc`. No customer/order rows, financial aggregates, anonymous bulk API results, credentials, or access logs were retrieved. Only catalog metadata and one aggregate-function definition were inspected. No database writes, access changes, deployments, sends or scheduler changes occurred. Remote publication remains denied/pending explicit human approval; no retry was made.
+Read-only investigation on 2026-11-03 UTC against Supabase project `twrihhyfvomqiqbxkitc`. No production customer/order rows, financial aggregates, anonymous bulk API results, credentials, or access logs were retrieved. Only catalog metadata and one aggregate-function definition were inspected. No database writes, access changes, deployments, sends or scheduler changes occurred. Remote publication remains denied/pending explicit human approval; no retry was made.
 
 ## What is verified in production
 
@@ -61,39 +61,41 @@ The existing admin delete button calls DELETE, but no authenticated DELETE row p
 
 This is a concrete proposal for separate implementation/release permission. No permission migration or server-checkout replacement was executed in this follow-up.
 
-## Automatic monthly statements: correction and required delta
+## Automatic monthly statements: local implementation completed
 
-The user confirmed a **monthly email** showing balances with a reply to select check/products, and separately confirmed **owner approval for payouts**. Requiring an owner click to send each month's statement is narrower than that request. It is not necessary to ask the user to choose manual email delivery again. The intended completed behavior is automatic monthly statements after one-time approved rollout, with manual approval retained for each check/product redemption.
+The user confirmed automatic monthly balance emails and separately confirmed owner approval for payouts. The initial draft’s manual-send-only gap has now been fixed locally within PR #25; production delivery remains off. The approved order-access repair is on a separate local branch and is not folded into the referral diff.
 
-Current draft behavior is incomplete for automatic delivery:
+Implemented in the second staged referral migration and shared `referralStatements.js`:
 
-- `referral-monthly` only prepares idempotent partner/month snapshots and returns `sent:0, paid:0`.
-- `referral-admin` sends a statement only on an authenticated `send-statement` action.
-- No monthly cron exists and the email flags remain disabled.
+- One frozen recipient/name/code/balance/creation-time snapshot per partner/month, protected by an immutable-snapshot trigger.
+- The manual and scheduled sender share the exact existing `referral-send-statement` / statement-ID / `statement-v1` identity and provider key. No duplicate key family was introduced.
+- Current-month preparation can run after a missed 1st. Signup and the actual activation timestamp determine the first eligible Chicago month boundary. Previously frozen unsent statements remain queued across rollover; missing historical months are not newly backfilled. Emails state the actual balance-preparation time.
+- A durable queue excludes accepted, pending, uncertain and rejected attempts **before** its batch limit. A two-minute lease controls concurrent automatic runs; the email-attempt claim protects against a simultaneous manual send or a process crash. Unknown provider outcomes are held for review, including beyond provider-key retention.
+- Each invocation is limited to 50 deliveries and a 40-second budget with spacing between calls. A **recurring hourly scheduler is required**, since `more:true` is drained by later invocations rather than internal dispatch. Monthly mail is still once per eligible partner/month.
+- Zero, positive and negative balances are stated without moving money. Unaccepted invitations are excluded. Pausing new referral enrollment does not stop statements for permanent links.
+- Environment and database send/automatic gates default off; `statements_started_at` defaults null. The worker cannot be enabled by a request body. It is cron/backend/active-admin authorized, with no payout or redemption-approval path.
+- Persistent cumulative review counts keep held statements visible in admin and execution history even on subsequent empty runs.
 
-Required **local/staging code** before claiming automatic statements complete:
+Verification: 20 focused worker/endpoint tests and the isolated Postgres monthly suite pass, including manual/automatic races, worker concurrency, batch continuation, kill switches, ledger/provider outages, Chicago/DST boundaries, catch-up, rollover, immutable content, lease recovery, minimized delivery data and no payout path. An independent read-only review found one observability issue; it was fixed and covered by regressions. Hosted multi-connection, gateway/cron, rate-limit and real-provider configuration checks remain staging gates.
 
-1. Share a statement sender between the admin/resend path and a cron-authorized monthly worker, using the existing email-attempt ledger with the same automation/entity/template identity on both paths. Different identities would allow the manual and automatic paths to duplicate mail.
-2. Have the monthly worker generate one immutable snapshot per accepted partner/month, then automatically send the balance email to that partner's fixed email. Positive, zero and negative balances can all be stated without initiating payouts. Skip unaccepted invitations; pausing new code enrollment must not silently erase an existing partner's statement or permanent earnings.
-3. Use bounded batches and a durable eligible-statement queue/cursor, so large recipient sets finish and reruns skip accepted/held attempts. The existing recorder holds pending/uncertain/rejected attempts for review; a scheduler must never blindly bypass those records or provider idempotency retention. No auto-payout or redemption approval is part of this worker.
-4. Add tests for concurrent worker runs, manual/automatic collision, duplicate scheduler delivery, partial-batch continuation, unavailable email ledger, provider uncertainty, month/DST boundaries, no buyer PII in the email, disabled sends, unauthorized cron calls, and the invariant `paid:0`. A test transport must intercept every provider call.
-5. Keep all send/scheduler gates off while developing/testing. No live invitation or monthly email is needed to validate the implementation.
+Required release configuration remains unperformed:
 
-Required **release approval/configuration**, after those tests:
+1. Approve deployment/application of the four staged referral migrations and updated worker/shared sender, then test in an isolated environment with provider traffic intercepted.
+2. Set the actual approved activation timestamp, server/database email gates and both automatic-statement gates only during explicitly approved rollout. Verify the reviewed sender, reply-to and fixed enrolled recipients.
+3. Create exactly one new hourly authenticated check job for `referral-monthly`. It prepares on the first due Chicago cycle and resumes batches/catch-up thereafter. Do not run global cron setup or alter paused job 26 or other schedules.
+4. Keep individual check/product redemption approval and manual issuance required. Automatic statement emails do not pay rewards.
 
-- Approve deployment of the new monthly worker/migration (if its durable batch queue needs one) and the reviewed statement template/recipient selection.
-- Enable both the server email flag and database email setting only as an explicit rollout step; verify sender/reply-to configuration and provider delivery handling without exposing credentials.
-- Create exactly one new authenticated scheduler in America/Chicago. A UTC monthly run on the 1st well inside the Chicago calendar date is sufficient if only the day matters (for example 15:00 UTC is 09:00/10:00 Chicago). Select an approved window; preserve local month keys and DST boundary tests. Add an idempotent catch-up rule for a missed 1st, because the current SQL rejects preparation on later dates; do not silently backfill emails for months before referral launch. Bound retries/catch-up to newly eligible unsent statements.
-- Do not rerun the global cron setup or change any existing job, including intentionally paused job 26. Creating the scheduler and enabling real sends are separate from permission to publish a disabled branch/draft PR.
-- Once enabled, subsequent monthly statements run automatically under that approved policy. Owner approval remains mandatory when reserving/issuing checks or products.
+No scheduler, real provider call, credential or production setting was created or changed by this local implementation.
+
+Subsequent user-authorized additions are also staged: custom or generated unique codes, and named per-customer eligible-spend/commission details. Statements separate the previous Chicago calendar month from lifetime totals, show mixed rates and pending/vested/held amounts, and mark unallocated refunds provisional. Buyer contact/address/payment/tax/shipping details remain excluded. The code-entry disclosure explicitly covers this and future same-email purchases. Code editing is not exposed; collisions never overwrite existing partners. See the fictional statement preview and code-setup screenshots in this directory.
 
 ## Recommended sequence and exact pending gates
 
-1. Continue local work: document/implement the separately approved order-access repair and finish the automatic monthly sender with fixtures. **Current automatic monthly delivery is not implemented.**
-2. Obtain the human's explicit permission to push the disabled branch/open a draft PR. Automatic approval review denied the prior combined action before execution; do not retry until that approval is forwarded.
+1. Finish and review the approved separate local order-access repair. Automatic monthly statement implementation is now locally complete and independently reviewed in the referral draft; production gates remain off.
+2. Publication-only permission was subsequently received and draft PR #25 was opened. Keep it unmerged and disabled. A second remote access-repair PR requires separate publication permission.
 3. With separate staging authorization, deploy to an isolated environment and run full hosted authorization/concurrency/payment/email tests with intercepted email and no production users/orders. Apply security advisors there. A new billable environment needs its own cost approval.
 4. Obtain explicit production checkout/access migration and Edge/static deployment approval. Coordinate the server/frontend/policy transition so checkout remains functional and private. Keep referral/email flags off during this transition; preserve shipping, tax, existing pricing and schedules.
 5. Review and approve referral activation and an owner-selected invitation. Apply only the reviewed referral migration; no historical commission backfill. Test the permanent-link and refund path with approved release evidence before broader invitations.
 6. Separately approve the monthly scheduler and automatic statement sends. Keep every payout/product issuance manually owner-approved. Never silently turn off future earnings for existing permanent links when rolling back enrollment; keep tracking/reconciliation or an equivalent durable recovery path running.
 
-This follow-up did not mutate production, publish anything or retry the denied action. Only a local review document was added.
+The metadata investigation did not mutate production or read customer rows. Subsequent explicit permission allowed publishing the disabled referral draft. The automatic-mail implementation is local/staged; production operations remain unapproved and unperformed.
