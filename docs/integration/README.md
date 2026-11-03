@@ -1,6 +1,6 @@
 # Secure checkout and referral composition — local only
 
-This branch composes main-based access repair `020cec1` with referral rewards `d074e96` and follow-up `29ed34e`. Both original branches remain separate. Nothing on this branch has been pushed, deployed or applied to a hosted database. No real payment, order, invitation, statement, schedule or payout was created.
+This branch composes main-based access repair `020cec1` with referral rewards `d074e96` and follow-up `29ed34e`. Both original branches remain separate. Draft GitHub publication was separately approved on 2026-11-03. This branch has not been deployed or applied to a hosted database. No real payment, order, invitation, statement, schedule or payout was created.
 
 Independent read-only review found no additional payment-capability, admin-authorization or PII bypass. It identified Unicode-name retry and ambiguous legacy-payment ordering issues; both received targeted fixture coverage and conservative fixes.
 
@@ -25,7 +25,7 @@ Optional tools are `/tmp/referral-tools` PGlite/Deno/Playwright. Run `npm test`,
 
 ## Release gates and order
 
-Publication of this integration/access diff needs separate permission. Hosted staging and production operations remain unapproved. Before any launch, obtain explicit staging authorization and run gateway authentication/RLS/advisor checks, actual multi-connection concurrency, intercepted statement delivery, Stripe test-mode raw webhook/return/retry/refund/dispute/tax checks and admin manual/order/shipping/report regressions in an isolated project. Local serialized PGlite is not hosted concurrency or provider-delivery certification.
+Draft publication of this integration/access diff is approved; keep both drafts unmerged. Hosted staging and production operations remain unapproved. Before any launch, obtain explicit staging authorization and run gateway authentication/RLS/advisor checks, actual multi-connection concurrency, intercepted statement delivery, Stripe test-mode raw webhook/return/retry/refund/dispute/tax checks and admin manual/order/shipping/report regressions in an isolated project. Local serialized PGlite is not hosted concurrency or provider-delivery certification.
 
 The staged migration order is `003157` referral core, `010645` automatic statements, `011248` additive secure checkout, `011310` least-privilege order cutover, `012437` named statements, `013111` code choices, then `020100` ambiguous history hold (all `20261103`). For a coordinated production transition, review each separately: private additive backend and new versioned endpoint first, new frontend next, legacy endpoint retirement/server webhook plus access cutover last. Do not blindly apply the whole chronological chain while old frontend tabs can still create public orders. Existing pending legacy delivery details require owner verification because previously public rows have no private historical address proof.
 
