@@ -980,6 +980,30 @@
       }
     },
     {
+      "path": "/referral/signup",
+      "element": "ReferralSignupPage",
+      "module": "./pages/ReferralSignupPage",
+      "redirectTo": null,
+      "lazy": false,
+      "category": "public",
+      "samples": [
+        {
+          "url": "/referral/signup",
+          "state": "private invitation without token"
+        }
+      ],
+      "work": {
+        "status": "implemented",
+        "notes": "Staged referral feature; private signup and active-admin controls. No production deployment."
+      },
+      "test": {
+        "status": "fixture-verified",
+        "results": [
+          "Isolated headless desktop/mobile fixtures; database service-only authorization tests. Hosted rollout checks remain approval-gated."
+        ]
+      }
+    },
+    {
       "path": "/testimonial",
       "element": "TestimonialPage",
       "module": "./pages/TestimonialPage",
@@ -2014,6 +2038,35 @@
             "errors": [],
             "screenshot": "screenshots/mobile_admin_products_mocksession.png"
           }
+        ]
+      }
+    },
+    {
+      "path": "/admin/referrals",
+      "element": "AdminReferralsPage",
+      "module": "./pages/admin/AdminReferralsPage",
+      "redirectTo": null,
+      "lazy": true,
+      "category": "admin",
+      "samples": [
+        {
+          "url": "/admin/referrals",
+          "state": "unauthenticated → redirect to /admin/login"
+        },
+        {
+          "url": "/admin/referrals",
+          "state": "mocked session + mocked/empty data (real auth/RLS untested)",
+          "mockAdminSession": true
+        }
+      ],
+      "work": {
+        "status": "implemented",
+        "notes": "Staged referral feature; private signup and active-admin controls. No production deployment."
+      },
+      "test": {
+        "status": "fixture-verified",
+        "results": [
+          "Isolated headless desktop/mobile fixtures; database service-only authorization tests. Hosted rollout checks remain approval-gated."
         ]
       }
     },

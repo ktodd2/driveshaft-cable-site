@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { Link, NavLink } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
-export const adminDestinations = [['','Dashboard'],['orders','Orders'],['quotes','Quotes'],['suggestions','Suggestions'],['testimonials','Testimonials'],['products','Products'],['sales','Sales'],['email','Email & health'],['analytics','Analytics'],['newsletter','Newsletter'],['blog','Blog']]
+export const adminDestinations = [['','Dashboard'],['orders','Orders'],['quotes','Quotes'],['suggestions','Suggestions'],['testimonials','Testimonials'],['products','Products'],['sales','Sales'],['referrals','Referral rewards'],['email','Email & health'],['analytics','Analytics'],['newsletter','Newsletter'],['blog','Blog']]
 export default function AdminNavigation({ snapshot, client = supabase, badges = {} }) {
  const [count,setCount]=useState(null), [state,setState]=useState('loading')
  const generation=useRef(0)

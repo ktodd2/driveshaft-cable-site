@@ -107,6 +107,7 @@ const SAMPLES = {
     { url: '/blog/not-a-real-post', state: 'not found' },
   ],
   '/suggestions': [{ url: '/suggestions', state: 'form idle' }],
+  '/referral/signup': [{ url: '/referral/signup', state: 'private invitation without token' }],
   '/testimonial': [{ url: '/testimonial', state: 'form idle' }],
   '/cart/recover/:token': [{ url: '/cart/recover/mock-token', state: 'recovery (mock RPC, empty result)' }],
   '/*': [{ url: '/this-page-does-not-exist', state: '404' }],
