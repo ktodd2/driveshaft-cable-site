@@ -102,6 +102,7 @@ function CheckoutPage() {
   const recoveryDiscountCode = useCartStore(s => s.recoveryDiscountCode)
   const recoveryEmail = useCartStore(s => s.recoveryEmail)
 
+  const [referralCode, setReferralCode] = useState('')
   const [formData, setFormData] = useState({
     email: '',
     name: '',
@@ -332,7 +333,7 @@ function CheckoutPage() {
     setIsCreatingOrder(true)
 
     try {
-      const signature = JSON.stringify([formData,items.map(i=>[i.productId,i.quantity]),totalCents,appliedCode])
+      const signature = JSON.stringify([formData,items.map(i=>[i.productId,i.quantity]),totalCents,appliedCode,referralCode])
       const draft = await getOrCreateCheckoutDraft(signature)
       const response = await fetch(
         `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-secure-checkout`,
@@ -352,6 +353,7 @@ function CheckoutPage() {
             customer: formData,
             items: items.map(item=>({productId:item.productId,quantity:item.quantity})),
             howHeard: formData.hearAboutUs === 'Other' ? formData.hearAboutUsOther.trim() || 'Other' : formData.hearAboutUs,
+            referralCode: referralCode.trim() || null,
             discountCode: discountSource === 'code' ? appliedCode : null,
           })
         }
@@ -523,7 +525,12 @@ function CheckoutPage() {
                           <option value="Repeat customer">Repeat customer</option>
                           <option value="Other">Other</option>
                         </select>
-                        {formData.hearAboutUs === 'Other' && (
+                        {import.meta.env.VITE_REFERRAL_REWARDS_ENABLED === 'true' && <div className="my-4">
+                        <label htmlFor="referralCode" className="block text-sm text-gray-300 mb-2">Referral code (optional)</label>
+                        <input id="referralCode" value={referralCode} onChange={e=>setReferralCode(e.target.value.toUpperCase())} maxLength={24} className="input-field w-full" autoComplete="off" />
+                        <p className="text-xs text-gray-400 mt-2">For your first paid order only. Rewards go to the customer who referred you. This does not change your price. Use this same email on future orders.</p><p className="text-xs text-gray-400 mt-2">By using a referral code, you share your name, eligible product purchases after discounts, and commission information on this and future orders placed with this email with that referrer in their statements. Your email, address, tax, shipping and payment details are not included.</p>
+                      </div>}
+                      {formData.hearAboutUs === 'Other' && (
                           <input
                             type="text"
                             id="hearAboutUsOther"

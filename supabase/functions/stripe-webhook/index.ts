@@ -1,3 +1,4 @@
+import {handleReferralEvent} from '../_shared/referrals.js'
 import {createApiClient} from '../_shared/supabaseTransport.js'
 import {getSupabaseSecretKey} from '../_shared/supabaseKeys.js'
 import {reconcileOrderPayment} from '../_shared/secureCheckout.js'
@@ -11,11 +12,14 @@ serve(async req=>{
  let event
  try{event=await stripe.webhooks.constructEventAsync(await req.text(),req.headers.get('stripe-signature')!,Deno.env.get('STRIPE_WEBHOOK_SECRET')!,undefined,Stripe.createSubtleCryptoProvider())}
  catch{return new Response('Invalid signature',{status:400})}
- if(!['payment_intent.succeeded','payment_intent.payment_failed'].includes(event.type))return Response.json({received:true})
  try{
   // Fresh authoritative state prevents a stale failure from undoing a successful payment.
-  const intent=await stripe.paymentIntents.retrieve(event.data.object.id,{expand:['latest_charge']})
-  await reconcileOrderPayment(db,stripe,intent,{failed:event.type==='payment_intent.payment_failed'&&intent.status!=='succeeded'})
+  if(['payment_intent.succeeded','payment_intent.payment_failed'].includes(event.type)){
+   const intent=await stripe.paymentIntents.retrieve(event.data.object.id,{expand:['latest_charge']})
+   await reconcileOrderPayment(db,stripe,intent,{failed:event.type==='payment_intent.payment_failed'&&intent.status!=='succeeded'})
+  }
+  // Reward failure remains retryable after secure stock/payment reconciliation has completed.
+  await handleReferralEvent(db,stripe,event)
   return Response.json({received:true})
  }catch{return new Response('Payment reconciliation unavailable; retry required',{status:503})}
  // Refund tax reversal remains a separate existing workflow; this repair does not issue refunds.
