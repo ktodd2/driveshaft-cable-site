@@ -625,7 +625,7 @@ function CheckoutPage() {
                         {import.meta.env.VITE_REFERRAL_REWARDS_ENABLED === 'true' && <div className="my-4">
                         <label htmlFor="referralCode" className="block text-sm text-gray-300 mb-2">Referral code (optional)</label>
                         <input id="referralCode" value={referralCode} onChange={e=>setReferralCode(e.target.value.toUpperCase())} maxLength={24} className="input-field w-full" autoComplete="off" />
-                        <p className="text-xs text-gray-400 mt-2">For your first paid order only. Rewards go to the customer who referred you. This does not change your price. Use this same email on future orders.</p><p className="text-xs text-gray-400 mt-2">By using a referral code, you share your name, eligible product purchases after discounts, and commission information on this and future orders placed with this email with that referrer in their statements. Your email, address, tax, shipping and payment details are not included.</p>
+                        <p className="text-xs text-gray-400 mt-2">For your first paid order only. Rewards go to the customer who referred you. This does not change your price. Use this same email on future orders.</p><p className="text-xs text-gray-400 mt-2">Using this code lets the referrer see your name, eligible product spending after discounts, and commission details in their statements. This applies to this order and future orders using the same email. Your email, address, tax, shipping and payment details are not included.</p>
                       </div>}
                       {formData.hearAboutUs === 'Other' && (
                           <input
