@@ -1,0 +1,44 @@
+LOCAL FIXTURE VALIDATION ONLY — 2026-11-03 UTC
+
+aved snapshot blocks retry (0.077042ms)
+✔ changed saved snapshot blocks retry (0.065291ms)
+✔ changed saved snapshot blocks retry (0.03725ms)
+✔ expired retry 82800000 fails closed (0.068459ms)
+✔ expired retry 86400000 fails closed (0.046167ms)
+✔ A to B to A creates three separate notifications (0.0905ms)
+✔ function preserves sender, deterministic key, and accepts repeated requests (39.75125ms)
+Tracking provider acceptance unconfirmed
+✔ function rejects unauthorized, stale, expired, missing identity and malformed provider success (3.831708ms)
+✔ function conflict requires review, not another retry (0.076375ms)
+✔ concurrent function requests retain identical provider key and payload (0.906125ms)
+✔ function tolerates bounded browser clock skew without extending retries to 24 hours (5.078583ms)
+ℹ tests 331
+ℹ suites 0
+ℹ pass 331
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 266.854
+
+(node:78347) ExperimentalWarning: stripTypeScriptTypes is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ composed endpoint preserves retail/discount/tax pricing and one shared named referral payment identity (550.590834ms)
+✔ composed rollout and intake reject false code promises, arbitrary order IDs and tampering without creating payments (299.582458ms)
+✔ composed signed webhook reconciles secure stock/payment once, holds out-of-order rewards, refunds and freezes named statements privately (351.420416ms)
+✔ ambiguous cross-cutover paid history holds rewards without permanently discarding the first code attribution (293.20675ms)
+✔ uncoded historical repeat orders settle without filling the ambiguity review queue (307.822833ms)
+ℹ tests 5
+ℹ suites 0
+ℹ pass 5
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1862.179084
+
+Additional successful runs: orderAccess.mjs; shippingImport.postgres.mjs; referrals.mjs; referralStatements.mjs; referralCustomerDetails.mjs; referralCodes.mjs; referralStatementScale.mjs.
+Eight Deno entrypoints checked; actual Stripe signature test passed.
+Headless actual checkout: newbuyer/referral and repeat, desktop1440/mobile390, zero orders-table calls/external requests/page errors; admin/code/signup fixtures passed.
+Fixture Vite build,10-page prerender/SEO/schema/sitemap and34-route inventory checks passed.
+Hosted concurrency/provider/gateway validation remains pending; no hosted operations executed.
