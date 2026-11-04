@@ -1,5 +1,5 @@
 const ORIGIN = 'https://driveshaftcable.com'
-export const STATIC_PUBLIC_PATHS = ['/', '/products', '/about', '/faq', '/instructions', '/contact', '/quote', '/blog', '/shipping-returns']
+export const STATIC_PUBLIC_PATHS = ['/', '/products', '/about', '/faq', '/instructions', '/contact', '/quote', '/blog', '/shipping-returns', '/referrals']
 const isPublicPath = path => STATIC_PUBLIC_PATHS.includes(path) || /^\/(products|blog)\/[a-z0-9]+(?:-[a-z0-9]+)*$/.test(path)
 const escapeXml = value => String(value).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&apos;')
 export function lastModified(value, now = Date.now()) {

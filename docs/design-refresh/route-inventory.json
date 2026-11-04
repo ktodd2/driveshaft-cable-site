@@ -1030,6 +1030,86 @@
       }
     },
     {
+      "path": "/referrals",
+      "element": "ReferralProgramPage",
+      "module": "./pages/ReferralProgramPage",
+      "redirectTo": null,
+      "lazy": false,
+      "category": "public",
+      "samples": [
+        {
+          "url": "/referrals",
+          "state": "public referral terms, reward choices and signup contact"
+        }
+      ],
+      "work": {
+        "status": "implemented",
+        "notes": "Branded public referral overview, four default earning tiers, code-specific settings disclaimer, product/check conversion and invitation-only contact workflow. Navigation and sitemap included; no business logic or provider writes."
+      },
+      "test": {
+        "status": "pass",
+        "method": "Fixture build/prerender and isolated headless Chrome at 320, 390, 640, 768, 1024, 1280, 1440; keyboard focus/Escape, SEO and zero mutations. No real provider traffic.",
+        "results": [
+          {
+            "width": 1440,
+            "pass": true,
+            "h1": 1,
+            "overflow": false,
+            "keyboard": true,
+            "mutations": 0
+          },
+          {
+            "width": 1280,
+            "pass": true,
+            "h1": 1,
+            "overflow": false,
+            "keyboard": true,
+            "mutations": 0
+          },
+          {
+            "width": 1024,
+            "pass": true,
+            "h1": 1,
+            "overflow": false,
+            "keyboard": true,
+            "mutations": 0
+          },
+          {
+            "width": 768,
+            "pass": true,
+            "h1": 1,
+            "overflow": false,
+            "keyboard": true,
+            "mutations": 0
+          },
+          {
+            "width": 640,
+            "pass": true,
+            "h1": 1,
+            "overflow": false,
+            "keyboard": true,
+            "mutations": 0
+          },
+          {
+            "width": 390,
+            "pass": true,
+            "h1": 1,
+            "overflow": false,
+            "keyboard": true,
+            "mutations": 0
+          },
+          {
+            "width": 320,
+            "pass": true,
+            "h1": 1,
+            "overflow": false,
+            "keyboard": true,
+            "mutations": 0
+          }
+        ]
+      }
+    },
+    {
       "path": "/testimonial",
       "element": "TestimonialPage",
       "module": "./pages/TestimonialPage",

@@ -24,6 +24,7 @@ import BlogPostPage from './pages/BlogPostPage'
 import SuggestionsPage from './pages/SuggestionsPage'
 import TestimonialPage from './pages/TestimonialPage'
 import ReferralSignupPage from './pages/ReferralSignupPage'
+import ReferralProgramPage from './pages/ReferralProgramPage'
 import BuyerEmailVerificationPage from './pages/BuyerEmailVerificationPage'
 import CartRecoverPage from './pages/CartRecoverPage'
 
@@ -81,6 +82,7 @@ function App({ router: Router = BrowserRouter, routerProps = {}, helmetContext, 
           <Route path="blog/:slug" element={<BlogPostPage />} />
           <Route path="suggestions" element={<SuggestionsPage />} />
           <Route path="referral/signup" element={<ReferralSignupPage />} />
+          <Route path="referrals" element={<ReferralProgramPage />} />
           <Route path="testimonial" element={<TestimonialPage />} />
           <Route path="cart/recover/:token" element={<CartRecoverPage />} />
           <Route path="*" element={<NotFoundPage />} />
