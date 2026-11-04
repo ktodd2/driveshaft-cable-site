@@ -4,11 +4,11 @@ const {chromium}=await import(process.env.REPORT_PLAYWRIGHT_MODULE||'playwright'
 const browser=await chromium.launch({executablePath:process.env.REPORT_BROWSER||'/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',headless:true})
 const fixture={settings:{enabled:false,emails_enabled:false,auto_statements_enabled:false,statement_last_run_at:'2026-11-03T15:00:00Z',statement_last_counts:{sent:2,review:1}},partners:[{id:'partner-fixture',name:'Fixture Customer',code:'FIXTURE10',email:'referrer@invalid.test',status:'active',preference:'product',mailing_address:'123 Fixture Lane',balance:{pending:1000,available:2500,held:500,reserved:0,paid:1000,reversed:100}}],earnings:[{order_id:'20000000-0000-4000-8000-000000000011',partner_id:'partner-fixture',email:'buyer@invalid.test',sequence:11,rate_bps:100,base_cents:10000,merchandise_refund_cents:0,refunded_total_cents:500,available_at:'2026-11-10T12:00:00Z',refund_review:true}],redemptions:[{id:'redemption-fixture',partner_id:'partner-fixture',kind:'product',merchandise_cents:2000,shipping_cents:500,tax_cents:0,total_cents:2500,state:'requested',notes:'Fixture customer reply: retail product and shipping'}],statements:[{id:'statement-fixture',partner_id:'partner-fixture',month:'2026-11',balance:{available:2500}}]}
 const origin=process.env.REFERRAL_FIXTURE_ORIGIN||'http://127.0.0.1:3017'
-const mutations=[]
+const mutations=[],screenshotRoot=process.env.REFERRAL_SCREENSHOT_DIR||'docs/referrals/screenshots'
 fixture.partners[0].buyer_discount_bps=500
 fixture.partners[0].commission_tiers=[{through:1,bps:1000},{through:2,bps:500},{through:10,bps:200},{through:20,bps:100}]
 fixture.partners[0].policy_revision=1
-await fs.mkdir('docs/referrals/screenshots',{recursive:true})
+await fs.mkdir(screenshotRoot,{recursive:true})
 try{for(const width of [1440,390]){
  const context=await browser.newContext({viewport:{width,height:1000},serviceWorkers:'block'}),page=await context.newPage(),errors=[]
  page.on('pageerror',e=>errors.push(e.message))
@@ -18,6 +18,7 @@ try{for(const width of [1440,390]){
   if(url.pathname==='/__referrals'){
    const request=JSON.parse(route.request().postData());assert.equal(request.name,'referral-admin')
    if(request.action==='list')return route.fulfill({contentType:'application/json',body:JSON.stringify(fixture)})
+   if(request.action==='search-customers'){const customers=[{name:'Custom Fixture',email:'custom-fixture@invalid.test'},{name:'Generated Fixture',email:'generated-fixture@invalid.test'}].filter(x=>(x.name+' '+x.email).toLowerCase().includes((request.data.query||'').toLowerCase()));return route.fulfill({json:{customers,nextCursor:null}})}
    mutations.push(request)
    if(request.action==='set-code-policy'){
     const partner=fixture.partners.find(p=>p.id===request.data.partner_id);assert.equal(request.data.expected_revision,partner.policy_revision)
@@ -42,21 +43,21 @@ try{for(const width of [1440,390]){
  await policyForm.getByRole('button',{name:'Review settings',exact:true}).click()
  assert.equal(mutations.length,beforePolicyReview,'reviewing code policy never mutates')
  await policyForm.getByText(/First eligible order discount: 7.25%/).waitFor()
- await page.screenshot({path:`docs/referrals/screenshots/code-policy-${width}.png`,fullPage:true})
+ await page.screenshot({path:`${screenshotRoot}/code-policy-${width}.png`,fullPage:true})
  await policyForm.getByRole('button',{name:'Save code settings',exact:true}).click()
  await policyForm.getByText(/Orders after the final tier earn 0%/).waitFor()
  assert.equal(mutations.at(-1).action,'set-code-policy');assert.equal(mutations.at(-1).data.buyer_discount_bps,725);assert.equal(mutations.at(-1).data.tiers.at(-1).through,25)
  assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false)
- await page.screenshot({path:`docs/referrals/screenshots/admin-${width}.png`,fullPage:true})
+ await page.screenshot({path:`${screenshotRoot}/admin-${width}.png`,fullPage:true})
  const beforeReview=mutations.length;await page.getByRole('button',{name:'Review approval',exact:true}).click();assert.equal(mutations.length,beforeReview,'reviewing never mutates')
  await page.getByRole('button',{name:'Confirm action',exact:true}).click()
  await page.getByRole('button',{name:'Review manual email send'}).click();await page.getByRole('button',{name:'Confirm action',exact:true}).click()
  await page.getByRole('alert').waitFor();assert.match(await page.getByRole('alert').textContent(),/disabled/)
  await page.getByRole('button',{name:'Cancel',exact:true}).click()
- await page.getByLabel('Name',{exact:true}).fill('Custom Fixture');await page.getByLabel('Paid customer email').fill('custom-fixture@invalid.test');await page.getByLabel('Referral code',{exact:true}).fill(' custom-shop ');await page.getByRole('button',{name:'Add customer',exact:true}).click();await page.getByText('Created referral code CUSTOM-SHOP. No invitation sent.',{exact:true}).waitFor()
+ await page.getByRole('combobox',{name:'Find a past customer'}).fill('custom-fixture');await page.getByRole('listbox',{name:'Past customers'}).getByRole('option',{name:/Custom Fixture/}).click();await page.getByLabel('Referral code',{exact:true}).fill(' custom-shop ');await page.getByRole('button',{name:'Add customer',exact:true}).click();await page.getByText('Created referral code CUSTOM-SHOP. No invitation sent.',{exact:true}).waitFor()
  const beforeGenerate=mutations.length;await page.getByRole('button',{name:'Generate code',exact:true}).click();const preview=await page.getByLabel('Referral code',{exact:true}).inputValue();assert.match(preview,/^DC-[ABCDEFGHJKLMNPQRSTUVWXYZ23456789]{8}$/);assert.equal(mutations.length,beforeGenerate,'generation preview sends no request')
- await page.getByLabel('Name',{exact:true}).fill('Generated Fixture');await page.getByLabel('Paid customer email').fill('generated-fixture@invalid.test');await page.screenshot({path:`docs/referrals/screenshots/code-choices-${width}.png`,fullPage:true});await page.getByRole('button',{name:'Add customer',exact:true}).click();await page.getByText('Created referral code DC-ABCDEFGH. No invitation sent.',{exact:true}).waitFor();assert.equal(mutations.at(-1).data.codeMode,'generated')
- await page.goto(origin+'/referral/signup#fixture-invite');await page.getByLabel('Full name').fill('Fixture Customer');await page.getByLabel('Mailing address').fill('123 Fixture Lane');await page.getByLabel('Preferred reward').selectOption('product');await page.getByRole('checkbox').check();assert.equal(new URL(page.url()).hash,'');await page.screenshot({path:`docs/referrals/screenshots/signup-${width}.png`,fullPage:true});await page.getByRole('button',{name:'Complete signup'}).click();await page.getByText('Share it with new customers.',{exact:false}).waitFor();
+ await page.getByRole('combobox',{name:'Find a past customer'}).fill('generated-fixture');await page.getByRole('listbox',{name:'Past customers'}).getByRole('option',{name:/Generated Fixture/}).click();await page.screenshot({path:`${screenshotRoot}/code-choices-${width}.png`,fullPage:true});await page.getByRole('button',{name:'Add customer',exact:true}).click();await page.getByText('Created referral code DC-ABCDEFGH. No invitation sent.',{exact:true}).waitFor();assert.equal(mutations.at(-1).data.codeMode,'generated')
+ await page.goto(origin+'/referral/signup#fixture-invite');await page.getByLabel('Full name').fill('Fixture Customer');await page.getByLabel('Mailing address').fill('123 Fixture Lane');await page.getByLabel('Preferred reward').selectOption('product');await page.getByRole('checkbox').check();assert.equal(new URL(page.url()).hash,'');await page.screenshot({path:`${screenshotRoot}/signup-${width}.png`,fullPage:true});await page.getByRole('button',{name:'Complete signup'}).click();await page.getByText('Share it with new customers.',{exact:false}).waitFor();
  assert.deepEqual(errors,[]);await context.close()
  }}finally{await browser.close()}
 assert.equal(mutations.filter(m=>m.action==='approve').length,2)

@@ -23,6 +23,7 @@ serve(async req=>{
   const text=await req.text();if(text.length>8192)return json({error:'Request too large'},400)
   const {action,data={}}=JSON.parse(text)
   const actor=auth.user.id
+  if(action==='search-customers')return json(await rpc(db,'referral_past_customer_search',{p_actor:actor,p_query:data.query||'',p_after:data.after||null,p_limit:25}))
   if(action==='lookup-first-checkout')return json(await rpc(db,'referral_first_checkout_list',{p_actor:actor,p_email:data.email}))
   if(action==='cancel-checkout'){
    const stripe=new Stripe(Deno.env.get('STRIPE_SECRET_KEY')!,{apiVersion:'2023-10-16'})
