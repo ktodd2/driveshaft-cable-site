@@ -28,7 +28,7 @@ test('actual endpoint cannot enable sends with request flags when environment ga
 test('authorized worker ignores caller dates, recipient lists, payout flags and provider URLs',async()=>{
  const h=harness();const response=await h.request('POST',{date:'1900-01-01',recipients:['private@invalid.test'],paid:true,url:'https://wrong.invalid'})
  assert.equal(response.status,200);assert.equal((await response.json()).paid,0);assert.equal(h.runs[0],'referral-monthly')
- assert.equal(h.authCalls[0].allowCron,true);assert.deepEqual(Object.keys(h.options[0]).sort(),['apiKey','emailEnabled','enabled'])
+ assert.equal(h.authCalls[0].allowCron,true);assert.equal(h.authCalls[0].cronKeyName,'REFERRAL_CRON_TRIGGER_KEY');assert.deepEqual(Object.keys(h.options[0]).sort(),['apiKey','emailEnabled','enabled'])
  assert.ok(!JSON.stringify(h.options).includes('private@'));assert.ok(!JSON.stringify(h.options).includes('1900'))
 })
 test('actual endpoint reports a persistent review backlog even when no new send failed',async()=>{

@@ -8,7 +8,7 @@ import {runAutomaticStatements} from '../_shared/referralStatements.js'
 import {observeEmailRun} from '../_shared/emailHealth.js'
 serve(async req=>{
  if(req.method!=='POST')return new Response('Method not allowed',{status:405})
- if(!await authorizeStoreRequest(req,createClient,{allowCron:true}))return new Response('Unauthorized',{status:403})
+ if(!await authorizeStoreRequest(req,createClient,{allowCron:true,cronKeyName:'REFERRAL_CRON_TRIGGER_KEY'}))return new Response('Unauthorized',{status:403})
  if(Deno.env.get('REFERRAL_AUTO_STATEMENTS_ENABLED')!=='true'||Deno.env.get('REFERRAL_EMAILS_ENABLED')!=='true'||!Deno.env.get('RESEND_API_KEY'))return new Response('Automatic statements disabled',{status:409})
  const db=createApiClient(createClient,Deno.env.get('SUPABASE_URL'),getSupabaseSecretKey())
  return await observeEmailRun(db,'referral-monthly',async()=>{

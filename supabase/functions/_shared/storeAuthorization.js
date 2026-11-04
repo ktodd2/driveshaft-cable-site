@@ -12,10 +12,10 @@ export async function isActiveAdmin(userClient, userId) {
   } catch { return false }
 }
 
-export async function authorizeStoreRequest(req, createClient, { allowCron = false } = {}) {
+export async function authorizeStoreRequest(req, createClient, { allowCron = false, cronKeyName = 'CRON_TRIGGER_KEY' } = {}) {
   if (hasBackendApiKey(req, getSupabaseSecretKey())) return true
   const token = (req.headers.get('Authorization') || '').replace(/^Bearer\s+/i, '')
-  const cronToken = allowCron ? Deno.env.get('CRON_TRIGGER_KEY') : undefined
+  const cronToken = allowCron ? Deno.env.get(cronKeyName) : undefined
   if (cronToken && token === cronToken) return true
   if (!token) return false
   try {

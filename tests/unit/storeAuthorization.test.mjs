@@ -17,13 +17,13 @@ test('admin authority is an active matching database row, never user claims', as
   assert.equal(await isActiveAdmin({ from() { throw Error('unavailable') } }, 'user-fixture'), false)
 })
 
-function authorizer({ backend = false, cron, tokenValid = false, active = false, authError = false } = {}) {
+function authorizer({ backend = false, cron, referralCron, tokenValid = false, active = false, authError = false } = {}) {
   const source = readFileSync(new URL('../../supabase/functions/_shared/storeAuthorization.js', import.meta.url),'utf8')
     .replace(/^import .*\n/gm,'').replace(/^export /gm,'')
   const context = {
     getSupabaseSecretKey: () => 'offline-backend', getSupabasePublishableKey: () => 'offline-public',
     hasBackendApiKey: () => backend,
-    Deno: { env: { get: key => key === 'CRON_TRIGGER_KEY' ? cron : 'https://offline.test' } },
+    Deno: { env: { get: key => ({CRON_TRIGGER_KEY:cron,REFERRAL_CRON_TRIGGER_KEY:referralCron,SUPABASE_URL:'https://offline.test'})[key] } },
     createApiClient: () => ({
       auth: { getUser: async () => ({ data: { user: tokenValid ? { id:'user-fixture', user_metadata:{ role:'admin' } } : null }, error: authError ? Error('invalid') : null }) },
       from: () => { const q={ select:()=>q, eq:()=>q, maybeSingle:async()=>({data:active?{id:'user-fixture'}:null}) }; return q },
@@ -42,6 +42,17 @@ test('protected endpoints require validated active admins, backend identity or e
   assert.equal(await authorizer({backend:true})(req(),()=>{}),true)
   assert.equal(await authorizer({cron:'cron-fixture'})(req('cron-fixture'),()=>{}),false)
   assert.equal(await authorizer({cron:'cron-fixture'})(req('cron-fixture'),()=>{},{allowCron:true}),true)
+})
+
+test('monthly scheduler token is isolated from existing cron credentials and fails closed when absent', async () => {
+  const req = token => new Request('https://offline.test', { headers: { Authorization:`Bearer ${token}` } })
+  const monthly = {allowCron:true,cronKeyName:'REFERRAL_CRON_TRIGGER_KEY'}
+  const authorize = authorizer({cron:'existing-cron-fixture',referralCron:'monthly-only-fixture'})
+  assert.equal(await authorize(req('monthly-only-fixture'),()=>{},monthly),true)
+  assert.equal(await authorize(req('existing-cron-fixture'),()=>{},monthly),false)
+  assert.equal(await authorize(req('monthly-only-fixture'),()=>{},{allowCron:true}),false)
+  assert.equal(await authorize(req('monthly-only-fixture'),()=>{}),false)
+  assert.equal(await authorizer({cron:'existing-cron-fixture'})(req('existing-cron-fixture'),()=>{},monthly),false)
 })
 
 for (const name of ['generate-blog-post','check-tracking-status','setup-cron-jobs','send-tracking-email','send-tracking-email-v2','send-delivery-email','finalize-tax-transaction']) {
