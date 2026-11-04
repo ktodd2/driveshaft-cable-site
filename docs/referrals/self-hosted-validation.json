@@ -10,7 +10,7 @@
   "testWebhookEnabled": false,
   "results": {
     "unit": {
-      "passed": 353,
+      "passed": 355,
       "failed": 0
     },
     "composedSqlCheckout": {
@@ -93,12 +93,16 @@
       "sha256": "46d98c40d3c2b44de7cbc75050dfeefac07817c1f404d74de77a41ee6885b494"
     },
     {
+      "path": "docs/referrals/coupon-gateway-release-review.md",
+      "sha256": "6b6461d0e1a5f4ef3ff44ebad6069c9475d14c88fdca7d458b4cac1f1006fb10"
+    },
+    {
       "path": "docs/referrals/independent-security-review.md",
       "sha256": "14a485b361da044d285ae2cf86c1661c613c2225e946366caedd64b86d0602cc"
     },
     {
       "path": "docs/referrals/production-release-runbook.md",
-      "sha256": "faa63f77b8ae39ff8345ea9be1456953b4e1d178fe57f2fac7768796bb434cdc"
+      "sha256": "1df2fdf596a3a4bbbab902c02dd5ecafc2b37a8c00459b760d32c3d931415837"
     },
     {
       "path": "docs/referrals/screenshots/email-confirm-390.png",
@@ -114,11 +118,11 @@
     },
     {
       "path": "docs/referrals/self-hosted-validation.md",
-      "sha256": "9615a856837add00b659295db22f0d209d5d947cdd53e8d620b73407d48b87dd"
+      "sha256": "47c34cd713e907147acaf25bc4d0f3906b51c90f8037fc7ecf0f800cae1fc317"
     },
     {
       "path": "docs/referrals/self-hosted-verification.md",
-      "sha256": "118650ecf1a1d7dd224fdf100b7a715bac1afa24ab5a77f6b167d1af4cbe6722"
+      "sha256": "db77023c34b22a8f4723095fd75ce30d693677c25f7cb9b196664142b8b9249d"
     },
     {
       "path": "package-lock.json",
@@ -145,6 +149,14 @@
       "sha256": "f8e2a4dc52639febcf504ff21a3b008e3385693baa51691ab9d9e7c040c502eb"
     },
     {
+      "path": "supabase/functions/_shared/discounts.ts",
+      "sha256": "76debeeb1255d73ca0cbf8693aa010d7b2716f828e538dbf1ce0b5774dab498d"
+    },
+    {
+      "path": "supabase/functions/_shared/pricing.ts",
+      "sha256": "60388140e30498f4d5fb57dd7ed80839e9d9ffb27150cfafd2a50217afd26cf8"
+    },
+    {
       "path": "supabase/functions/_shared/secureCheckout.js",
       "sha256": "4aa77b633b4bcec64cf93f02157b7efe2239a4bf8d444f45fa31400edd58f847"
     },
@@ -163,6 +175,10 @@
     {
       "path": "supabase/functions/stripe-webhook/index.ts",
       "sha256": "d6b37f000ccb383cc580f0faeeae86033b24008a379a5c4496a67c9b93b399e7"
+    },
+    {
+      "path": "supabase/functions/validate-discount-code/index.ts",
+      "sha256": "72954a543d34439870be584ba19338fcc43f37db611490ee4e4aebd906d61518"
     },
     {
       "path": "tests/browser/buyerVerification.mjs",
@@ -193,6 +209,10 @@
       "sha256": "648fde08efedf82d0ed996e6ba142a7c22e774d894a8ee1df6403018e7f38ed2"
     },
     {
+      "path": "tests/unit/couponPublicEndpoint.test.mjs",
+      "sha256": "0d35f66b819cd4c07e2af864d9fa1de7e784ecd2b46ae7b86a7bc5f502451720"
+    },
+    {
       "path": "tests/unit/orderAccessEndpoints.test.mjs",
       "sha256": "368decd6b1b656f9cf88e745755a4ebdacd9a8f643603b08036099ca13e8edaa"
     },
@@ -202,5 +222,16 @@
     }
   ],
   "releaseRunbook": "docs/referrals/production-release-runbook.md",
-  "rollbackTrackingInvariant": "Keep server REFERRAL_REWARDS_ENABLED=true for existing linked buyers while pausing DB enrollment/frontend entry/sends."
+  "rollbackTrackingInvariant": "Keep server REFERRAL_REWARDS_ENABLED=true for existing linked buyers while pausing DB enrollment/frontend entry/sends.",
+  "releaseCompatibility": {
+    "report": "docs/referrals/coupon-gateway-release-review.md",
+    "sdkVersion": "2.118.0",
+    "sdkSelection": "explicit source URLs matching prior lock resolution",
+    "couponGatewayProposed": false,
+    "productionGatewayChanged": false,
+    "independentNewEndpointTestsPassed": 2,
+    "independentSourceReview": "approved, no blocking findings",
+    "presenceOnlyCredentialConfirmation": true
+  },
+  "compatibilityBaseCommit": "0f48ed2a3fd4024959313d1d386d2e12b8b87d03"
 }

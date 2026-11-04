@@ -1,6 +1,6 @@
 # Self-hosted verification — local validation, November 4
 
-The owner approved resuming necessary checks. Current results: **353 unit checks, 30 composed checkout/SQL cases and six database scripts pass**. Real PostgreSQL 17.6 sessions with TCP disabled pass checkout, payment observation, policy edit, cancellation, receiver-proof and send-budget contention. The temporary local database is removed after the run.
+The owner approved resuming necessary checks. Current results: **355 unit checks, 30 composed checkout/SQL cases and six database scripts pass**. Real PostgreSQL 17.6 sessions with TCP disabled pass checkout, payment observation, policy edit, cancellation, receiver-proof and send-budget contention. The temporary local database is removed after the run.
 
 Desktop and 390px mobile-viewport headless Chrome pass the actual bundled proof-of-work widget, intercepted verification mail, explicit receiver consumption, separate-requester isolation, native same-browser handoff, blocked-storage/scrubber recovery, and uncoded first-checkout proof enforcement. No external browser traffic was permitted. The fixture was corrected to click the widget's visible label rather than its visually hidden input; no forced clicks or production layout workaround was used. Screenshots: `screenshots/self-hosted-challenge-390.png`, `screenshots/email-confirm-390.png`, `screenshots/email-verified-1440.png`.
 
@@ -26,3 +26,7 @@ No provider delivered a real webhook and no actual Stripe payment/refund or posi
 Production private modern-key, Resend/Stripe mapping still needs secure confirmation. The previous secret-returning configuration read denial and coordinated order-access cutover denial remain held; neither was retried or bypassed. The isolated Supabase database remains deleted, and no retained test webhook was enabled. New hosted resources, credentials, emails or production actions require their applicable authorization.
 
 Proof of work is computation-based friction, not human/adaptive bot classification. A determined solver can exhaust conservative global limits; real lower-powered mobile hardware and production performance are not validated by the desktop-engine mobile viewport. Missing/failed safeguards remain fail closed. Customer invitations, monthly schedules and payouts are unchanged.
+
+## Release compatibility addendum
+
+The intended public coupon endpoint is also included in the scoped release with modern-key gateway compatibility. Three Supabase SDK URLs are pinned to the already validated 2.118.0 resolution, and an existing coupon catch-type/error-disclosure issue is fixed. The full 355 unit checks and 30 composed cases pass; targeted Deno checks pass. Peer review independently approves the three pins/fixed catch and ran the two new offline coupon regressions (2/2). See `coupon-gateway-release-review.md` for exact hashes, boundaries and residuals. No production gateway, function, permission or credential changed.

@@ -2,7 +2,7 @@
 
 The owner selected the safe route needing the least owner setup. This revision replaces the draft's mandatory Cloudflare Turnstile integration with the MIT-licensed, self-hosted ALTCHA widget 3.5.0 and server library 2.8.0. Packages are exact-pinned, with npm integrity records and a function-local Deno import map/lock. No ALTCHA Cloud/Sentinel account, subscription, DNS change, new provider key, external script or remote bot-classification service is required. Existing Supabase/Render resource charges still apply.
 
-**Status:** locally implemented and validated after the owner explicitly resumed necessary checks. See [current results and review limits](self-hosted-validation.md): 353 unit checks, 30 composed cases, six database scripts, real PostgreSQL contention, desktop/mobile-viewport browser flow, build and Edge type-checks pass. No production mutation, real provider transaction/email, resource creation or publication occurred. Independent peer review is complete for the corrected source snapshot; production configuration/cutover remain pending.
+**Status:** locally implemented and validated after the owner explicitly resumed necessary checks. See [current results and review limits](self-hosted-validation.md): 355 unit checks, 30 composed cases, six database scripts, real PostgreSQL contention, desktop/mobile-viewport browser flow, build and Edge type-checks pass. No production mutation, real provider transaction/email, resource creation or publication occurred. Independent peer review is complete for the corrected source snapshot; production configuration/cutover remain pending.
 
 ## Flow and safeguards
 

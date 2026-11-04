@@ -10,7 +10,7 @@ import { getSupabaseSecretKey } from '../_shared/supabaseKeys.js'
 // doesn't burn a code prematurely.
 
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.118.0'
 import { checkDiscountCode } from '../_shared/discounts.ts'
 
 const corsHeaders = {
@@ -43,9 +43,9 @@ serve(async (req) => {
         status: !result.valid && result.lookupFailed ? 500 : 200,
       }
     )
-  } catch (error) {
+  } catch {
     return new Response(
-      JSON.stringify({ valid: false, reason: error.message || 'Validation failed' }),
+      JSON.stringify({ valid: false, reason: 'Validation failed. Please try again.' }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
     )
   }
