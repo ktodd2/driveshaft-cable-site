@@ -137,6 +137,7 @@ function Header() {
     ['/instructions', 'Instructions'],
     ['/faq', 'FAQ'],
     ['/blog', 'Blog'],
+    ['/referrals', 'Referrals'],
   ]
 
   return (

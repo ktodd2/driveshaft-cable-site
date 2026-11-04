@@ -70,6 +70,9 @@ function Footer() {
               <li>
                 <Link to="/suggestions" className="inline-flex items-center min-h-[32px] text-gray-400 hover:text-yellow-500 transition-colors text-sm">Suggestions</Link>
               </li>
+              <li>
+                <Link to="/referrals" className="inline-flex items-center min-h-[44px] text-gray-400 hover:text-yellow-500 transition-colors text-sm">Referral Program</Link>
+              </li>
             </ul>
           </div>
 
