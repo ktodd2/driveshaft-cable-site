@@ -1,0 +1,83 @@
+import fs from 'node:fs/promises'
+import assert from 'node:assert/strict'
+import {commerceFixture} from '../fixtures/integrationCommerceDb.mjs'
+const f=await commerceFixture({policyRuntime:true}),db=f.sql
+const id=n=>`60000000-0000-4000-8000-${String(n).padStart(12,'0')}`
+const call=async(name,args=[])=>(await db.query(`select ${name}(${args.map((_,i)=>'$'+(i+1)).join(',')}) result`,args)).rows[0].result
+const admin=(action,data={},actor=f.owner)=>call('referral_admin',[actor,action,data])
+const migration=await fs.readFile('supabase/migrations/20261104053945_referral_check_cash_conversion.sql','utf8')
+try{
+ await db.query("insert into referral_partners(id,email,name,code) values($1,'new-referrer@invalid.test','Fixture','NEWREF'),($2,'legacy@invalid.test','Legacy Fixture','LEGACY')",[id(1),id(2)])
+ for(const [n,state]of [[3,'requested'],[4,'reserved'],[5,'paid']])await db.query("insert into referral_redemptions(id,partner_id,kind,merchandise_cents,shipping_cents,tax_cents,total_cents,notes,state) values($1,$2,'check',1000,0,0,1000,'Legacy terms',$3)",[id(n),id(2),state])
+ await db.query("insert into referral_statements(partner_id,month,balance,recipient_email,recipient_name,referral_code) values($1,'2026-10','{}','legacy@invalid.test','Legacy Fixture','LEGACY')",[id(2)])
+ await db.exec('reset role')
+ await db.query('update referral_partners set accepted_at=now() where id=$1',[id(1)])
+ await assert.rejects(()=>db.exec(migration),/owner policy decision/)
+ await db.exec('rollback')
+ assert.equal((await db.query("select count(*)::int n from information_schema.columns where table_name='referral_redemptions' and column_name='cash_value_bps'")).rows[0].n,0,'failed cutover leaves schema untouched')
+ await db.query('update referral_partners set accepted_at=null where id=$1',[id(1)])
+ await db.exec(migration);await db.exec('set role service_role')
+ const legacy=(await db.query('select * from referral_redemptions where partner_id=$1 order by id',[id(2)])).rows
+ assert.deepEqual(legacy.map(r=>[r.state,r.total_cents,r.check_amount_cents,r.cash_value_bps]),[['requested',1000,1000,10000],['reserved',1000,1000,10000],['paid',1000,1000,10000]])
+ await admin('request',{id:id(3),partner_id:id(2),kind:'check',merchandise_cents:1000,shipping_cents:0,tax_cents:0,notes:'Legacy terms'})
+ assert.equal((await db.query('select cash_value_bps from referral_statements')).rows[0].cash_value_bps,10000)
+ await assert.rejects(()=>db.exec('update referral_statements set cash_value_bps=5000'),/immutable/)
+ await assert.rejects(()=>db.exec('update referral_redemptions set cash_value_bps=5000'),/immutable/)
+ await db.exec('update referral_settings set enabled=true')
+ await admin('invite',{partner_id:id(1),hash:'a'.repeat(64)})
+ assert.equal((await call('referral_invite_preview',['a'.repeat(64)])).redemption_terms_version,'check-half-value-v1')
+ await assert.rejects(()=>call('referral_signup_policy',['a'.repeat(64),'Fixture','123 Fixture Road','check',1]),/terms changed/)
+ await assert.rejects(()=>call('referral_signup_policy',['a'.repeat(64),'Fixture','123 Fixture Road','check',2,'check-half-value-v1']),/settings changed/)
+ assert.equal((await db.query('select used_at from referral_invites')).rows[0].used_at,null)
+ await call('referral_signup_policy',['a'.repeat(64),'Fixture','123 Fixture Road','check',1,'check-half-value-v1'])
+ assert.equal((await db.query("select details->>'check_value_bps' bps from referral_audit where action='accept_redemption_terms'")).rows[0].bps,'5000')
+ const policy=(await db.query('select buyer_discount_bps,commission_tiers,policy_revision from referral_partners where id=$1',[id(1)])).rows[0]
+ assert.equal(policy.buyer_discount_bps,500);assert.deepEqual(policy.commission_tiers,[{through:1,bps:1000},{through:2,bps:500},{through:10,bps:200},{through:20,bps:100}]);assert.equal(policy.policy_revision,1)
+ // Synthetic earned reward fixture: $100.01 available. No provider or network operations.
+ await db.query("insert into orders(id,email) values($1,'buyer@invalid.test')",[id(10)])
+ await db.query("insert into referral_checkouts(order_id,email,partner_id,merchandise_cents,shipping_cents,tax_cents,total_cents,intent_params) values($1,'buyer@invalid.test',$2,100010,0,0,100010,'{}')",[id(10),id(1)])
+ await db.query("insert into referral_buyers(email,partner_id,first_order_id) values('buyer@invalid.test',$1,$2)",[id(1),id(10)])
+ await db.query("insert into referral_earnings(order_id,partner_id,email,sequence,rate_bps,base_cents,original_cents,paid_at,available_at) values($1,$2,'buyer@invalid.test',1,1000,100010,10001,now()-interval '8 days',now()-interval '1 day')",[id(10),id(1)])
+ const request={id:id(20),partner_id:id(1),kind:'check',merchandise_cents:10000,shipping_cents:0,tax_cents:0,notes:'Please issue $50',check_cash_cents:5000,redemption_version:'check-half-value-v1'}
+ for(const patch of [{redemption_version:null},{check_cash_cents:5000.5},{check_cash_cents:'5000'},{check_cash_cents:1073741824},{merchandise_cents:5000},{shipping_cents:1},{tax_cents:1}])await assert.rejects(()=>admin('request',{...request,...patch}),/terms changed|whole cents|two reward cents/)
+ await assert.rejects(()=>admin('request',request,id(99)),/Active admin/)
+ await admin('request',request);await admin('request',request)
+ await assert.rejects(()=>admin('request',{...request,check_cash_cents:1}),/recorded terms/)
+ const acknowledged=n=>({id:id(n),redemption_version:'check-half-value-v1',check_cash_cents:n===21?1:5000})
+ await assert.rejects(()=>admin('approve',{id:id(20)}),/confirm the recorded cash/)
+ await assert.rejects(()=>admin('approve',{...acknowledged(20),check_cash_cents:10000}),/confirm the recorded cash/)
+ await admin('approve',acknowledged(20));await admin('approve',acknowledged(20))
+ let b=await call('referral_balance',[id(1)]);assert.equal(b.available,1);assert.equal(b.reserved,10000)
+ await admin('request',{...request,id:id(21),check_cash_cents:1,merchandise_cents:2,notes:'Too much'})
+ await assert.rejects(()=>admin('approve',acknowledged(21)),/Insufficient/)
+ await assert.rejects(()=>admin('complete',{id:id(20),reference:'Stale tab tries $100'}),/confirm the recorded cash/)
+ await admin('complete',{...acknowledged(20),reference:'Fixture check $50'});await admin('complete',{...acknowledged(20),reference:'Fixture check $50'})
+ b=await call('referral_balance',[id(1)]);assert.equal(b.paid,10000);assert.equal(b.available,1)
+ const recorded=(await db.query('select * from referral_redemptions where id=$1',[id(20)])).rows[0];assert.equal(recorded.check_amount_cents,5000);assert.equal(recorded.total_cents,10000)
+ assert.equal((await db.query("select details->>'check_amount_cents' cash from referral_audit where action='complete' and entity_id=$1",[id(20)])).rows[0].cash,'5000')
+ await db.query('update referral_earnings set merchandise_refund_cents=100010 where order_id=$1',[id(10)])
+ b=await call('referral_balance',[id(1)]);assert.equal(b.available,-10000,'post-issuance refund reduces future reward units, not merely cash paid')
+ // New earning restores $100.01; a product request consumes full retail/shipping/tax value.
+ await db.query('update referral_earnings set merchandise_refund_cents=0 where order_id=$1',[id(10)])
+ await db.query('update referral_earnings set base_cents=200010,original_cents=20001 where order_id=$1',[id(10)])
+ await admin('request',{id:id(30),partner_id:id(1),kind:'product',merchandise_cents:9000,shipping_cents:900,tax_cents:100,notes:'Retail items and shipping'})
+ await admin('approve',{id:id(30)});b=await call('referral_balance',[id(1)]);assert.equal(b.available,1);assert.equal(b.reserved,10000)
+ const product=(await db.query('select * from referral_redemptions where id=$1',[id(30)])).rows[0];assert.equal(product.cash_value_bps,10000);assert.equal(product.check_amount_cents,0)
+ await admin('reject',{id:id(30)});assert.equal((await call('referral_balance',[id(1)])).available,10001,'rejection releases full reward reservation')
+ await db.query('update referral_redemptions set state=\'rejected\' where partner_id=$1 and state=\'reserved\'',[id(2)])
+ await db.query("insert into orders(id,email) values($1,'legacy-buyer@invalid.test')",[id(40)])
+ await db.query("insert into referral_checkouts(order_id,email,partner_id,merchandise_cents,shipping_cents,tax_cents,total_cents,intent_params) values($1,'legacy-buyer@invalid.test',$2,50000,0,0,50000,'{}')",[id(40),id(2)])
+ await db.query("insert into referral_buyers(email,partner_id,first_order_id) values('legacy-buyer@invalid.test',$1,$2)",[id(2),id(40)])
+ await db.query("insert into referral_earnings(order_id,partner_id,email,sequence,rate_bps,base_cents,original_cents,paid_at,available_at) values($1,$2,'legacy-buyer@invalid.test',1,1000,50000,5000,now()-interval '8 days',now()-interval '1 day')",[id(40),id(2)])
+ await admin('approve',{id:id(3)});await admin('complete',{id:id(3),reference:'Legacy check $10'})
+ assert.equal((await db.query('select check_amount_cents from referral_redemptions where id=$1',[id(3)])).rows[0].check_amount_cents,1000,'legacy request still pays $10, not $5')
+ await call('referral_prepare_statements',['2027-01-01T06:00:00Z',200,false])
+ assert.equal((await db.query('select cash_value_bps from referral_statements where partner_id=$1',[id(1)])).rows[0].cash_value_bps,5000)
+ for(const role of ['anon','authenticated']){
+  await db.exec(`reset role;set role ${role}`)
+  await assert.rejects(()=>admin('request',request),/permission denied/)
+  await assert.rejects(()=>call('referral_signup_policy',['a'.repeat(64),'Fixture','Address','check',1,'check-half-value-v1']),/permission denied/)
+  await assert.rejects(()=>db.query('select * from referral_redemptions'),/permission denied/)
+ }
+ console.log('PASS prospective check conversion: exact 2:1 reward debit, odd-cent retention, product/shipping full credit, legacy snapshots, signup version, immutable terms, audit, idempotent approval/issuance, insufficient rewards, refunds, service-only authorization; local serialized DB fixture.')
+}finally{await db.close()}

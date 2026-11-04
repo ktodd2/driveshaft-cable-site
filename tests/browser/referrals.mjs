@@ -2,7 +2,7 @@ import assert from 'node:assert/strict'
 import fs from 'node:fs/promises'
 const {chromium}=await import(process.env.REPORT_PLAYWRIGHT_MODULE||'playwright')
 const browser=await chromium.launch({executablePath:process.env.REPORT_BROWSER||'/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',headless:true})
-const fixture={settings:{enabled:false,emails_enabled:false,auto_statements_enabled:false,statement_last_run_at:'2026-11-03T15:00:00Z',statement_last_counts:{sent:2,review:1}},partners:[{id:'partner-fixture',name:'Fixture Customer',code:'FIXTURE10',email:'referrer@invalid.test',status:'active',preference:'product',mailing_address:'123 Fixture Lane',balance:{pending:1000,available:2500,held:500,reserved:0,paid:1000,reversed:100}}],earnings:[{order_id:'20000000-0000-4000-8000-000000000011',partner_id:'partner-fixture',email:'buyer@invalid.test',sequence:11,rate_bps:100,base_cents:10000,merchandise_refund_cents:0,refunded_total_cents:500,available_at:'2026-11-10T12:00:00Z',refund_review:true}],redemptions:[{id:'redemption-fixture',partner_id:'partner-fixture',kind:'product',merchandise_cents:2000,shipping_cents:500,tax_cents:0,total_cents:2500,state:'requested',notes:'Fixture customer reply: retail product and shipping'}],statements:[{id:'statement-fixture',partner_id:'partner-fixture',month:'2026-11',balance:{available:2500}}]}
+const fixture={settings:{enabled:false,emails_enabled:false,auto_statements_enabled:false,statement_last_run_at:'2026-11-03T15:00:00Z',statement_last_counts:{sent:2,review:1}},partners:[{id:'partner-fixture',name:'Fixture Customer',code:'FIXTURE10',email:'referrer@invalid.test',status:'active',preference:'product',mailing_address:'123 Fixture Lane',balance:{pending:1000,available:2500,held:500,reserved:0,paid:1000,reversed:100}}],earnings:[{order_id:'20000000-0000-4000-8000-000000000011',partner_id:'partner-fixture',email:'buyer@invalid.test',sequence:11,rate_bps:100,base_cents:10000,merchandise_refund_cents:0,refunded_total_cents:500,available_at:'2026-11-10T12:00:00Z',refund_review:true}],redemptions:[{id:'redemption-fixture',partner_id:'partner-fixture',kind:'check',merchandise_cents:2500,shipping_cents:0,tax_cents:0,total_cents:2500,check_amount_cents:1250,cash_value_bps:5000,conversion_version:'check-half-value-v1',state:'requested',notes:'Fixture customer reply: $12.50 check using $25 rewards'}],statements:[{id:'statement-fixture',partner_id:'partner-fixture',month:'2026-11',balance:{available:2500}}]}
 const origin=process.env.REFERRAL_FIXTURE_ORIGIN||'http://127.0.0.1:3017'
 const mutations=[],screenshotRoot=process.env.REFERRAL_SCREENSHOT_DIR||'docs/referrals/screenshots'
 fixture.partners[0].buyer_discount_bps=500
@@ -11,10 +11,11 @@ fixture.partners[0].policy_revision=1
 await fs.mkdir(screenshotRoot,{recursive:true})
 try{for(const width of [1440,390]){
  const context=await browser.newContext({viewport:{width,height:1000},serviceWorkers:'block'}),page=await context.newPage(),errors=[]
+ page.setDefaultTimeout(15000)
  page.on('pageerror',e=>errors.push(e.message))
  await page.route('**/*',async route=>{
   const url=new URL(route.request().url());if(url.hostname!=='127.0.0.1')return route.abort()
-  if(url.pathname==='/__signup'){const body=JSON.parse(route.request().postData());assert.equal(body.functionName,'referral-signup');assert.equal(body.token,'fixture-invite');if(body.action==='preview')return route.fulfill({json:{code:'FIXTURE10',revision:1,buyer_discount_bps:500,tiers:[{through:1,bps:1000},{through:2,bps:500},{through:10,bps:200},{through:20,bps:100}]}});assert.equal(body.accepted,true);assert.equal(body.revision,1);return route.fulfill({contentType:'application/json',body:JSON.stringify({code:'FIXTURE10',name:body.name})})}
+  if(url.pathname==='/__signup'){const body=JSON.parse(route.request().postData());assert.equal(body.functionName,'referral-signup');assert.equal(body.token,'fixture-invite');if(body.action==='preview')return route.fulfill({json:{code:'FIXTURE10',redemption_terms_version:'check-half-value-v1',revision:1,buyer_discount_bps:500,tiers:[{through:1,bps:1000},{through:2,bps:500},{through:10,bps:200},{through:20,bps:100}]}});assert.equal(body.accepted,true);assert.equal(body.revision,1);assert.equal(body.redemptionVersion,'check-half-value-v1');return route.fulfill({contentType:'application/json',body:JSON.stringify({code:'FIXTURE10',name:body.name})})}
   if(url.pathname==='/__referrals'){
    const request=JSON.parse(route.request().postData());assert.equal(request.name,'referral-admin')
    if(request.action==='list')return route.fulfill({contentType:'application/json',body:JSON.stringify(fixture)})
@@ -36,6 +37,12 @@ try{for(const width of [1440,390]){
  await page.getByText('statements need provider review.',{exact:false}).waitFor()
  await page.getByLabel('Customer / code').selectOption('partner-fixture')
  await page.getByText(width===1440?'11 / 1%':'Order 11 · 1%',{exact:true}).waitFor()
+ await page.getByText(/Available reward redemption: up to \$12.50 by check/).waitFor()
+ await page.getByLabel('Check amount ($)',{exact:true}).fill('10')
+ await page.getByText('A $10.00 check uses $20.00 in rewards. Owner approval is required.',{exact:true}).waitFor()
+ await page.getByLabel('Customer reply / product details').fill('Fixture request for a $10 check')
+ await page.getByRole('button',{name:'Save request for review',exact:true}).click()
+ assert.equal(mutations.at(-1).action,'request');assert.equal(mutations.at(-1).data.merchandise_cents,2000);assert.equal(mutations.at(-1).data.check_cash_cents,1000);assert.equal(mutations.at(-1).data.redemption_version,'check-half-value-v1')
  const policyForm=page.getByRole('region',{name:'Code reward settings'})
  await policyForm.getByLabel('First-order buyer discount (%)').fill('7.25')
  await policyForm.getByLabel('Through paid order').last().fill('25')
@@ -51,6 +58,7 @@ try{for(const width of [1440,390]){
  await page.screenshot({path:`${screenshotRoot}/admin-${width}.png`,fullPage:true})
  const beforeReview=mutations.length;await page.getByRole('button',{name:'Review approval',exact:true}).click();assert.equal(mutations.length,beforeReview,'reviewing never mutates')
  await page.getByRole('button',{name:'Confirm action',exact:true}).click()
+ assert.equal(mutations.at(-1).data.check_cash_cents,1250);assert.equal(mutations.at(-1).data.redemption_version,'check-half-value-v1')
  await page.getByRole('button',{name:'Review manual email send'}).click();await page.getByRole('button',{name:'Confirm action',exact:true}).click()
  await page.getByRole('alert').waitFor();assert.match(await page.getByRole('alert').textContent(),/disabled/)
  await page.getByRole('button',{name:'Cancel',exact:true}).click()

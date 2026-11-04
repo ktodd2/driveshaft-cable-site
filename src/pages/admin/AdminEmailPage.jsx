@@ -3,12 +3,14 @@ import EmailHealth from '../../components/admin/EmailHealth'
 import React, { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
+import { referralAnnouncementTemplate } from '../../lib/referralAnnouncementTemplate'
 
 // ---------------------------------------------------------------------------
 // Email templates
 // ---------------------------------------------------------------------------
 
 const TEMPLATES = {
+  referralProgram: referralAnnouncementTemplate,
   loyalty: {
     label: 'Loyalty Discount',
     description: '10% repeat customer discount reminder',
