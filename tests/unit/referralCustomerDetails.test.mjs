@@ -13,7 +13,7 @@ test('customer report separates purchase-period and lifetime totals with each or
  for(const rate of ['10%','5%','2%'])assert.ok(text.includes(rate))
  assert.match(text,/Order 1 \(2026-10-20, outside purchase period\)/);assert.match(text,/Order 3 \(2026-11-29, in purchase period\): 2%/)
  assert.match(text,/pending \$2.00; vested before payouts\/reservations \$10.50; on hold \$0.00/)
- assert.match(text,/Available: \$11.50/);assert.match(text,/Customer name unavailable/)
+ assert.match(text,/Available rewards: \$11.50/);assert.match(text,/Customer name unavailable/)
  assert.match(text,/Refunds shown are cumulative/);assert.match(text,/overall available balance above deducts/)
 })
 test('untrusted names stay on one plaintext line, email-like name values are omitted, and no HTML transport is used',async()=>{

@@ -23,7 +23,7 @@ test('zero/negative/positive balance statements use frozen recipients and omit b
  const result=await runAutomaticStatements(db,{...enabled,transport:async(url,options)=>{messages.push(JSON.parse(options.body));assert.match(options.headers['Idempotency-Key'],/^ledger\//);return accepted()}})
  assert.equal(result.sent,3);assert.equal(result.paid,0);assert.equal(result.more,false)
  assert.deepEqual(messages.map(m=>m.to),db.tables.referral_statements.map(s=>s.recipient_email))
- assert.match(messages[0].text,/Available: \$0.00/);assert.match(messages[1].text,/Available: -\$1.00/)
+ assert.match(messages[0].text,/Available rewards: \$0.00/);assert.match(messages[1].text,/Available rewards: -\$1.00/)
  assert.ok(messages.every(m=>m.text.includes('Balance prepared 2026-11-03T15:00:00.000Z (UTC)')))
  assert.ok(!JSON.stringify(messages).includes('PRIVATE_BUYER'));assert.ok(!JSON.stringify(db.tables.email_attempts).includes('Frozen Name'))
  assert.ok(db.calls.every(([name])=>!name.includes('redemption')&&!name.includes('approve')))
