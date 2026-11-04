@@ -1,0 +1,172 @@
+{
+  "database": "PostgreSQL 17.6; temporary local synthetic database, private Unix socket; TCP disabled",
+  "provider_transport": "Synthetic deterministic fixture only; no Stripe requests, cryptographic signature validation or real deliveries",
+  "started_at": "2026-11-04T00:55:20.832Z",
+  "cases": [
+    {
+      "name": "first checkout transaction begins",
+      "at": "2026-11-04T00:55:21.297Z"
+    },
+    {
+      "name": "competing first checkout request starts",
+      "at": "2026-11-04T00:55:21.306Z"
+    },
+    {
+      "name": "competing first checkout waits on email advisory lock",
+      "at": "2026-11-04T00:55:21.330Z",
+      "waiting_pid": 52181,
+      "blockers": [
+        52180
+      ],
+      "wait_event_type": "Lock"
+    },
+    {
+      "name": "first checkout commits",
+      "at": "2026-11-04T00:55:21.330Z"
+    },
+    {
+      "name": "competing checkout rejected; exactly one provider intent",
+      "at": "2026-11-04T00:55:21.331Z",
+      "intent_count": 1
+    },
+    {
+      "name": "later success delivery observed first; earlier trusted fixture timestamp still pending",
+      "at": "2026-11-04T00:55:21.347Z"
+    },
+    {
+      "name": "overlapping simulated payment observation waits on email advisory lock",
+      "at": "2026-11-04T00:55:21.370Z",
+      "waiting_pid": 52181,
+      "blockers": [
+        52180
+      ],
+      "wait_event_type": "Lock"
+    },
+    {
+      "name": "reverse and overlapping observations settled by verified payment time",
+      "at": "2026-11-04T00:55:21.374Z",
+      "sequences": [
+        {
+          "sequence": 1,
+          "rate_bps": 1000
+        },
+        {
+          "sequence": 2,
+          "rate_bps": 500
+        },
+        {
+          "sequence": 3,
+          "rate_bps": 200
+        }
+      ]
+    },
+    {
+      "name": "simultaneous admin edit waits on partner row lock",
+      "at": "2026-11-04T00:55:21.397Z",
+      "waiting_pid": 52181,
+      "blockers": [
+        52180
+      ],
+      "wait_event_type": "Lock"
+    },
+    {
+      "name": "exactly one edit commits; stale edit rejected and history immutable",
+      "at": "2026-11-04T00:55:21.398Z"
+    },
+    {
+      "name": "policy edit waits for already prepared checkout terms",
+      "at": "2026-11-04T00:55:21.401Z",
+      "waiting_pid": 52181,
+      "blockers": [
+        52180
+      ],
+      "wait_event_type": "Lock"
+    },
+    {
+      "name": "prepared order terms retained across concurrent edit",
+      "at": "2026-11-04T00:55:21.402Z",
+      "prepared_revision": 2,
+      "current_revision": 3
+    },
+    {
+      "name": "cancellation waits for in-flight prepare ID lock without lock-order reversal",
+      "at": "2026-11-04T00:55:21.405Z",
+      "waiting_pid": 52181,
+      "blockers": [
+        52180
+      ],
+      "wait_event_type": "Lock"
+    },
+    {
+      "name": "prepare-then-cancel completed without deadlock; simulated provider cancellation verified",
+      "at": "2026-11-04T00:55:21.406Z"
+    },
+    {
+      "name": "prepare waits for earlier cancellation tombstone ID lock",
+      "at": "2026-11-04T00:55:21.430Z",
+      "waiting_pid": 52181,
+      "blockers": [
+        52180
+      ],
+      "wait_event_type": "Lock"
+    },
+    {
+      "name": "cancel-then-prepare rejected after tombstone commits; no orphan intent",
+      "at": "2026-11-04T00:55:21.430Z"
+    },
+    {
+      "name": "different receiver proof waits on the single-use link row",
+      "at": "2026-11-04T00:55:21.442Z",
+      "waiting_pid": 52181,
+      "blockers": [
+        52180
+      ],
+      "wait_event_type": "Lock"
+    },
+    {
+      "name": "one receiver proof issued; same-pair lost-response retry recovers without renewing expiry",
+      "at": "2026-11-04T00:55:21.443Z"
+    },
+    {
+      "name": "new first checkout waits while its ownership proof expires",
+      "at": "2026-11-04T00:55:21.466Z",
+      "waiting_pid": 52181,
+      "blockers": [
+        52180
+      ],
+      "wait_event_type": "Lock"
+    },
+    {
+      "name": "server clock rechecked after email lock; expired proof reserves nothing",
+      "at": "2026-11-04T00:55:21.769Z"
+    },
+    {
+      "name": "link confirmation waits while the link expires",
+      "at": "2026-11-04T00:55:21.771Z",
+      "waiting_pid": 52181,
+      "blockers": [
+        52180
+      ],
+      "wait_event_type": "Lock"
+    },
+    {
+      "name": "server clock rechecked after link lock; no proof minted for expired link",
+      "at": "2026-11-04T00:55:22.073Z"
+    },
+    {
+      "name": "concurrent mail request waits on the shared send-budget lock",
+      "at": "2026-11-04T00:55:22.075Z",
+      "waiting_pid": 52181,
+      "blockers": [
+        52180
+      ],
+      "wait_event_type": "Lock"
+    },
+    {
+      "name": "concurrent request budget permits one request; no email transport or proof granted",
+      "at": "2026-11-04T00:55:22.075Z"
+    }
+  ],
+  "completed_at": "2026-11-04T00:55:22.075Z",
+  "result": "PASS"
+}

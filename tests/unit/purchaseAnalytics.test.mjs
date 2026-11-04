@@ -151,20 +151,20 @@ test('checkout capability is tab-local, bound to order, and expires', () => {
   assert.equal(getCheckoutPayment(orderId, browser), null)
 })
 
-test('actual verification handler is read-only, authorized by secret, sanitized and no-store', async () => {
-  let handler, retrieved = [], intentPatch = {}
+test('actual verification handler reconciles server-side only after secret verification and remains sanitized/no-store', async () => {
+  let handler, retrieved = [], reconciled = [], intentPatch = {}
   const source = readFileSync(new URL('../../supabase/functions/verify-purchase/index.ts', import.meta.url), 'utf8').replace(/^import .*\n/gm, '')
   class Stripe { constructor() { this.paymentIntents = { retrieve: async id => { retrieved.push(id); return makeIntent(intentPatch) } } } }
-  runInNewContext(stripTypeScriptTypes(source), { serve: fn => { handler = fn }, Stripe, verifiedPurchaseResponse,
+  runInNewContext(stripTypeScriptTypes(source), { serve: fn => { handler = fn }, Stripe, verifiedPurchaseResponse,createAdminClient:()=>({}),reconcileOrderPayment:async(_db,_stripe,intent)=>{reconciled.push(intent.id||'fixture')},
     Deno: { env: { get: () => 'offline-fixture-only' } }, Response, JSON })
   const call = body => handler(new Request('https://offline.test', { method: 'POST', body: JSON.stringify(body) }))
   let res = await call({ orderId, clientSecret: secret })
   assert.equal(res.status, 200)
   assert.equal(res.headers.get('cache-control'), 'no-store')
   assert.deepEqual(await res.json(), response(makeIntent()))
-  assert.deepEqual(retrieved, ['pi_offlineFixture'])
+  assert.deepEqual(retrieved, ['pi_offlineFixture']);assert.equal(reconciled.length,1)
   res = await call({ orderId, clientSecret: 'pi_offlineFixture_secret_wrong' })
-  assert.equal(res.status, 403)
+  assert.equal(res.status, 403);assert.equal(reconciled.length,1)
   assert.ok(!(await res.text()).includes('wrong'))
   assert.equal((await call({ orderId, redirect_status: 'succeeded' })).status, 400)
   assert.equal((await handler(new Request('https://offline.test'))).status, 405)

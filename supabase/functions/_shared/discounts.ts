@@ -2,7 +2,7 @@
 // so the server-computed total matches what the customer was shown — keep
 // the rounding expressions identical to the client's.
 
-import { SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2.118.0'
 
 // code -> percent off (0-100). Both single-use per email.
 //   WELCOME5  — welcome series Day 0 email

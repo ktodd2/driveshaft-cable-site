@@ -1,0 +1,15 @@
+{
+  "note": "Unpublished local migration scaffolds regenerated with Supabase CLI 2.58.5; distinct CLI timestamps; SQL bytes preserved; no hosted migration applied",
+  "files": [
+    {
+      "previous_local_scaffold": "20261103125000_referral_code_policy.sql",
+      "cli_generated_file": "20261103143717_referral_code_policy.sql",
+      "sql_sha256_unchanged": "56b4e58365b475361af3a89fa083e80682a2c7fe620f8712bf974eab3c5eeec5"
+    },
+    {
+      "previous_local_scaffold": "20261103131000_referral_policy_checkout_runtime.sql",
+      "cli_generated_file": "20261103143732_referral_policy_checkout_runtime.sql",
+      "sql_sha256_unchanged": "a1fae07b1fc9b6a1772ae22148d559e7faa71ad45f0c428e045647e086bfeae2"
+    }
+  ]
+}

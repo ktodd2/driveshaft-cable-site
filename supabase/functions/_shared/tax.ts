@@ -2,6 +2,7 @@
 // create-payment-intent (the authoritative total that is actually charged).
 
 import Stripe from 'https://esm.sh/stripe@13.10.0?target=deno'
+import {discountedLineAmounts} from './discountAllocation.js'
 
 // txcd_99999999 = "General — Tangible Goods", Stripe's catch-all for physical
 // products. If a more specific code for automotive parts is added to the
@@ -45,11 +46,10 @@ export async function createTaxCalculation(
   // the post-discount amount because most US jurisdictions tax the net price
   // the customer actually pays.
   const safeDiscount = Math.max(0, Math.min(discountCents, subtotalCents))
-  const discountRatio = subtotalCents > 0 ? safeDiscount / subtotalCents : 0
+  const netAmounts = discountedLineAmounts(lines, subtotalCents, safeDiscount)
 
-  const lineItems = lines.map((line) => {
-    const lineGross = line.unitPrice * line.quantity
-    const lineNet = Math.round(lineGross * (1 - discountRatio))
+  const lineItems = lines.map((line,index) => {
+    const lineNet = netAmounts[index]
     return {
       amount: lineNet,
       reference: line.productId,

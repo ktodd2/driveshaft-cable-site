@@ -21,7 +21,7 @@
       },
       "test": {
         "status": "pass",
-        "method": "headless Chrome smoke (desktop 1440×900 + mobile 390×844), mocked Supabase, Stripe/ads/analytics blocked",
+        "method": "headless Chrome smoke (desktop 1440\u00d7900 + mobile 390\u00d7844), mocked Supabase, Stripe/ads/analytics blocked",
         "authenticated": "n/a",
         "ranAt": "2026-10-11T03:02:00.181Z",
         "results": [
@@ -73,7 +73,7 @@
       },
       "test": {
         "status": "pass",
-        "method": "headless Chrome smoke (desktop 1440×900 + mobile 390×844), mocked Supabase, Stripe/ads/analytics blocked",
+        "method": "headless Chrome smoke (desktop 1440\u00d7900 + mobile 390\u00d7844), mocked Supabase, Stripe/ads/analytics blocked",
         "authenticated": "n/a",
         "ranAt": "2026-10-11T03:02:00.181Z",
         "results": [
@@ -125,7 +125,7 @@
       },
       "test": {
         "status": "pass",
-        "method": "headless Chrome smoke (desktop 1440×900 + mobile 390×844), mocked Supabase, Stripe/ads/analytics blocked",
+        "method": "headless Chrome smoke (desktop 1440\u00d7900 + mobile 390\u00d7844), mocked Supabase, Stripe/ads/analytics blocked",
         "authenticated": "n/a",
         "ranAt": "2026-10-11T03:02:00.181Z",
         "results": [
@@ -177,7 +177,7 @@
       },
       "test": {
         "status": "pass",
-        "method": "headless Chrome smoke (desktop 1440×900 + mobile 390×844), mocked Supabase, Stripe/ads/analytics blocked",
+        "method": "headless Chrome smoke (desktop 1440\u00d7900 + mobile 390\u00d7844), mocked Supabase, Stripe/ads/analytics blocked",
         "authenticated": "n/a",
         "ranAt": "2026-10-11T03:02:00.181Z",
         "results": [
@@ -252,7 +252,7 @@
       },
       "test": {
         "status": "pass",
-        "method": "headless Chrome smoke (desktop 1440×900 + mobile 390×844), mocked Supabase, Stripe/ads/analytics blocked",
+        "method": "headless Chrome smoke (desktop 1440\u00d7900 + mobile 390\u00d7844), mocked Supabase, Stripe/ads/analytics blocked",
         "authenticated": "n/a",
         "ranAt": "2026-10-11T03:02:00.181Z",
         "results": [
@@ -304,7 +304,7 @@
       },
       "test": {
         "status": "pass",
-        "method": "headless Chrome smoke (desktop 1440×900 + mobile 390×844), mocked Supabase, Stripe/ads/analytics blocked",
+        "method": "headless Chrome smoke (desktop 1440\u00d7900 + mobile 390\u00d7844), mocked Supabase, Stripe/ads/analytics blocked",
         "authenticated": "n/a",
         "ranAt": "2026-10-11T03:02:00.181Z",
         "results": [
@@ -356,7 +356,7 @@
       },
       "test": {
         "status": "pass",
-        "method": "headless Chrome smoke (desktop 1440×900 + mobile 390×844), mocked Supabase, Stripe/ads/analytics blocked",
+        "method": "headless Chrome smoke (desktop 1440\u00d7900 + mobile 390\u00d7844), mocked Supabase, Stripe/ads/analytics blocked",
         "authenticated": "n/a",
         "ranAt": "2026-10-11T03:02:00.181Z",
         "results": [
@@ -416,7 +416,7 @@
       },
       "test": {
         "status": "pass",
-        "method": "headless Chrome smoke (desktop 1440×900 + mobile 390×844), mocked Supabase, Stripe/ads/analytics blocked",
+        "method": "headless Chrome smoke (desktop 1440\u00d7900 + mobile 390\u00d7844), mocked Supabase, Stripe/ads/analytics blocked",
         "authenticated": "n/a",
         "ranAt": "2026-10-11T03:02:00.181Z",
         "results": [
@@ -525,7 +525,7 @@
       },
       "test": {
         "status": "pass",
-        "method": "headless Chrome smoke (desktop 1440×900 + mobile 390×844), mocked Supabase, Stripe/ads/analytics blocked",
+        "method": "headless Chrome smoke (desktop 1440\u00d7900 + mobile 390\u00d7844), mocked Supabase, Stripe/ads/analytics blocked",
         "authenticated": "n/a",
         "ranAt": "2026-10-11T03:02:00.181Z",
         "results": [
@@ -604,7 +604,7 @@
       },
       "test": {
         "status": "pass",
-        "method": "headless Chrome smoke (desktop 1440×900 + mobile 390×844), mocked Supabase, Stripe/ads/analytics blocked",
+        "method": "headless Chrome smoke (desktop 1440\u00d7900 + mobile 390\u00d7844), mocked Supabase, Stripe/ads/analytics blocked",
         "authenticated": "n/a",
         "ranAt": "2026-10-11T03:02:00.181Z",
         "results": [
@@ -656,7 +656,7 @@
       },
       "test": {
         "status": "pass",
-        "method": "headless Chrome smoke (desktop 1440×900 + mobile 390×844), mocked Supabase, Stripe/ads/analytics blocked",
+        "method": "headless Chrome smoke (desktop 1440\u00d7900 + mobile 390\u00d7844), mocked Supabase, Stripe/ads/analytics blocked",
         "authenticated": "n/a",
         "ranAt": "2026-10-11T03:02:00.181Z",
         "results": [
@@ -690,6 +690,32 @@
       }
     },
     {
+      "path": "/checkout/verify-email",
+      "element": "BuyerEmailVerificationPage",
+      "module": "./pages/BuyerEmailVerificationPage",
+      "redirectTo": null,
+      "lazy": false,
+      "category": "commerce",
+      "samples": [
+        {
+          "url": "/checkout/verify-email",
+          "state": "private link absent; explicit confirmation required"
+        }
+      ],
+      "work": {
+        "status": "implemented-local",
+        "notes": "Private explicit buyer email confirmation; no account or automatic payment. Unpublished; hosted/provider validation pending."
+      },
+      "test": {
+        "status": "passed-local-fixture",
+        "results": [
+          "tests/unit/buyerVerification.test.mjs",
+          "tests/integration/buyerVerification.postgres.mjs",
+          "tests/browser/buyerVerification.mjs: explicit confirmation, requester isolation, same-browser handoff, cross-browser continuation; all provider transports intercepted"
+        ]
+      }
+    },
+    {
       "path": "/quote",
       "element": "QuotePage",
       "module": "./pages/QuotePage",
@@ -708,7 +734,7 @@
       },
       "test": {
         "status": "pass",
-        "method": "headless Chrome smoke (desktop 1440×900 + mobile 390×844), mocked Supabase, Stripe/ads/analytics blocked",
+        "method": "headless Chrome smoke (desktop 1440\u00d7900 + mobile 390\u00d7844), mocked Supabase, Stripe/ads/analytics blocked",
         "authenticated": "n/a",
         "ranAt": "2026-10-11T03:02:00.181Z",
         "results": [
@@ -760,7 +786,7 @@
       },
       "test": {
         "status": "pass",
-        "method": "headless Chrome smoke (desktop 1440×900 + mobile 390×844), mocked Supabase, Stripe/ads/analytics blocked",
+        "method": "headless Chrome smoke (desktop 1440\u00d7900 + mobile 390\u00d7844), mocked Supabase, Stripe/ads/analytics blocked",
         "authenticated": "n/a",
         "ranAt": "2026-10-11T03:02:00.181Z",
         "results": [
@@ -812,7 +838,7 @@
       },
       "test": {
         "status": "pass",
-        "method": "headless Chrome smoke (desktop 1440×900 + mobile 390×844), mocked Supabase, Stripe/ads/analytics blocked",
+        "method": "headless Chrome smoke (desktop 1440\u00d7900 + mobile 390\u00d7844), mocked Supabase, Stripe/ads/analytics blocked",
         "authenticated": "n/a",
         "ranAt": "2026-10-11T03:02:00.181Z",
         "results": [
@@ -868,7 +894,7 @@
       },
       "test": {
         "status": "pass",
-        "method": "headless Chrome smoke (desktop 1440×900 + mobile 390×844), mocked Supabase, Stripe/ads/analytics blocked",
+        "method": "headless Chrome smoke (desktop 1440\u00d7900 + mobile 390\u00d7844), mocked Supabase, Stripe/ads/analytics blocked",
         "authenticated": "n/a",
         "ranAt": "2026-10-11T03:02:00.181Z",
         "results": [
@@ -946,7 +972,7 @@
       },
       "test": {
         "status": "pass",
-        "method": "headless Chrome smoke (desktop 1440×900 + mobile 390×844), mocked Supabase, Stripe/ads/analytics blocked",
+        "method": "headless Chrome smoke (desktop 1440\u00d7900 + mobile 390\u00d7844), mocked Supabase, Stripe/ads/analytics blocked",
         "authenticated": "n/a",
         "ranAt": "2026-10-11T03:02:00.181Z",
         "results": [
@@ -980,6 +1006,30 @@
       }
     },
     {
+      "path": "/referral/signup",
+      "element": "ReferralSignupPage",
+      "module": "./pages/ReferralSignupPage",
+      "redirectTo": null,
+      "lazy": false,
+      "category": "public",
+      "samples": [
+        {
+          "url": "/referral/signup",
+          "state": "private invitation without token"
+        }
+      ],
+      "work": {
+        "status": "implemented",
+        "notes": "Staged referral feature; private signup and active-admin controls. No production deployment."
+      },
+      "test": {
+        "status": "fixture-verified",
+        "results": [
+          "Isolated headless desktop/mobile fixtures; database service-only authorization tests. Hosted rollout checks remain approval-gated."
+        ]
+      }
+    },
+    {
       "path": "/testimonial",
       "element": "TestimonialPage",
       "module": "./pages/TestimonialPage",
@@ -998,7 +1048,7 @@
       },
       "test": {
         "status": "pass",
-        "method": "headless Chrome smoke (desktop 1440×900 + mobile 390×844), mocked Supabase, Stripe/ads/analytics blocked",
+        "method": "headless Chrome smoke (desktop 1440\u00d7900 + mobile 390\u00d7844), mocked Supabase, Stripe/ads/analytics blocked",
         "authenticated": "n/a",
         "ranAt": "2026-10-11T03:02:00.181Z",
         "results": [
@@ -1050,7 +1100,7 @@
       },
       "test": {
         "status": "pass",
-        "method": "headless Chrome smoke (desktop 1440×900 + mobile 390×844), mocked Supabase, Stripe/ads/analytics blocked",
+        "method": "headless Chrome smoke (desktop 1440\u00d7900 + mobile 390\u00d7844), mocked Supabase, Stripe/ads/analytics blocked",
         "authenticated": "n/a",
         "ranAt": "2026-10-11T03:02:00.181Z",
         "results": [
@@ -1102,7 +1152,7 @@
       },
       "test": {
         "status": "pass",
-        "method": "headless Chrome smoke (desktop 1440×900 + mobile 390×844), mocked Supabase, Stripe/ads/analytics blocked",
+        "method": "headless Chrome smoke (desktop 1440\u00d7900 + mobile 390\u00d7844), mocked Supabase, Stripe/ads/analytics blocked",
         "authenticated": "n/a",
         "ranAt": "2026-10-11T03:02:00.181Z",
         "results": [
@@ -1154,7 +1204,7 @@
       },
       "test": {
         "status": "pass",
-        "method": "headless Chrome smoke (desktop 1440×900 + mobile 390×844), mocked Supabase, Stripe/ads/analytics blocked",
+        "method": "headless Chrome smoke (desktop 1440\u00d7900 + mobile 390\u00d7844), mocked Supabase, Stripe/ads/analytics blocked",
         "authenticated": "n/a",
         "ranAt": "2026-10-11T03:02:00.181Z",
         "results": [
@@ -1197,7 +1247,7 @@
       "samples": [
         {
           "url": "/admin",
-          "state": "unauthenticated → redirect to /admin/login"
+          "state": "unauthenticated \u2192 redirect to /admin/login"
         },
         {
           "url": "/admin",
@@ -1211,13 +1261,13 @@
       },
       "test": {
         "status": "pass",
-        "method": "headless Chrome smoke (desktop 1440×900 + mobile 390×844), mocked Supabase, Stripe/ads/analytics blocked",
-        "authenticated": "mocked session only — real auth/RLS untested",
+        "method": "headless Chrome smoke (desktop 1440\u00d7900 + mobile 390\u00d7844), mocked Supabase, Stripe/ads/analytics blocked",
+        "authenticated": "mocked session only \u2014 real auth/RLS untested",
         "ranAt": "2026-10-11T03:02:00.181Z",
         "results": [
           {
             "url": "/admin",
-            "state": "unauthenticated → redirect to /admin/login",
+            "state": "unauthenticated \u2192 redirect to /admin/login",
             "viewport": "desktop",
             "pass": true,
             "finalPath": "/admin/login",
@@ -1230,7 +1280,7 @@
           },
           {
             "url": "/admin",
-            "state": "unauthenticated → redirect to /admin/login",
+            "state": "unauthenticated \u2192 redirect to /admin/login",
             "viewport": "mobile",
             "pass": true,
             "finalPath": "/admin/login",
@@ -1280,7 +1330,7 @@
       "samples": [
         {
           "url": "/admin/orders",
-          "state": "unauthenticated → redirect to /admin/login"
+          "state": "unauthenticated \u2192 redirect to /admin/login"
         },
         {
           "url": "/admin/orders",
@@ -1294,13 +1344,13 @@
       },
       "test": {
         "status": "pass",
-        "method": "headless Chrome smoke (desktop 1440×900 + mobile 390×844), mocked Supabase, Stripe/ads/analytics blocked",
-        "authenticated": "mocked session only — real auth/RLS untested",
+        "method": "headless Chrome smoke (desktop 1440\u00d7900 + mobile 390\u00d7844), mocked Supabase, Stripe/ads/analytics blocked",
+        "authenticated": "mocked session only \u2014 real auth/RLS untested",
         "ranAt": "2026-10-11T03:02:00.181Z",
         "results": [
           {
             "url": "/admin/orders",
-            "state": "unauthenticated → redirect to /admin/login",
+            "state": "unauthenticated \u2192 redirect to /admin/login",
             "viewport": "desktop",
             "pass": true,
             "finalPath": "/admin/login",
@@ -1313,7 +1363,7 @@
           },
           {
             "url": "/admin/orders",
-            "state": "unauthenticated → redirect to /admin/login",
+            "state": "unauthenticated \u2192 redirect to /admin/login",
             "viewport": "mobile",
             "pass": true,
             "finalPath": "/admin/login",
@@ -1363,7 +1413,7 @@
       "samples": [
         {
           "url": "/admin/quotes",
-          "state": "unauthenticated → redirect to /admin/login"
+          "state": "unauthenticated \u2192 redirect to /admin/login"
         },
         {
           "url": "/admin/quotes",
@@ -1377,13 +1427,13 @@
       },
       "test": {
         "status": "pass",
-        "method": "headless Chrome smoke (desktop 1440×900 + mobile 390×844), mocked Supabase, Stripe/ads/analytics blocked",
-        "authenticated": "mocked session only — real auth/RLS untested",
+        "method": "headless Chrome smoke (desktop 1440\u00d7900 + mobile 390\u00d7844), mocked Supabase, Stripe/ads/analytics blocked",
+        "authenticated": "mocked session only \u2014 real auth/RLS untested",
         "ranAt": "2026-10-11T03:02:00.181Z",
         "results": [
           {
             "url": "/admin/quotes",
-            "state": "unauthenticated → redirect to /admin/login",
+            "state": "unauthenticated \u2192 redirect to /admin/login",
             "viewport": "desktop",
             "pass": true,
             "finalPath": "/admin/login",
@@ -1396,7 +1446,7 @@
           },
           {
             "url": "/admin/quotes",
-            "state": "unauthenticated → redirect to /admin/login",
+            "state": "unauthenticated \u2192 redirect to /admin/login",
             "viewport": "mobile",
             "pass": true,
             "finalPath": "/admin/login",
@@ -1446,7 +1496,7 @@
       "samples": [
         {
           "url": "/admin/email",
-          "state": "unauthenticated → redirect to /admin/login"
+          "state": "unauthenticated \u2192 redirect to /admin/login"
         },
         {
           "url": "/admin/email",
@@ -1460,13 +1510,13 @@
       },
       "test": {
         "status": "pass",
-        "method": "headless Chrome smoke (desktop 1440×900 + mobile 390×844), mocked Supabase, Stripe/ads/analytics blocked",
-        "authenticated": "mocked session only — real auth/RLS untested",
+        "method": "headless Chrome smoke (desktop 1440\u00d7900 + mobile 390\u00d7844), mocked Supabase, Stripe/ads/analytics blocked",
+        "authenticated": "mocked session only \u2014 real auth/RLS untested",
         "ranAt": "2026-10-11T03:02:00.181Z",
         "results": [
           {
             "url": "/admin/email",
-            "state": "unauthenticated → redirect to /admin/login",
+            "state": "unauthenticated \u2192 redirect to /admin/login",
             "viewport": "desktop",
             "pass": true,
             "finalPath": "/admin/login",
@@ -1479,7 +1529,7 @@
           },
           {
             "url": "/admin/email",
-            "state": "unauthenticated → redirect to /admin/login",
+            "state": "unauthenticated \u2192 redirect to /admin/login",
             "viewport": "mobile",
             "pass": true,
             "finalPath": "/admin/login",
@@ -1529,7 +1579,7 @@
       "samples": [
         {
           "url": "/admin/analytics",
-          "state": "unauthenticated → redirect to /admin/login"
+          "state": "unauthenticated \u2192 redirect to /admin/login"
         },
         {
           "url": "/admin/analytics",
@@ -1543,13 +1593,13 @@
       },
       "test": {
         "status": "pass",
-        "method": "headless Chrome smoke (desktop 1440×900 + mobile 390×844), mocked Supabase, Stripe/ads/analytics blocked",
-        "authenticated": "mocked session only — real auth/RLS untested",
+        "method": "headless Chrome smoke (desktop 1440\u00d7900 + mobile 390\u00d7844), mocked Supabase, Stripe/ads/analytics blocked",
+        "authenticated": "mocked session only \u2014 real auth/RLS untested",
         "ranAt": "2026-10-11T03:02:00.181Z",
         "results": [
           {
             "url": "/admin/analytics",
-            "state": "unauthenticated → redirect to /admin/login",
+            "state": "unauthenticated \u2192 redirect to /admin/login",
             "viewport": "desktop",
             "pass": true,
             "finalPath": "/admin/login",
@@ -1562,7 +1612,7 @@
           },
           {
             "url": "/admin/analytics",
-            "state": "unauthenticated → redirect to /admin/login",
+            "state": "unauthenticated \u2192 redirect to /admin/login",
             "viewport": "mobile",
             "pass": true,
             "finalPath": "/admin/login",
@@ -1612,7 +1662,7 @@
       "samples": [
         {
           "url": "/admin/newsletter",
-          "state": "unauthenticated → redirect to /admin/login"
+          "state": "unauthenticated \u2192 redirect to /admin/login"
         },
         {
           "url": "/admin/newsletter",
@@ -1626,13 +1676,13 @@
       },
       "test": {
         "status": "pass",
-        "method": "headless Chrome smoke (desktop 1440×900 + mobile 390×844), mocked Supabase, Stripe/ads/analytics blocked",
-        "authenticated": "mocked session only — real auth/RLS untested",
+        "method": "headless Chrome smoke (desktop 1440\u00d7900 + mobile 390\u00d7844), mocked Supabase, Stripe/ads/analytics blocked",
+        "authenticated": "mocked session only \u2014 real auth/RLS untested",
         "ranAt": "2026-10-11T03:02:00.181Z",
         "results": [
           {
             "url": "/admin/newsletter",
-            "state": "unauthenticated → redirect to /admin/login",
+            "state": "unauthenticated \u2192 redirect to /admin/login",
             "viewport": "desktop",
             "pass": true,
             "finalPath": "/admin/login",
@@ -1645,7 +1695,7 @@
           },
           {
             "url": "/admin/newsletter",
-            "state": "unauthenticated → redirect to /admin/login",
+            "state": "unauthenticated \u2192 redirect to /admin/login",
             "viewport": "mobile",
             "pass": true,
             "finalPath": "/admin/login",
@@ -1695,7 +1745,7 @@
       "samples": [
         {
           "url": "/admin/blog",
-          "state": "unauthenticated → redirect to /admin/login"
+          "state": "unauthenticated \u2192 redirect to /admin/login"
         },
         {
           "url": "/admin/blog",
@@ -1709,13 +1759,13 @@
       },
       "test": {
         "status": "pass",
-        "method": "headless Chrome smoke (desktop 1440×900 + mobile 390×844), mocked Supabase, Stripe/ads/analytics blocked",
-        "authenticated": "mocked session only — real auth/RLS untested",
+        "method": "headless Chrome smoke (desktop 1440\u00d7900 + mobile 390\u00d7844), mocked Supabase, Stripe/ads/analytics blocked",
+        "authenticated": "mocked session only \u2014 real auth/RLS untested",
         "ranAt": "2026-10-11T03:02:00.181Z",
         "results": [
           {
             "url": "/admin/blog",
-            "state": "unauthenticated → redirect to /admin/login",
+            "state": "unauthenticated \u2192 redirect to /admin/login",
             "viewport": "desktop",
             "pass": true,
             "finalPath": "/admin/login",
@@ -1728,7 +1778,7 @@
           },
           {
             "url": "/admin/blog",
-            "state": "unauthenticated → redirect to /admin/login",
+            "state": "unauthenticated \u2192 redirect to /admin/login",
             "viewport": "mobile",
             "pass": true,
             "finalPath": "/admin/login",
@@ -1778,7 +1828,7 @@
       "samples": [
         {
           "url": "/admin/suggestions",
-          "state": "unauthenticated → redirect to /admin/login"
+          "state": "unauthenticated \u2192 redirect to /admin/login"
         },
         {
           "url": "/admin/suggestions",
@@ -1792,13 +1842,13 @@
       },
       "test": {
         "status": "pass",
-        "method": "headless Chrome smoke (desktop 1440×900 + mobile 390×844), mocked Supabase, Stripe/ads/analytics blocked",
-        "authenticated": "mocked session only — real auth/RLS untested",
+        "method": "headless Chrome smoke (desktop 1440\u00d7900 + mobile 390\u00d7844), mocked Supabase, Stripe/ads/analytics blocked",
+        "authenticated": "mocked session only \u2014 real auth/RLS untested",
         "ranAt": "2026-10-11T03:02:00.181Z",
         "results": [
           {
             "url": "/admin/suggestions",
-            "state": "unauthenticated → redirect to /admin/login",
+            "state": "unauthenticated \u2192 redirect to /admin/login",
             "viewport": "desktop",
             "pass": true,
             "finalPath": "/admin/login",
@@ -1811,7 +1861,7 @@
           },
           {
             "url": "/admin/suggestions",
-            "state": "unauthenticated → redirect to /admin/login",
+            "state": "unauthenticated \u2192 redirect to /admin/login",
             "viewport": "mobile",
             "pass": true,
             "finalPath": "/admin/login",
@@ -1861,7 +1911,7 @@
       "samples": [
         {
           "url": "/admin/testimonials",
-          "state": "unauthenticated → redirect to /admin/login"
+          "state": "unauthenticated \u2192 redirect to /admin/login"
         },
         {
           "url": "/admin/testimonials",
@@ -1875,13 +1925,13 @@
       },
       "test": {
         "status": "pass",
-        "method": "headless Chrome smoke (desktop 1440×900 + mobile 390×844), mocked Supabase, Stripe/ads/analytics blocked",
-        "authenticated": "mocked session only — real auth/RLS untested",
+        "method": "headless Chrome smoke (desktop 1440\u00d7900 + mobile 390\u00d7844), mocked Supabase, Stripe/ads/analytics blocked",
+        "authenticated": "mocked session only \u2014 real auth/RLS untested",
         "ranAt": "2026-10-11T03:02:00.181Z",
         "results": [
           {
             "url": "/admin/testimonials",
-            "state": "unauthenticated → redirect to /admin/login",
+            "state": "unauthenticated \u2192 redirect to /admin/login",
             "viewport": "desktop",
             "pass": true,
             "finalPath": "/admin/login",
@@ -1894,7 +1944,7 @@
           },
           {
             "url": "/admin/testimonials",
-            "state": "unauthenticated → redirect to /admin/login",
+            "state": "unauthenticated \u2192 redirect to /admin/login",
             "viewport": "mobile",
             "pass": true,
             "finalPath": "/admin/login",
@@ -1944,7 +1994,7 @@
       "samples": [
         {
           "url": "/admin/products",
-          "state": "unauthenticated → redirect to /admin/login"
+          "state": "unauthenticated \u2192 redirect to /admin/login"
         },
         {
           "url": "/admin/products",
@@ -1958,13 +2008,13 @@
       },
       "test": {
         "status": "pass",
-        "method": "headless Chrome smoke (desktop 1440×900 + mobile 390×844), mocked Supabase, Stripe/ads/analytics blocked",
-        "authenticated": "mocked session only — real auth/RLS untested",
+        "method": "headless Chrome smoke (desktop 1440\u00d7900 + mobile 390\u00d7844), mocked Supabase, Stripe/ads/analytics blocked",
+        "authenticated": "mocked session only \u2014 real auth/RLS untested",
         "ranAt": "2026-10-11T03:02:00.181Z",
         "results": [
           {
             "url": "/admin/products",
-            "state": "unauthenticated → redirect to /admin/login",
+            "state": "unauthenticated \u2192 redirect to /admin/login",
             "viewport": "desktop",
             "pass": true,
             "finalPath": "/admin/login",
@@ -1977,7 +2027,7 @@
           },
           {
             "url": "/admin/products",
-            "state": "unauthenticated → redirect to /admin/login",
+            "state": "unauthenticated \u2192 redirect to /admin/login",
             "viewport": "mobile",
             "pass": true,
             "finalPath": "/admin/login",
@@ -2018,6 +2068,35 @@
       }
     },
     {
+      "path": "/admin/referrals",
+      "element": "AdminReferralsPage",
+      "module": "./pages/admin/AdminReferralsPage",
+      "redirectTo": null,
+      "lazy": true,
+      "category": "admin",
+      "samples": [
+        {
+          "url": "/admin/referrals",
+          "state": "unauthenticated \u2192 redirect to /admin/login"
+        },
+        {
+          "url": "/admin/referrals",
+          "state": "mocked session + mocked/empty data (real auth/RLS untested)",
+          "mockAdminSession": true
+        }
+      ],
+      "work": {
+        "status": "implemented",
+        "notes": "Staged referral feature; private signup and active-admin controls. No production deployment."
+      },
+      "test": {
+        "status": "fixture-verified",
+        "results": [
+          "Isolated headless desktop/mobile fixtures; database service-only authorization tests. Hosted rollout checks remain approval-gated."
+        ]
+      }
+    },
+    {
       "path": "/admin/sales",
       "element": "AdminSalesPage",
       "module": "./pages/admin/AdminSalesPage",
@@ -2027,7 +2106,7 @@
       "samples": [
         {
           "url": "/admin/sales",
-          "state": "unauthenticated → redirect to /admin/login"
+          "state": "unauthenticated \u2192 redirect to /admin/login"
         },
         {
           "url": "/admin/sales",
@@ -2041,13 +2120,13 @@
       },
       "test": {
         "status": "pass",
-        "method": "headless Chrome smoke (desktop 1440×900 + mobile 390×844), mocked Supabase, Stripe/ads/analytics blocked",
-        "authenticated": "mocked session only — real auth/RLS untested",
+        "method": "headless Chrome smoke (desktop 1440\u00d7900 + mobile 390\u00d7844), mocked Supabase, Stripe/ads/analytics blocked",
+        "authenticated": "mocked session only \u2014 real auth/RLS untested",
         "ranAt": "2026-10-11T03:02:00.181Z",
         "results": [
           {
             "url": "/admin/sales",
-            "state": "unauthenticated → redirect to /admin/login",
+            "state": "unauthenticated \u2192 redirect to /admin/login",
             "viewport": "desktop",
             "pass": true,
             "finalPath": "/admin/login",
@@ -2060,7 +2139,7 @@
           },
           {
             "url": "/admin/sales",
-            "state": "unauthenticated → redirect to /admin/login",
+            "state": "unauthenticated \u2192 redirect to /admin/login",
             "viewport": "mobile",
             "pass": true,
             "finalPath": "/admin/login",

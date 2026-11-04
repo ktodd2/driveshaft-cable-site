@@ -1,0 +1,237 @@
+{
+  "observedCompletedUtc": "2026-11-04T01:00:55Z",
+  "scope": "LOCAL OFFLINE/SIMULATED ONLY",
+  "baseCommit": "8901a0d3917f7204e2e6a81525fb76112f5e16da",
+  "published": false,
+  "productionMutations": 0,
+  "paidResourcesCreated": 0,
+  "providerApiCalls": 0,
+  "emailsSent": 0,
+  "testWebhookEnabled": false,
+  "results": {
+    "unit": {
+      "passed": 355,
+      "failed": 0
+    },
+    "composedSqlCheckout": {
+      "passed": 30,
+      "failed": 0,
+      "includesActualProductionHandlerAndActualStripeSignatureSdk": true,
+      "providerTransport": "offline synthetic only"
+    },
+    "databaseScripts": {
+      "passed": 6,
+      "failed": 0
+    },
+    "actualPostgresqlConcurrency": {
+      "result": "PASS",
+      "tcpEnabled": false,
+      "evidence": "docs/referrals/concurrency-v2-local.json",
+      "includesOriginalMailBudgetAndProofLockWait": true
+    },
+    "browser": {
+      "result": "PASS",
+      "viewports": [
+        1440,
+        390
+      ],
+      "headless": true,
+      "externalTrafficBlocked": true,
+      "realHardwareMobileTest": false
+    },
+    "viteBundle": "PASS with loopback fixture environment; not a deployable production artifact",
+    "edgeTypeChecks": [
+      "buyer-email-verification",
+      "stripe-webhook",
+      "create-secure-checkout",
+      "verify-purchase"
+    ],
+    "signatureSdkOnlyCases": 1,
+    "historicalStagingGuardCryptoCases": 20,
+    "historicalGuardCasesValidateCurrentProductionHandler": false,
+    "rollbackLinkedBuyerCommission": "PASS: DB enrollment-off preserves sequence2/5% commission with server tracking on; new code usage rejected"
+  },
+  "fixedFindings": [
+    "Verification body previously allocated all input before size check; now streaming 4096-byte cap and 10-second timeout.",
+    "Test-mode payment could reach secure order/stock reconciliation before reward exclusion; production webhook now ignores non-live events and shared creation/reconciliation require authoritative livemode true.",
+    "Independent P1 finding: pre-work global issuance counter let unsolved requests block unrelated buyers. Removed never-shipped counter/migration; stateless issuance and invalid proof touch no DB, original post-work send budgets/dedupe unchanged."
+  ],
+  "independentPeerReview": {
+    "status": "COMPLETE \u2014 no remaining blocking code finding in corrected reviewed snapshot",
+    "report": "docs/referrals/independent-security-review.md",
+    "matchedSourceHashes": 13,
+    "independentTargetedUnitPasses": 25,
+    "independentVerificationSignedHandlerPasses": 8,
+    "independentAbuseRepetitions": 96,
+    "independentMailBudgetReplayRoleBoundaryChecks": "PASS",
+    "supplementaryRealPgRerun": {
+      "state": "DENIED BEFORE PROCESS CREATION",
+      "reason": "automatic review cited earlier testing-stop instruction",
+      "retried": false,
+      "primaryExistingPgEvidenceRemainsSeparate": true
+    }
+  },
+  "remaining": [
+    "Private production modern-key, Resend and Stripe mapping remains unverified; no secret-returning read retried.",
+    "Previously denied coordinated orders permissions cutover remains held; no retry/bypass.",
+    "No real provider signed webhook delivery, payment/refund, or positive-tax API validation under the current revision.",
+    "Changes remain local/unpublished; production source is still 38adb33.",
+    "Proof of work does not classify humans; global quota exhaustion and real low-powered-device performance remain operational risks.",
+    "Existing explicit payment tax-failure fallback remains unchanged; server quote fails closed and amount consistency is enforced. Review fallback policy before release."
+  ],
+  "localFileHashes": [
+    {
+      "path": "deno.lock",
+      "sha256": "73ab3faac5682c4c4bf04f6fd80ee52fecfd6e925ba3a425da1b44a9380103b2"
+    },
+    {
+      "path": "docs/referrals/buyer-email-verification-review.md",
+      "sha256": "0ef6a40e8d2f64193e12e4e94bf5f663c1cd2c01fddb9f6a217b1afda4aa4a25"
+    },
+    {
+      "path": "docs/referrals/concurrency-v2-local.json",
+      "sha256": "46d98c40d3c2b44de7cbc75050dfeefac07817c1f404d74de77a41ee6885b494"
+    },
+    {
+      "path": "docs/referrals/coupon-gateway-release-review.md",
+      "sha256": "6b6461d0e1a5f4ef3ff44ebad6069c9475d14c88fdca7d458b4cac1f1006fb10"
+    },
+    {
+      "path": "docs/referrals/independent-security-review.md",
+      "sha256": "14a485b361da044d285ae2cf86c1661c613c2225e946366caedd64b86d0602cc"
+    },
+    {
+      "path": "docs/referrals/production-release-runbook.md",
+      "sha256": "1df2fdf596a3a4bbbab902c02dd5ecafc2b37a8c00459b760d32c3d931415837"
+    },
+    {
+      "path": "docs/referrals/screenshots/email-confirm-390.png",
+      "sha256": "3919cc144dc2585635fcd7bb0ba72c488d0992e4a560e2ade517fe154919cc08"
+    },
+    {
+      "path": "docs/referrals/screenshots/email-verified-1440.png",
+      "sha256": "38dd0a07080b57dc77b6ce67cd0dacf69ddf9abd52b11894cd1d423b8a2900f4"
+    },
+    {
+      "path": "docs/referrals/screenshots/self-hosted-challenge-390.png",
+      "sha256": "98aa306bb2ac89d9bb0b9d642478e9d60e39b344cbe94ae718a1079fe8e00b6d"
+    },
+    {
+      "path": "docs/referrals/self-hosted-validation.md",
+      "sha256": "47c34cd713e907147acaf25bc4d0f3906b51c90f8037fc7ecf0f800cae1fc317"
+    },
+    {
+      "path": "docs/referrals/self-hosted-verification.md",
+      "sha256": "db77023c34b22a8f4723095fd75ce30d693677c25f7cb9b196664142b8b9249d"
+    },
+    {
+      "path": "package-lock.json",
+      "sha256": "4bb6af5a965b0d88986d421e6bc88f48cdf380580614a1a333acb981fba26720"
+    },
+    {
+      "path": "package.json",
+      "sha256": "d3452b821f60145cedf43ee3a88857a082c5c2b40faf3870c7945afa8edfe19f"
+    },
+    {
+      "path": "src/components/checkout/BuyerEmailVerification.jsx",
+      "sha256": "35a0d168e66ea87965d18233b779bccfa3495bd267b00aee262791112fffffee"
+    },
+    {
+      "path": "supabase/functions/_shared/boundedJson.js",
+      "sha256": "94bb3cac77f5f2a0b6b8ee1cf249f752f60a20c938b212b0aa9ab8b42ddad26d"
+    },
+    {
+      "path": "supabase/functions/_shared/buyerProofOfWork.js",
+      "sha256": "a5b0ea2c8682431a35ea1cceb61fb7334495b5baa728da60ba75f43f51331ccb"
+    },
+    {
+      "path": "supabase/functions/_shared/buyerVerification.js",
+      "sha256": "f8e2a4dc52639febcf504ff21a3b008e3385693baa51691ab9d9e7c040c502eb"
+    },
+    {
+      "path": "supabase/functions/_shared/discounts.ts",
+      "sha256": "76debeeb1255d73ca0cbf8693aa010d7b2716f828e538dbf1ce0b5774dab498d"
+    },
+    {
+      "path": "supabase/functions/_shared/pricing.ts",
+      "sha256": "60388140e30498f4d5fb57dd7ed80839e9d9ffb27150cfafd2a50217afd26cf8"
+    },
+    {
+      "path": "supabase/functions/_shared/secureCheckout.js",
+      "sha256": "4aa77b633b4bcec64cf93f02157b7efe2239a4bf8d444f45fa31400edd58f847"
+    },
+    {
+      "path": "supabase/functions/buyer-email-verification/deno.json",
+      "sha256": "1f5e8ff8b2925fe1de262220951d5792da012898ecc4fafa7c7078fac6885a8d"
+    },
+    {
+      "path": "supabase/functions/buyer-email-verification/deno.lock",
+      "sha256": "6989c69a2944d796a2283f861cb0262e4af85db1a5d1da5557e65cb30ecbdadf"
+    },
+    {
+      "path": "supabase/functions/buyer-email-verification/index.ts",
+      "sha256": "2d7e746e7bb1fc0ef5656bd54a5c48a959ad5c6bdf227c7e108fc295f3b8c0b4"
+    },
+    {
+      "path": "supabase/functions/stripe-webhook/index.ts",
+      "sha256": "d6b37f000ccb383cc580f0faeeae86033b24008a379a5c4496a67c9b93b399e7"
+    },
+    {
+      "path": "supabase/functions/validate-discount-code/index.ts",
+      "sha256": "72954a543d34439870be584ba19338fcc43f37db611490ee4e4aebd906d61518"
+    },
+    {
+      "path": "tests/browser/buyerVerification.mjs",
+      "sha256": "2eaf9ec25ee07cfb839442d709f6e519e1049ebeeee53c38de82401ef4c04011"
+    },
+    {
+      "path": "tests/fixtures/buyerProofOfWork.mjs",
+      "sha256": "b9bc7cd4c121094166b2250b9ebf67faadb28e93e1192a427e380f5e4cb47d6f"
+    },
+    {
+      "path": "tests/integration/buyerVerification.postgres.mjs",
+      "sha256": "f083e9fa150a90967e0360a91a81049557bfed358e3b013dbdafeed77023f8a6"
+    },
+    {
+      "path": "tests/integration/referralPolicyCheckout.postgres.mjs",
+      "sha256": "e8f6827c887687cd4a57176764d6389f53bb48f29cd0480083dd45cd878a6f4d"
+    },
+    {
+      "path": "tests/integration/referralSignedWebhook.postgres.mjs",
+      "sha256": "645ce55f3f9e7162957df6457e88de6a84b834d9ce2f183db0893e34b954ec29"
+    },
+    {
+      "path": "tests/unit/boundedJson.test.mjs",
+      "sha256": "2b1c56a63771d6ac0c61c3e7d7257519966c7b522c00febe2144fe4552aea9a4"
+    },
+    {
+      "path": "tests/unit/buyerVerification.test.mjs",
+      "sha256": "648fde08efedf82d0ed996e6ba142a7c22e774d894a8ee1df6403018e7f38ed2"
+    },
+    {
+      "path": "tests/unit/couponPublicEndpoint.test.mjs",
+      "sha256": "0d35f66b819cd4c07e2af864d9fa1de7e784ecd2b46ae7b86a7bc5f502451720"
+    },
+    {
+      "path": "tests/unit/orderAccessEndpoints.test.mjs",
+      "sha256": "368decd6b1b656f9cf88e745755a4ebdacd9a8f643603b08036099ca13e8edaa"
+    },
+    {
+      "path": "tests/unit/secureCheckout.test.mjs",
+      "sha256": "243e628a1a23e142db810dc0e4248d5b2454751f9f370b5366fabb59e9d59d54"
+    }
+  ],
+  "releaseRunbook": "docs/referrals/production-release-runbook.md",
+  "rollbackTrackingInvariant": "Keep server REFERRAL_REWARDS_ENABLED=true for existing linked buyers while pausing DB enrollment/frontend entry/sends.",
+  "releaseCompatibility": {
+    "report": "docs/referrals/coupon-gateway-release-review.md",
+    "sdkVersion": "2.118.0",
+    "sdkSelection": "explicit source URLs matching prior lock resolution",
+    "couponGatewayProposed": false,
+    "productionGatewayChanged": false,
+    "independentNewEndpointTestsPassed": 2,
+    "independentSourceReview": "approved, no blocking findings",
+    "presenceOnlyCredentialConfirmation": true
+  },
+  "compatibilityBaseCommit": "0f48ed2a3fd4024959313d1d386d2e12b8b87d03"
+}

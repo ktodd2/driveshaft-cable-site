@@ -1,0 +1,55 @@
+Local staged validation, 2026-11-03 UTC
+Base: main 38adb33bbddf38b7625ff3a4df5823ab9aef7d45 (fresh fetch verified)
+
+npm test: 281 passed, 0 failed
+Isolated PGlite/Postgres migration and business/security tests: PASS
+Actual pinned Stripe signature verification fixture: 1 passed, 0 failed
+Deno type-check: create-payment-intent, stripe-webhook, referral-admin, referral-signup, referral-monthly PASS
+Isolated headless desktop/mobile admin and signup fixtures: PASS
+Route inventory: 34 routes, complete
+Vite build with fixture public configuration: PASS (existing large chunk warning)
+Offline prerender, schema and sitemap verification: 10 public pages / 10 canonical URLs PASS
+Git whitespace check: PASS
+
+No production migrations, deployments, emails, invitations, schedules, payouts or order mutations.
+No active user browser/profile used. Headless tests blocked all external network requests.
+
+Limits: local Postgres engine serializes simultaneous calls. Hosted multi-connection stress, hosted gateway/RLS/advisors,
+provider event subscription verification and real environment delivery checks remain approval-gated staging work.
+Existing broad production orders permissions are a release blocker; see README.
+No payment cancellation or per-email checkout limit remains in the implementation.
+
+Publication status: the combined git push / draft PR action to ktodd2/driveshaft-cable-site was rejected
+before execution by automatic approval review. Reason: local staging/review authorization did not explicitly
+include external publication or opening a PR. No remote branch or PR was created. Do not retry through
+another tool. Explicit human approval is required to publish the draft branch/PR; local files remain usable.
+
+Later publication authorization: the human explicitly approved pushing the disabled version and opening a draft PR.
+This supersedes the publication-only denial above; production changes, activation, scheduling and sends remain unapproved.
+The new order-access follow-up document contains findings/proposals only, no permission-policy implementation.
+
+Updated referral draft validation, 2026-11-03 UTC:
+- Automatic monthly delivery completed locally with shared manual/automatic dedupe, immutable snapshots,
+  durable batches, recurring-worker continuation, Chicago activation/signup cutovers and persistent review visibility.
+- User-requested attributed customer names, eligible product spend and commissions added, with explicit previous
+  calendar-month vs lifetime totals, per-order mixed rates, known refund reductions and provisional unallocated refunds.
+- Buyer code-entry disclosure covers this and future same-email purchases. Buyer email/address/tax/shipping/payment
+  details are excluded from delivery. Unicode/Bidi/email-like names and missing-name capture are regression-tested.
+- Custom/generated code creation added with 3–24 safe characters, atomic case-insensitive uniqueness, random
+  collision recovery, no confusing generated characters and no editing/overwriting existing codes.
+
+Full unit suite: 311 passed, 0 failed.
+Core referral, automatic statements, named customer details and code-choice isolated SQL suites: PASS.
+Five Edge Function type checks: PASS. Fixture Vite/prerender/schema/sitemap: PASS.
+Headless desktop/mobile admin/signup/custom/generated code fixtures: PASS; real provider network blocked.
+Independent read-only reviews completed; identified observability, Unicode/name-capture and provisional-refund
+clarity issues were fixed and regression-tested. See sample-monthly-statement.txt and code-choices screenshots.
+
+Separate order-access repair is locally committed on feature/order-access-repair at 020cec1 and remains unpublished.
+Its 283 unit tests plus SQL/payment/RLS/shipping/checkout UI/Edge/build checks pass. Referral/access composition
+still needs explicit local integration testing before any release. No production operations have run.
+
+Illustrative statement-size fixture: 100 named customers and 1,200 orders, all four tiers, $3,300 total
+commissions reconcile; 387,004 plaintext bytes; local SQL measured 50ms. This is not a hosted performance
+or provider-size guarantee. No real recipients or provider requests were used. The final buyer disclosure
+now states the sharing rule in two short sentences covering this and future same-email orders.

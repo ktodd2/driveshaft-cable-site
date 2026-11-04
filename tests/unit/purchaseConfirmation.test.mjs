@@ -79,13 +79,13 @@ test('forged success flag without checkout capability never verifies, writes pai
   h.dispose()
 })
 
-test('pending becomes paid only after server verification, then fulfillment fallback and analytics run', async () => {
+test('pending becomes paid only after server verification, then analytics run without a browser order write', async () => {
   const h = harness({ results: [{ status: 'pending' }, paid] }); await h.flush()
   assert.match(h.text(), /PAYMENT PROCESSING/)
   assert.equal(h.writes.length, 0); assert.equal(h.reports.length, 0)
   await h.tick()
   assert.match(h.text(), /CONFIRMED!/)
-  assert.equal(h.writes.length, 1); assert.equal(h.writes[0].payment_status, 'paid')
+  assert.equal(h.writes.length, 0)
   assert.equal(h.reports.length, 1)
   h.dispose()
 })
@@ -116,6 +116,6 @@ test('fulfilled payment remains confirmed if the independent fallback update fai
 test('verified legacy/test payment can confirm without analytics payload', async () => {
   const h = harness({ results: [{ ...paid, purchase: null }] }); await h.flush()
   assert.match(h.text(), /CONFIRMED!/)
-  assert.equal(h.writes.length, 1); assert.equal(h.reports.length, 0)
+  assert.equal(h.writes.length, 0); assert.equal(h.reports.length, 0)
   h.dispose()
 })

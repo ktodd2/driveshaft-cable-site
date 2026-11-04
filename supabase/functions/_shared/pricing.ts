@@ -13,7 +13,7 @@ import { getSupabaseSecretKey } from './supabaseKeys.js'
 // % off on top of the tier/base price, and Stripe Tax is computed against
 // the discounted line totals.
 
-import { createClient, SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { createClient, SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2.118.0'
 
 export const MIN_ORDER_QUANTITY = 10
 export const SHIPPING_FEE = 2000 // $20.00 in cents

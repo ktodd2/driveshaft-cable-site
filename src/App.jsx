@@ -23,6 +23,8 @@ import BlogListPage from './pages/BlogListPage'
 import BlogPostPage from './pages/BlogPostPage'
 import SuggestionsPage from './pages/SuggestionsPage'
 import TestimonialPage from './pages/TestimonialPage'
+import ReferralSignupPage from './pages/ReferralSignupPage'
+import BuyerEmailVerificationPage from './pages/BuyerEmailVerificationPage'
 import CartRecoverPage from './pages/CartRecoverPage'
 
 // Admin pages (lazy loaded — excluded from public bundle)
@@ -37,6 +39,7 @@ const AdminBlogPage = React.lazy(() => import('./pages/admin/AdminBlogPage'))
 const AdminSuggestionsPage = React.lazy(() => import('./pages/admin/AdminSuggestionsPage'))
 const AdminTestimonialsPage = React.lazy(() => import('./pages/admin/AdminTestimonialsPage'))
 const AdminProductsPage = React.lazy(() => import('./pages/admin/AdminProductsPage'))
+const AdminReferralsPage = React.lazy(() => import('./pages/admin/AdminReferralsPage'))
 const AdminSalesPage = React.lazy(() => import('./pages/admin/AdminSalesPage'))
 
 function App({ router: Router = BrowserRouter, routerProps = {}, helmetContext, initialData = null }) {
@@ -71,11 +74,13 @@ function App({ router: Router = BrowserRouter, routerProps = {}, helmetContext, 
           <Route path="cart" element={<CartPage />} />
           <Route path="checkout" element={<Suspense fallback={<div role="status" className="py-16 text-center">Loading secure checkout…</div>}><CheckoutPage /></Suspense>} />
           <Route path="checkout/success" element={<OrderSuccessPage />} />
+          <Route path="checkout/verify-email" element={<BuyerEmailVerificationPage />} />
           <Route path="quote" element={<QuotePage />} />
           <Route path="order-tracking" element={<OrderTrackingPage />} />
           <Route path="blog" element={<BlogListPage />} />
           <Route path="blog/:slug" element={<BlogPostPage />} />
           <Route path="suggestions" element={<SuggestionsPage />} />
+          <Route path="referral/signup" element={<ReferralSignupPage />} />
           <Route path="testimonial" element={<TestimonialPage />} />
           <Route path="cart/recover/:token" element={<CartRecoverPage />} />
           <Route path="*" element={<NotFoundPage />} />
@@ -93,6 +98,7 @@ function App({ router: Router = BrowserRouter, routerProps = {}, helmetContext, 
         <Route path="/admin/suggestions" element={<Suspense fallback={<div />}><AdminSuggestionsPage /></Suspense>} />
         <Route path="/admin/testimonials" element={<Suspense fallback={<div />}><AdminTestimonialsPage /></Suspense>} />
         <Route path="/admin/products" element={<Suspense fallback={<div />}><AdminProductsPage /></Suspense>} />
+        <Route path="/admin/referrals" element={<Suspense fallback={<div />}><AdminReferralsPage /></Suspense>} />
         <Route path="/admin/sales" element={<Suspense fallback={<div />}><AdminSalesPage /></Suspense>} />
       </Routes>
       <UtilityIndexing />
