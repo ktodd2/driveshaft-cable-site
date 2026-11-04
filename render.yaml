@@ -27,6 +27,9 @@ services:
         value: text/html; charset=utf-8
     routes:
       - type: rewrite
+        source: /referrals
+        destination: /referrals/index.html
+      - type: rewrite
         source: /referral/signup
         destination: /referral/signup/index.html
       - type: rewrite
