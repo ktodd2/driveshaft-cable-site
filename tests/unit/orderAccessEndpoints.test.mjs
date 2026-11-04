@@ -20,13 +20,14 @@ test('quote endpoint returns only prices and minimal repeat flag, never records 
 })
 test('actual confirmation endpoint requires matching secret/order before server fulfillment and never reveals PII',async()=>{
  const writes=[];let patch={}
- const intent=()=>({id:'pi_fixture',client_secret:secret,livemode:false,status:'succeeded',currency:'usd',amount:7000,amount_received:7000,receipt_email:'private@invalid.test',latest_charge:{paid:true,amount_refunded:0,disputed:false},metadata:{order_id:orderId,items:'[{"productId":"1","quantity":10}]',ga4_purchase:createPurchaseSnapshot([{productId:'1',quantity:10,unitPrice:500,analyticsName:'Catalog Product'}],5000,0,2000,0)},...patch})
+ const intent=()=>({id:'pi_fixture',client_secret:secret,livemode:true,status:'succeeded',currency:'usd',amount:7000,amount_received:7000,receipt_email:'private@invalid.test',latest_charge:{paid:true,amount_refunded:0,disputed:false},metadata:{order_id:orderId,items:'[{"productId":"1","quantity":10}]',ga4_purchase:createPurchaseSnapshot([{productId:'1',quantity:10,unitPrice:500,analyticsName:'Catalog Product'}],5000,0,2000,0)},...patch})
  const db={rpc:async(name,args)=>{writes.push({name,args});return {data:name==='claim_order_tax'?null:{status:'paid'}}}}
  const fn=handler('verify-purchase',{Stripe:class{constructor(){this.paymentIntents={retrieve:async()=>intent()}}},createAdminClient:()=>db,reconcileOrderPayment,verifiedPurchaseResponse})
  assert.equal((await call(fn,{orderId,clientSecret:'pi_fixture_secret_wrong'})).status,403);assert.equal(writes.length,0)
  assert.equal((await call(fn,{orderId,redirect_status:'succeeded'})).status,400);assert.equal(writes.length,0)
  patch={status:'processing'};assert.equal((await (await call(fn,{orderId,clientSecret:secret})).json()).status,'pending');assert.equal(writes.length,0)
  patch={latest_charge:null};assert.equal((await call(fn,{orderId,clientSecret:secret})).status,503);assert.equal(writes.length,0)
+ patch={livemode:false};assert.equal((await call(fn,{orderId,clientSecret:secret})).status,503);assert.equal(writes.length,0)
  patch={};const response=await call(fn,{orderId,clientSecret:secret});assert.equal(response.status,200);assert.equal(writes[0].name,'apply_verified_order_payment');assert.equal(writes[0].args.p_email,'private@invalid.test');const body=await response.text();assert.ok(!body.includes('private@'));assert.ok(!body.includes(secret));assert.equal(response.headers.get('cache-control'),'no-store')
  patch={metadata:{order_id:'different'}};assert.equal((await call(fn,{orderId,clientSecret:secret})).status,403)
 })

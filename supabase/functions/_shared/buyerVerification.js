@@ -1,51 +1,43 @@
 import {digest,createEmailRecorder} from './emailHealth.js'
 import {referralInvitationOrigin} from './referralInviteOrigin.js'
+import {readSupabaseKey} from './supabaseKeys.js'
+import {issueBuyerProofOfWork,verifyBuyerProofOfWork,validBuyerChallengeIdentity} from './buyerProofOfWork.js'
 const UUID=/^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/i
 const TOKEN=/^[a-f0-9]{64}$/
 const STAGE='https://dmpvmztdkfdkilygxiaj.supabase.co'
 const LIVE='https://twrihhyfvomqiqbxkitc.supabase.co'
 const STAGE_ORIGIN='https://dsc-referral-stage-20261103.onrender.com'
-const ACTION='buyer-checkout-verification'
-const DUMMY_SECRET=/^[123]x0+AA$/
-const DUMMY_KEYS=new Set(['1x0000000000000000000000000000000AA','2x0000000000000000000000000000000AA','3x0000000000000000000000000000000AA'])
 const fixtureEmails=new Set(['buyer@referral-final.invalid','second-buyer@referral-final.invalid','smoke@referral-final.invalid','owner@referral-final.invalid'])
 const generic={message:'Check your email for a verification link. It is valid for one hour. If it does not arrive, check spam or try again shortly.'}
 const normalize=value=>typeof value==='string'?value.trim().toLowerCase():''
 async function rpc(db,name,args){const result=await db.rpc(name,args);if(result.error)throw Error('Buyer verification is unavailable');return result.data}
 export function buyerVerificationContext(env){
- const origin=referralInvitationOrigin(env),secret=env.get('BUYER_VERIFICATION_CHALLENGE_SECRET')||''
- const test=env.get('BUYER_VERIFICATION_TEST_MODE')==='true'
- const stage=env.get('SUPABASE_URL')===STAGE
- if(!stage&&env.get('SUPABASE_URL')!==LIVE)throw Error('Buyer verification project is not approved')
+ const origin=referralInvitationOrigin(env),project=env.get('SUPABASE_URL'),keyMaterial=readSupabaseKey('secret',env)
+ const stage=project===STAGE
+ if(!stage&&project!==LIVE)throw Error('Buyer verification project is not approved')
  if(!stage&&(env.get('BUYER_VERIFICATION_APPROVED_TEST_RECIPIENT')||env.get('BUYER_VERIFICATION_TEST_EMAIL_APPROVED')||env.get('BUYER_VERIFICATION_APPROVED_TEST_REQUEST_ID')))throw Error('Test recipient settings cannot be used for live verification')
- if(test&&(env.get('SUPABASE_URL')!==STAGE||origin!==STAGE_ORIGIN))throw Error('Buyer verification test settings are not isolated')
- if(DUMMY_SECRET.test(secret)&&!test)throw Error('Test challenge keys cannot be used for live verification')
- if(!secret||test&&!DUMMY_KEYS.has(secret))throw Error('Buyer verification challenge is not configured')
- return {origin,secret,test,stage}
+ // No client or environment test switch may bypass proof of work.
+ if(env.get('BUYER_VERIFICATION_TEST_MODE')==='true')throw Error('Mock challenge settings are not supported')
+ if(stage&&origin!==STAGE_ORIGIN)throw Error('Buyer verification test settings are not isolated')
+ if(!keyMaterial||keyMaterial.length<40)throw Error('Buyer verification signing is not configured')
+ return {origin,project,keyMaterial,stage}
 }
-export async function verifyBuyerChallenge(token,id,context,{transport=fetch,now=Date.now}={}){
- if(typeof token!=='string'||!token||token.length>2048||!UUID.test(id))return false
- const controller=new AbortController(),timeout=setTimeout(()=>controller.abort(),10000)
- try{
-  const response=await transport('https://challenges.cloudflare.com/turnstile/v0/siteverify',{method:'POST',signal:controller.signal,headers:{'Content-Type':'application/json'},body:JSON.stringify({secret:context.secret,response:token,idempotency_key:id})})
-  const result=await response.json()
-  if(!response.ok||result.success!==true)return false
-  if(context.test){
-   // Cloudflare's published sample and current testing-key response differ.
-   // Both remain restricted to public dummy tokens on the exact stage context.
-   const documented=result.hostname==='localhost'&&result.action==='test'
-   const current=result.hostname==='example.com'&&result.action==null&&result.cdata==null&&result.metadata?.result_with_testing_key===true
-   return token==='XXXX.DUMMY.TOKEN.XXXX'&&(documented||current)
-  }
-  const stamp=Date.parse(result.challenge_ts)
-  const host=new URL(context.origin).hostname,hosts=host==='driveshaftcable.com'?[host,'www.driveshaftcable.com']:[host]
-  return hosts.includes(result.hostname)&&result.action===ACTION&&result.cdata===id&&Number.isFinite(stamp)&&stamp<=now()+30000&&stamp>=now()-300000
- }catch{return false}finally{clearTimeout(timeout)}
+export async function createBuyerVerificationChallenge(_db,input,env){
+ if(env.get('BUYER_EMAIL_VERIFICATION_ENABLED')!=='true'||env.get('BUYER_VERIFICATION_EMAILS_ENABLED')!=='true'||!env.get('RESEND_API_KEY'))return {status:503,body:{error:'Email verification is not available yet. Contact us before continuing.'}}
+ const email=normalize(input?.email),id=input?.requestId
+ if(!validBuyerChallengeIdentity(email,id))return {status:400,body:{error:'Enter a valid email before completing the verification check.'}}
+ const context=buyerVerificationContext(env)
+ if(context.stage&&!fixtureEmails.has(email))return {status:409,body:{error:'This isolated test accepts only synthetic fixture email addresses.'}}
+ // Stateless issuance grants no email, ownership, reservation or send-budget
+ // slot. Never put a shared quota here: an unsolved request could drain it and
+ // block every other buyer. Mail budgets are consumed only after valid work.
+ return {status:200,body:await issueBuyerProofOfWork(email,id,context)}
 }
+export const verifyBuyerChallenge=verifyBuyerProofOfWork
 export function buyerVerificationEmail(link){
  return `Verify your email for Driveshaft Cable checkout\n\nOpen this private link, then press Verify email: ${link}\n\nThe link expires in one hour. Verification stays in the browser that opens it; it does not give access to whoever requested this email. You can return to your checkout in that browser afterward. No account or password is created.\n\nIf you did not request this email, ignore it. Opening the page alone does not verify anything, place an order or start a payment.\n\nDriveshaft Cable by K.Todd`
 }
-export async function requestBuyerVerification(db,input,env,{challengeTransport=fetch,emailTransport=fetch,captureOnly=false,randomToken=()=>Array.from(crypto.getRandomValues(new Uint8Array(32)),n=>n.toString(16).padStart(2,'0')).join('')}={}){
+export async function requestBuyerVerification(db,input,env,{emailTransport=fetch,captureOnly=false,randomToken=()=>Array.from(crypto.getRandomValues(new Uint8Array(32)),n=>n.toString(16).padStart(2,'0')).join('')}={}){
  if(env.get('BUYER_EMAIL_VERIFICATION_ENABLED')!=='true'||env.get('BUYER_VERIFICATION_EMAILS_ENABLED')!=='true'||!captureOnly&&!env.get('RESEND_API_KEY'))return {status:503,body:{error:'Email verification is not available yet. Contact us before starting another checkout.'}}
  const email=normalize(input?.email),id=input?.requestId
  if(typeof id!=='string'||!UUID.test(id)||email.length>254||!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))return {status:400,body:{error:'Enter a valid email and complete the verification check.'}}
@@ -54,13 +46,11 @@ export async function requestBuyerVerification(db,input,env,{challengeTransport=
  if(context.stage&&!fixtureEmails.has(email))return {status:409,body:{error:'This isolated test accepts only synthetic fixture email addresses.'}}
  const approvedRecipient=normalize(env.get('BUYER_VERIFICATION_APPROVED_TEST_RECIPIENT'))
  if(context.stage&&!captureOnly&&(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(approvedRecipient)||env.get('BUYER_VERIFICATION_TEST_EMAIL_APPROVED')!=='buyer-verification-v1'||!UUID.test(env.get('BUYER_VERIFICATION_APPROVED_TEST_REQUEST_ID')||'')||id!==env.get('BUYER_VERIFICATION_APPROVED_TEST_REQUEST_ID')||email!=='buyer@referral-final.invalid'))return {status:503,body:{error:'One exact owner-only test recipient, request and message approval are required before staging delivery.'}}
+ const challengeHash=await verifyBuyerChallenge(input.challenge,email,id,context)
+ if(!challengeHash)return {status:400,body:{error:'The verification check expired or failed. Complete a fresh check and try again.'}}
  const settings=await db.from('referral_settings').select('enabled,buyer_verification_emails_enabled').single()
  if(settings.error||!settings.data?.enabled||!settings.data?.buyer_verification_emails_enabled)return {status:503,body:{error:'Email verification is not available yet. Contact us before starting another checkout.'}}
- if(!await verifyBuyerChallenge(input.challenge,id,context,{transport:challengeTransport}))return {status:400,body:{error:'The verification check expired or failed. Complete a fresh check and try again.'}}
  const token=randomToken();if(!TOKEN.test(token))throw Error('Verification token unavailable')
- // Real challenge tokens cannot be replayed across request IDs. Vendor dummy
- // tokens are constant; only the strictly isolated synthetic branch binds ID too.
- const challengeHash=await digest(context.test?JSON.stringify([id,input.challenge]):input.challenge)
  const accepted=await rpc(db,'buyer_verification_prepare',{p_id:id,p_email:email,p_link_hash:await digest(token),p_challenge_hash:challengeHash})
  if(!accepted)return {status:202,body:generic}
  const recorder=createEmailRecorder(db,captureOnly?'buyer-email-verification-intercepted':'buyer-email-verification',null,emailTransport)

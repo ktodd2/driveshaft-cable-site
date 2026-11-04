@@ -1,13 +1,14 @@
 // Headless browser ownership isolation against actual local pricing/verification SQL.
-// Mail, bot challenge and Stripe transports are fixtures; all external requests blocked.
+// Mail and Stripe are fixtures; the bundled PoW widget solves a real offline signed challenge. No external requests.
 import assert from 'node:assert/strict'
 import fs from 'node:fs/promises'
 import {commerceFixture} from '../fixtures/integrationCommerceDb.mjs'
 import {normalizeCheckoutInput,createSecurePayment} from '../../supabase/functions/_shared/secureCheckout.js'
-import {requestBuyerVerification,consumeBuyerVerification} from '../../supabase/functions/_shared/buyerVerification.js'
+import {createBuyerVerificationChallenge,requestBuyerVerification,consumeBuyerVerification} from '../../supabase/functions/_shared/buyerVerification.js'
+import {fixtureSigningKey} from '../fixtures/buyerProofOfWork.mjs'
 const {chromium}=await import(process.env.PLAYWRIGHT_MODULE||'playwright')
 const origin='http://127.0.0.1:3019',mailbox=[],responses=[],consumes=[],creates=[]
-const env={get:key=>({BUYER_EMAIL_VERIFICATION_ENABLED:'true',BUYER_VERIFICATION_EMAILS_ENABLED:'true',RESEND_API_KEY:'fixture-only',SUPABASE_URL:'https://twrihhyfvomqiqbxkitc.supabase.co',BUYER_VERIFICATION_CHALLENGE_SECRET:'fixture-real-key'}[key])}
+const env={get:key=>({BUYER_EMAIL_VERIFICATION_ENABLED:'true',BUYER_VERIFICATION_EMAILS_ENABLED:'true',RESEND_API_KEY:'fixture-only',SUPABASE_URL:'https://twrihhyfvomqiqbxkitc.supabase.co',STORE_SUPABASE_SECRET_KEY:fixtureSigningKey}[key])}
 const f=await commerceFixture({policyRuntime:true,emailVerification:true})
 await f.sql.exec('reset role');await f.sql.query("insert into orders(email,name,payment_status,status,payment_method,items,total_cents,stock_decremented)values('owner@invalid.test','Owner','paid','confirmed','cash','[]',100,true)");await f.sql.exec('set role service_role;update referral_settings set enabled=true,buyer_verification_emails_enabled=true')
 const partner=await f.db.rpc('referral_create_partner',{p_actor:f.owner,p_email:'owner@invalid.test',p_name:'Owner',p_code:'VERIFY-CODE',p_generate:false});assert.ifError(partner.error);await f.sql.query("update referral_partners set status='active' where id=$1",[partner.data.id])
@@ -16,11 +17,10 @@ const product={id:'1',name:'Fixture Cable',slug:'driveshaft-cable',sku:'FIXTURE'
 const cart={state:{items:[{productId:'1',name:'Fixture Cable',quantity:10,price:500}],recoveryDiscountCode:null,recoveryEmail:null},version:0}
 const errors=[]
 async function context(width=1440,{blockedStorage=false,blockedScrubber=false}={}){
- const context=await browser.newContext({viewport:{width,height:1000},serviceWorkers:'block'})
+ const context=await browser.newContext({viewport:{width,height:1000},serviceWorkers:'block'});context.setDefaultTimeout(15000)
  await context.addInitScript(data=>{
   if(window.location.origin!=='http://127.0.0.1:3019')return
   if(!localStorage.getItem('ktodd-cart'))localStorage.setItem('ktodd-cart',JSON.stringify(data))
-  window.turnstile={render:(_node,options)=>{queueMicrotask(()=>options.callback('fixture-challenge-'+options.cData));return 'fixture-widget'},remove(){}}
  },cart)
  if(blockedStorage)await context.addInitScript(()=>{Object.defineProperty(window,'sessionStorage',{get(){throw Error('Fixture storage blocked')}})})
  context.on('page',page=>page.on('pageerror',error=>errors.push(error.message)))
@@ -35,7 +35,8 @@ async function context(width=1440,{blockedStorage=false,blockedScrubber=false}={
   }
   if(path==='/functions/v1/buyer-email-verification'){
    const input=route.request().postDataJSON();let result
-   if(input.action==='request')result=await requestBuyerVerification(f.db,input,env,{challengeTransport:async(_url,options)=>{const body=JSON.parse(options.body);assert.equal(body.response,'fixture-challenge-'+body.idempotency_key);return Response.json({success:true,hostname:'driveshaftcable.com',action:'buyer-checkout-verification',cdata:body.idempotency_key,challenge_ts:new Date().toISOString()})},emailTransport:async(_url,options)=>{const email=JSON.parse(options.body),token=email.text.match(/#([a-f0-9]{64})/)[1];mailbox.push({email:email.to,token});return Response.json({id:'fixture-mail-'+mailbox.length})}})
+   if(input.action==='challenge')result=await createBuyerVerificationChallenge(f.db,input,env)
+   else if(input.action==='request')result=await requestBuyerVerification(f.db,input,env,{emailTransport:async(_url,options)=>{const email=JSON.parse(options.body),token=email.text.match(/#([a-f0-9]{64})/)[1];mailbox.push({email:email.to,token});return Response.json({id:'fixture-mail-'+mailbox.length})}})
    else{consumes.push(input);result=await consumeBuyerVerification(f.db,input,env)}
    responses.push(result.body);return route.fulfill({status:result.status,json:result.body})
   }
@@ -55,7 +56,7 @@ async function form(page,email,code=''){
  if(code)await page.getByLabel('Referral code (optional)',{exact:true}).fill(code)
  await page.getByRole('heading',{name:'Verify your email before your first checkout',exact:true}).waitFor()
  assert.equal(await page.getByRole('button',{name:'Continue to Payment',exact:true}).isDisabled(),true)
- await page.getByRole('button',{name:'Email verification link',exact:true}).click();await page.getByText('Check your email for a verification link.',{exact:false}).waitFor()
+ await page.locator('altcha-widget').evaluate(el=>el.scrollIntoView({block:'center',behavior:'instant'}));await page.locator('altcha-widget').getByText("I'm not a robot",{exact:true}).click();await page.getByRole('button',{name:'Email verification link',exact:true}).click();await page.getByText('Check your email for a verification link.',{exact:false}).waitFor()
 }
 try{
  await fs.mkdir('docs/referrals/screenshots',{recursive:true})
@@ -91,7 +92,8 @@ try{
  assert.equal(await fallback.getByLabel('Email *',{exact:true}).inputValue(),'storage-blocked@invalid.test')
  assert.equal(await fallback.evaluate(()=>window.__continuationFixture),true,'blocked storage keeps the receiver proof through SPA navigation')
  await fallback.getByText('Email verified: storage-blocked@invalid.test',{exact:true}).waitFor()
+ const mobileContext=await context(390),mobile=await mobileContext.newPage();await form(mobile,'mobile-buyer@invalid.test');assert.ok(mailbox.some(mail=>mail.email==='mobile-buyer@invalid.test'));await mobile.screenshot({path:'docs/referrals/screenshots/self-hosted-challenge-390.png',fullPage:true});await mobileContext.close()
  assert.deepEqual(errors,[])
  await Promise.all([attackerContext.close(),receiverContext.close(),originalContext.close(),fallbackContext.close()])
  console.log('PASS isolated buyer verification browser: explicit confirmation, fragment scrub even with asset failure, requester isolation, native same-browser BroadcastChannel handoff, full-navigation continuation, blocked-storage fallback and proof-gated uncoded checkout; no external traffic.')
-}finally{await browser.close();await f.sql.close()}
+}catch(error){for(const c of browser.contexts())for(const p of c.pages())await p.screenshot({path:'docs/referrals/screenshots/self-hosted-browser-failure.png',fullPage:true}).catch(()=>{});throw error}finally{await browser.close();await f.sql.close()}

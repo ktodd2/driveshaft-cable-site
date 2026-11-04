@@ -1,0 +1,6 @@
+{
+  "imports": {
+    "altcha-lib": "npm:altcha-lib@2.8.0",
+    "altcha-lib/algorithms/web/pbkdf2": "npm:altcha-lib@2.8.0/algorithms/web/pbkdf2"
+  }
+}

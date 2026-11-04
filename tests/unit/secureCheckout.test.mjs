@@ -19,7 +19,7 @@ function fixture(){
   if(name==='claim_order_tax')return {data:null}
   return {}
  }}
- const stripe={paymentIntents:{create:async(params,{idempotencyKey})=>{calls.push({name:'stripe.create',params,idempotencyKey});if(!intents.has(idempotencyKey)){chargeCount++;intents.set(idempotencyKey,{id:'pi_fixture',client_secret:'pi_fixture_secret_private',status:'requires_payment_method',...params})}return intents.get(idempotencyKey)},retrieve:async()=>[...intents.values()][0]}}
+ const stripe={paymentIntents:{create:async(params,{idempotencyKey})=>{calls.push({name:'stripe.create',params,idempotencyKey});if(!intents.has(idempotencyKey)){chargeCount++;intents.set(idempotencyKey,{id:'pi_fixture',livemode:true,client_secret:'pi_fixture_secret_private',status:'requires_payment_method',...params})}return intents.get(idempotencyKey)},retrieve:async()=>[...intents.values()][0]}}
  return {db,stripe,rows,calls,get chargeCount(){return chargeCount}}
 }
 test('intake normalizes exact email, strips trusted client fields and combines duplicate products',()=>{
@@ -61,7 +61,7 @@ test('wrong Stripe metadata, currency or receipt binding cannot return a capabil
   await assert.rejects(()=>createSecurePayment(f.db,f.stripe,request(),async()=>priced),/binding/)
  }
 })
-const paidIntent=()=>({id:'pi_fixture',currency:'usd',amount:6875,amount_received:6875,status:'succeeded',receipt_email:'buyer@invalid.test',metadata:{order_id:orderId,secure_checkout_id:id,items:'[{"productId":"1","quantity":10}]'},latest_charge:{paid:true}})
+const paidIntent=()=>({id:'pi_fixture',livemode:true,currency:'usd',amount:6875,amount_received:6875,status:'succeeded',receipt_email:'buyer@invalid.test',metadata:{order_id:orderId,secure_checkout_id:id,items:'[{"productId":"1","quantity":10}]'},latest_charge:{paid:true}})
 test('server reconciliation verifies captured charge before any order write',async()=>{
  const f=fixture();for(const patch of [{amount_received:1},{latest_charge:null},{latest_charge:'ch_unexpanded'},{latest_charge:{paid:false}}])await assert.rejects(()=>reconcileOrderPayment(f.db,{}, {...paidIntent(),...patch}),/verified/)
  assert.equal(f.calls.length,0)
@@ -93,4 +93,15 @@ test('large secure baskets do not overflow Stripe metadata or require a legacy i
  const f=fixture(),input=request();input.items=Array.from({length:30},(_,i)=>({productId:'fixture-long-product-'+i,quantity:10}))
  const result=await createSecurePayment(f.db,f.stripe,input,async()=>priced)
  assert.equal(result.status,200);assert.equal(f.rows.get(id).intent_params.metadata.items,undefined)
+})
+
+test('non-live or missing payment mode cannot bind a checkout or mutate order/stock/tax state',async()=>{
+ for(const mode of [false,undefined]){
+  const f=fixture(),original=f.stripe.paymentIntents.create
+  f.stripe.paymentIntents.create=async(...args)=>({...await original(...args),livemode:mode})
+  await assert.rejects(()=>createSecurePayment(f.db,f.stripe,request(),async()=>priced),/binding/)
+  assert.ok(!f.calls.some(call=>call.name==='attach_secure_checkout'))
+  await assert.rejects(()=>reconcileOrderPayment(f.db,f.stripe,{...paidIntent(),livemode:mode}),/mode requires review/)
+  assert.ok(!f.calls.some(call=>call.name==='apply_verified_order_payment'||call.name==='claim_order_tax'))
+ }
 })

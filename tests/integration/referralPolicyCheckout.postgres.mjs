@@ -211,3 +211,16 @@ test('active owner exact-email lookup reaches a lost checkout beyond the first 2
   }
  }finally{await f.sql.close()}
 })
+
+test('pausing database enrollment preserves future commissions for already linked buyers when server tracking stays enabled',async()=>{
+ const f=await setup();try{
+  const first=await create(f,await priced(f,request('rollback-linked@invalid.test')));await pay(f,first)
+  await f.sql.exec('update referral_settings set enabled=false')
+  await assert.rejects(()=>priced(f,request('new-during-pause@invalid.test')),/referral code/)
+  const next=await priced(f,request('rollback-linked@invalid.test',null)),quote=await f.price(normalizeCheckoutInput(next))
+  assert.equal(quote.referralPolicy.partner_id,f.partner)
+  const second=await create(f,next);assert.equal(second.status,200);await pay(f,second)
+  assert.deepEqual((await f.sql.query('select sequence,rate_bps from referral_earnings order by sequence')).rows,[{sequence:1,rate_bps:1000},{sequence:2,rate_bps:500}])
+  assert.equal(f.payments.at(-1).params.metadata.referral_system,'v1','server referral-aware tracking remains on during enrollment pause')
+ }finally{await f.sql.close()}
+})

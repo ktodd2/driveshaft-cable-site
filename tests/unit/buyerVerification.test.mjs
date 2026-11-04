@@ -4,27 +4,39 @@ import {readFileSync} from 'node:fs'
 import {runInNewContext} from 'node:vm'
 import {verifyBuyerChallenge,buyerVerificationContext} from '../../supabase/functions/_shared/buyerVerification.js'
 import {getBuyerVerification,saveBuyerVerification,buyerVerificationAttempt,pendingBuyerVerification,clearBuyerVerificationAttempt,listenForBuyerVerification,announceBuyerVerification,buyerVerificationCanReload} from '../../src/lib/buyerVerification.js'
-const id='10000000-0000-4000-8000-000000000001',now=Date.now(),context={origin:'https://driveshaftcable.com',secret:'fixture-secret',test:false}
-test('challenge validation requires the expected hostname/action/request ID, timestamp and server response; all failures close',async()=>{
- const good={success:true,hostname:'driveshaftcable.com',action:'buyer-checkout-verification',cdata:id,challenge_ts:new Date(now).toISOString()}
- const verify=result=>verifyBuyerChallenge('fixture-token',id,context,{now:()=>now,transport:async(url,options)=>{assert.equal(url,'https://challenges.cloudflare.com/turnstile/v0/siteverify');assert.equal(JSON.parse(options.body).idempotency_key,id);assert.equal(JSON.parse(options.body).remoteip,undefined);return Response.json(result)}})
- assert.equal(await verify(good),true)
- for(const patch of [{success:false},{hostname:'evil.invalid'},{action:'other-form'},{cdata:'other-id'},{challenge_ts:'bad'},{challenge_ts:new Date(now-300001).toISOString()},{challenge_ts:new Date(now+30001).toISOString()}])assert.equal(await verify({...good,...patch}),false)
- assert.equal(await verifyBuyerChallenge('x'.repeat(2049),id,context,{transport:()=>assert.fail('oversized token must not reach provider')}),false)
- assert.equal(await verifyBuyerChallenge('fixture',id,context,{transport:async()=>{throw Error('offline')}}),false)
+import {solvedBuyerChallenge,fixtureContext,fixtureSigningKey} from '../fixtures/buyerProofOfWork.mjs'
+import {issueBuyerProofOfWork} from '../../supabase/functions/_shared/buyerProofOfWork.js'
+const id='10000000-0000-4000-8000-000000000001',now=Date.now(),email='buyer+tag@invalid.test'
+test('self-hosted challenge is signed, email/request/project/origin bound, bounded and expiring; mutations fail closed',async()=>{
+ const payload=await solvedBuyerChallenge(email,id),value=JSON.parse(atob(payload)),verify=p=>verifyBuyerChallenge(p,email,id,fixtureContext)
+ const hash=await verify(payload);assert.match(hash,/^[a-f0-9]{64}$/)
+ assert.equal(await verifyBuyerChallenge(payload,'other@invalid.test',id,fixtureContext),null)
+ assert.equal(await verifyBuyerChallenge(payload,email,crypto.randomUUID(),fixtureContext),null)
+ assert.equal(await verifyBuyerChallenge(payload,email,id,{...fixtureContext,origin:'https://other.invalid'}),null)
+ assert.equal(await verifyBuyerChallenge(payload,email,id,{...fixtureContext,project:'https://other.invalid'}),null)
+ assert.equal(await verifyBuyerChallenge(payload,email,id,{...fixtureContext,keyMaterial:fixtureSigningKey+'other'}),null)
+ for(const patch of [{cost:1},{cost:500000000},{algorithm:'SHA-256'},{keyPrefix:''},{expiresAt:Math.floor(Date.now()/1000)+3600},{nonce:'invalid'},{salt:'invalid'},{keySignature:'f'.repeat(64)}]){
+  const changed=structuredClone(value);Object.assign(changed.challenge.parameters,patch);assert.equal(await verify(btoa(JSON.stringify(changed))),null)
+ }
+ for(const patch of [{counter:-1},{counter:4294967296},{counter:0.5},{derivedKey:'0'.repeat(64)}]){
+  const changed=structuredClone(value);Object.assign(changed.solution,patch);assert.equal(await verify(btoa(JSON.stringify(changed))),null)
+ }
+ const changed=structuredClone(value);changed.solution.time=12345
+ assert.equal(await verify(btoa(JSON.stringify(changed))),hash,'solution metadata cannot change the replay identity')
+ const reordered={solution:value.solution,challenge:{signature:value.challenge.signature,parameters:value.challenge.parameters}}
+ assert.equal(await verify(btoa(JSON.stringify(reordered))),hash,'JSON reordering cannot evade single-use SQL identity')
+ for(const bad of ['x'.repeat(3073),'not-base64','XXXX.DUMMY.TOKEN.XXXX',btoa(JSON.stringify({challenge:null,solution:null,test:true}))])assert.equal(await verify(bad),null)
+ assert.equal(await verifyBuyerChallenge(payload,email,id,fixtureContext,{now:()=>Date.now()+301000}),null)
+ const challenge=await issueBuyerProofOfWork(email,id,fixtureContext)
+ assert.ok(!JSON.stringify(challenge).includes(email));assert.ok(!JSON.stringify(challenge).includes(fixtureSigningKey))
 })
-test('vendor dummy keys and relaxed dummy response work only on the exact approved synthetic project/host',async()=>{
- const dummy='1x0000000000000000000000000000000AA'
- const values={SUPABASE_URL:'https://dmpvmztdkfdkilygxiaj.supabase.co',REFERRAL_INVITE_STAGING_PROJECT_REF:'dmpvmztdkfdkilygxiaj',REFERRAL_INVITE_ORIGIN:'https://dsc-referral-stage-20261103.onrender.com',BUYER_VERIFICATION_CHALLENGE_SECRET:dummy,BUYER_VERIFICATION_TEST_MODE:'true'}
- const get=map=>({get:key=>map[key]})
- const ctx=buyerVerificationContext(get(values));assert.equal(ctx.test,true)
- assert.equal(await verifyBuyerChallenge('XXXX.DUMMY.TOKEN.XXXX',id,ctx,{transport:async()=>Response.json({success:true,hostname:'localhost',action:'test'})}),true)
- assert.equal(await verifyBuyerChallenge('XXXX.DUMMY.TOKEN.XXXX',id,ctx,{transport:async()=>Response.json({success:true,hostname:'example.com',metadata:{result_with_testing_key:true}})}),true)
- for(const patch of [{metadata:{}},{metadata:{result_with_testing_key:false}},{hostname:'evil.invalid'},{action:'other'},{cdata:'unexpected'}])assert.equal(await verifyBuyerChallenge('XXXX.DUMMY.TOKEN.XXXX',id,ctx,{transport:async()=>Response.json({success:true,hostname:'example.com',metadata:{result_with_testing_key:true},...patch})}),false)
- assert.equal(await verifyBuyerChallenge('XXXX.DUMMY.TOKEN.XXXX',id,ctx,{transport:async()=>Response.json({success:true,hostname:'evil.invalid',action:'test'})}),false)
- assert.throws(()=>buyerVerificationContext(get({SUPABASE_URL:'https://twrihhyfvomqiqbxkitc.supabase.co',BUYER_VERIFICATION_CHALLENGE_SECRET:dummy})),/Test challenge keys/)
- assert.throws(()=>buyerVerificationContext(get({...values,SUPABASE_URL:'https://twrihhyfvomqiqbxkitc.supabase.co'})))
- assert.throws(()=>buyerVerificationContext(get({...values,BUYER_VERIFICATION_CHALLENGE_SECRET:'fixture-real-key'})),/not configured/)
+test('unknown project, missing backend key and every mock/test bypass fail closed',()=>{
+ const get=values=>({get:key=>values[key]}),live={SUPABASE_URL:fixtureContext.project,STORE_SUPABASE_SECRET_KEY:fixtureSigningKey}
+ assert.equal(buyerVerificationContext(get(live)).stage,false)
+ assert.throws(()=>buyerVerificationContext(get({...live,SUPABASE_URL:'https://unknown.supabase.co'})),/not configured|not approved/)
+ assert.throws(()=>buyerVerificationContext(get({...live,STORE_SUPABASE_SECRET_KEY:''})),/not configured/)
+ assert.throws(()=>buyerVerificationContext(get({...live,BUYER_VERIFICATION_TEST_MODE:'true'})),/Mock challenge/)
+ assert.throws(()=>buyerVerificationContext(get({...live,BUYER_VERIFICATION_APPROVED_TEST_RECIPIENT:'owner@invalid.test'})),/Test recipient/)
 })
 function browser(group=new Map()){
  const stored=new Map()

@@ -1,0 +1,28 @@
+# Self-hosted verification — local validation, November 4
+
+The owner approved resuming necessary checks. Current results: **353 unit checks, 30 composed checkout/SQL cases and six database scripts pass**. Real PostgreSQL 17.6 sessions with TCP disabled pass checkout, payment observation, policy edit, cancellation, receiver-proof and send-budget contention. The temporary local database is removed after the run.
+
+Desktop and 390px mobile-viewport headless Chrome pass the actual bundled proof-of-work widget, intercepted verification mail, explicit receiver consumption, separate-requester isolation, native same-browser handoff, blocked-storage/scrubber recovery, and uncoded first-checkout proof enforcement. No external browser traffic was permitted. The fixture was corrected to click the widget's visible label rather than its visually hidden input; no forced clicks or production layout workaround was used. Screenshots: `screenshots/self-hosted-challenge-390.png`, `screenshots/email-confirm-390.png`, `screenshots/email-verified-1440.png`.
+
+The Vite bundle succeeds with loopback/fixture configuration. Deno type-checks buyer verification, the production webhook, secure checkout and purchase verification. Source whitespace checks pass. No production build/deploy, paid resource, provider API call, real email, payment or check was created.
+
+## Findings fixed
+
+- The public verification endpoint checked size after allocating its complete body. It now limits input while streaming to 4,096 UTF-8 bytes and times out stalled reads after ten seconds. Chunked/declared oversized, invalid UTF-8 and stalled bodies fail closed.
+- A signed Test-mode event could previously reach secure order/stock reconciliation before referral exclusion. Production now verifies the signature then ignores non-live events before any provider/DB work. Shared intent binding and order reconciliation also require authoritative `livemode === true`, protecting direct confirmation/recovery and mismatched event/intent mode. No test bypass was added.
+
+The new integration executes the **actual production webhook handler and Stripe 13.10.0 signature verification** with ephemeral SQL and intercepted provider operations. An independently computed fixture HMAC authenticates the HTTP payload. It checks tampered/stale signatures, Test-mode exclusion, live-shaped event with authoritative test intent, stacked product discounts with positive tax, replay/stale failure, partial-refund review, seven-day passage, manually approved recorded payout, and a subsequent full refund leaving **−$3.50** available. Original rate/sequence survive. These are synthetic records; no bank/check/provider action occurs. One additional SDK-only case and 20 prior staging-guard cryptographic cases pass, but are not described as current production delivery evidence.
+
+A new composed regression additionally proves pausing DB enrollment while keeping server referral tracking enabled preserves the linked buyer's sequence2/5% commission. New code usage is rejected during that pause. Do not turn server `REFERRAL_REWARDS_ENABLED` off after buyers have been linked; see the concrete [rollback sequence](production-release-runbook.md).
+
+## Review and release boundaries
+
+[Independent peer review](independent-security-review.md) is complete: no remaining blocking code findings in the corrected source snapshot. The reviewer independently reproduced a P1 availability issue: the pre-work shared issuance counter let unsolved anonymous requests lock out unrelated buyers. The unshipped counter/migration was removed. Stateless issuance and invalid work perform no DB access; existing post-work mail limits/dedupe were retained. The reviewer independently passed 25 targeted unit checks, eight verification/signed-handler integrations, a 96-request abuse regression, all five send budgets, replay dedupe and browser-role denials. Thirteen source hashes define the independent reviewed snapshot.
+
+A supplementary independent real-PostgreSQL repeat was rejected before process creation by automatic approval review, citing the earlier testing-stop instruction. No retry/workaround occurred. The implementer's authorized real-PostgreSQL evidence remains distinct; independent review does not claim to reproduce that run. Code remains local/unpublished on top of `8901a0d`. Exact local hashes/results are in `self-hosted-validation.json`; copied console evidence is in workspace `staging/self-hosted-validation/`.
+
+No provider delivered a real webhook and no actual Stripe payment/refund or positive-tax API request occurred under this revision. Simulated tax is not evidence of a real jurisdiction/rate determination. Existing explicit payment tax-failure fallback remains unchanged: quote calculation fails closed; payment calculation can use its existing zero-tax fallback, subject to exact client/server amount agreement. This operational policy warrants review before release.
+
+Production private modern-key, Resend/Stripe mapping still needs secure confirmation. The previous secret-returning configuration read denial and coordinated order-access cutover denial remain held; neither was retried or bypassed. The isolated Supabase database remains deleted, and no retained test webhook was enabled. New hosted resources, credentials, emails or production actions require their applicable authorization.
+
+Proof of work is computation-based friction, not human/adaptive bot classification. A determined solver can exhaust conservative global limits; real lower-powered mobile hardware and production performance are not validated by the desktop-engine mobile viewport. Missing/failed safeguards remain fail closed. Customer invitations, monthly schedules and payouts are unchanged.

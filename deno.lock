@@ -242,6 +242,8 @@
         "npm:@stripe/stripe-js@^8.7.0",
         "npm:@supabase/supabase-js@^2.39.0",
         "npm:@vitejs/plugin-react@^4.2.1",
+        "npm:altcha-lib@2.8.0",
+        "npm:altcha@3.5.0",
         "npm:autoprefixer@^10.4.16",
         "npm:clsx@^2.1.1",
         "npm:date-fns@^4.1.0",

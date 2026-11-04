@@ -1,10 +1,11 @@
+import {solvedBuyerChallenge,fixtureSigningKey} from '../fixtures/buyerProofOfWork.mjs'
 import {test} from 'node:test'
 import assert from 'node:assert/strict'
 import {commerceFixture} from '../fixtures/integrationCommerceDb.mjs'
 import {createSecurePayment,normalizeCheckoutInput,resumeSecurePayment,checkoutDigest,reconcileOrderPayment} from '../../supabase/functions/_shared/secureCheckout.js'
-import {requestBuyerVerification,consumeBuyerVerification,verifyBuyerChallenge,buyerVerificationContext} from '../../supabase/functions/_shared/buyerVerification.js'
+import {createBuyerVerificationChallenge,requestBuyerVerification,consumeBuyerVerification} from '../../supabase/functions/_shared/buyerVerification.js'
 const token=()=>Array.from(crypto.getRandomValues(new Uint8Array(32)),n=>n.toString(16).padStart(2,'0')).join('')
-const env={get:name=>({BUYER_EMAIL_VERIFICATION_ENABLED:'true',BUYER_VERIFICATION_EMAILS_ENABLED:'true',RESEND_API_KEY:'fixture-mail-key',SUPABASE_URL:'https://twrihhyfvomqiqbxkitc.supabase.co',BUYER_VERIFICATION_CHALLENGE_SECRET:'fixture-real-shape-secret'}[name])}
+const env={get:name=>({BUYER_EMAIL_VERIFICATION_ENABLED:'true',BUYER_VERIFICATION_EMAILS_ENABLED:'true',RESEND_API_KEY:'fixture-mail-key',SUPABASE_URL:'https://twrihhyfvomqiqbxkitc.supabase.co',STORE_SUPABASE_SECRET_KEY:fixtureSigningKey}[name])}
 async function setup(){
  const f=await commerceFixture({policyRuntime:true,emailVerification:true})
  await f.sql.exec('reset role');await f.sql.query("insert into orders(email,name,payment_status,status,payment_method,items,total_cents,stock_decremented)values('owner@invalid.test','Owner','paid','confirmed','cash','[]',100,true)");await f.sql.exec('set role service_role;update referral_settings set enabled=true,buyer_verification_emails_enabled=true')
@@ -66,18 +67,17 @@ test('repeat paid/refunded history uses the same eligibility predicate, not whet
 test('requester receives no link/proof, delivery is deduped, resends do not invalidate links and uncertain sends are not retried blindly',async()=>{
  const f=await setup();try{
   const email='mail@invalid.test',id=crypto.randomUUID(),secret=token(),sends=[]
-  const input={email,requestId:id,challenge:'fixture-challenge-'+id}
-  const challengeTransport=async()=>Response.json({success:true,hostname:'driveshaftcable.com',action:'buyer-checkout-verification',cdata:id,challenge_ts:new Date().toISOString()})
+  const input={email,requestId:id,challenge:await solvedBuyerChallenge(email,id)}
   const emailTransport=async(url,options)=>{assert.equal(url,'https://api.resend.com/emails');sends.push(JSON.parse(options.body));return Response.json({id:'fixture-accepted'})}
-  const options={challengeTransport,emailTransport,randomToken:()=>secret}
+  const options={emailTransport,randomToken:()=>secret}
   const response=await requestBuyerVerification(f.db,input,env,options)
   assert.equal(response.status,202);assert.ok(!JSON.stringify(response).includes(secret));assert.equal(response.body.email,undefined);assert.equal(response.body.requestId,undefined)
   assert.equal(sends[0].to,email);assert.match(sends[0].text,/https:\/\/driveshaftcable.com\/checkout\/verify-email#[a-f0-9]{64}/)
   await requestBuyerVerification(f.db,input,env,options);assert.equal(sends.length,1)
   const sameEmail=await f.db.rpc('buyer_verification_prepare',{p_id:crypto.randomUUID(),p_email:email,p_link_hash:await checkoutDigest(token()),p_challenge_hash:await checkoutDigest(token())});assert.equal(sameEmail.data,false,'cooldown causes no additional send or link invalidation')
   assert.equal((await consumeBuyerVerification(f.db,{token:secret,proofToken:token()},env)).status,200)
-  const unknownId=crypto.randomUUID(),unknown={email:'unknown@invalid.test',requestId:unknownId,challenge:'fixture-challenge-'+unknownId}
-  const failed={challengeTransport:async()=>Response.json({success:true,hostname:'driveshaftcable.com',action:'buyer-checkout-verification',cdata:unknownId,challenge_ts:new Date().toISOString()}),emailTransport:async()=>{throw Error('uncertain fixture transport')}}
+  const unknownId=crypto.randomUUID(),unknown={email:'unknown@invalid.test',requestId:unknownId,challenge:await solvedBuyerChallenge('unknown@invalid.test',unknownId)}
+  const failed={emailTransport:async()=>{throw Error('uncertain fixture transport')}}
   assert.equal((await requestBuyerVerification(f.db,unknown,env,failed)).status,202)
   assert.equal((await f.sql.query("select status from email_attempts where entity_id=$1",[unknownId])).rows[0].status,'uncertain')
   assert.equal((await requestBuyerVerification(f.db,unknown,env,failed)).status,202)
@@ -93,5 +93,21 @@ test('private verification tables and RPCs cannot be read, forged or consumed by
    const r=await f.db.rpc('buyer_verification_consume',{p_link_hash:await checkoutDigest(l.secret),p_proof_hash:await checkoutDigest(token())});assert.ok(r.error)
    assert.ok((await f.db.rpc('buyer_verification_valid',{p_email:'private@invalid.test',p_hash:await checkoutDigest(token())})).error)
   }
+ }finally{await f.sql.close()}
+})
+
+test('stateless issuance cannot drain shared quotas; invalid work reaches no database and disabled settings block valid work before mail',async()=>{
+ const input={email:'public@invalid.test',requestId:crypto.randomUUID()}
+ const noDb={from(){assert.fail('issuance or invalid work must not read the database')},rpc(){assert.fail('issuance or invalid work must not mutate the database')}}
+ for(let i=0;i<64;i++)assert.equal((await createBuyerVerificationChallenge(noDb,input,env)).status,200)
+ assert.equal((await createBuyerVerificationChallenge(noDb,{...input,email:'different@invalid.test'},env)).status,200,'one unsolved requester cannot lock out other buyers')
+ assert.equal((await requestBuyerVerification(noDb,{...input,challenge:'invalid'},env)).status,400)
+ assert.equal((await createBuyerVerificationChallenge(noDb,input,{get:key=>key==='BUYER_EMAIL_VERIFICATION_ENABLED'?'false':env.get(key)})).status,503)
+ const f=await setup();try{
+  const challenge=await solvedBuyerChallenge(input.email,input.requestId)
+  await f.sql.exec('update referral_settings set buyer_verification_emails_enabled=false')
+  const blocked=await requestBuyerVerification(f.db,{...input,challenge},env,{emailTransport:()=>assert.fail('disabled delivery must not send')})
+  assert.equal(blocked.status,503)
+  assert.equal((await f.sql.query('select count(*)::int n from buyer_verification_requests')).rows[0].n,0)
  }finally{await f.sql.close()}
 })

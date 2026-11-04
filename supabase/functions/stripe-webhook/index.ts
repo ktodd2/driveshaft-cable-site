@@ -12,6 +12,9 @@ serve(async req=>{
  let event
  try{event=await stripe.webhooks.constructEventAsync(await req.text(),req.headers.get('stripe-signature')!,Deno.env.get('STRIPE_WEBHOOK_SECRET')!,undefined,Stripe.createSubtleCryptoProvider())}
  catch{return new Response('Invalid signature',{status:400})}
+ // Test endpoints/keys must never change production orders, stock or rewards.
+ // Verify the signature first, then ignore non-live events before any API/DB work.
+ if(event.livemode!==true)return Response.json({received:true,ignored:true})
  try{
   // Fresh authoritative state prevents a stale failure from undoing a successful payment.
   if(['payment_intent.succeeded','payment_intent.payment_failed'].includes(event.type)){

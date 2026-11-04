@@ -1,3 +1,7 @@
+> Current local tests were subsequently authorized and pass. Read [self-hosted validation](self-hosted-validation.md) for current results, fixed body/mode defects and remaining gates. No production changes or real provider transactions/messages occurred.
+
+> Superseded protection: the current local revision uses account-free self-hosted ALTCHA. Read [the current implementation/release note](self-hosted-verification.md). All test counts and Turnstile details below are historical and do not validate the new revision. Testing was later resumed for local/simulated checks only; no production changes have been made. The temporary database was deleted on November 3; old staging follow-up instructions below are closed.
+
 # Buyer email verification — local review
 
 Owner selected email verification before first-order reservation. This work is local and unpublished on integration head `b9d50142aa98f2de832354d758471aa752790967`. No production deployment, hosted migration, new provider credential or actual email send occurred.

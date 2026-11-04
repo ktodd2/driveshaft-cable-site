@@ -29,7 +29,7 @@ export function checkoutErrorMessage(error){
 }
 export async function checkedRpc(db,name,args){const {data,error}=await db.rpc(name,args);if(error){const safe=checkoutErrorMessage(error);throw Error(safe.startsWith('Checkout could not')?'Checkout storage unavailable':safe)}return data}
 export function intentMatchesCheckout(intent,snapshot){
- return intent?.id && intent.currency==='usd' && intent.amount===snapshot.intent_params.amount && normalizeEmail(intent.receipt_email)===normalizeEmail(snapshot.order_snapshot.email)
+ return intent?.id && intent.livemode===true && intent.currency==='usd' && intent.amount===snapshot.intent_params.amount && normalizeEmail(intent.receipt_email)===normalizeEmail(snapshot.order_snapshot.email)
  && intent.metadata?.order_id===snapshot.order_id && intent.metadata?.secure_checkout_id===snapshot.id && (!snapshot.intent_id||snapshot.intent_id===intent.id)
 }
 const noAnalytics=(_value)=>({})
@@ -99,6 +99,7 @@ export async function resumeSecurePayment(db,stripe,input,{now=Date.now}={}){
 }
 
 export async function reconcileOrderPayment(db,stripe,intent,{failed=false}={}){
+ if(intent?.livemode!==true)throw Error('Payment mode requires review')
  if(!intent?.metadata?.order_id||intent.currency!=='usd')throw Error('Payment binding requires review')
  if(intent.status!=='succeeded'&&!failed)return {status:'pending'}
  if(intent.status==='succeeded'&&(intent.amount_received!==intent.amount||!intent.latest_charge||typeof intent.latest_charge!=='object'||!intent.latest_charge.paid))throw Error('Payment charge is not verified')
