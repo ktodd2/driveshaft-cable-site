@@ -1,6 +1,5 @@
 import { useCommerceView } from '../hooks/useCommerceView'
 import PolicyLinks from '../components/common/PolicyLinks'
-import { isBoltPack, packQuantity, priceUnit } from '../lib/productPresentation'
 import { captureAnalyticsContext } from '../lib/purchaseAnalytics'
 import React, { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
@@ -12,6 +11,8 @@ import { supabase } from '../lib/supabase'
 import { rememberCheckoutPayment, clearPurchasedCart, getOrCreateCheckoutDraft, getCurrentCheckoutDraft, markCheckoutDraftSubmitted, forgetCancelledCheckoutDraft } from '../lib/checkoutPayment'
 import SEOHead from '../components/common/SEOHead'
 import BuyerEmailVerification from '../components/checkout/BuyerEmailVerification'
+import CheckoutOrderItems from '../components/checkout/CheckoutOrderItems'
+import { quotedCheckoutItems } from '../lib/checkoutSummary'
 import {getBuyerVerification,forgetBuyerVerification} from '../lib/buyerVerification'
 
 // Initialize Stripe
@@ -159,8 +160,8 @@ function CheckoutPage() {
   // a code. The order_reason text reflects whichever applied.
   const quoteKey=JSON.stringify([formData,items.map(item=>[item.productId,item.quantity]),appliedCode,referralCode.trim().toUpperCase()])
   const activeQuote=step===2&&paymentSnapshot?paymentSnapshot.pricing:quoteData
-  const summaryItems=step===2&&paymentSnapshot?paymentSnapshot.items:items
   const quoteReady=step===2&&!!paymentSnapshot||quoteData?.key===quoteKey
+  const summaryItems=step===2&&paymentSnapshot?paymentSnapshot.items:quoteReady?quoteData.items:items
   const subtotal=quoteReady?activeQuote.subtotalCents:cartSubtotal
   const shippingCents=quoteReady?activeQuote.shippingCents:cartShippingCents
   const loyaltyDiscountCents = isRepeatCustomer ? Math.round(subtotal * REPEAT_CUSTOMER_DISCOUNT) : 0
@@ -212,7 +213,8 @@ function CheckoutPage() {
         if (data.error) throw new Error(data.error)
         if (controller.signal.aborted) return
         if(!['subtotalCents','discountCents','shippingCents','taxCents','totalCents'].every(key=>Number.isSafeInteger(data[key])&&data[key]>=0)||data.totalCents!==data.subtotalCents-data.discountCents+data.shippingCents+data.taxCents)throw Error('Could not verify the quoted total.')
-        setQuoteData({...data,key:quoteKey})
+        const quotedItems = quotedCheckoutItems(items, data)
+        setQuoteData({...data,items:quotedItems,key:quoteKey})
         setIsRepeatCustomer(data.repeat === true)
         setTaxCents(data.taxCents || 0)
         setTaxQuoted(data.taxQuoted === true)
@@ -767,27 +769,7 @@ function CheckoutPage() {
                 <h2 className="text-xl font-industrial text-yellow-500 mb-6">ORDER SUMMARY</h2>
 
                 {/* Items */}
-                <div className="space-y-4 mb-6">
-                  {summaryItems.map((item) => (
-                    <div key={item.productId} className="flex gap-4">
-                      <div className="w-16 h-16 bg-gray-700 flex items-center justify-center flex-shrink-0">
-                        <svg viewBox="0 0 50 40" className="w-10 h-8">
-                          <path d="M 8 20 Q 25 10 42 20" stroke="#9CA3AF" strokeWidth="2" fill="none" />
-                          <rect x="3" y="16" width="9" height="8" rx="1" fill="#D4A017" />
-                          <rect x="38" y="16" width="9" height="8" rx="1" fill="#D4A017" />
-                        </svg>
-                      </div>
-                      <div className="flex-grow">
-                        <div className="text-white text-sm">{item.name}</div>
-                        <div className="text-gray-400 text-xs">Qty: {isBoltPack(item) ? packQuantity(item, item.quantity) : item.quantity}</div>
-                        {isBoltPack(item) && <div className="text-gray-400 text-xs">{formatPrice(item.price)}/{priceUnit(item)}</div>}
-                      </div>
-                      <div className="text-white text-sm">
-                        {formatPrice(item.price * item.quantity)}
-                      </div>
-                    </div>
-                  ))}
-                </div>
+                <CheckoutOrderItems items={summaryItems} pricesLocked={!!quoteReady} />
 
                 {/* Discount code (only on step 1 — once we have a clientSecret the amount is locked) */}
                 {step === 1 && !isRepeatCustomer && (

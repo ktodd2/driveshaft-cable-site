@@ -14,9 +14,9 @@ test('old order-ID-only creation requests reject without reading or mutating any
  assert.equal((await call(fn,{},'GET')).status,405)
 })
 test('quote endpoint returns only prices and minimal repeat flag, never records or customer fields',async()=>{
- const fn=handler('quote-checkout',{Stripe:class{},createAdminClient:()=>({}),normalizeCheckoutInput,priceCheckout:async()=>({subtotalCents:5000,discountCents:500,shippingCents:2000,taxCents:300,totalCents:6800,discountSource:'loyalty',repeat:true,lines:[{private:'must not return'}],customer:{email:'private@invalid.test'}})})
+ const fn=handler('quote-checkout',{Stripe:class{},createAdminClient:()=>({}),normalizeCheckoutInput,priceCheckout:async()=>({subtotalCents:5000,discountCents:500,shippingCents:2000,taxCents:300,totalCents:6800,discountSource:'loyalty',repeat:true,lines:[{productId:'1',quantity:10,unitPrice:500,private:'must not return'}],customer:{email:'private@invalid.test'}})})
  const response=await call(fn,{items:[{productId:'1',quantity:10}],customer:{email:'private@invalid.test'}})
- assert.equal(response.status,200);const body=await response.json();assert.deepEqual(Object.keys(body).sort(),['discountCents','discountSource','repeat','shippingCents','subtotalCents','taxCents','taxQuoted','totalCents'].sort());assert.ok(!JSON.stringify(body).includes('private'));assert.equal(response.headers.get('cache-control'),'no-store')
+ assert.equal(response.status,200);const body=await response.json();assert.deepEqual(Object.keys(body).sort(),['linePrices','discountCents','discountSource','repeat','shippingCents','subtotalCents','taxCents','taxQuoted','totalCents'].sort());assert.deepEqual(body.linePrices,[{productId:'1',quantity:10,unitPrice:500}]);assert.ok(!JSON.stringify(body).includes('private'));assert.equal(response.headers.get('cache-control'),'no-store')
 })
 test('actual confirmation endpoint requires matching secret/order before server fulfillment and never reveals PII',async()=>{
  const writes=[];let patch={}
