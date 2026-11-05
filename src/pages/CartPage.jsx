@@ -5,7 +5,6 @@ import {
   useCartStore,
   selectTotalItems,
   selectSubtotal,
-  selectPricePerUnit,
   selectMeetsMinimum,
   selectHasBulkDiscount,
   selectShipping,
@@ -16,11 +15,11 @@ import {
   getPriceForQuantity,
   getTierPriceForQuantity,
   getActiveSaleForProduct,
-  MIN_ORDER_QUANTITY,
   FREE_SHIPPING_THRESHOLD,
   SHIPPING_FEE,
   selectRequiredMinimum,
   getStepForProduct,
+  getMinForProduct,
 } from '../stores/cartStore'
 import SaleCountdown from '../components/common/SaleCountdown'
 import SEOHead from '../components/common/SEOHead'
@@ -32,7 +31,6 @@ function CartPage() {
   const { items, updateQuantity, removeItem, clearCart } = useCartStore()
   const totalItems = useCartStore(selectTotalItems)
   const subtotal = useCartStore(selectSubtotal)
-  const pricePerUnit = useCartStore(selectPricePerUnit)
   const meetsMinimum = useCartStore(selectMeetsMinimum)
   const requiredMinimum = useCartStore(selectRequiredMinimum)
   const hasBulkDiscount = useCartStore(selectHasBulkDiscount)
@@ -45,12 +43,12 @@ function CartPage() {
   })).filter(({ rows }) => rows.length > 0)
 
   const handleQuantityChange = (productId, delta) => {
-    const item = items.find(i => i.productId === productId)
+    // Read the latest quantity so consecutive clicks always build on each other.
+    const item = useCartStore.getState().items.find(i => i.productId === productId)
     if (item) {
-      const newQty = item.quantity + delta
-      if (newQty >= 1) {
-        updateQuantity(productId, newQty)
-      }
+      const minimum = item.reducedMinimum ? 1 : getMinForProduct(productId)
+      const newQuantity = item.quantity + delta
+      if (newQuantity >= minimum) updateQuantity(productId, newQuantity)
     }
   }
 
@@ -116,6 +114,7 @@ function CartPage() {
             YOUR <span className="text-yellow-500">CART</span>
           </h1>
           <p className="text-gray-400 mt-2">{items.length} product{items.length !== 1 ? 's' : ''} in cart</p>
+          <p className="text-gray-300 mt-2">Change quantities below. Prices and totals update automatically.</p>
         </div>
       </section>
 
@@ -188,8 +187,10 @@ function CartPage() {
                   // they qualify for a tier). Otherwise we fall back to the original
                   // base-vs-tier behavior.
                   const struckPrice = appliedSale ? tierPrice : basePrice
+                  const itemStep = getStepForProduct(item.productId)
+                  const itemMinimum = item.reducedMinimum ? 1 : getMinForProduct(item.productId)
                   return (
-                  <div key={item.productId} className="bg-gray-800/50 border border-gray-700 p-4 sm:p-6">
+                  <div key={item.productId} data-testid={`cart-item-${item.productId}`} className="min-w-0 bg-gray-800/50 border border-gray-700 p-4 sm:p-6">
                     <div className="flex gap-4 sm:gap-6">
                       {/* Product Image */}
                       <Link to={`/products/${item.slug}`} className="flex-shrink-0">
@@ -197,7 +198,7 @@ function CartPage() {
                       </Link>
 
                       {/* Product Info */}
-                      <div className="flex-grow">
+                      <div className="min-w-0 flex-1 break-words">
                         <Link to={`/products/${item.slug}`} className="text-lg font-bold text-white hover:text-yellow-500 transition-colors">
                           {item.name}
                         </Link>
@@ -222,51 +223,55 @@ function CartPage() {
                         {!appliedSale && <div className="mb-4" />}
                         {isBoltPack(item) && <p className="text-gray-300 text-sm mb-3">{packQuantity(item, item.quantity)} · 10 bolts per pack</p>}
 
-                        <div className="flex flex-wrap items-center gap-4">
-                          {/* Quantity — increment matches each product's
-                              order-step (10 for cables, 1 for the bolt). */}
-                          {(() => {
-                            const itemStep = getStepForProduct(item.productId)
-                            return (
-                              <div className="flex items-center border border-gray-700">
-                                <button
-                                  aria-label={`Decrease ${item.name} quantity by ${itemStep}`}
-                                  onClick={() => handleQuantityChange(item.productId, -itemStep)}
-                                  className="min-w-[44px] min-h-[44px] px-3 py-2 text-white hover:bg-gray-700 transition-colors text-sm font-bold"
-                                >
-                                  -{itemStep}
-                                </button>
-                                <span className="px-4 py-1 text-white border-x border-gray-700 min-w-[60px] text-center">
-                                  {item.quantity}
-                                </span>
-                                <button
-                                  aria-label={`Increase ${item.name} quantity by ${itemStep}`}
-                                  onClick={() => handleQuantityChange(item.productId, itemStep)}
-                                  className="min-w-[44px] min-h-[44px] px-3 py-2 text-white hover:bg-gray-700 transition-colors text-sm font-bold"
-                                >
-                                  +{itemStep}
-                                </button>
-                              </div>
-                            )
-                          })()}
+                      </div>
+                    </div>
 
-                          {/* Price */}
-                          <div className="text-yellow-500 font-bold">
-                            {formatPrice(linePrice * item.quantity)}
-                          </div>
-
-                          {/* Remove */}
+                    <div className="mt-4 grid grid-cols-[minmax(0,1fr)_auto] items-end gap-3 sm:flex sm:flex-wrap sm:items-center sm:gap-4">
+                      {/* Quantity — increment matches each product's
+                          order-step (10 for cables, 1 for the bolt). */}
+                      <div className="col-span-2 sm:col-span-1" role="group" aria-label={`Quantity for ${item.name}`}>
+                        <p className="text-gray-300 text-sm font-bold mb-2">{isBoltPack(item) ? 'Number of 10-packs' : 'Quantity'}</p>
+                        <div className="inline-flex items-center rounded-lg border border-yellow-500/60 overflow-hidden">
                           <button
-                            aria-label={`Remove ${item.name} from cart`}
-                            onClick={() => removeItem(item.productId)}
-                            className="min-w-[44px] min-h-[44px] inline-flex items-center justify-center text-gray-400 hover:text-red-500 transition-colors ml-auto"
+                            type="button"
+                            aria-label={`Decrease ${item.name} quantity by ${itemStep}`}
+                            onClick={() => handleQuantityChange(item.productId, -itemStep)}
+                            disabled={item.quantity - itemStep < itemMinimum}
+                            className="min-w-[52px] min-h-[48px] px-3 py-2 bg-yellow-500/10 text-yellow-400 hover:bg-yellow-500/25 transition-colors text-base font-bold disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-4 focus-visible:outline-yellow-400"
                           >
-                            <svg aria-hidden="true" className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                            </svg>
+                            −{itemStep}
+                          </button>
+                          <output aria-label={`${item.name} quantity`} className="px-4 py-1 text-white border-x border-gray-700 min-w-[60px] text-center tabular-nums">
+                            {item.quantity}
+                          </output>
+                          <button
+                            type="button"
+                            aria-label={`Increase ${item.name} quantity by ${itemStep}`}
+                            onClick={() => handleQuantityChange(item.productId, itemStep)}
+                            className="min-w-[52px] min-h-[48px] px-3 py-2 bg-yellow-500/10 text-yellow-400 hover:bg-yellow-500/25 transition-colors text-base font-bold focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-4 focus-visible:outline-yellow-400"
+                          >
+                            +{itemStep}
                           </button>
                         </div>
+                        <p className="text-gray-400 text-xs mt-2">Minimum {itemMinimum}{itemStep > 1 ? ` · in ${itemStep}s` : ''}</p>
                       </div>
+
+                      {/* Price */}
+                      <div className="text-yellow-500 font-bold sm:ml-auto">
+                        <span className="text-gray-400 text-xs font-normal block">Item total</span>
+                        <span data-testid="cart-line-total">{formatPrice(linePrice * item.quantity)}</span>
+                      </div>
+
+                      {/* Remove */}
+                      <button
+                        aria-label={`Remove ${item.name} from cart`}
+                        onClick={() => removeItem(item.productId)}
+                        className="min-w-[44px] min-h-[44px] inline-flex items-center justify-center text-gray-400 hover:text-red-500 transition-colors ml-auto"
+                      >
+                        <svg aria-hidden="true" className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                      </button>
                     </div>
                   </div>
                   )
@@ -326,7 +331,7 @@ function CartPage() {
                       <span>-{formatPrice(volumeSavings)}</span>
                     </div>
                   )}
-                  <div className="border-t border-gray-700 pt-4 flex justify-between">
+                  <div role="status" aria-live="polite" aria-atomic="true" className="border-t border-gray-700 pt-4 flex justify-between">
                     <span className="text-white font-bold">Total</span>
                     <span className="text-yellow-500 font-bold text-xl">{formatPrice(orderTotal)}</span>
                   </div>
