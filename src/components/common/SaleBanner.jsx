@@ -17,11 +17,7 @@ export default function SaleBanner() {
   const sales = getLiveSales()
   // Use product '__sitewide__' to find any sitewide sale specifically. We
   // pass an empty productId so only sitewide candidates are eligible.
-  const sitewide = sales.find(s => {
-    if (s.scope !== 'sitewide' || !s.is_active) return false
-    const now = Date.now()
-    return now >= new Date(s.starts_at).getTime() && now < new Date(s.ends_at).getTime()
-  })
+  const sitewide = getActiveSaleForProduct('__sitewide__', sales.filter(s => s.scope === 'sitewide'))
 
   if (!sitewide) return null
 

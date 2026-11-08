@@ -79,7 +79,7 @@ export function CableOrderSummary({ selection, minQuantity, step }) {
             : `On its own, this selection adds ${formatPrice(shipping.shippingCents)} shipping; ${formatPrice(shipping.remainingCents)} more merchandise reaches free shipping.`}
         </p>
         <p className="text-gray-500 mt-1" data-testid="cable-rules-line">
-          Volume tier is set by this cable's quantity; the best active sale applies after it and is already included above.
+          Volume tier is set by this cable's quantity; all applicable active sales stack after it and is already included above.
           Shipping is judged on the cart's merchandise subtotal after volume and sale pricing, before any returning-customer or code discount. Tax is calculated at checkout.
         </p>
       </details>
@@ -92,7 +92,7 @@ export function CableReturningNote() {
   return (
     <div className="bg-green-500/10 border border-green-500/30 px-4 py-2 mb-6 text-sm text-green-400" data-testid="cable-returning-note">
       Returning customers save an extra <span className="font-bold">{returningDiscountPercent()}%</span> on the merchandise subtotal, applied automatically at checkout when
-      the email has a paid order. Discount codes can't be combined with it; the larger discount applies.
+      the email has a paid order. Eligible discount codes stack with your loyalty discount and active sales.
     </div>
   )
 }

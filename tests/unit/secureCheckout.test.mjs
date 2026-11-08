@@ -105,3 +105,13 @@ test('non-live or missing payment mode cannot bind a checkout or mutate order/st
   assert.ok(!f.calls.some(call=>call.name==='apply_verified_order_payment'||call.name==='claim_order_tax'))
  }
 })
+
+
+test('stacked coupon survives the trusted order snapshot for single-use redemption',async()=>{
+ const f=fixture()
+ await createSecurePayment(f.db,f.stripe,request(),async()=>({...priced,discountSource:'combined',baseDiscountSource:'combined'}))
+ const order=f.rows.get(id).order_snapshot
+ assert.equal(order.discount_code,'WELCOME5')
+ assert.equal(order.discount_source,'combined')
+ assert.match(order.discount_reason,/Loyalty discount plus discount code WELCOME5/)
+})

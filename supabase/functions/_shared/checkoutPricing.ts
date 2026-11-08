@@ -23,7 +23,7 @@ export async function priceCheckout(db:any,stripe:any,input:any,{failTaxOpen=fal
  if(referralEnabled&&input.customer.email){const {data,error}=await db.rpc('referral_quote_code',{p_email:input.customer.email,p_code:input.referralCode||null});if(error)throw Error('Could not verify this referral code or its terms. Review your email and code.');referralPolicy=data}
  let verificationRequired=false
  if(referralEnabled&&buyerVerificationEnabled&&input.customer.email){const {data,error}=await db.rpc('buyer_checkout_needs_verification',{p_email:input.customer.email});if(error)throw Error('Could not verify checkout eligibility');verificationRequired=data===true}
- const baseDiscountCents=Math.min(subtotalCents,Math.max(loyalty,code)),baseDiscountSource=baseDiscountCents===0?null:loyalty>=code?'loyalty':'code'
+ const baseDiscountCents=Math.min(subtotalCents,loyalty+code),baseDiscountSource=baseDiscountCents===0?null:loyalty&&code?'combined':loyalty?'loyalty':'code'
  // Owner-confirmed additive percentages on the same product subtotal, capped at 100%.
  const referralDiscountBps=input.referralCode?referralPolicy?.buyer_discount_bps||0:0
  const referralDiscountCents=Math.min(subtotalCents-baseDiscountCents,Math.round(subtotalCents*referralDiscountBps/10000))

@@ -85,11 +85,11 @@ test('source rules the copy relies on: shipping, discount stacking, loyalty perc
   // Shipping is computed from the merchandise subtotal, before the discount.
   const checkout = read('src/pages/CheckoutPage.jsx')
   assert.match(checkout, /loyaltyDiscountCents = isRepeatCustomer \? Math\.round\(subtotal \* REPEAT_CUSTOMER_DISCOUNT\)/)
-  assert.match(checkout, /discountCents = quoteReady\?activeQuote\.discountCents:Math\.max\(loyaltyDiscountCents, codeDiscountCents\)/)
+  assert.match(checkout, /discountCents = quoteReady\?activeQuote\.discountCents:Math\.min\(subtotal, loyaltyDiscountCents \+ codeDiscountCents\)/)
   assert.match(checkout, /totalCents = quoteReady\?activeQuote\.totalCents:baseTotal - discountCents \+ taxCents/)
   const intent = read('supabase/functions/_shared/checkoutPricing.ts')
   assert.match(intent, /shippingCents=computeShipping\(subtotalCents\)/)
-  assert.match(intent, /baseDiscountCents=Math\.min\(subtotalCents,Math\.max\(loyalty,code\)\)/)
+  assert.match(intent, /baseDiscountCents=Math\.min\(subtotalCents,loyalty\+code\)/)
   const discounts = read('supabase/functions/_shared/discounts.ts')
   assert.match(discounts, /\.eq\('payment_status', 'paid'\)/)
 })
@@ -184,7 +184,7 @@ test('sales off then on: unit price, was-price, total and sale line update', asy
   // XL gets the sitewide sale too, applied after its own tier.
   assert.equal(s.cableSelectionPricing(xl, 100).unitCents, Math.round(450 * 0.9))
 
-  // Best sale wins; inactive/expired/not-started/other-product sales are ignored.
+  // Eligible sales add; inactive/expired/not-started/other-product sales are ignored.
   s.testData.sales = [
     saleOn({ id: 'a', name: 'Small', discount_percent: 5 }),
     saleOn({ id: 'b', name: 'Big', discount_percent: 20 }),
@@ -194,8 +194,8 @@ test('sales off then on: unit price, was-price, total and sale line update', asy
     saleOn({ id: 'f', name: 'Other', discount_percent: 80, scope: 'product', product_id: 'something-else' }),
   ]
   await store.getState().loadSales()
-  assert.equal(s.cableSelectionPricing(standard, 10).sale.name, 'Big')
-  assert.equal(s.cableSelectionPricing(standard, 10).unitCents, 240)
+  assert.equal(s.cableSelectionPricing(standard, 10).sale.name, 'Small + Big')
+  assert.equal(s.cableSelectionPricing(standard, 10).unitCents, 225)
 
   s.testData.sales = []
   await store.getState().loadSales()
@@ -274,7 +274,7 @@ test('both cable pages render positioning, summary, returning note and compariso
     assert.match(t, /Available in two lengths/)
     assert.ok(html.includes('href="/products/driveshaft-cable"') && html.includes('href="/products/driveshaft-cable-xl"'))
     assert.match(t, /Returning customers save an extra 10% on the merchandise subtotal/)
-    assert.match(t, /Discount codes can't be combined with it; the larger discount applies/)
+    assert.match(t, /Eligible discount codes stack with your loyalty discount and active sales/)
     assert.match(t, /Tax is calculated at checkout/)
     assert.match(t, /Quantity \(min\. 10, in increments of 10\)/)
     // Single total, directly above the buttons; the old inline "Total:" is gone.

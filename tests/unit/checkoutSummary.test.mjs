@@ -99,15 +99,15 @@ test('server-quoted shipping-step lines override stale client catalog and sale s
   assert.equal(s.items()[0].price, 500, 'display correction does not rewrite persisted cart base prices')
 })
 
-test('sale rounding, coupon/loyalty precedence and tax allocation stay consistent with server pricing', async () => {
+test('sale rounding, coupon/loyalty stacking and tax allocation stay consistent with server pricing', async () => {
   for (const repeat of [false, true]) {
     const s = harness({ repeat, sales: [sale] }); s.add(cable, 200); s.add(xl, 50); s.add(bolts, 5); s.add(cutter, 1)
     const priced = await s.quote('WELCOME5')
     const lines = s.quotedCheckoutItems(s.items(), response(priced))
     assert.deepEqual(amounts(s.render(lines, true)), plain(priced.lines.map(l => l.unitPrice * l.quantity)))
     assert.equal(priced.lines[0].unitPrice, 221, 'round sale unit cents before multiplying')
-    assert.equal(priced.discountCents, Math.round(priced.subtotalCents * (repeat ? 0.10 : 0.05)))
-    assert.equal(priced.discountSource, repeat ? 'loyalty' : 'code')
+    assert.equal(priced.discountCents, Math.round(priced.subtotalCents * 0.05) + (repeat ? Math.round(priced.subtotalCents * 0.10) : 0))
+    assert.equal(priced.discountSource, repeat ? 'combined' : 'code')
     assert.equal(s.testData.taxCalls[0].line_items.reduce((sum, l) => sum + l.amount, 0), priced.subtotalCents - priced.discountCents)
     assert.equal(priced.totalCents, priced.subtotalCents - priced.discountCents + priced.shippingCents + 123)
     assert.deepEqual(amounts(s.render()), amounts(s.render(lines, true)), 'client and server agree with the same catalog')
@@ -137,4 +137,18 @@ test('incomplete, stale, duplicate, unsafe or nonreconciling quoted lines fail c
     { ...good, subtotalCents: 17001 }, { ...good, linePrices: [good.linePrices[0], good.linePrices[0]] },
     ...[{ productId: 'unknown' }, { quantity: 40 }, { unitPrice: -1 }, { unitPrice: 2.5 }, { unitPrice: Infinity }, { unitPrice: Number.MAX_SAFE_INTEGER }].map(patch => ({ ...good, linePrices: [{ ...good.linePrices[0], ...patch }, good.linePrices[1]] })),
   ]) assert.throws(() => s.quotedCheckoutItems(s.items(), bad), /quoted item prices/)
+})
+
+
+test('regular product sale stacks with sitewide sale while other products keep only sitewide savings', async () => {
+  const s = harness({ repeat: true, sales: [sale, { ...sale, id: 'regular', scope: 'product', product_id: '1' }] })
+  s.add(cable, 200); s.add(xl, 50); s.add(cutter, 1)
+  const p = await s.quote('WELCOME5')
+  assert.equal(p.lines[0].unitPrice, 196)
+  assert.equal(p.lines[1].unitPrice, 435)
+  assert.equal(p.lines[2].unitPrice, 2250)
+  assert.equal(p.discountSource, 'combined')
+  assert.equal(s.selectSubtotal(s.store.getState()), p.subtotalCents)
+  assert.deepEqual(amounts(s.render()), plain(p.lines.map(l => l.unitPrice * l.quantity)))
+  assert.equal(s.testData.taxCalls[0].line_items.reduce((sum,l)=>sum+l.amount,0),p.subtotalCents-p.discountCents)
 })

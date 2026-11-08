@@ -154,10 +154,7 @@ function CheckoutPage() {
   const baseTotal = useCartStore(selectOrderTotal)
   const pricePerUnit = useCartStore(selectPricePerUnit)
 
-  // Discount math: loyalty (10% for repeat customers) and discount codes (5%)
-  // are MUTUALLY EXCLUSIVE — apply whichever is larger. In practice this
-  // means a repeat customer's loyalty discount wins; a new customer can use
-  // a code. The order_reason text reflects whichever applied.
+  // Eligible loyalty and coupon savings both apply to the sale-adjusted subtotal.
   const quoteKey=JSON.stringify([formData,items.map(item=>[item.productId,item.quantity]),appliedCode,referralCode.trim().toUpperCase()])
   const activeQuote=step===2&&paymentSnapshot?paymentSnapshot.pricing:quoteData
   const quoteReady=step===2&&!!paymentSnapshot||quoteData?.key===quoteKey
@@ -166,10 +163,10 @@ function CheckoutPage() {
   const shippingCents=quoteReady?activeQuote.shippingCents:cartShippingCents
   const loyaltyDiscountCents = isRepeatCustomer ? Math.round(subtotal * REPEAT_CUSTOMER_DISCOUNT) : 0
   const codeDiscountCents = appliedCodePercentOff > 0 ? Math.round(subtotal * appliedCodePercentOff / 100) : 0
-  const discountCents = quoteReady?activeQuote.discountCents:Math.max(loyaltyDiscountCents, codeDiscountCents)
+  const discountCents = quoteReady?activeQuote.discountCents:Math.min(subtotal, loyaltyDiscountCents + codeDiscountCents)
   const discountSource = quoteReady?activeQuote.discountSource:
     discountCents === 0 ? null :
-    loyaltyDiscountCents >= codeDiscountCents ? 'loyalty' : 'code'
+    loyaltyDiscountCents && codeDiscountCents ? 'combined' : loyaltyDiscountCents ? 'loyalty' : 'code'
   const totalCents = quoteReady?activeQuote.totalCents:baseTotal - discountCents + taxCents
   const verificationRequired=!!activeQuote?.verificationRequired||serverRequiresVerification
   const buyerProofValid=buyerProof?.email===formData.email.trim().toLowerCase()&&buyerProof?.expiresAt>Date.now()
@@ -519,7 +516,7 @@ function CheckoutPage() {
                           </svg>
                           <div>
                             <p className="text-green-400 font-bold text-sm">Welcome back! Returning Customer: 10% Off!</p>
-                            <p className="text-green-400/70 text-xs">Your loyalty discount of {formatPrice(discountCents)} will be applied automatically.</p>
+                            <p className="text-green-400/70 text-xs">Your loyalty discount of {formatPrice(loyaltyDiscountCents)} will be applied automatically.</p>
                           </div>
                         </div>
                       )}

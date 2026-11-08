@@ -1,3 +1,4 @@
+import { activeSalesForProduct, saleUnitPrice } from './salePricing.js'
 import { createApiClient } from './supabaseTransport.js'
 import { getSupabaseSecretKey } from './supabaseKeys.js'
 // Server-side mirror of pricing constants from src/stores/cartStore.js.
@@ -146,20 +147,6 @@ async function loadActiveSales(
   return rows
 }
 
-// Pick the best (highest %) sale applicable to a product. Product-scoped wins
-// ties over sitewide so a product can be discounted deeper than the rest.
-function bestSaleFor(productId: string, sales: Sale[]): Sale | null {
-  const candidates = sales.filter(s =>
-    s.scope === 'sitewide' || s.product_id === productId
-  )
-  if (!candidates.length) return null
-  candidates.sort((a, b) =>
-    b.discount_percent - a.discount_percent ||
-    (b.scope === 'product' ? 1 : -1)
-  )
-  return candidates[0]
-}
-
 export async function getPriceForQuantityFromDb(
   productId: string,
   qty: number,
@@ -170,9 +157,7 @@ export async function getPriceForQuantityFromDb(
   const tierPrice = row ? pickTierPrice(row, qty) : getPriceForQuantity(productId, qty)
 
   const sales = await loadActiveSales(client, cache)
-  const sale = bestSaleFor(productId, sales)
-  if (!sale) return tierPrice
-  return Math.round((tierPrice * (100 - sale.discount_percent)) / 100)
+  return saleUnitPrice(tierPrice, activeSalesForProduct(productId, sales))
 }
 
 // Convenience for callers that have a Supabase URL + service key but no

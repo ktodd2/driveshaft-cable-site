@@ -1,3 +1,4 @@
+import { activeSalesForProduct, combinedSalePercent, saleUnitPrice } from '../../supabase/functions/_shared/salePricing.js'
 import { reportCommerceEvent } from '../lib/commerceAnalytics'
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
@@ -139,25 +140,17 @@ let livePricing = { ...PRODUCT_PRICING }
 // start during a user's session kick in automatically.
 let liveSales = []
 
-// Find the best active sale that applies to a given product. Highest % wins;
-// ties prefer the product-scoped sale over the sitewide one (so a product can
-// be deeper-discounted than the rest of the store).
+// Keep the existing display API while showing all applicable sales together.
 export function getActiveSaleForProduct(productId, sales = liveSales, now = Date.now()) {
-  if (!sales || sales.length === 0) return null
-  const candidates = []
-  for (const s of sales) {
-    if (!s.is_active) continue
-    const start = new Date(s.starts_at).getTime()
-    const end   = new Date(s.ends_at).getTime()
-    if (now < start || now >= end) continue
-    if (s.scope === 'sitewide' || s.product_id === productId) candidates.push(s)
-  }
+  const candidates = activeSalesForProduct(productId, sales, now)
   if (!candidates.length) return null
-  candidates.sort((a, b) =>
-    b.discount_percent - a.discount_percent ||
-    (b.scope === 'product' ? 1 : -1)
-  )
-  return candidates[0]
+  if (candidates.length === 1) return candidates[0]
+  return {
+    ...candidates[0],
+    name: candidates.map(s => s.name).filter(Boolean).join(' + '),
+    discount_percent: combinedSalePercent(candidates),
+    ends_at: candidates.reduce((end, s) => Date.parse(s.ends_at) < Date.parse(end) ? s.ends_at : end, candidates[0].ends_at),
+  }
 }
 
 // Returns the tier-or-base price WITHOUT applying a sale. Used by the UI to
@@ -172,18 +165,10 @@ export function getTierPriceForQuantity(productId, qty, product = null) {
   return pricing.basePrice
 }
 
-function applySalePercent(basePrice, percent) {
-  return Math.round((basePrice * (100 - percent)) / 100)
-}
-
-// A storefront row takes precedence over the cart snapshot, so direct entry
-// never depends on which catalog request finishes first. Legacy ID-only callers
-// retain their fallback behavior. Apply the best active sale after tier pricing.
+// Apply every eligible sale to the authoritative product's volume/base price.
 export function getPriceForQuantity(productId, qty, product = null) {
   const tierPrice = getTierPriceForQuantity(productId, qty, product)
-  const sale = getActiveSaleForProduct(productId)
-  if (!sale) return tierPrice
-  return applySalePercent(tierPrice, sale.discount_percent)
+  return saleUnitPrice(tierPrice, activeSalesForProduct(productId, liveSales))
 }
 
 // Seed public pricing without a state/persistence write before saved carts restore.
