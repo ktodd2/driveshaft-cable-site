@@ -56,7 +56,7 @@ const CRON_JOBS: CronJob[] = [
     name: 'check-tracking-twice-daily',
     schedule: '0 9,17 * * *',
     functionSlug: 'check-tracking-status',
-    description: '9:00 + 17:00 UTC — poll EasyPost; auto-flip delivered orders + send delivery emails',
+    description: '9:00 + 17:00 UTC — poll USPS/UPS; update admin order delivery status only',
   },
 ]
 
