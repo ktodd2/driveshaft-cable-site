@@ -65,8 +65,8 @@ function HowItWorks() {
           <figcaption className="eyebrow mb-4">Installation Video</figcaption>
           <video
             className="w-full max-w-sm max-h-[80vh] aspect-[9/16] rounded-xl bg-black object-contain"
-            src="/videos/installation.mp4"
-            poster="/videos/installation-poster.jpg"
+            src="/videos/installation.mp4?v=20261110"
+            poster="/videos/installation-poster.jpg?v=20261110"
             controls
             playsInline
             preload="metadata"
