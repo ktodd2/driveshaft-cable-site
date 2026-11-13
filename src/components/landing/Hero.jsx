@@ -6,7 +6,7 @@ import { Link } from 'react-router-dom'
 // frame, screenshot and reduced-motion setting.
 const quickSpecs = [
   { label: 'Steel Cable', value: '5/32"' },
-  { label: 'Length', value: '39"' },
+  { label: 'Length', value: '40"' },
   { label: 'Breaking Strength', value: '3000 lbs' },
   { label: 'Built for', value: 'Class 7-8' },
 ]

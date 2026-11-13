@@ -276,7 +276,7 @@ Built with 5/32" galvanized steel cable and heavy-duty aluminum couplers, it pro
   19.2,
   '{
     "Cable Diameter": "5/32\" (4mm)",
-    "Total Length": "1000mm (39\")",
+    "Total Length": "40 inches",
     "Working Load Limit": "2400 lb",
     "Cable Material": "Galvanized Steel Wire",
     "Coupler Material": "Yellow Anodized Aluminum",

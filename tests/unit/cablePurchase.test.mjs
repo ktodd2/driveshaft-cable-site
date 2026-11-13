@@ -45,7 +45,7 @@ const compiled = await build({
 const standard = {
   id: '1', slug: 'driveshaft-cable', name: 'Driveshaft Cable', sku: 'KTDC-001', base_price_cents: 300, min_order_quantity: 10, order_quantity_step: 10,
   tiers: [{ min: 50, price: 290 }, { min: 100, price: 270 }, { min: 200, price: 245 }],
-  specs: { 'Total Length': '1000mm (39")', 'Cable Diameter': '5/32" (4mm)', 'Cable Material': 'Galvanized Steel Wire', 'Coupler Material': 'Yellow Anodized Aluminum' },
+  specs: { 'Total Length': '40 inches', 'Cable Diameter': '5/32" (4mm)', 'Cable Material': 'Galvanized Steel Wire', 'Coupler Material': 'Yellow Anodized Aluminum' },
   features: [], applications: [], images: [],
 }
 const xl = {
@@ -210,10 +210,10 @@ test('comparison is built from catalog specs for both routes with direct links',
   assert.deepEqual(plain(c.entries.map(e => e.slug)), ['driveshaft-cable', 'driveshaft-cable-xl'])
   assert.equal('lengthDifferenceInches' in c, false)
   const [a, b] = c.entries
-  assert.equal(a.length, '1000mm (39")')
+  assert.equal(a.length, '40 inches')
   assert.equal(b.length, '60 inches')
   assert.equal('lengthInches' in a || 'lengthInches' in b, false)
-  assert.deepEqual(plain([a.length, a.diameter, a.appearance]), ['1000mm (39")', '5/32" (4mm)', 'Yellow anodized aluminum couplers'])
+  assert.deepEqual(plain([a.length, a.diameter, a.appearance]), ['40 inches', '5/32" (4mm)', 'Yellow anodized aluminum couplers'])
   assert.deepEqual(plain([b.length, b.diameter, b.appearance]), ['60 inches', '5/32 inch', 'Green body'])
   assert.deepEqual(plain([a.href, b.href]), ['/products/driveshaft-cable', '/products/driveshaft-cable-xl'])
 })
@@ -234,7 +234,7 @@ test('comparison renders both links on both pages, marks the current one, and gi
     assert.doesNotMatch(t, /\blonger\b|\bshorter\b|\d+\s*inches? (?:more|less|difference)/i)
     assert.doesNotMatch(t, /\b21\b/)
     assert.match(t, /we don't list vehicle-specific fitment/)
-    assert.match(t, /1000mm \(39"\)/)
+    assert.match(t, /40 inches/)
     assert.match(t, /60 inches/)
     assert.match(t, /Yellow anodized aluminum couplers/)
     assert.match(t, /Green body/)

@@ -74,7 +74,7 @@ test('page wiring keeps presentation data live and cutter-only image containment
 
 
 test('buyer-focused product titles use catalog length and hex facts without guessing Standard length', () => {
-  const standard = productMetadata({ ...xl, slug: 'driveshaft-cable', name: 'Driveshaft Cable', specs: { 'Total Length': '1000mm (39")', 'Breaking Strength': '3000 lbs' } })
+  const standard = productMetadata({ ...xl, slug: 'driveshaft-cable', name: 'Driveshaft Cable', specs: { 'Total Length': '40 inches', 'Breaking Strength': '3000 lbs' } })
   assert.equal(standard.title, 'Standard Driveshaft Tie-Up Cable for Towing')
   assert.doesNotMatch(standard.title, /39|40/)
   assert.equal(productMetadata({ ...xl, slug: 'driveshaft-cable-xl' }).title, '60-Inch XL Driveshaft Tie-Up Cable')

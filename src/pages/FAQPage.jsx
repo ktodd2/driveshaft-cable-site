@@ -27,7 +27,7 @@ const faqStructuredData = {
       name: 'What are the specifications?',
       acceptedAnswer: {
         '@type': 'Answer',
-        text: 'Cable Diameter: 5/32" steel wire cable. Total Length: 1000mm (39"). Breaking Strength: 3000 lb. End Construction: Crimped loops with aluminum couplers. The cable is galvanized for corrosion resistance.'
+        text: 'Cable Diameter: 5/32" steel wire cable. Total Length: 40 inches. Breaking Strength: 3000 lb. End Construction: Crimped loops with aluminum couplers. The cable is galvanized for corrosion resistance.'
       }
     },
     {
@@ -59,7 +59,7 @@ const faqStructuredData = {
       name: "What if the cable doesn't fit my application?",
       acceptedAnswer: {
         '@type': 'Answer',
-        text: 'The 39" length is designed to accommodate most heavy-duty applications. If you have specific requirements, contact us to discuss your needs. We may be able to provide a custom solution for fleet or specialty applications.'
+        text: 'The 40" length is designed to accommodate most heavy-duty applications. If you have specific requirements, contact us to discuss your needs. We may be able to provide a custom solution for fleet or specialty applications.'
       }
     },
     {
@@ -143,7 +143,7 @@ const faqs = [
       },
       {
         question: 'What are the specifications?',
-        answer: 'Cable Diameter: 5/32" steel wire cable. Total Length: 1000mm (39"). Breaking Strength: 3000 lb. End Construction: Crimped loops with aluminum couplers. The cable is galvanized for corrosion resistance.'
+        answer: 'Cable Diameter: 5/32" steel wire cable. Total Length: 40 inches. Breaking Strength: 3000 lb. End Construction: Crimped loops with aluminum couplers. The cable is galvanized for corrosion resistance.'
       },
       {
         question: 'Is it reusable?',
@@ -168,7 +168,7 @@ const faqs = [
       },
       {
         question: 'What if the cable doesn\'t fit my application?',
-        answer: 'The 39" length is designed to accommodate most heavy-duty applications. If you have specific requirements, contact us to discuss your needs. We may be able to provide a custom solution for fleet or specialty applications.'
+        answer: 'The 40" length is designed to accommodate most heavy-duty applications. If you have specific requirements, contact us to discuss your needs. We may be able to provide a custom solution for fleet or specialty applications.'
       }
     ]
   },

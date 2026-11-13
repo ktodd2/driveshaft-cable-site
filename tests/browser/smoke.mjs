@@ -204,7 +204,7 @@ async function behaviour(browser) {
     const read = () => page.$$eval('[aria-label="Key specifications"] dd', (d) => d.map((x) => x.textContent.trim()))
     await page.waitForSelector('[aria-label="Key specifications"] dd')
     const first = await read(); await page.waitForTimeout(2000); const later = await read()
-    assert(JSON.stringify(first) === JSON.stringify(['5/32"', '39"', '3000 lbs', 'Class 7-8']), `unexpected specs ${JSON.stringify(first)}`)
+    assert(JSON.stringify(first) === JSON.stringify(['5/32"', '40"', '3000 lbs', 'Class 7-8']), `unexpected specs ${JSON.stringify(first)}`)
     assert(JSON.stringify(first) === JSON.stringify(later), 'spec values changed over time')
     await ctx.close()
   })

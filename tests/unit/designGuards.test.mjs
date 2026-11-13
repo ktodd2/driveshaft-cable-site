@@ -31,7 +31,7 @@ test('existing logo assets are still the ones rendered in header and footer', ()
 test('hero spec values are static literals (no counters/animated numbers)', () => {
   const hero = readFileSync(join(ROOT, 'src/components/landing/Hero.jsx'), 'utf8')
   assert.ok(!/setInterval|requestAnimationFrame|useState/.test(hero), 'Hero must not animate values')
-  for (const v of ['5/32"', '39"', '3000 lbs', 'Class 7-8']) assert.ok(hero.includes(v), v)
+  for (const v of ['5/32"', '40"', '3000 lbs', 'Class 7-8']) assert.ok(hero.includes(v), v)
 })
 
 test('refreshed layer avoids `transition: all` in the global stylesheet', () => {

@@ -3,7 +3,7 @@ import React from 'react'
 function Specs() {
   const specs = [
     { label: 'Cable Diameter', value: '5/32"', detail: 'Steel wire cable' },
-    { label: 'Total Length', value: '1000mm', detail: '39 inches' },
+    { label: 'Total Length', value: '40 inches', detail: 'Total cable length' },
     { label: 'Breaking Strength', value: '3000 lbs', detail: 'Not a working load limit' },
     { label: 'End Construction', value: 'Crimped Loops', detail: 'Secure attachment' },
     { label: 'Coupler Material', value: 'Aluminum', detail: 'Yellow anodized finish' },
