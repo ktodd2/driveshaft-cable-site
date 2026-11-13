@@ -1,7 +1,7 @@
-// Cutter photos need their full head and handles visible in every storefront frame.
+// Cutter and XL installation photos need the full product visible in every storefront frame.
 // Other products keep their existing cover/optional hover-zoom behavior.
 export function productImageClasses(product, { hoverZoom = false } = {}) {
-  if (product?.id === 'driveshaft-cable-cutters' || product?.slug === 'driveshaft-cable-cutters') {
+  if (product?.id === 'driveshaft-cable-cutters' || product?.slug === 'driveshaft-cable-cutters' || product?.id === 'driveshaft-cable-xl' || product?.slug === 'driveshaft-cable-xl') {
     return 'object-contain'
   }
   return hoverZoom ? 'object-cover hover:scale-105' : 'object-cover'
@@ -74,6 +74,7 @@ const imageDescriptions = {
     'img_5489.jpeg': 'Caliper measuring the diameter of a steel driveshaft cable',
   },
   'driveshaft-cable-xl': {
+    'driveshaft-cable-xl-frame-rail.jpeg': 'Green Driveshaft Cable XL routed around a truck frame rail supporting a disconnected driveshaft',
     'approved-body-detail-8810-d84970761dce.png': 'Close-up of the green Driveshaft Cable XL body and steel cable',
   },
   'driveshaft-cable-cutters': {
