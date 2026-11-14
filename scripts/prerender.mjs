@@ -70,7 +70,7 @@ try {
     const post = path.startsWith('/blog/') ? data.posts.find(post => `/blog/${post.slug}` === path) : null
     const initial = { path, products: data.products, inventory: data.inventory, sales: data.sales || [],
       ...(path === '/blog' ? { blogPosts } : {}),
-      ...(path === '/' ? { testimonials: data.testimonials || [] } : {}),
+      ...((path === '/' || path === '/products') ? { testimonials: data.testimonials || [] } : {}),
       ...(post ? { post, relatedPosts: blogPosts.filter(p => p.category === post.category && p.id !== post.id).slice(0, 3) } : {}) }
     const rendered = renderPage(path, initial)
     if (!rendered.html.includes('<h1') || !rendered.head.includes('rel="canonical"')) throw new Error(`Incomplete public page: ${path}`)
