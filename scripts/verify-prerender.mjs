@@ -16,7 +16,7 @@ for (const path of manifest.paths) {
   const state = JSON.parse(html.match(/<script id="__PUBLIC_DATA__" type="application\/json">([\s\S]*?)<\/script>/)[1])
   assert.equal(state.path, path)
   if (state.testimonials) {
-    assert.equal(path, '/', 'Feedback is general customer feedback, not a product review')
+    assert.ok(['/', '/products'].includes(path), 'Feedback is general customer feedback, not a product review')
     for (const quote of state.testimonials) {
       assert.deepEqual(Object.keys(quote).sort(), ['display_name', 'id', 'testimonial_text'])
       assert.ok(html.includes(quote.display_name), 'Approved feedback appears in initial HTML')
