@@ -1,4 +1,5 @@
 import React from 'react'
+import CustomerFeedback from '../components/landing/CustomerFeedback'
 import SEOHead from '../components/common/SEOHead'
 import StorefrontProducts from '../components/landing/StorefrontProducts'
 import { useStorefrontProducts } from '../hooks/useStorefrontProducts'
@@ -30,6 +31,7 @@ function ProductListPage() {
         }}
       />
       <StorefrontProducts />
+      <CustomerFeedback />
     </div>
   )
 }
