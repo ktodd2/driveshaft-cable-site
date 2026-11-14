@@ -13,10 +13,10 @@ export default function CustomerFeedback() {
     return () => { active = false }
   }, [])
   if (!quotes.length) return null
-  return <section aria-labelledby="customer-feedback-heading" className="py-8 md:py-12 bg-ktodd-charcoal border-y border-gray-800">
+  return <section id="testimonials" aria-labelledby="customer-feedback-heading" className="scroll-mt-28 py-8 md:py-12 bg-ktodd-charcoal border-y border-gray-800">
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <p className="eyebrow mb-3">From Our Customers</p>
-      <h2 id="customer-feedback-heading" className="text-3xl font-industrial text-white mb-6">CUSTOMER FEEDBACK</h2>
+      <h2 id="customer-feedback-heading" className="text-3xl font-industrial text-white mb-6">CUSTOMER TESTIMONIALS</h2>
       <div className="grid gap-5 md:grid-cols-2">
         {quotes.map(quote => <figure key={quote.id} className="rounded-xl bg-black/30 border border-gray-700 p-6">
           <blockquote className="text-gray-200 text-lg leading-relaxed whitespace-pre-wrap">“{quote.testimonial_text}”</blockquote>
