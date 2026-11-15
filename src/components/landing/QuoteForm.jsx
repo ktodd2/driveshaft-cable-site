@@ -1,5 +1,6 @@
-import React, { useState } from 'react'
-import { submitQuoteRequest, sendQuoteNotification } from '../../lib/supabase'
+import { newQuoteSubmission } from '../../lib/quoteSubmission'
+import React, { useState, useRef } from 'react'
+import { submitQuoteRequest } from '../../lib/supabase'
 
 function QuoteForm() {
   const [formData, setFormData] = useState({
@@ -10,11 +11,14 @@ function QuoteForm() {
     quantity: '',
     message: ''
   })
+  const submission = useRef(newQuoteSubmission())
+  const [website, setWebsite] = useState('')
   const [status, setStatus] = useState('idle') // idle, submitting, success, error
   const [errorMessage, setErrorMessage] = useState('')
 
   const handleChange = (e) => {
     const { name, value } = e.target
+    submission.current = { ...submission.current, request_id: newQuoteSubmission().request_id }
     setFormData(prev => ({
       ...prev,
       [name]: value
@@ -23,18 +27,21 @@ function QuoteForm() {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
+    if (status === 'submitting') return
     setStatus('submitting')
     setErrorMessage('')
 
     try {
       const submissionData = {
         ...formData,
-        quantity: formData.quantity ? parseInt(formData.quantity) : null
+        website,
+        ...submission.current,
+        quantity: formData.quantity ? Number(formData.quantity) : null
       }
       await submitQuoteRequest(submissionData)
-      // Send email notification (don't block on failure)
-      sendQuoteNotification(submissionData)
       setStatus('success')
+      submission.current = newQuoteSubmission()
+      setWebsite('')
       setFormData({
         name: '',
         company: '',
@@ -45,7 +52,7 @@ function QuoteForm() {
       })
     } catch (error) {
       setStatus('error')
-      setErrorMessage('There was an error submitting your request. Please try again or contact us directly.')
+      setErrorMessage('Your request could not be confirmed. Please try again later; refresh if the problem persists, or email admin@driveshaftcable.com.')
       console.error('Form submission error:', error)
     }
   }
@@ -143,6 +150,10 @@ function QuoteForm() {
                 <h3 className="text-2xl font-industrial text-yellow-500 mb-6">REQUEST A QUOTE</h3>
 
                 <form onSubmit={handleSubmit} className="space-y-4">
+                    <div aria-hidden="true" style={{ position: 'absolute', left: '-10000px', width: '1px', height: '1px', overflow: 'hidden' }}>
+                      <label htmlFor="quote-website">Leave this field empty</label>
+                      <input id="quote-website" name="website" type="text" value={website} onChange={e => setWebsite(e.target.value)} tabIndex={-1} autoComplete="off" />
+                    </div>
                   <div className="grid sm:grid-cols-2 gap-4">
                     <div>
                       <label htmlFor="name" className="block text-gray-400 text-sm mb-1">Name *</label>

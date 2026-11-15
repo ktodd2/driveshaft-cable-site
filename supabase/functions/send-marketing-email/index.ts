@@ -180,7 +180,7 @@ serve(async (req) => {
     // -----------------------------------------------------------------------
     const [orderEmails, quoteEmails, subscriberEmails] = await Promise.all([
       fetchAllEmails(adminClient, 'orders', q => q.eq('payment_status', 'paid')),
-      fetchAllEmails(adminClient, 'quote_requests'),
+      fetchAllEmails(adminClient, 'quote_requests', q => q.or('status.is.null,status.neq.quarantined')),
       fetchAllEmails(adminClient, 'newsletter_subscribers', q => q.eq('status', 'active').eq('confirmed', true)),
     ])
 

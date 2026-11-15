@@ -8,80 +8,9 @@ const supabasePublishableKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || 
 
 export const supabase = createApiClient(createClient, supabaseUrl, supabasePublishableKey)
 
-// Function to submit quote request
+// All quote ingestion and notification happens server-side. Never insert directly.
 export async function submitQuoteRequest(formData) {
-  const { data, error } = await supabase
-    .from('quote_requests')
-    .insert([
-      {
-        name: formData.name,
-        company: formData.company,
-        email: formData.email,
-        phone: formData.phone,
-        quantity: formData.quantity,
-        message: formData.message,
-        created_at: new Date().toISOString()
-      }
-    ])
-    .select()
-
-  if (error) {
-    console.error('Error submitting quote:', error)
-    throw error
-  }
-
+  const { data, error } = await supabase.functions.invoke('submit-quote', { body: formData })
+  if (error || !data?.success) throw error || new Error('Quote submission failed')
   return data
 }
-
-// Send quote notification email via Edge Function
-export async function sendQuoteNotification(formData) {
-  try {
-    const { data, error } = await supabase.functions.invoke('send-quote-notification', {
-      body: {
-        name: formData.name,
-        company: formData.company,
-        email: formData.email,
-        phone: formData.phone,
-        quantity: formData.quantity,
-        message: formData.message,
-      },
-    })
-    if (error) console.error('Quote notification email error:', error)
-    return { data, error }
-  } catch (err) {
-    console.error('Quote notification email error:', err)
-    return { error: err }
-  }
-}
-
-/*
--- SUPABASE TABLE SETUP --
-Run this SQL in your Supabase SQL Editor to create the quote_requests table:
-
-CREATE TABLE quote_requests (
-  id BIGSERIAL PRIMARY KEY,
-  name TEXT NOT NULL,
-  company TEXT,
-  email TEXT NOT NULL,
-  phone TEXT,
-  quantity INTEGER,
-  message TEXT,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  status TEXT DEFAULT 'new'
-);
-
--- Enable Row Level Security
-ALTER TABLE quote_requests ENABLE ROW LEVEL SECURITY;
-
--- Create policy to allow inserts from anonymous users
-CREATE POLICY "Allow anonymous inserts" ON quote_requests
-  FOR INSERT
-  TO anon
-  WITH CHECK (true);
-
--- Create policy to allow reading for authenticated users (admin)
-CREATE POLICY "Allow authenticated reads" ON quote_requests
-  FOR SELECT
-  TO authenticated
-  USING (true);
-*/

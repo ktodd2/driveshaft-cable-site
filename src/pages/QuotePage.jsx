@@ -1,7 +1,8 @@
-import React, { useState } from 'react'
+import { newQuoteSubmission } from '../lib/quoteSubmission'
+import React, { useState, useRef } from 'react'
 import { Link } from 'react-router-dom'
 import { useCartStore } from '../stores/cartStore'
-import { supabase, sendQuoteNotification } from '../lib/supabase'
+import { submitQuoteRequest } from '../lib/supabase'
 import SEOHead from '../components/common/SEOHead'
 
 function QuotePage() {
@@ -16,45 +17,34 @@ function QuotePage() {
     quantity: totalItems > 0 ? totalItems.toString() : '',
     message: ''
   })
+  const submission = useRef(newQuoteSubmission())
+  const [website, setWebsite] = useState('')
   const [status, setStatus] = useState('idle')
   const [errorMessage, setErrorMessage] = useState('')
 
   const handleChange = (e) => {
     const { name, value } = e.target
+    submission.current = { ...submission.current, request_id: newQuoteSubmission().request_id }
     setFormData(prev => ({ ...prev, [name]: value }))
   }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
+    if (status === 'submitting') return
     setStatus('submitting')
     setErrorMessage('')
 
     try {
-      const { error } = await supabase
-        .from('quote_requests')
-        .insert([{
-          name: formData.name,
-          company: formData.company,
-          email: formData.email,
-          phone: formData.phone,
-          quantity: formData.quantity ? parseInt(formData.quantity) : null,
-          message: formData.message,
-          created_at: new Date().toISOString()
-        }])
-
-      if (error) throw error
-
-      // Send email notification (don't block on failure)
-      sendQuoteNotification({
-        name: formData.name,
-        company: formData.company,
-        email: formData.email,
-        phone: formData.phone,
-        quantity: formData.quantity ? parseInt(formData.quantity) : null,
-        message: formData.message,
+      await submitQuoteRequest({
+        ...formData,
+        quantity: formData.quantity ? Number(formData.quantity) : null,
+        website,
+        ...submission.current,
       })
 
       setStatus('success')
+      submission.current = newQuoteSubmission()
+      setWebsite('')
       clearCart()
       setFormData({
         name: '',
@@ -66,7 +56,7 @@ function QuotePage() {
       })
     } catch (error) {
       setStatus('error')
-      setErrorMessage('There was an error submitting your request. Please try again or contact us directly.')
+      setErrorMessage('Your request could not be confirmed. Please try again later; refresh if the problem persists, or email admin@driveshaftcable.com.')
       console.error('Quote submission error:', error)
     }
   }
@@ -208,6 +198,10 @@ function QuotePage() {
                   )}
 
                   <form onSubmit={handleSubmit} className="space-y-4">
+                    <div aria-hidden="true" style={{ position: 'absolute', left: '-10000px', width: '1px', height: '1px', overflow: 'hidden' }}>
+                      <label htmlFor="quote-website">Leave this field empty</label>
+                      <input id="quote-website" name="website" type="text" value={website} onChange={e => setWebsite(e.target.value)} tabIndex={-1} autoComplete="off" />
+                    </div>
                     <div className="grid sm:grid-cols-2 gap-4">
                       <div>
                         <label htmlFor="name" className="block text-gray-400 text-sm mb-1">Name *</label>
