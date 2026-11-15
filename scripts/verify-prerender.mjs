@@ -15,6 +15,7 @@ for (const path of manifest.paths) {
   assert.doesNotMatch(head, /content="noindex/)
   const state = JSON.parse(html.match(/<script id="__PUBLIC_DATA__" type="application\/json">([\s\S]*?)<\/script>/)[1])
   assert.equal(state.path, path)
+  assert.deepEqual(state.sales, [], `No transient sale snapshots: ${path}`)
   if (state.testimonials) {
     assert.ok(['/', '/products'].includes(path), 'Feedback is general customer feedback, not a product review')
     for (const quote of state.testimonials) {
@@ -32,6 +33,7 @@ for (const path of manifest.paths) {
     const min = stock > 0 && stock < product.min_order_quantity ? stock : product.min_order_quantity
     const productSchema = schemas.find(schema => schema['@type'] === 'Product')
     const offer = productSchema.offers
+    assert.equal(offer.validThrough, undefined, `No frozen sale expiry: ${path}`)
     if (productSchema.image?.[0]) {
       const socialImage = productSchema.image[0].replace(/&/g, '&amp;')
       assert.ok(head.includes(`property="og:image" content="${socialImage}"`), `Product Open Graph image: ${path}`)

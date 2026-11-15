@@ -4,7 +4,8 @@ import { HelmetProvider } from 'react-helmet-async'
 import { PublicDataContext } from './ssg/PublicData'
 import UtilityIndexing from './components/common/UtilityIndexing'
 import Layout from './components/layout/Layout'
-import { useCartStore } from './stores/cartStore'
+import { useCartStore, getLiveSales } from './stores/cartStore'
+import { startSaleClock } from './lib/saleClock'
 import HomePage from './pages/HomePage'
 import AboutPage from './pages/AboutPage'
 import ContactPage from './pages/ContactPage'
@@ -53,6 +54,13 @@ function App({ router: Router = BrowserRouter, routerProps = {}, helmetContext, 
     const cart = useCartStore.getState()
     cart.loadProducts()
     cart.loadSales()
+    return startSaleClock({
+      readSales: getLiveSales,
+      refresh: () => useCartStore.setState(s => ({ salesLoadedAt: Math.max(Date.now(), s.salesLoadedAt + 1) })),
+      subscribe: listener => useCartStore.subscribe((state, previous) => {
+        if (state.salesLoadedAt !== previous.salesLoadedAt) listener()
+      }),
+    })
   }, [])
 
   return (

@@ -155,7 +155,7 @@ function CheckoutPage() {
   const pricePerUnit = useCartStore(selectPricePerUnit)
 
   // Eligible loyalty and coupon savings both apply to the sale-adjusted subtotal.
-  const quoteKey=JSON.stringify([formData,items.map(item=>[item.productId,item.quantity]),appliedCode,referralCode.trim().toUpperCase()])
+  const quoteKey=JSON.stringify([formData,items.map(item=>[item.productId,item.quantity,getPriceForQuantity(item.productId,item.quantity)]),appliedCode,referralCode.trim().toUpperCase()])
   const activeQuote=step===2&&paymentSnapshot?paymentSnapshot.pricing:quoteData
   const quoteReady=step===2&&!!paymentSnapshot||quoteData?.key===quoteKey
   const summaryItems=step===2&&paymentSnapshot?paymentSnapshot.items:quoteReady?quoteData.items:items

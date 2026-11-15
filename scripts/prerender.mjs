@@ -68,7 +68,10 @@ try {
   }
   for (const path of paths) {
     const post = path.startsWith('/blog/') ? data.posts.find(post => `/blog/${post.slug}` === path) : null
-    const initial = { path, products: data.products, inventory: data.inventory, sales: data.sales || [],
+    // Static HTML can outlive any promotion. Snapshot regular prices only;
+    // the browser loads current promotions before applying discounts. Never
+    // freeze a sale/countdown/discounted JSON-LD offer into the CDN artifact.
+    const initial = { path, products: data.products, inventory: data.inventory, sales: [],
       ...(path === '/blog' ? { blogPosts } : {}),
       ...((path === '/' || path === '/products') ? { testimonials: data.testimonials || [] } : {}),
       ...(post ? { post, relatedPosts: blogPosts.filter(p => p.category === post.category && p.id !== post.id).slice(0, 3) } : {}) }
