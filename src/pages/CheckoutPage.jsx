@@ -10,10 +10,8 @@ import { getShippingAddressProblem, SHIPPING_ADDRESS_MESSAGES } from '../lib/shi
 import { supabase } from '../lib/supabase'
 import { rememberCheckoutPayment, clearPurchasedCart, getOrCreateCheckoutDraft, getCurrentCheckoutDraft, markCheckoutDraftSubmitted, forgetCancelledCheckoutDraft } from '../lib/checkoutPayment'
 import SEOHead from '../components/common/SEOHead'
-import BuyerEmailVerification from '../components/checkout/BuyerEmailVerification'
 import CheckoutOrderItems from '../components/checkout/CheckoutOrderItems'
 import { quotedCheckoutItems } from '../lib/checkoutSummary'
-import {getBuyerVerification,forgetBuyerVerification} from '../lib/buyerVerification'
 
 // Initialize Stripe
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY)
@@ -107,7 +105,7 @@ function CheckoutPage() {
 
   const [referralCode, setReferralCode] = useState('')
   const [formData, setFormData] = useState({
-    email: getBuyerVerification()?.email || '',
+    email: '',
     name: '',
     company: '',
     phone: '',
@@ -129,8 +127,6 @@ function CheckoutPage() {
   const [cancelReview,setCancelReview]=useState(false)
   const [quoteData,setQuoteData]=useState(null)
   const [paymentSnapshot,setPaymentSnapshot]=useState(null)
-  const [buyerProof,setBuyerProof]=useState(()=>getBuyerVerification(formData.email))
-  const [serverRequiresVerification,setServerRequiresVerification]=useState(false)
   const [isRepeatCustomer, setIsRepeatCustomer] = useState(false)
   const [checkingEmail, setCheckingEmail] = useState(false)
 
@@ -168,9 +164,6 @@ function CheckoutPage() {
     discountCents === 0 ? null :
     loyaltyDiscountCents && codeDiscountCents ? 'combined' : loyaltyDiscountCents ? 'loyalty' : 'code'
   const totalCents = quoteReady?activeQuote.totalCents:baseTotal - discountCents + taxCents
-  const verificationRequired=!!activeQuote?.verificationRequired||serverRequiresVerification
-  const buyerProofValid=buyerProof?.email===formData.email.trim().toLowerCase()&&buyerProof?.expiresAt>Date.now()
-  useEffect(()=>{setServerRequiresVerification(false);setBuyerProof(getBuyerVerification(formData.email))},[formData.email])
 
   // Recalculate tax whenever the address (city + state + zip), the cart, or
   // the loyalty discount changes. Debounced 500ms so each keystroke doesn't
@@ -372,14 +365,12 @@ function CheckoutPage() {
             howHeard: formData.hearAboutUs === 'Other' ? formData.hearAboutUsOther.trim() || 'Other' : formData.hearAboutUs,
             referralCode: referralCode.trim() || null,
             discountCode: appliedCode,
-            buyerVerificationToken: buyerProofValid?buyerProof.token:null,
           })
         }
       )
 
-      const { clientSecret: secret, orderId: createdOrderId, status, error: intentError, checkout, verificationRequired:verifyRequired } = await response.json()
+      const { clientSecret: secret, orderId: createdOrderId, status, error: intentError, checkout } = await response.json()
 
-      if(verifyRequired){setServerRequiresVerification(true);forgetBuyerVerification(formData.email);setBuyerProof(null)}
 
       if (intentError) throw new Error(intentError)
 
@@ -684,11 +675,10 @@ function CheckoutPage() {
                     </div>
                   )}
 
-                  <BuyerEmailVerification email={formData.email} required={verificationRequired} onProof={setBuyerProof}/>
 
                   <button
                     type="submit"
-                    disabled={isCreatingOrder || isCalculatingTax || !quoteReady || !!taxError || verificationRequired&&!buyerProofValid}
+                    disabled={isCreatingOrder || isCalculatingTax || !quoteReady || !!taxError}
                     className="btn-primary w-full disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {isCreatingOrder ? (
