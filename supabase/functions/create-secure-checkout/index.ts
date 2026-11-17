@@ -16,8 +16,8 @@ serve(async req=>{
   const input=JSON.parse(text)
   if(input.orderId)return Response.json({error:'Checkout has been updated. Refresh before continuing; do not repay an existing payment.'},{status:409,headers})
   const db=createAdminClient()
-  const result=await createSecurePayment(db,stripe,input,(normalized:any)=>priceCheckout(db,stripe,normalized,{failTaxOpen:true,referralEnabled:Deno.env.get('REFERRAL_REWARDS_ENABLED')==='true',buyerVerificationEnabled:Deno.env.get('BUYER_EMAIL_VERIFICATION_ENABLED')==='true'}),{
-   referralEnabled:Deno.env.get('REFERRAL_REWARDS_ENABLED')==='true',
+  const result=await createSecurePayment(db,stripe,input,(normalized:any)=>priceCheckout(db,stripe,normalized,{failTaxOpen:true,referralEnabled:false,buyerVerificationEnabled:false}),{
+   referralEnabled:false,
    analyticsMetadata:(analytics:any)=>analyticsMetadata(analytics,Deno.env.get('GA4_SERVER_PURCHASES_ENABLED')==='true'),
    purchaseSnapshot:(p:any)=>createPurchaseSnapshot(p.lines.map((line:any)=>({...line,analyticsName:line.name})),p.subtotalCents,p.discountCents,p.shippingCents,p.taxCents),
   })

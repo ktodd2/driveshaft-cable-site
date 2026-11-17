@@ -1,37 +1,3 @@
 import {test} from 'node:test'
-import assert from 'node:assert/strict'
-import {build} from 'esbuild'
-import {runInNewContext} from 'node:vm'
-const output=await build({entryPoints:['supabase/functions/referral-admin/index.ts'],bundle:true,write:false,platform:'node',format:'cjs',plugins:[{name:'offline',setup(b){
- b.onResolve({filter:/https:|_shared\//},args=>args.path.endsWith('/referralInviteOrigin.js')?undefined:({path:args.path,namespace:'fixture'}))
- b.onLoad({filter:/.*/,namespace:'fixture'},({path})=>({loader:'js',contents:
- path.includes('stripe@')?'export default class Stripe{};':path.includes('secureCheckout')?'export const cancelSecurePayment=async(db,stripe,input,options)=>{h.calls.push({name:"cancel",input,options});return {status:200,body:{status:"cancelled"}}};':path.includes('/http/server')?'export const serve=fn=>h.handler=fn;':path.includes('supabase-js')?'export const createClient=()=>({});':
- path.includes('supabaseTransport')?'export const createApiClient=()=>({auth:{getUser:async()=>({data:{user:h.user},error:null})}});':
- path.includes('supabaseKeys')?'export const getSupabaseSecretKey=()=>"fixture-only",getSupabasePublishableKey=()=>"fixture-public";':
- path.includes('storeAuthorization')?'export const isActiveAdmin=async()=>h.active;':
- path.includes('referralStatements')?'export const sendReferralStatement=()=>{throw Error("Unexpected email")};':
- path.includes('emailHealth')?'export const createEmailRecorder=()=>{throw Error("Unexpected email")},digest=()=>{};':
- 'export const rpc=async(db,name,args)=>{h.calls.push({name,args});if(name==="referral_past_customer_search")return {customers:[{name:"Past Fixture",email:"past@customer-fixture.com"}],nextCursor:null};return {id:"created-fixture",code:args.p_generate?"DC-ABCDEFGH":args.p_code.trim().toUpperCase()}};'}))
-}}]})
-function harness(){const h={user:{id:'verified-owner'},active:true,calls:[]},module={exports:{}};runInNewContext(output.outputFiles[0].text,{h,module,exports:module.exports,Response,Deno:{env:{get:()=>''}}})
- h.request=(action,data)=>h.handler(new Request('http://fixture/referral-admin',{method:'POST',headers:{Authorization:'Bearer fixture'},body:JSON.stringify({action,data})}));h.create=data=>h.request('create',data);return h}
-test('custom code creation uses verified actor and server-only create RPC without sending invitations',async()=>{
- const h=harness(),result=await h.create({email:'past@invalid.test',name:'Fixture',code:' custom-code ',p_actor:'forged'})
- assert.equal(result.status,200);assert.equal((await result.json()).code,'CUSTOM-CODE')
- assert.equal(h.calls[0].name,'referral_create_partner');assert.equal(h.calls[0].args.p_actor,'verified-owner');assert.equal(h.calls[0].args.p_generate,false)
-})
-test('generation mode requests atomic server collision handling and reports the final code',async()=>{
- const h=harness(),result=await h.create({email:'past@invalid.test',name:'Fixture',code:'DC-PREVIEW2',codeMode:'generated'})
- assert.equal((await result.json()).code,'DC-ABCDEFGH');assert.equal(h.calls[0].args.p_generate,true)
- const invalid=harness();assert.equal((await invalid.create({codeMode:'overwrite'})).status,400);assert.equal(invalid.calls.length,0)
-})
-test('ordinary/inactive callers cannot create custom or generated codes',async()=>{
- for(const inactive of [false,true]){const h=harness();if(inactive)h.active=false;else h.user=null
- assert.equal((await h.create({codeMode:'generated'})).status,403);assert.equal(h.calls.length,0)}
-})
-test('past-customer search uses verified actor, fixed page size and no write/email RPC',async()=>{
- const h=harness(),response=await h.request('search-customers',{query:'Past',after:'a@customer-fixture.com',p_actor:'forged',p_limit:10000})
- assert.equal(response.status,200);assert.equal((await response.json()).customers.length,1)
- assert.deepEqual(JSON.parse(JSON.stringify(h.calls)),[{name:'referral_past_customer_search',args:{p_actor:'verified-owner',p_query:'Past',p_after:'a@customer-fixture.com',p_limit:25}}])
- for(const state of ['ordinary','inactive']){const denied=harness();if(state==='ordinary')denied.user=null;else denied.active=false;assert.equal((await denied.request('search-customers',{})).status,403);assert.equal(denied.calls.length,0)}
-})
+import {verifyRetiredEndpoint} from '../fixtures/retiredReferralEndpoint.mjs'
+test('referral-admin is retired and cannot write, invite or send even with enabling request flags',()=>verifyRetiredEndpoint('referral-admin'))

@@ -3,7 +3,7 @@ import fs from 'node:fs/promises'
 import {build} from 'esbuild'
 import {runInNewContext} from 'node:vm'
 const {PGlite}=await import(process.env.PGLITE_MODULE||'@electric-sql/pglite')
-export async function commerceFixture({policyRuntime=false,emailVerification=false,sqlAdapter=null}={}){
+export async function commerceFixture({policyRuntime=false,emailVerification=false,sqlAdapter=null,referralEnabled=policyRuntime}={}){
  const sql=sqlAdapter||new PGlite()
  await sql.exec(`create role anon;create role authenticated;create role service_role bypassrls;create schema auth;
  create function auth.uid() returns uuid language sql as $$select nullif(current_setting('app.uid',true),'')::uuid$$;
@@ -46,5 +46,5 @@ export async function commerceFixture({policyRuntime=false,emailVerification=fal
  const module={exports:{}};runInNewContext(compiled.outputFiles[0].text,{module,exports:module.exports,Date,Error,Map,Math,Number,console:{warn(){},error(){}}})
  stripe.paymentIntents.cancel=async id=>{const intent=intents.get(id);if(!intent||!['requires_payment_method','requires_confirmation','requires_action','canceled'].includes(intent.status))throw Error('Provider cannot cancel');intent.status='canceled';return structuredClone(intent)}
  // Without policyRuntime this intentionally models the historical no-buyer-discount pricing for legacy regression fixtures only.
- return {sql,db,stripe,owner,calls,intents,payments,taxes,succeed,price:input=>module.exports.priceCheckout(db,stripe,policyRuntime?input:{...input,referralCode:undefined},{failTaxOpen:true,referralEnabled:policyRuntime,buyerVerificationEnabled:emailVerification})}
+ return {sql,db,stripe,owner,calls,intents,payments,taxes,succeed,price:input=>module.exports.priceCheckout(db,stripe,policyRuntime?input:{...input,referralCode:undefined},{failTaxOpen:true,referralEnabled,buyerVerificationEnabled:emailVerification})}
 }

@@ -56,7 +56,6 @@ export async function getOrCreateCheckoutDraft(signature, browser = window) {
   if(Date.now()-draft.createdAt>=23*3600000)throw Error('Your previous payment needs owner verification before retrying. Please contact us before paying again.')
   return draft
  }
- if(draft?.submitted||draft?.orderId)throw Error('Your previous checkout may still be payable. Cancel that unpaid checkout before changing its details, or resume it before paying again.')
  draft={signature:hash,id:crypto.randomUUID(),token:Array.from(crypto.getRandomValues(new Uint8Array(32)),b=>b.toString(16).padStart(2,'0')).join(''),createdAt:Date.now()}
  browser.__checkoutDraft=draft
  try{browser.sessionStorage.setItem('ktodd-checkout-draft',JSON.stringify(draft))}catch{}

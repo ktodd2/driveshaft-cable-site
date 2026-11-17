@@ -115,3 +115,11 @@ test('stacked coupon survives the trusted order snapshot for single-use redempti
  assert.equal(order.discount_source,'combined')
  assert.match(order.discount_reason,/Loyalty discount plus discount code WELCOME5/)
 })
+
+test('edited checkout can start independently while unchanged retries preserve identity',async()=>{
+ const values=new Map(),browser={sessionStorage:{setItem:(k,v)=>values.set(k,v),getItem:k=>values.get(k),removeItem:k=>values.delete(k)}}
+ const first=await getOrCreateCheckoutDraft('cart-one',browser);first.submitted=true;first.orderId=orderId
+ const same=await getOrCreateCheckoutDraft('cart-one',browser);assert.equal(same.id,first.id)
+ const changed=await getOrCreateCheckoutDraft('cart-two',browser);assert.notEqual(changed.id,first.id);assert.notEqual(changed.token,first.token)
+ assert.equal((await getOrCreateCheckoutDraft('cart-two',browser)).id,changed.id)
+})

@@ -1,4 +1,5 @@
-// Execute actual composed endpoints + server helpers over local PostgreSQL and provider fixtures.
+// Preserve historical referral snapshot/reconciliation regressions using the frozen pre-retirement intake.
+// Current production intake retirement is tested in retiredReferralCheckout.postgres.mjs.
 import {test} from 'node:test'
 import assert from 'node:assert/strict'
 import {readFileSync} from 'node:fs'
@@ -10,7 +11,7 @@ import {createPurchaseSnapshot} from '../../supabase/functions/_shared/purchaseA
 function endpoint(f,enabled=true,name='create-secure-checkout'){
  let handler
  class Stripe{constructor(){return f.stripe}}
- const source=readFileSync(`supabase/functions/${name}/index.ts`,'utf8').replace(/^import .*\n/gm,'')
+ const source=readFileSync('tests/fixtures/legacyReferralEndpoint.ts','utf8').replace(/^import .*\n/gm,'')
  runInNewContext(stripTypeScriptTypes(source),{serve:fn=>{handler=fn},Stripe,createAdminClient:()=>f.db,createSecurePayment,checkoutErrorMessage,priceCheckout:(_db,_stripe,input)=>f.price(input),createPurchaseSnapshot,analyticsMetadata:()=>({}),Deno:{env:{get:key=>key==='REFERRAL_REWARDS_ENABLED'&&enabled?'true':''}},Response,JSON,Error})
  return body=>handler(new Request('http://fixture',{method:'POST',body:JSON.stringify(body)}))
 }

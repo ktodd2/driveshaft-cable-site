@@ -24,8 +24,6 @@ import BlogListPage from './pages/BlogListPage'
 import BlogPostPage from './pages/BlogPostPage'
 import SuggestionsPage from './pages/SuggestionsPage'
 import TestimonialPage from './pages/TestimonialPage'
-import ReferralSignupPage from './pages/ReferralSignupPage'
-import ReferralProgramPage from './pages/ReferralProgramPage'
 import BuyerEmailVerificationPage from './pages/BuyerEmailVerificationPage'
 import CartRecoverPage from './pages/CartRecoverPage'
 
@@ -41,7 +39,6 @@ const AdminBlogPage = React.lazy(() => import('./pages/admin/AdminBlogPage'))
 const AdminSuggestionsPage = React.lazy(() => import('./pages/admin/AdminSuggestionsPage'))
 const AdminTestimonialsPage = React.lazy(() => import('./pages/admin/AdminTestimonialsPage'))
 const AdminProductsPage = React.lazy(() => import('./pages/admin/AdminProductsPage'))
-const AdminReferralsPage = React.lazy(() => import('./pages/admin/AdminReferralsPage'))
 const AdminSalesPage = React.lazy(() => import('./pages/admin/AdminSalesPage'))
 
 function App({ router: Router = BrowserRouter, routerProps = {}, helmetContext, initialData = null }) {
@@ -89,8 +86,8 @@ function App({ router: Router = BrowserRouter, routerProps = {}, helmetContext, 
           <Route path="blog" element={<BlogListPage />} />
           <Route path="blog/:slug" element={<BlogPostPage />} />
           <Route path="suggestions" element={<SuggestionsPage />} />
-          <Route path="referral/signup" element={<ReferralSignupPage />} />
-          <Route path="referrals" element={<ReferralProgramPage />} />
+          <Route path="referral/signup" element={<Navigate to="/" replace />} />
+          <Route path="referrals" element={<Navigate to="/" replace />} />
           <Route path="testimonial" element={<TestimonialPage />} />
           <Route path="cart/recover/:token" element={<CartRecoverPage />} />
           <Route path="*" element={<NotFoundPage />} />
@@ -108,7 +105,7 @@ function App({ router: Router = BrowserRouter, routerProps = {}, helmetContext, 
         <Route path="/admin/suggestions" element={<Suspense fallback={<div />}><AdminSuggestionsPage /></Suspense>} />
         <Route path="/admin/testimonials" element={<Suspense fallback={<div />}><AdminTestimonialsPage /></Suspense>} />
         <Route path="/admin/products" element={<Suspense fallback={<div />}><AdminProductsPage /></Suspense>} />
-        <Route path="/admin/referrals" element={<Suspense fallback={<div />}><AdminReferralsPage /></Suspense>} />
+        <Route path="/admin/referrals" element={<Navigate to="/admin" replace />} />
         <Route path="/admin/sales" element={<Suspense fallback={<div />}><AdminSalesPage /></Suspense>} />
       </Routes>
       <UtilityIndexing />

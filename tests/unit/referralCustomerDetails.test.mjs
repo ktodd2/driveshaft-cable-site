@@ -35,11 +35,10 @@ test('legacy missing names/details do not fall back to a buyer email or live ord
  assert.match(customerStatementText(details),/Customer name unavailable/)
  assert.ok(!customerStatementText(details).includes('@'))
 })
-test('checkout code entry and referrer signup explain named-purchase sharing upfront',()=>{
- const checkout=readFileSync('src/pages/CheckoutPage.jsx','utf8'),signup=readFileSync('src/pages/ReferralSignupPage.jsx','utf8')
- assert.match(checkout,/Using this code lets the referrer see your name, eligible product spending after discounts, and commission details/)
- assert.match(checkout,/This applies to this order and future orders using the same email/);assert.match(checkout,/Your email, address, tax, shipping and payment details are not included/)
- assert.match(signup,/Statements include your referred customers’ names, eligible product spending and commission details/)
+test('retired checkout has no referral code entry or sharing promises',()=>{
+ const checkout=readFileSync('src/pages/CheckoutPage.jsx','utf8'),app=readFileSync('src/App.jsx','utf8')
+ assert.doesNotMatch(checkout,/referralCode|Using this code lets the referrer/)
+ assert.doesNotMatch(app,/import ReferralSignupPage|import ReferralProgramPage/)
 })
 test('unallocated partial refunds are visibly provisional and excluded from confirmed spend and commission',()=>{
  const statement=customerStatementFixture(),c=statement.customer_details.customers[0]
