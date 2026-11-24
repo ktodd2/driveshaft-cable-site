@@ -7,6 +7,7 @@ const DEFAULT_IMAGE = `${SITE_URL}/logos/main-logo.png`
 
 function SEOHead({
   title,
+  appendSiteName = true,
   description = DEFAULT_DESCRIPTION,
   keywords,
   canonical,
@@ -15,7 +16,7 @@ function SEOHead({
   noindex = false,
   structuredData,
 }) {
-  const fullTitle = title ? `${title} | ${SITE_NAME}` : SITE_NAME
+  const fullTitle = title && appendSiteName ? `${title} | ${SITE_NAME}` : title || SITE_NAME
   const canonicalUrl = canonical ? `${SITE_URL}${canonical}` : undefined
 
   return (

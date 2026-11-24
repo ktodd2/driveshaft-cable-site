@@ -125,6 +125,7 @@ function ProductDetailPage() {
     <div className="pt-24 md:pt-32">
       <SEOHead
         title={metadata.title}
+        appendSiteName={!isCable}
         description={metadata.description}
         keywords={metadata.keywords}
         ogImage={shareImage}
