@@ -34,10 +34,10 @@ export function productMetadata(product) {
   const inches = length.match(/^(\d+(?:\.\d+)?)\s*(?:inches|inch|in\.?|")$/i)?.[1]
   const hex = String(specs.find(([key]) => /^hex size$/i.test(key))?.[1] || '').match(/\b(\d+)\s*mm\b/i)?.[1]
   const titles = {
-    'driveshaft-cable': 'Standard Driveshaft Tie-Up Cable for Towing',
-    'driveshaft-cable-xl': `${inches ? `${inches}-Inch ` : ''}XL Driveshaft Tie-Up Cable`,
+    'driveshaft-cable': 'Standard Driveshaft Tie-Up Cable for Heavy-Duty Towing',
+    'driveshaft-cable-xl': `${inches ? `${inches}-Inch ` : ''}XL Driveshaft Cable for Heavy-Duty Towing`,
     'driveshaft-cable-cutters': 'Driveshaft Cable Cutters – Sold Individually',
-    'value-brake-caging-bolt': `${hex ? `${hex}mm ` : ''}Brake Caging Bolts – 10-Pack`,
+    'value-brake-caging-bolt': `${hex ? `${hex}mm ` : ''}Brake Caging Bolts - 10-Pack`,
   }
   return {
     title: titles[product.slug] || `${product.name}${breakingStrength ? ` — ${breakingStrength} breaking strength` : ''}`,

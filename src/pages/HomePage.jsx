@@ -38,7 +38,8 @@ function HomePage() {
   return (
     <>
       <SEOHead
-        title="Heavy-Duty Driveshaft Safety Cable for Towing"
+        title="Driveshaft Cables & Heavy-Duty Towing Supplies"
+        appendSiteName={false}
         description="Shop Standard and XL driveshaft cables for heavy-duty towing and recovery. Compare lengths, view current volume pricing, and order online."
         keywords="driveshaft cable, driveshaftcable, driveshaft safety cable, towing safety cable, heavy duty towing cable, driveshaft guard cable"
         canonical="/"

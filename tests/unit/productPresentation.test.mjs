@@ -75,11 +75,11 @@ test('page wiring keeps presentation data live and cutter-only image containment
 
 test('buyer-focused product titles use catalog length and hex facts without guessing Standard length', () => {
   const standard = productMetadata({ ...xl, slug: 'driveshaft-cable', name: 'Driveshaft Cable', specs: { 'Total Length': '40 inches', 'Breaking Strength': '3000 lbs' } })
-  assert.equal(standard.title, 'Standard Driveshaft Tie-Up Cable for Towing')
+  assert.equal(standard.title, 'Standard Driveshaft Tie-Up Cable for Heavy-Duty Towing')
   assert.doesNotMatch(standard.title, /39|40/)
-  assert.equal(productMetadata({ ...xl, slug: 'driveshaft-cable-xl' }).title, '60-Inch XL Driveshaft Tie-Up Cable')
-  assert.equal(productMetadata({ ...xl, slug: 'driveshaft-cable-xl', specs: { Length: '72 inches' } }).title, '72-Inch XL Driveshaft Tie-Up Cable')
-  assert.equal(productMetadata({ name: 'Value Brake Caging Bolt (10-Pack)', slug: 'value-brake-caging-bolt', specs: { 'Hex Size': '18mm (NOT 3/4"/19mm)' } }).title, '18mm Brake Caging Bolts – 10-Pack')
+  assert.equal(productMetadata({ ...xl, slug: 'driveshaft-cable-xl' }).title, '60-Inch XL Driveshaft Cable for Heavy-Duty Towing')
+  assert.equal(productMetadata({ ...xl, slug: 'driveshaft-cable-xl', specs: { Length: '72 inches' } }).title, '72-Inch XL Driveshaft Cable for Heavy-Duty Towing')
+  assert.equal(productMetadata({ name: 'Value Brake Caging Bolt (10-Pack)', slug: 'value-brake-caging-bolt', specs: { 'Hex Size': '18mm (NOT 3/4"/19mm)' } }).title, '18mm Brake Caging Bolts - 10-Pack')
 })
 
 test('reviewed image descriptions follow the photo across reordering and avoid claims about unknown photos', () => {
