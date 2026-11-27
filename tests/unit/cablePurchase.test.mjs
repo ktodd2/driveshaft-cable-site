@@ -84,7 +84,8 @@ test('source rules the copy relies on: shipping, discount stacking, loyalty perc
   assert.match(server, /subtotalCents >= FREE_SHIPPING_THRESHOLD \? 0 : SHIPPING_FEE/)
   // Shipping is computed from the merchandise subtotal, before the discount.
   const checkout = read('src/pages/CheckoutPage.jsx')
-  assert.match(checkout, /loyaltyDiscountCents = isRepeatCustomer \? Math\.round\(subtotal \* REPEAT_CUSTOMER_DISCOUNT\)/)
+  assert.match(checkout, /loyaltyBlockedBySale = blocksReturningCustomerDiscount\(getLiveSales\(\)\)/)
+  assert.match(checkout, /loyaltyDiscountCents = isRepeatCustomer && !loyaltyBlockedBySale \? Math\.round\(subtotal \* REPEAT_CUSTOMER_DISCOUNT\)/)
   assert.match(checkout, /discountCents = quoteReady\?activeQuote\.discountCents:Math\.min\(subtotal, loyaltyDiscountCents \+ codeDiscountCents\)/)
   assert.match(checkout, /totalCents = quoteReady\?activeQuote\.totalCents:baseTotal - discountCents \+ taxCents/)
   const intent = read('supabase/functions/_shared/checkoutPricing.ts')

@@ -1,6 +1,7 @@
 import {computeShipping,getPriceForQuantityFromDb,makeDbCache} from './pricing.ts'
 import {checkDiscountCode,REPEAT_CUSTOMER_DISCOUNT} from './discounts.ts'
 import {createTaxCalculation,isAddressTaxable} from './tax.ts'
+import {blocksReturningCustomerDiscount} from './salePricing.js'
 export async function priceCheckout(db:any,stripe:any,input:any,{failTaxOpen=false,referralEnabled=false,buyerVerificationEnabled=false}={}){
  const cache=makeDbCache(),lines=[]
  for(const item of input.items){
@@ -15,7 +16,7 @@ export async function priceCheckout(db:any,stripe:any,input:any,{failTaxOpen=fal
  const subtotalCents=lines.reduce((sum,line)=>sum+line.quantity*line.unitPrice,0),shippingCents=computeShipping(subtotalCents)
  let repeat=false
  if(input.customer.email){const {data,error}=await db.rpc('checkout_repeat_customer',{p_email:input.customer.email});if(error)throw Error('Could not verify pricing. Please try again.');repeat=data===true}
- const loyalty=repeat?Math.round(subtotalCents*REPEAT_CUSTOMER_DISCOUNT):0
+ const loyalty=repeat&&!blocksReturningCustomerDiscount(cache.sales)?Math.round(subtotalCents*REPEAT_CUSTOMER_DISCOUNT):0
  let code=0,discountCode=null
  if(input.discountCode){const check=await checkDiscountCode(input.discountCode,input.customer.email,db);if(!check.valid&&check.lookupFailed)throw Error('Could not verify pricing. Please try again.');if(check.valid){discountCode=check.code;code=Math.round(subtotalCents*check.percentOff/100)}}
  let referralPolicy=null

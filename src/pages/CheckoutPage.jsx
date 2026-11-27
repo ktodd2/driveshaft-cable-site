@@ -5,7 +5,8 @@ import React, { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { loadStripe } from '@stripe/stripe-js'
 import { Elements, PaymentElement, useStripe, useElements } from '@stripe/react-stripe-js'
-import { useCartStore, getPriceForQuantity, selectTotalItems, selectSubtotal, selectPricePerUnit, selectShipping, selectOrderTotal, formatPrice, SHIPPING_FEE, FREE_SHIPPING_THRESHOLD, REPEAT_CUSTOMER_DISCOUNT } from '../stores/cartStore'
+import { useCartStore, getPriceForQuantity, getLiveSales, selectTotalItems, selectSubtotal, selectPricePerUnit, selectShipping, selectOrderTotal, formatPrice, SHIPPING_FEE, FREE_SHIPPING_THRESHOLD, REPEAT_CUSTOMER_DISCOUNT } from '../stores/cartStore'
+import { blocksReturningCustomerDiscount } from '../../supabase/functions/_shared/salePricing.js'
 import { getShippingAddressProblem, SHIPPING_ADDRESS_MESSAGES } from '../lib/shippingAddress'
 import { supabase } from '../lib/supabase'
 import { rememberCheckoutPayment, clearPurchasedCart, getOrCreateCheckoutDraft } from '../lib/checkoutPayment'
@@ -147,14 +148,15 @@ function CheckoutPage() {
   const baseTotal = useCartStore(selectOrderTotal)
   const pricePerUnit = useCartStore(selectPricePerUnit)
 
-  // Eligible loyalty and coupon savings both apply to the sale-adjusted subtotal.
-  const quoteKey=JSON.stringify([formData,items.map(item=>[item.productId,item.quantity,getPriceForQuantity(item.productId,item.quantity)]),appliedCode])
+  // Black Friday excludes loyalty only while its scheduled sale is active.
+  const loyaltyBlockedBySale = blocksReturningCustomerDiscount(getLiveSales())
+  const quoteKey=JSON.stringify([formData,items.map(item=>[item.productId,item.quantity,getPriceForQuantity(item.productId,item.quantity)]),appliedCode,loyaltyBlockedBySale])
   const activeQuote=step===2&&paymentSnapshot?paymentSnapshot.pricing:quoteData
   const quoteReady=step===2&&!!paymentSnapshot||quoteData?.key===quoteKey
   const summaryItems=step===2&&paymentSnapshot?paymentSnapshot.items:quoteReady?quoteData.items:items
   const subtotal=quoteReady?activeQuote.subtotalCents:cartSubtotal
   const shippingCents=quoteReady?activeQuote.shippingCents:cartShippingCents
-  const loyaltyDiscountCents = isRepeatCustomer ? Math.round(subtotal * REPEAT_CUSTOMER_DISCOUNT) : 0
+  const loyaltyDiscountCents = isRepeatCustomer && !loyaltyBlockedBySale ? Math.round(subtotal * REPEAT_CUSTOMER_DISCOUNT) : 0
   const codeDiscountCents = appliedCodePercentOff > 0 ? Math.round(subtotal * appliedCodePercentOff / 100) : 0
   const discountCents = quoteReady?activeQuote.discountCents:Math.min(subtotal, loyaltyDiscountCents + codeDiscountCents)
   const discountSource = quoteReady?activeQuote.discountSource:
@@ -467,8 +469,8 @@ function CheckoutPage() {
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                           </svg>
                           <div>
-                            <p className="text-green-400 font-bold text-sm">Welcome back! Returning Customer: 10% Off!</p>
-                            <p className="text-green-400/70 text-xs">Your loyalty discount of {formatPrice(loyaltyDiscountCents)} will be applied automatically.</p>
+                            <p className="text-green-400 font-bold text-sm">{loyaltyBlockedBySale ? 'Welcome back! Black Friday savings applied.' : 'Welcome back! Returning Customer: 10% Off!'}</p>
+                            <p className="text-green-400/70 text-xs">{loyaltyBlockedBySale ? 'The Black Friday sale does not combine with the returning-customer discount.' : <>Your loyalty discount of {formatPrice(loyaltyDiscountCents)} will be applied automatically.</>}</p>
                           </div>
                         </div>
                       )}

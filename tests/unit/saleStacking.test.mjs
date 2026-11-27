@@ -1,6 +1,6 @@
 import {test} from 'node:test'
 import assert from 'node:assert/strict'
-import {activeSalesForProduct, combinedSalePercent, saleUnitPrice} from '../../supabase/functions/_shared/salePricing.js'
+import {activeSalesForProduct, blocksReturningCustomerDiscount, combinedSalePercent, saleUnitPrice} from '../../supabase/functions/_shared/salePricing.js'
 import {discountedLineAmounts} from '../../supabase/functions/_shared/discountAllocation.js'
 const now=Date.parse('2026-11-08T00:00:00Z')
 const sale=(id,extra={})=>({id,scope:'sitewide',discount_percent:10,is_active:true,starts_at:'2026-11-08T00:00:00Z',ends_at:'2026-11-15T00:00:00Z',...extra})
@@ -21,4 +21,18 @@ test('invalid percentages cannot increase the price and excess savings stop at z
  assert.throws(()=>saleUnitPrice(-1,[]),/Invalid product price/)
  assert.throws(()=>saleUnitPrice(Infinity,[]),/Invalid product price/)
  assert.deepEqual(discountedLineAmounts([{unitPrice:0,quantity:10}],0,0),[0])
+})
+
+test('only the enabled Black Friday campaign excludes loyalty, with exact scheduled boundaries',()=>{
+ const blackFriday={id:'f12adf43-0ec1-419f-b69b-796b82c2f426',name:'Black Friday — Our Biggest Sale Ever',scope:'sitewide',discount_percent:20,is_active:true,starts_at:'2026-11-27T06:00:00Z',ends_at:'2026-11-28T06:00:00Z'}
+ const start=Date.parse(blackFriday.starts_at),end=Date.parse(blackFriday.ends_at)
+ assert.equal(blocksReturningCustomerDiscount([blackFriday],start-1),false)
+ assert.equal(blocksReturningCustomerDiscount([blackFriday],start),true)
+ assert.equal(blocksReturningCustomerDiscount([blackFriday],end-1),true)
+ assert.equal(blocksReturningCustomerDiscount([blackFriday],end),false)
+ for(const change of [{is_active:false},{id:'another-sale'},{scope:'product',product_id:'1'},{starts_at:'invalid'},{discount_percent:0}]){
+  assert.equal(blocksReturningCustomerDiscount([{...blackFriday,...change}],start),false)
+ }
+ assert.equal(blocksReturningCustomerDiscount([],start),false)
+ assert.equal(blocksReturningCustomerDiscount(null,start),false)
 })

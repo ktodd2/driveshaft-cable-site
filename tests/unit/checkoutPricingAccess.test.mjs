@@ -3,11 +3,13 @@ import assert from 'node:assert/strict'
 import {build} from 'esbuild'
 import {runInNewContext} from 'node:vm'
 const compiled=await build({entryPoints:['supabase/functions/_shared/checkoutPricing.ts'],bundle:true,write:false,platform:'node',format:'cjs',plugins:[{name:'offline-supabase',setup(b){b.onResolve({filter:/^https:/},args=>({path:args.path,namespace:'offline'}));b.onLoad({filter:/.*/,namespace:'offline'},()=>({contents:'export const createClient=()=>{throw Error("No network")};export default class Stripe{}',loader:'js'}))}}]})
-const module={exports:{}};runInNewContext(compiled.outputFiles[0].text,{module,exports:module.exports,console:{warn(){}},Date,Error,Map,Math,Number});const {priceCheckout}=module.exports
-function fixture({repeat=false,lookupError=false,product='cable',stock=10000,sale=false,taxError=false}={}){
+function loadPriceCheckout(Clock=Date){const module={exports:{}};runInNewContext(compiled.outputFiles[0].text,{module,exports:module.exports,console:{warn(){}},Date:Clock,Error,Map,Math,Number});return module.exports.priceCheckout}
+const priceCheckout=loadPriceCheckout()
+function priceCheckoutAt(iso){const now=Date.parse(iso);return loadPriceCheckout(class extends Date{constructor(...args){super(...(args.length?args:[now]))}static now(){return now}})}
+function fixture({repeat=false,lookupError=false,product='cable',stock=10000,sale=false,sales=null,taxError=false}={}){
  const products={cable:{id:'cable',name:'Catalog Cable',is_active:true,is_storefront:true,base_price_cents:300,tiers:[{min:200,price:245},{min:100,price:270}],min_order_quantity:10,order_quantity_step:1},cutter:{id:'cutter',name:'Cutter',is_active:true,is_storefront:true,base_price_cents:2500,tiers:[],min_order_quantity:1,order_quantity_step:1}}
  const calls=[],taxes=[]
- const db={rpc:async(name,args)=>{calls.push([name,args]);assert.equal(name,'checkout_repeat_customer');return lookupError?{error:{message:'offline'}}:{data:repeat}},from(table){const filters=[];const q={select(){return q},eq(k,v){filters.push([k,v]);return q},lte(){return q},gt(){return q},single:async()=>({data:table==='products'?products[filters.find(x=>x[0]==='id')?.[1]||product]:{stock_quantity:stock}}),maybeSingle:async()=>({data:null}),then(resolve){assert.equal(table,'sales');return Promise.resolve({data:sale?[{id:'sale',scope:'sitewide',discount_percent:10,is_active:true,starts_at:'2000-01-01',ends_at:'2999-01-01'}]:[]}).then(resolve)}};return q}}
+ const db={rpc:async(name,args)=>{calls.push([name,args]);assert.equal(name,'checkout_repeat_customer');return lookupError?{error:{message:'offline'}}:{data:repeat}},from(table){const filters=[];const q={select(){return q},eq(k,v){filters.push([k,v]);return q},lte(){return q},gt(){return q},single:async()=>({data:table==='products'?products[filters.find(x=>x[0]==='id')?.[1]||product]:{stock_quantity:stock}}),maybeSingle:async()=>({data:null}),then(resolve){assert.equal(table,'sales');return Promise.resolve({data:sales||(sale?[{id:'sale',scope:'sitewide',discount_percent:10,is_active:true,starts_at:'2000-01-01',ends_at:'2999-01-01'}]:[])}).then(resolve)}};return q}}
  const stripe={tax:{calculations:{create:async params=>{taxes.push(params);if(taxError)throw Error('offline');return {tax_amount_exclusive:200,id:'taxcalc_fixture'}}}}}
  const input={items:[{productId:product,quantity:product==='cutter'?1:200}],customer:{email:'fixture@invalid.test',address1:'123 Fixture',city:'Houston',state:'TX',zip:'77001',country:'US'},discountCode:'WELCOME5'}
  return {db,stripe,input,calls,taxes,products}
@@ -61,5 +63,53 @@ test('used or invalid coupons do not add savings to loyalty',async()=>{
   assert.equal(p.discountCents,4420)
   assert.equal(p.discountSource,'loyalty')
   assert.equal(p.discountCode,null)
+ }
+})
+
+const blackFriday={id:'f12adf43-0ec1-419f-b69b-796b82c2f426',scope:'sitewide',discount_percent:20,is_active:true,starts_at:'2026-11-27T06:00:00Z',ends_at:'2026-11-28T06:00:00Z'}
+test('Black Friday gives new and returning buyers the same 20% sale price without loyalty stacking',async()=>{
+ const price=priceCheckoutAt('2026-11-27T12:00:00Z')
+ for(const repeat of [false,true]){
+  const f=fixture({repeat,sales:[blackFriday]});f.input.discountCode=''
+  const p=await price(f.db,f.stripe,f.input)
+  assert.equal(p.lines[0].unitPrice,196,'20% applies after the independent 200-unit volume tier')
+  assert.equal(p.subtotalCents,39200)
+  assert.equal(p.discountCents,0)
+  assert.equal(p.discountSource,null)
+  assert.equal(p.repeat,repeat,'customer identity stays accurate when loyalty is excluded')
+  assert.equal(p.shippingCents,2000)
+  assert.equal(p.taxCents,200)
+  assert.equal(p.totalCents,41400)
+  assert.equal(f.taxes[0].line_items[0].amount,39200)
+ }
+ const mixed=fixture({repeat:true,sales:[blackFriday]});mixed.input.discountCode=''
+ mixed.input.items.push({productId:'cutter',quantity:1})
+ const p=await price(mixed.db,mixed.stripe,mixed.input)
+ assert.equal(p.lines[1].unitPrice,2000,'the sitewide sale includes accessories')
+ assert.equal(p.subtotalCents,41200)
+ assert.equal(p.discountCents,0)
+ assert.equal(p.totalCents,43400)
+})
+
+test('Black Friday loyalty exclusion preserves the existing independent coupon policy',async()=>{
+ const f=fixture({repeat:true,sales:[blackFriday]})
+ const p=await priceCheckoutAt('2026-11-27T12:00:00Z')(f.db,f.stripe,f.input)
+ assert.equal(p.subtotalCents,39200)
+ assert.equal(p.discountCents,1960)
+ assert.equal(p.discountSource,'code')
+ assert.equal(p.baseDiscountSource,'code')
+ assert.equal(p.totalCents,39440)
+ assert.equal(f.taxes[0].line_items[0].amount,37240)
+})
+
+test('loyalty returns before or after Black Friday and when the campaign is paused',async()=>{
+ for(const [time,row] of [['2026-11-27T05:59:59.999Z',blackFriday],['2026-11-28T06:00:00Z',blackFriday],['2026-11-27T12:00:00Z',{...blackFriday,is_active:false}]]){
+  const f=fixture({repeat:true,sales:[row]});f.input.discountCode=''
+  const p=await priceCheckoutAt(time)(f.db,f.stripe,f.input)
+  assert.equal(p.lines[0].unitPrice,245)
+  assert.equal(p.subtotalCents,49000)
+  assert.equal(p.discountCents,4900)
+  assert.equal(p.discountSource,'loyalty')
+  assert.equal(p.totalCents,46300)
  }
 })

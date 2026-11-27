@@ -835,13 +835,17 @@ function AdminEmailPage() {
 
   const checkRecipientCount = async () => {
     setCheckingCount(true)
-    const [{ count: orderCount }, { count: quoteCount }, { count: subscriberCount }] = await Promise.all([
-      supabase.from('orders').select('email', { count: 'exact', head: true }).eq('payment_status', 'paid'),
-      supabase.from('quote_requests').select('email', { count: 'exact', head: true }),
-      supabase.from('newsletter_subscribers').select('email', { count: 'exact', head: true }).eq('status', 'active'),
-    ])
-    setRecipientCount((orderCount || 0) + (quoteCount || 0) + (subscriberCount || 0))
-    setCheckingCount(false)
+    setSendError(null)
+    try {
+      const { data, error } = await supabase.functions.invoke('send-marketing-email', { body: { action: 'preview' } })
+      if (error) throw error
+      setRecipientCount(data.total)
+    } catch (err) {
+      setRecipientCount(null)
+      setSendError(err.message || 'Could not verify eligible recipients.')
+    } finally {
+      setCheckingCount(false)
+    }
   }
 
   // -------------------------------------------------------------------------
@@ -861,14 +865,39 @@ function AdminEmailPage() {
     setSendError(null)
 
     try {
+      // Retain the campaign ID before sending, so a lost send response can only
+      // resume this campaign rather than create another blast.
+      const { data: campaign, error: createError } = await supabase.from('email_campaigns')
+        .insert({ subject, html_content: htmlBody, send_type: 'immediate', status: 'active', is_active: false })
+        .select('id').single()
+      if (createError) throw createError
+      setSendResult({ campaignId: campaign.id, acceptedCount: 0, remaining: recipientCount ?? 1, total: recipientCount ?? 0 })
       const { data, error } = await supabase.functions.invoke('send-marketing-email', {
-        body: { subject, htmlContent: htmlBody },
+        body: { campaignId: campaign.id, force: true },
       })
       if (error) throw error
-      setSendResult(data)
+      setSendResult(previous => data.skipped ? { ...previous, ...data } : data)
       loadCampaigns()
     } catch (err) {
       setSendError(err.message || 'Failed to send email blast.')
+    } finally {
+      setSending(false)
+    }
+  }
+
+  const continueCampaign = async () => {
+    if (!sendResult?.campaignId || !(sendResult.remaining > 0)) return
+    setSending(true)
+    setSendError(null)
+    try {
+      const { data, error } = await supabase.functions.invoke('send-marketing-email', {
+        body: { campaignId: sendResult.campaignId, force: true },
+      })
+      if (error) throw error
+      setSendResult(previous => data.skipped ? { ...previous, ...data } : data)
+      loadCampaigns()
+    } catch (err) {
+      setSendError(err.message || 'Could not continue this campaign. Keep this campaign open; do not start another blast.')
     } finally {
       setSending(false)
     }
@@ -1093,11 +1122,11 @@ function AdminEmailPage() {
             <div className="bg-gray-800/50 border border-gray-700 px-6 py-4 mb-6 flex flex-col sm:flex-row sm:items-center gap-3">
               <div className="flex-1">
                 <span className="text-gray-400 text-sm">
-                  Recipients: paid orders + quote requests + newsletter subscribers (deduplicated)
+                  Recipients: paid orders + quote requests + confirmed newsletter subscribers, excluding opt-outs and suppressed addresses
                 </span>
                 {recipientCount !== null && (
                   <span className="ml-3 text-yellow-500 font-bold text-sm">
-                    Up to {recipientCount} recipients (exact count after dedup)
+                    {recipientCount} eligible recipients (deduplicated)
                   </span>
                 )}
               </div>
@@ -1213,7 +1242,7 @@ function AdminEmailPage() {
                   </p>
                   <button
                     onClick={handleSend}
-                    disabled={sending || !subject.trim() || !htmlBody.trim()}
+                    disabled={sending || !!sendResult?.campaignId || !subject.trim() || !htmlBody.trim()}
                     className="bg-yellow-500 hover:bg-yellow-600 text-black font-bold px-6 py-3 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {sending ? 'Sending...' : 'SEND BLAST NOW'}
@@ -1296,10 +1325,15 @@ function AdminEmailPage() {
                         ? 'Recurring campaign updated.'
                         : 'Recurring campaign started.'
                       : sendResult.skipped
-                        ? 'Already sending — this campaign is being delivered by another run.'
+                        ? 'This campaign is already being processed by another run.'
                         : sendResult.remaining > 0
-                          ? `Sending in progress. ${sendResult.sentCount ?? 0} delivered so far, ${sendResult.remaining} remaining (${sendResult.total ?? 0} total). The rest go out automatically — nobody is emailed twice.`
-                          : `Blast sent. ${sendResult.sentCount ?? 0} delivered, ${sendResult.failedCount ?? 0} failed (${sendResult.total ?? 0} total).`}
+                          ? `${sendResult.acceptedCount ?? sendResult.sentCount ?? 0} accepted by the email provider; ${sendResult.remaining} remaining (${sendResult.total ?? 0} eligible). Continue this same campaign below.`
+                          : `${sendResult.acceptedCount ?? sendResult.sentCount ?? 0} accepted by the email provider; ${sendResult.reviewCount ?? sendResult.failedCount ?? 0} held for review (${sendResult.total ?? 0} eligible). Provider acceptance does not confirm delivery.`}
+                  {sendResult.remaining > 0 && sendResult.campaignId && (
+                    <button onClick={continueCampaign} disabled={sending} className="block mt-3 bg-yellow-500 text-black font-bold px-4 py-2 disabled:opacity-50">
+                      {sending ? 'Sending...' : 'CONTINUE THIS CAMPAIGN'}
+                    </button>
+                  )}
                 </div>
               )}
               {sendError && (

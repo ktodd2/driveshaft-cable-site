@@ -1,6 +1,7 @@
 import { isActiveAdmin } from '../_shared/storeAuthorization.js'
 import { createApiClient } from '../_shared/supabaseTransport.js'
 import { getSupabaseSecretKey, getSupabasePublishableKey, hasBackendApiKey } from '../_shared/supabaseKeys.js'
+import { loadMarketingAudience, loadProviderMarketingExclusions, sendMarketingRecipients } from '../_shared/marketingEmail.js'
 // Marketing campaign sender.
 //
 // Previously this function would re-blast the entire customer list on every
@@ -15,7 +16,8 @@ import { getSupabaseSecretKey, getSupabasePublishableKey, hasBackendApiKey } fro
 //   * Claims the campaign under a lease, so overlapping triggers no-op.
 //   * Logs every recipient and skips already-mailed addresses, so a run that
 //     dies mid-list resumes instead of re-sending.
-//   * Uses Resend's batch endpoint (100/request) so runs actually finish.
+//   * Checks global opt-outs and provider exclusions before any campaign write.
+//   * Records individual provider IDs under stable recipient idempotency keys.
 
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
@@ -25,37 +27,13 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
-const FROM_ADDRESS = 'Driveshaft Cable <admin@driveshaftcable.com>'
-const BATCH_SIZE = 100          // Resend's per-request cap for /emails/batch
 const LEASE_SECONDS = 900       // how long a claim is held before it's reclaimable
-const MAX_BATCHES_PER_RUN = 20  // 2000 recipients/run; leaves headroom under the
-                                // execution limit. Leftovers resume next run.
 
 const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), {
     headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     status,
   })
-
-/** Page through a table — Supabase caps a single select at 1000 rows. */
-async function fetchAllEmails(
-  client: any,
-  table: string,
-  refine?: (q: any) => any
-): Promise<string[]> {
-  const out: string[] = []
-  const PAGE = 1000
-  for (let from = 0; ; from += PAGE) {
-    let q = client.from(table).select('email').range(from, from + PAGE - 1)
-    if (refine) q = refine(q)
-    const { data, error } = await q
-    if (error) throw new Error(`${table}: ${error.message}`)
-    if (!data?.length) break
-    for (const row of data) if (row.email) out.push(row.email)
-    if (data.length < PAGE) break
-  }
-  return out
-}
 
 async function fetchAlreadySent(
   client: any,
@@ -83,6 +61,7 @@ serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
   }
+  if (req.method !== 'POST') return json({ error: 'Method not allowed' }, 405)
 
   const supabaseUrl = Deno.env.get('SUPABASE_URL')!
   const serviceRoleKey = getSupabaseSecretKey()!
@@ -115,6 +94,19 @@ serve(async (req) => {
     }
 
     const body = await req.json().catch(() => ({}))
+    if (!body || typeof body !== 'object' || Array.isArray(body) ||
+        !['send', 'preview'].includes(body.action || 'send') ||
+        ['testEmail', 'recipients', 'dryRun'].some(key => key in body)) {
+      return json({ error: 'Use action preview for read-only eligibility checks, or send with subject/htmlContent or campaignId' }, 400)
+    }
+
+    // Fail closed before creating/claiming a campaign if either exclusion source
+    // is unavailable. Preview uses this exact audience and never writes state.
+    const providerExcluded = await loadProviderMarketingExclusions(resendApiKey)
+    const audience = await loadMarketingAudience(adminClient, providerExcluded)
+    const eligibility = { total: audience.total, candidates: audience.candidates,
+      excludedOptOut: audience.excludedOptOut, excludedProvider: audience.excludedProvider }
+    if (body.action === 'preview') return json({ success: true, preview: true, ...eligibility })
 
     // -----------------------------------------------------------------------
     // Resolve the campaign. Manual sends create the row up front (rather than
@@ -125,6 +117,7 @@ serve(async (req) => {
 
     if (body.campaignId) {
       campaignId = Number(body.campaignId)
+      if (!Number.isSafeInteger(campaignId) || campaignId <= 0) return json({ error: 'Invalid campaignId' }, 400)
       requireDue = body.force !== true
     } else if (body.subject && body.htmlContent) {
       const { data: created, error: createErr } = await adminClient
@@ -178,113 +171,41 @@ serve(async (req) => {
     // -----------------------------------------------------------------------
     // Build the outstanding recipient list.
     // -----------------------------------------------------------------------
-    const [orderEmails, quoteEmails, subscriberEmails] = await Promise.all([
-      fetchAllEmails(adminClient, 'orders', q => q.eq('payment_status', 'paid')),
-      fetchAllEmails(adminClient, 'quote_requests', q => q.or('status.is.null,status.neq.quarantined')),
-      fetchAllEmails(adminClient, 'newsletter_subscribers', q => q.eq('status', 'active').eq('confirmed', true)),
-    ])
-
-    const audience = new Set<string>()
-    for (const e of [...orderEmails, ...quoteEmails, ...subscriberEmails]) {
-      const clean = e.toLowerCase().trim()
-      if (clean) audience.add(clean)
-    }
-
     const alreadySent = await fetchAlreadySent(adminClient, campaignId, cycle)
-    const pending = Array.from(audience).filter(e => !alreadySent.has(e))
+    const pending = audience.emails.filter(e => !alreadySent.has(e))
 
     // -----------------------------------------------------------------------
-    // Send in batches, logging each batch before moving on so a timeout can
-    // never cost more than one batch of duplicates.
+    // Bounded runs resume the same campaign; one-recipient requests make batch
+    // membership stable even when the audience changes between runs. Ambiguous
+    // attempts remain held in email_attempts until independently reviewed.
     // -----------------------------------------------------------------------
-    let sentCount = 0
-    let failedCount = 0
-    let batchesRun = 0
+    const result = await sendMarketingRecipients(adminClient, campaign, cycle, pending, { apiKey: resendApiKey })
+    const { sentCount, failedCount, complete } = result
 
-    for (let i = 0; i < pending.length; i += BATCH_SIZE) {
-      if (batchesRun >= MAX_BATCHES_PER_RUN) break
-      const batch = pending.slice(i, i + BATCH_SIZE)
-      batchesRun++
-
-      try {
-        const res = await fetch('https://api.resend.com/emails/batch', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${resendApiKey}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(
-            batch.map(to => ({
-              from: FROM_ADDRESS,
-              to: [to],
-              subject: campaign.subject,
-              html: campaign.html_content,
-            }))
-          ),
-        })
-
-        if (!res.ok) {
-          failedCount += batch.length
-          console.error(`Batch failed for campaign ${campaignId}:`, await res.text())
-          continue
-        }
-
-        // Record delivery before the next batch. Conflicts are ignored so a
-        // retry of the same batch stays idempotent.
-        const { error: logErr } = await adminClient
-          .from('email_campaign_recipients')
-          .upsert(
-            batch.map(email => ({ campaign_id: campaignId, email, cycle })),
-            { onConflict: 'campaign_id,cycle,email', ignoreDuplicates: true }
-          )
-        if (logErr) {
-          // If we cannot record the send we must stop: continuing risks
-          // re-mailing this batch on the next run.
-          console.error(`Recipient log failed for campaign ${campaignId}:`, logErr)
-          await adminClient.rpc('release_campaign_claim', {
-            p_campaign_id: campaignId,
-            p_completed: false,
-          })
-          return json({ error: 'Send halted: recipient log write failed' }, 500)
-        }
-
-        sentCount += batch.length
-      } catch (err) {
-        failedCount += batch.length
-        console.error(`Batch error for campaign ${campaignId}:`, err)
-      }
-
-      // Stay well clear of Resend's request rate limit between batches.
-      await new Promise(r => setTimeout(r, 600))
-    }
-
-    const remaining = pending.length - sentCount - failedCount
-    const complete = remaining <= 0 && failedCount === 0
-
-    await adminClient.from('email_campaign_sends').insert({
+    const { error: historyError } = await adminClient.from('email_campaign_sends').insert({
       campaign_id: campaignId,
       sent_count: sentCount,
       failed_count: failedCount,
-      total_recipients: audience.size,
+      total_recipients: audience.total,
     })
+    if (historyError) throw Error('Send history unavailable; review the existing campaign before resuming')
 
     // Only advance/close the campaign once everyone has actually been mailed.
     // Otherwise just drop the lease so the next run resumes where this stopped.
-    await adminClient.rpc('release_campaign_claim', {
+    const { error: releaseError } = await adminClient.rpc('release_campaign_claim', {
       p_campaign_id: campaignId,
       p_completed: complete,
     })
+    if (releaseError) throw Error('Campaign completion could not be recorded; review the existing campaign before resuming')
 
     return json({
       success: true,
       campaignId,
       cycle,
-      sentCount,
-      failedCount,
+      ...result,
+      acceptedCount: alreadySent.size + result.acceptedCount,
       skippedAlreadySent: alreadySent.size,
-      remaining: Math.max(0, remaining),
-      complete,
-      total: audience.size,
+      ...eligibility,
     })
   } catch (error) {
     console.error('Error:', error)
@@ -297,6 +218,6 @@ serve(async (req) => {
         })
       } catch { /* lease expires on its own after LEASE_SECONDS */ }
     }
-    return json({ error: (error as Error).message }, 500)
+    return json({ error: (error as Error).message, ...(claimedCampaignId !== null ? { campaignId: claimedCampaignId } : {}) }, 500)
   }
 })
